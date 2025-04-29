@@ -19,7 +19,6 @@ export default defineConfig({
       },
     },
   },
-  middleware: "./src/middleware.ts",
   vite: {
     ssr: { noExternal: ["@kobalte/core"] },
     resolve: {

@@ -1,5 +1,4 @@
 import { join } from "node:path";
-import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { migrate as mig } from "drizzle-orm/neon-http/migrator";
@@ -44,12 +43,10 @@ export const migrate = async () => {
   }
 };
 
-export const luciaAdapter = new DrizzlePostgreSQLAdapter(db, schema.TB_sessions, schema.TB_users);
-
 export class DatabaseService extends Effect.Service<DatabaseService>()("@warehouse/database", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function*(_) {
     return {
-      instance: Effect.gen(function* (_) {
+      instance: Effect.gen(function*(_) {
         if (Resource.DatabaseProvider.value === "local") {
           const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
           return localDrizzle(localClient, { schema });
@@ -60,7 +57,7 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
           });
         }
       }),
-      migrate: Effect.gen(function* (_) {
+      migrate: Effect.gen(function*(_) {
         const config = {
           migrationsFolder: join(process.cwd(), "drizzle/migrations"),
         };
@@ -80,6 +77,6 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
       }),
     } as const;
   }),
-}) {}
+}) { }
 
 export const DatabaseLive = DatabaseService.Default;
