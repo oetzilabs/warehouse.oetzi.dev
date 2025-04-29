@@ -16,7 +16,6 @@
     "@aws-sdk/middleware-signing": "3.649.0",
     "@aws-sdk/util-utf8-browser": "3.259.0",
     "@aws-sdk/middleware-sdk-sts": "3.649.0",
-    "@jsx-email/render": "^1.1.0",
     "@warehouseoetzidev/core": "workspace:*",
     "@openauthjs/openauth": "0.4.3",
     "dayjs": "1.11.10",
