@@ -1,7 +1,6 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
-    "jsx": "react",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ESNext"
