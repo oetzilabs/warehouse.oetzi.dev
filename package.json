@@ -1,0 +1,32 @@
+{
+  "name": "zomoetzidev",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "docker compose up -d && sst dev",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "console": "sst console",
+    "typecheck": "tsc --noEmit",
+    "clean": "find . \\( -name 'node_modules' -or -name '.vinxi' -or -name '.output' \\) -type d -prune -exec rm -rf '{}' +;"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.3.1",
+    "prettier-plugin-tailwindcss": "0.6.6",
+    "@tsconfig/node22": "22.0.0",
+    "sst": "3.13.20",
+    "typescript": "5.8.3",
+    "prettier": "3.3.3"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "trustedDependencies": [
+    "aws-sdk",
+    "canvas",
+    "esbuild",
+    "sharp"
+  ]
+}

@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16.4-alpine3.20
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment: 
+      POSTGRES_PASSWORD: warehousepassword
+      POSTGRES_USER: warehouseuser
+      POSTGRES_DB: warehouse
+    ports:
+      - "25432:5432"
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none' # disable saving logs
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
+volumes:
+  data:

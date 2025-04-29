@@ -1,0 +1,45 @@
+import { relations } from "drizzle-orm";
+import { boolean, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-valibot";
+import { object, omit, partial } from "valibot";
+import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
+import { commonTable } from "./entity";
+import { TB_organization_users } from "./organization_users";
+import { TB_users } from "./users";
+
+export const TB_organizations = commonTable(
+  "organizations",
+  {
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    image: text("image"),
+    location: text("location"),
+    description: text("description"),
+    phone: text("phone"),
+    email: text("email"),
+    website: text("website"),
+    uid: text("uid"),
+    address: text("address"),
+    owner_id: varchar("owner")
+      .references(() => TB_users.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  "org",
+);
+
+export const organizations_relation = relations(TB_organizations, ({ many, one }) => ({
+  owner: one(TB_users, {
+    fields: [TB_organizations.owner_id],
+    references: [TB_users.id],
+  }),
+  users: many(TB_organization_users),
+}));
+
+export type OrganizationSelect = typeof TB_organizations.$inferSelect;
+export type OrganizationInsert = typeof TB_organizations.$inferInsert;
+
+export const OrganizationCreateSchema = omit(createInsertSchema(TB_organizations), ["owner_id", "slug"]);
+export const OrganizationUpdateSchema = object({
+  ...partial(omit(OrganizationCreateSchema, ["createdAt", "updatedAt"])).entries,
+  id: prefixed_cuid2,
+});
