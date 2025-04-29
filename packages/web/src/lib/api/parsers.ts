@@ -9,12 +9,12 @@ import {
 } from "@aws-sdk/client-s3";
 import { AnalyzeDocumentCommand, TextractClient } from "@aws-sdk/client-textract";
 import { action, cache, redirect } from "@solidjs/router";
-import { Block, TreeNode } from "@zomoetzidev/core/src/drizzle/sql/schema";
-// import { Bus } from "@zomoetzidev/core/src/entities/event_bus";
-import { Parsers } from "@zomoetzidev/core/src/entities/parsers";
-import { VFS } from "@zomoetzidev/core/src/entities/paths";
-import { createPdfImage } from "@zomoetzidev/core/src/entities/pdfimages";
-import { User } from "@zomoetzidev/core/src/entities/users";
+import { Block, TreeNode } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+// import { Bus } from "@warehouseoetzidev/core/src/entities/event_bus";
+import { Parsers } from "@warehouseoetzidev/core/src/entities/parsers";
+import { VFS } from "@warehouseoetzidev/core/src/entities/paths";
+import { createPdfImage } from "@warehouseoetzidev/core/src/entities/pdfimages";
+import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { Resource } from "sst";
 import { convertToTree, withSession } from "./utils";
 

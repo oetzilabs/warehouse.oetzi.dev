@@ -1,8 +1,8 @@
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { action, cache, redirect } from "@solidjs/router";
-import { Attachments } from "@zomoetzidev/core/src/entities/attachments";
-import { VFS } from "@zomoetzidev/core/src/entities/paths";
-import { User, UserMessageTopicsList } from "@zomoetzidev/core/src/entities/users";
+import { Attachments } from "@warehouseoetzidev/core/src/entities/attachments";
+import { VFS } from "@warehouseoetzidev/core/src/entities/paths";
+import { User, UserMessageTopicsList } from "@warehouseoetzidev/core/src/entities/users";
 import { Resource } from "sst";
 import { withSession } from "./utils";
 

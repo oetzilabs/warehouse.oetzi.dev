@@ -1,5 +1,6 @@
 import path from "node:path";
 import { defineConfig } from "@solidjs/start/config";
+import tailwindcss from "@tailwindcss/vite";
 /* @ts-ignore */
 import pkg from "@vinxi/plugin-mdx";
 
@@ -42,6 +43,7 @@ export default defineConfig({
     //   cors: false,
     // },
     plugins: [
+      tailwindcss(),
       mdx.withImports({})({
         jsx: true,
         jsxImportSource: "solid-js",

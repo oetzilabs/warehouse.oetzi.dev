@@ -12,7 +12,7 @@ import { MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
-import { WebsocketMessage, WebsocketMessageProtocol } from "@zomoetzidev/core/src/utils/websocket";
+import { WebsocketMessage, WebsocketMessageProtocol } from "@warehouseoetzidev/core/src/utils/websocket";
 import AlertCircleIcon from "lucide-solid/icons/alert-circle";
 import CheckCheck from "lucide-solid/icons/check-check";
 import Info from "lucide-solid/icons/info";

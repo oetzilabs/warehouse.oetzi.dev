@@ -1,5 +1,5 @@
 import { action, cache, redirect } from "@solidjs/router";
-import { User } from "@zomoetzidev/core/src/entities/users";
+import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { getEvent } from "vinxi/http";
 import { withSession } from "./utils";
 

@@ -1,9 +1,9 @@
 import { Organizations } from "@/components/settings/Organization";
 import { action, cache, redirect } from "@solidjs/router";
-import { Dossiers } from "@zomoetzidev/core/src/entities/dossiers";
-// import { Bus } from "@zomoetzidev/core/src/entities/event_bus";
-import { Organization } from "@zomoetzidev/core/src/entities/organizations";
-import { WebsocketCore } from "@zomoetzidev/core/src/entities/websocket";
+import { Dossiers } from "@warehouseoetzidev/core/src/entities/dossiers";
+// import { Bus } from "@warehouseoetzidev/core/src/entities/event_bus";
+import { Organization } from "@warehouseoetzidev/core/src/entities/organizations";
+import { WebsocketCore } from "@warehouseoetzidev/core/src/entities/websocket";
 import { withSession } from "./utils";
 
 export const getDocumentById = cache(async (slug: string, did: string) => {

@@ -1,8 +1,8 @@
 import { action, cache, redirect } from "@solidjs/router";
-import { withSession } from "./utils";
-import { Domains as DomainsCore } from "@zomoetzidev/core/src/entities/domains";
-import { DomainCreateSchema } from "@zomoetzidev/core/src/drizzle/sql/schema";
+import { DomainCreateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+import { Domains as DomainsCore } from "@warehouseoetzidev/core/src/entities/domains";
 import { z } from "zod";
+import { withSession } from "./utils";
 
 export * as Domains from "./domains";
 

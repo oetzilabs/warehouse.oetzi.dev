@@ -1,5 +1,5 @@
-import { Notifications } from "@zomoetzidev/core/src/entities/notifications";
 import { cache, redirect } from "@solidjs/router";
+import { Notifications } from "@warehouseoetzidev/core/src/entities/notifications";
 import { getEvent } from "vinxi/http";
 import { lucia } from "../auth";
 import { withSession } from "./utils";

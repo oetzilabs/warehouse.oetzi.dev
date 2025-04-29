@@ -6,16 +6,10 @@ import { allSecrets } from "./Secrets";
 export const websocket_api = new sst.aws.ApiGatewayWebSocket("websocket_api", {
   // link: [...allSecrets, bucket, auth],
   domain: {
-    name: `ws.${domain}`,
+    name: `websocket.${domain}`,
     dns: cf,
   },
 });
-
-// websocket_api.route("$connect", "src/ws.connect");
-// websocket_api.route("$disconnect", "src/ws.disconnect");
-// websocket_api.route("$default", "src/ws.main");
-// websocket_api.route("sendnotification", "src/ws.sendnotification");
-// websocket_api.route("ping", "src/ws.ping");
 
 websocket_api.route("$connect", {
   handler: "packages/functions/src/ws.connect",

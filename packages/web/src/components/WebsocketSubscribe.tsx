@@ -1,6 +1,6 @@
 import { Listener } from "@solid-primitives/event-bus";
-import type { WebsocketMessage, WebsocketMessageProtocol } from "@zomoetzidev/core/src/utils/websocket";
-import { Show, onCleanup, onMount } from "solid-js";
+import type { WebsocketMessage, WebsocketMessageProtocol } from "@warehouseoetzidev/core/src/utils/websocket";
+import { onCleanup, onMount, Show } from "solid-js";
 import { useWebsocket } from "./providers/Websocket";
 
 export const WebsocketSubscribe = (props: {

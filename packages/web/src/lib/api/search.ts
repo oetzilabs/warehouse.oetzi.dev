@@ -1,4 +1,4 @@
-import type { Services } from "@zomoetzidev/core/src/entities/services";
+import type { Services } from "@warehouseoetzidev/core/src/entities/services";
 
 export const filters = {
   all: {

@@ -26,8 +26,6 @@ export default $config({
     const web_apps = await import("./stacks/WebApps");
     const { migrate, generate, studio, drizzleKitUp, seed } = await import("./stacks/Database");
 
-    const { mainEmail } = await import("./stacks/Email");
-
     return {
       storageName: bucket.name,
       storageArn: bucket.arn,
@@ -40,9 +38,6 @@ export default $config({
       // notificationUrn: notification.notifications.urn,
       websocket: websocket.websocket_api.url,
 
-      mainEmail: mainEmail.sender,
-      mainEmailUrn: mainEmail.urn,
-
       migrateUrn: migrate.urn,
       generateUrn: generate.urn,
       dbStudioUrn: studio.urn,
@@ -52,9 +47,7 @@ export default $config({
       authUrl: auth.auth.url,
 
       api: api.api.url,
-      main_app_url: $dev ? "http://localhost:3000" : web_apps.admin_app.url,
-      portal_url: $dev ? "http://localhost:3001" : web_apps.portal_app.url,
-      admin_url: $dev ? "http://localhost:3002" : web_apps.admin_app.url,
+      main_app_url: $dev ? "http://localhost:3000" : web_apps.main_app.url,
     };
   },
 });

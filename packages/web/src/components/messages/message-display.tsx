@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import type { DropdownMenuTriggerProps } from "@kobalte/core/dropdown-menu";
 import type { TooltipTriggerProps } from "@kobalte/core/tooltip";
 import { revalidate, useAction, useSubmission } from "@solidjs/router";
-import type { UserMessageTopicsList } from "@zomoetzidev/core/src/entities/users";
+import type { UserMessageTopicsList } from "@warehouseoetzidev/core/src/entities/users";
 import dayjs from "dayjs";
 import FilePlus from "lucide-solid/icons/file-plus";
 import SendHorizontal from "lucide-solid/icons/send-horizontal";

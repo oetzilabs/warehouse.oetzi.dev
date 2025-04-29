@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { InferInput, safeParse } from "valibot";
+import { email, InferInput, pipe, safeParse, string } from "valibot";
 import { DatabaseLive, DatabaseService, db } from "../drizzle/sql";
 import { TB_users, UserCreateSchema, UserUpdateSchema } from "../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
@@ -32,7 +32,35 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           db.query.TB_users.findFirst({
             where: (users, operations) => operations.eq(users.id, parsedId.output),
             with: {
-              // ...existing with clauses...
+              organizations: {
+                with: {
+                  org: true,
+                },
+              },
+              sessions: true,
+            },
+          }),
+        );
+      });
+
+    const findByEmail = (emailInput: string) =>
+      Effect.gen(function* (_) {
+        const emailX = pipe(string(), email());
+        const parsedEmail = safeParse(emailX, emailInput);
+        if (!parsedEmail.success) {
+          return yield* Effect.fail(new Error("Invalid email format"));
+        }
+
+        return yield* Effect.promise(() =>
+          db.query.TB_users.findFirst({
+            where: (users, operations) => operations.eq(users.email, parsedEmail.output),
+            with: {
+              organizations: {
+                with: {
+                  org: true,
+                },
+              },
+              sessions: true,
             },
           }),
         );
@@ -86,6 +114,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
     return {
       create,
       findById,
+      findByEmail,
       update,
       remove,
       safeRemove,

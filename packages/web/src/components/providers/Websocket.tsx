@@ -3,7 +3,7 @@ import { createContextProvider } from "@solid-primitives/context";
 import { Emitter } from "@solid-primitives/event-bus";
 import { ReconnectingWebSocket } from "@solid-primitives/websocket";
 import { createAsync } from "@solidjs/router";
-import type { WebsocketMessage, WebsocketMessageProtocol } from "@zomoetzidev/core/src/utils/websocket";
+import type { WebsocketMessage, WebsocketMessageProtocol } from "@warehouseoetzidev/core/src/utils/websocket";
 import { onCleanup, onMount } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -92,5 +92,5 @@ export const [Websocket, useWebsocket] = createContextProvider(
       send: props.emitter.emit.bind(props.emitter.emit, "send"),
       subscribe: (type: Parameters<typeof props.emitter.on>[0]) => props.emitter.on.bind(props.emitter.on, type),
     };
-  }
+  },
 );

@@ -1,6 +1,6 @@
 import { action, redirect } from "@solidjs/router";
-import { Organization } from "@zomoetzidev/core/src/entities/organizations";
-import { User } from "@zomoetzidev/core/src/entities/users";
+import { Organization } from "@warehouseoetzidev/core/src/entities/organizations";
+import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { appendHeader, getCookie, getEvent } from "vinxi/http";
 import { z } from "zod";
 import { lucia } from "../auth";
@@ -82,7 +82,7 @@ export const setDashboard = action(async (organization_id: string) => {
     },
     {
       sessionId: session.session.id,
-    }
+    },
   );
   appendHeader(event, "Set-Cookie", lucia.createSessionCookie(newSession.id).serialize());
   event.context.session = newSession;
@@ -116,7 +116,7 @@ export const setCurrentOrganization = action(async (id: string) => {
     },
     {
       sessionId: session.session.id,
-    }
+    },
   );
   appendHeader(event, "Set-Cookie", lucia.createSessionCookie(session.session.id).serialize());
   event.context.session = newSession;

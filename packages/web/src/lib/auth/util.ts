@@ -1,6 +1,6 @@
-import { Organization } from "@zomoetzidev/core/src/entities/organizations";
-import { User } from "@zomoetzidev/core/src/entities/users";
 import { cache, redirect } from "@solidjs/router";
+import { Organization } from "@warehouseoetzidev/core/src/entities/organizations";
+import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { getCookie, getEvent } from "vinxi/http";
 import { lucia } from ".";
 

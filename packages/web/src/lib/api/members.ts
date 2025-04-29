@@ -1,5 +1,5 @@
 import { cache, redirect } from "@solidjs/router";
-import { User } from "@zomoetzidev/core/src/entities/users";
+import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { withSession } from "./utils";
 
 export const getAllMembers = cache(async () => {

@@ -1,7 +1,7 @@
 import { action, cache, redirect } from "@solidjs/router";
-import { Organization } from "@zomoetzidev/core/src/entities/organizations";
-import { withSession } from "./utils";
+import { Organization } from "@warehouseoetzidev/core/src/entities/organizations";
 import { StatusCodes } from "http-status-codes";
+import { withSession } from "./utils";
 
 export const getUserOrganizations = cache(async () => {
   "use server";

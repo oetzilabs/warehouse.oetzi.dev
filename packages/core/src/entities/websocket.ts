@@ -38,6 +38,10 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
 
     const connect = (connectionId: string) =>
       Effect.promise(() => db.insert(TB_websockets).values({ connectionId }).returning());
+
+    const disconnect = (connectionId: string) =>
+      Effect.promise(() => db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning());
+
     const getConnections = (userId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, userId);
@@ -123,25 +127,22 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
 
     const revokeAll = () =>
       Effect.gen(function* (_) {
-        const entries = yield* Effect.promise(() =>
-          db
-            .delete(TB_websockets)
-            .where(gte(TB_websockets.updatedAt, dayjs().subtract(5, "minute").toDate()))
-            .returning(),
-        );
+        const entries = yield* Effect.promise(() => db.delete(TB_websockets).returning());
 
         if (entries.length === 0) {
           return yield* Effect.fail(new Error("Failed to revoke all connections"));
         }
 
-        return entries[0];
+        return entries;
       });
 
     return {
       connect,
+      disconnect,
       getConnections,
       update,
       sendMessageToUsersInOrganization,
+      sendMessageToConnection,
       broadcast,
       revoke,
       revokeAll,

@@ -1,7 +1,7 @@
-import { User } from "@zomoetzidev/core/src/entities/users";
+import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { APIGatewayProxyHandlerV2, APIGatewayProxyResultV2, APIGatewayProxyWebsocketHandlerV2 } from "aws-lambda";
 import { StatusCodes } from "http-status-codes";
-import { createSessionBuilder, auth } from "sst/auth";
+import { auth, createSessionBuilder } from "sst/auth";
 
 export const sessions = createSessionBuilder<{
   user: {
@@ -35,7 +35,7 @@ export const json = (input: unknown, statusCode = StatusCodes.OK): APIGatewayPro
 
 export const error = <T extends string | Record<string, any>>(
   error: T,
-  statusCode = StatusCodes.BAD_REQUEST
+  statusCode = StatusCodes.BAD_REQUEST,
 ): APIGatewayProxyResultV2 => {
   const payload = typeof error === "string" ? { error } : error;
   return {
@@ -113,4 +113,3 @@ export const WebSocketApiHandler =
   <T extends any = any>(handler: APIGatewayProxyWebsocketHandlerV2<T>) =>
   async (...args: Parameters<APIGatewayProxyWebsocketHandlerV2<T>>) =>
     handler(...args);
-

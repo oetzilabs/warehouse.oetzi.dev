@@ -15,7 +15,7 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "4.3.1",
     "prettier-plugin-tailwindcss": "0.6.6",
-    "@tsconfig/node22": "22.0.0",
+    "@tsconfig/node22": "22.0.1",
     "sst": "3.13.20",
     "typescript": "5.8.3",
     "prettier": "3.3.3"
@@ -24,6 +24,7 @@
     "packages/*"
   ],
   "trustedDependencies": [
+    "@parcel/watcher",
     "aws-sdk",
     "canvas",
     "esbuild",

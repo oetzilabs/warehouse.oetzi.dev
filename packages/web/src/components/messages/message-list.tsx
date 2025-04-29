@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 import { useAction } from "@solidjs/router";
-import type { UserMessageTopicsList } from "@zomoetzidev/core/src/entities/users";
+import type { UserMessageTopicsList } from "@warehouseoetzidev/core/src/entities/users";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { For, Show, createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import { setMessageTopicMessagesAsRead } from "../../lib/api/messages";
 import { message_topic, setMessageTopic } from "./use-message";
+
 dayjs.extend(relativeTime);
 
 type Props = {
@@ -35,7 +36,7 @@ export const MessageTopicList = (props: Props) => {
             type="button"
             class={cn(
               "flex flex-col items-start gap-2 border-b p-3 text-left text-sm transition-all hover:bg-accent",
-              message_topic.selected === item.id && "bg-muted"
+              message_topic.selected === item.id && "bg-muted",
             )}
             onClick={async () => {
               setMessageTopic({
@@ -66,7 +67,7 @@ export const MessageTopicList = (props: Props) => {
                 <div
                   class={cn(
                     "ml-auto text-xs",
-                    message_topic.selected === item.id ? "text-foreground" : "text-muted-foreground"
+                    message_topic.selected === item.id ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
                   {dayjs(item.createdAt).fromNow()}

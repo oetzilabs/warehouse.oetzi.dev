@@ -1,6 +1,6 @@
+import type { Block, TreeNode } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { getCookie, getEvent } from "vinxi/http";
 import { lucia } from "../auth";
-import type { Block, TreeNode } from "@zomoetzidev/core/src/drizzle/sql/schema";
 
 export const withSession = async () => {
   "use server";

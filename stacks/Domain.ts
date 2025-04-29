@@ -1,8 +1,8 @@
 export const domain =
   {
-    production: "northstar.oetzi.dev",
-    dev: "dev.northstar.oetzi.dev",
-  }[$app.stage] || $app.stage + ".dev.northstar.oetzi.dev";
+    production: "warehouse.oetzi.dev",
+    dev: "dev.warehouse.oetzi.dev",
+  }[$app.stage] || $app.stage + ".dev.warehouse.oetzi.dev";
 
 export const zone = cloudflare.getZoneOutput({
   name: "oetzi.dev",

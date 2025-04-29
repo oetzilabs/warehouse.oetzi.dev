@@ -1,3 +1,3 @@
-export const bucket = new sst.aws.Bucket("NorthstarMainBucket", {
+export const bucket = new sst.aws.Bucket("MainBucket", {
   public: false,
 });

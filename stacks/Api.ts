@@ -19,7 +19,7 @@ export const api = new sst.aws.ApiGatewayV2("Api", {
     dns: cf,
   },
   cors: {
-    allowOrigins: ["*", "http://localhost:3000", "http://localhost:3001"],
+    allowOrigins: ["*"],
   },
 });
 

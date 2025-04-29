@@ -1,5 +1,5 @@
 import { action, cache, redirect } from "@solidjs/router";
-import { RolesAndPermissions } from "@zomoetzidev/core/src/entities/roles_and_permissions";
+import { RolesAndPermissions } from "@warehouseoetzidev/core/src/entities/roles_and_permissions";
 import { withSession } from "./utils";
 
 export const getAllRoles = cache(async () => {

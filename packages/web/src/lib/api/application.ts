@@ -1,6 +1,6 @@
 import { action, cache } from "@solidjs/router";
-import { Organization } from "@zomoetzidev/core/src/entities/organizations";
-import { Services } from "@zomoetzidev/core/src/entities/services";
+import { Organization } from "@warehouseoetzidev/core/src/entities/organizations";
+import { Services } from "@warehouseoetzidev/core/src/entities/services";
 import { Resource } from "sst";
 import { getCookie, setCookie } from "vinxi/http";
 import { filters, SearchFilter, SearchResult } from "./search";

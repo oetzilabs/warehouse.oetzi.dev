@@ -1,7 +1,7 @@
-import { lucia } from "@/lib/auth";
 import { getAuthenticatedSession, getAuthenticatedUser } from "@/lib/api/auth";
+import { lucia } from "@/lib/auth";
 import { action, redirect, reload } from "@solidjs/router";
-import { Organization } from "@zomoetzidev/core/src/entities/organizations";
+import { Organization } from "@warehouseoetzidev/core/src/entities/organizations";
 import { appendHeader, getCookie, getEvent } from "vinxi/http";
 import { z } from "zod";
 
@@ -101,7 +101,7 @@ export const disconnectFromOrganization = action(async (data: string) => {
     },
     {
       sessionId: sessionId,
-    }
+    },
   );
   appendHeader(event, "Set-Cookie", lucia.createSessionCookie(new_session.id).serialize());
   event.context.session = session;
@@ -138,7 +138,7 @@ export const deleteOrganization = action(async (id: string) => {
     },
     {
       sessionId: sessionId,
-    }
+    },
   );
   appendHeader(event, "Set-Cookie", lucia.createSessionCookie(new_session.id).serialize());
   event.context.session = session;

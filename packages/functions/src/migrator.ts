@@ -1,7 +1,7 @@
-import { migrate } from "@zomoetzidev/core/src/drizzle/sql";
-import { DocTypes } from "@zomoetzidev/core/src/entities/doc_types";
-import { Parsers } from "@zomoetzidev/core/src/entities/parsers";
-import { VatCodes } from "@zomoetzidev/core/src/entities/vatCodes";
+import { migrate } from "@warehouseoetzidev/core/src/drizzle/sql";
+import { DocTypes } from "@warehouseoetzidev/core/src/entities/doc_types";
+import { Parsers } from "@warehouseoetzidev/core/src/entities/parsers";
+import { VatCodes } from "@warehouseoetzidev/core/src/entities/vatCodes";
 import { ApiHandler, json } from "./utils";
 
 export const handler = ApiHandler(async (_evt) => {
