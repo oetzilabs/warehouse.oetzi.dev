@@ -8,11 +8,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getAuthenticatedSession, getAuthenticatedUser, logout, UserSession } from "@/lib/api/auth";
+import { getAuthenticatedUser, logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { useColorMode } from "@kobalte/core";
 import { A, revalidate, useAction, useSubmission } from "@solidjs/router";
-import Cloud from "lucide-solid/icons/cloud";
 import LifeBuoy from "lucide-solid/icons/life-buoy";
 import LogIn from "lucide-solid/icons/log-in";
 import LogOut from "lucide-solid/icons/log-out";
@@ -21,11 +20,11 @@ import Moon from "lucide-solid/icons/moon";
 import Settings from "lucide-solid/icons/settings";
 import Sun from "lucide-solid/icons/sun";
 import User from "lucide-solid/icons/user";
-import Vault from "lucide-solid/icons/vault";
 import { Match, Show, Switch } from "solid-js";
 import { toast } from "solid-sonner";
+import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
 
-export default function UserMenu(props: { session: UserSession }) {
+export default function UserMenu(props: { user: UserInfo }) {
   const isLoggingOut = useSubmission(logout);
   const logoutAction = useAction(logout);
 
@@ -61,7 +60,7 @@ export default function UserMenu(props: { session: UserSession }) {
           </div>
         }
       >
-        <Match when={props.session.user !== null && props.session}>
+        <Match when={props.user !== null && props.user}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>
               <DropdownMenuTrigger as={Button} class="flex flex-row items-center justify-center size-8 p-1">
@@ -71,14 +70,16 @@ export default function UserMenu(props: { session: UserSession }) {
                 <DropdownMenuGroup>
                   <DropdownMenuGroupLabel class="font-normal">
                     <div class="flex flex-col space-y-1">
-                      <p class="text-sm font-medium leading-none">{s().user!.name}</p>
-                      <p class="text-xs leading-none text-muted-foreground">{s().user!.email}</p>
+                      <p class="text-sm font-medium leading-none">{s().name}</p>
+                      <p class="text-xs leading-none text-muted-foreground">{s().email}</p>
+                      {/*
                       <Show
-                        when={s().current_organization}
+                        when={s().}
                         fallback={<p class="text-xs leading-none text-muted-foreground">No organization</p>}
                       >
                         {(o) => <p class="text-xs leading-none text-muted-foreground">{o().name}</p>}
                       </Show>
+                      */}
                     </div>
                   </DropdownMenuGroupLabel>
                   <DropdownMenuSeparator />
@@ -110,7 +111,7 @@ export default function UserMenu(props: { session: UserSession }) {
                       success: "Logged out successfully.",
                       error: "Error logging out",
                     });
-                    await revalidate([getAuthenticatedUser.key, getAuthenticatedSession.key]);
+                    await revalidate([getAuthenticatedUser.key]);
                   }}
                 >
                   <LogOut class="size-4" />

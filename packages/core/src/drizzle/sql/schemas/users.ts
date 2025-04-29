@@ -8,7 +8,6 @@ import { TB_organization_users } from "./organization_users";
 import { TB_sessions } from "./sessions";
 import { schema } from "./utils";
 
-export const entity_type = schema.enum("user_types", ["mail_bot", "app", "user", "admin"]);
 
 export const TB_users = commonTable(
   "users",
@@ -21,7 +20,6 @@ export const TB_users = commonTable(
       withTimezone: true,
       mode: "date",
     }),
-    type: entity_type("type").notNull(),
   },
   "user",
 );

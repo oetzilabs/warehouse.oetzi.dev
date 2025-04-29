@@ -1,16 +1,16 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { email, InferInput, pipe, safeParse, string } from "valibot";
-import { DatabaseLive, DatabaseService, db } from "../drizzle/sql";
+import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import { TB_users, UserCreateSchema, UserUpdateSchema } from "../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function*(_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
     const create = (userInput: InferInput<typeof UserCreateSchema>) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         const [x] = yield* Effect.promise(() => db.insert(TB_users).values(userInput).returning());
 
         const user = yield* findById(x.id);
@@ -22,7 +22,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const findById = (id: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -44,7 +44,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const findByEmail = (emailInput: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         const emailX = pipe(string(), email());
         const parsedEmail = safeParse(emailX, emailInput);
         if (!parsedEmail.success) {
@@ -67,7 +67,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const update = (id: string, userInput: InferInput<typeof UserUpdateSchema>) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -83,7 +83,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const remove = (id: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -95,7 +95,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -107,9 +107,10 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const notify = (message: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         return message;
       });
+
 
     return {
       create,
@@ -122,7 +123,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
     } as const;
   }),
   dependencies: [DatabaseLive],
-}) {}
+}) { }
 
 export const UserLive = UserService.Default;
-export type Frontend = NonNullable<Awaited<ReturnType<UserService["findById"]>>>;
+export type UserInfo = Effect.Effect.Success<ReturnType<UserService["findById"]>>;

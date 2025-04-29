@@ -1,16 +1,16 @@
 import { Footer } from "@/components/Footer";
-import { getAuthenticatedSession } from "@/lib/api/auth";
+import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getLocale } from "@/lib/api/locale";
-import { RouteLoadFuncArgs } from "@solidjs/router";
+import { RouteDefinition } from "@solidjs/router";
 import { JSXElement } from "solid-js";
 
 export const route = {
-  load: async (params: RouteLoadFuncArgs) => {
+  load: async (params) => {
     await getLocale();
-    const session = await getAuthenticatedSession();
+    const session = await getAuthenticatedUser();
     return { session };
   },
-};
+} satisfies RouteDefinition;
 
 export default function StaticLayout(props: { children: JSXElement }) {
   return (
