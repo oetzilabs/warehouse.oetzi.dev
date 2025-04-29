@@ -6,7 +6,7 @@ import { allSecrets } from "./Secrets";
 export const websocket_api = new sst.aws.ApiGatewayWebSocket("websocket_api", {
   // link: [...allSecrets, bucket, auth],
   domain: {
-    name: `websocket.${domain}`,
+    name: `ws.${domain}`,
     dns: cf,
   },
 });
