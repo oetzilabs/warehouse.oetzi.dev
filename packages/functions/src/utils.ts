@@ -1,27 +1,5 @@
-import { User } from "@warehouseoetzidev/core/src/entities/users";
 import { APIGatewayProxyHandlerV2, APIGatewayProxyResultV2, APIGatewayProxyWebsocketHandlerV2 } from "aws-lambda";
 import { StatusCodes } from "http-status-codes";
-import { auth, createSessionBuilder } from "sst/auth";
-
-export const sessions = createSessionBuilder<{
-  user: {
-    id: string;
-    email: string;
-  };
-}>();
-
-export const getUser = async (token: string) => {
-  const session = await sessions.verify(token);
-  if (!session) throw new Error("No session found");
-  if (session.type !== "user") {
-    throw new Error("Invalid session type");
-  }
-  const { id } = session.properties;
-  if (!id) throw new Error("Invalid UserID in session");
-  const user = await User.findById(id);
-  if (!user) throw new Error("No session found");
-  return user;
-};
 
 export const json = (input: unknown, statusCode = StatusCodes.OK): APIGatewayProxyResultV2 => {
   return {

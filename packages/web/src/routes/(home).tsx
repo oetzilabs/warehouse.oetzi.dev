@@ -8,6 +8,7 @@ export const route = {
 export default function IndexPage() {
   return (
     <>
+      <div class="flex grow w-full" />
       <Footer />
     </>
   );

@@ -1,4 +1,4 @@
-import { getAuthenticatedSession } from "@/lib/api/auth";
+import { getAuthenticatedUser } from "@/lib/api/auth";
 import { createContextProvider } from "@solid-primitives/context";
 import { Emitter } from "@solid-primitives/event-bus";
 import { ReconnectingWebSocket } from "@solid-primitives/websocket";
@@ -11,19 +11,15 @@ export type WSStatus = "connected" | "disconnected" | "pinging" | "sending" | "c
 
 export const [Websocket, useWebsocket] = createContextProvider(
   (props: { websocket: ReconnectingWebSocket | null; emitter: Emitter<WebsocketMessageProtocol> }) => {
-    const session = createAsync(() => getAuthenticatedSession());
+    const user = createAsync(() => getAuthenticatedUser());
 
     const createPingMessage = () => {
-      const s = session();
-      if (!s) {
+      const u = user();
+      if (!u) {
         console.error("no session");
         return;
       }
-      if (!s.user) {
-        console.error("no user");
-        return;
-      }
-      const userId = s.user.id;
+      const userId = u.id;
       if (!userId) throw new Error("No user id");
       const id = Math.random().toString(36).substring(2);
 
@@ -39,16 +35,12 @@ export const [Websocket, useWebsocket] = createContextProvider(
     const handlers = {
       open: () => {
         console.log("open");
-        const s = session();
+        const s = user();
         if (!s) {
           console.error("no session");
           return;
         }
-        if (!s.user) {
-          console.error("no user");
-          return;
-        }
-        const userId = s.user.id;
+        const userId = s.id;
         if (!userId) {
           return;
         }

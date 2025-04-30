@@ -6,11 +6,11 @@ import { TB_users, UserCreateSchema, UserUpdateSchema } from "../drizzle/sql/sch
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
-  effect: Effect.gen(function*(_) {
+  effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
     const create = (userInput: InferInput<typeof UserCreateSchema>) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         const [x] = yield* Effect.promise(() => db.insert(TB_users).values(userInput).returning());
 
         const user = yield* findById(x.id);
@@ -22,7 +22,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const findById = (id: string) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -34,7 +34,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             with: {
               organizations: {
                 with: {
-                  org: true,
+                  org: {
+                    with: {
+                      owner: true,
+                      users: {
+                        with: {
+                          user: true,
+                        },
+                      },
+                    },
+                  },
                 },
               },
               sessions: true,
@@ -44,7 +53,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const findByEmail = (emailInput: string) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         const emailX = pipe(string(), email());
         const parsedEmail = safeParse(emailX, emailInput);
         if (!parsedEmail.success) {
@@ -67,7 +76,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const update = (id: string, userInput: InferInput<typeof UserUpdateSchema>) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -83,7 +92,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const remove = (id: string) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -95,7 +104,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const safeRemove = (id: string) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
@@ -107,13 +116,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
     const notify = (message: string) =>
-      Effect.gen(function*(_) {
+      Effect.gen(function* (_) {
         return message;
       });
 
+    const disable = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid user ID format"));
+        }
+        const [updatedUser] = yield* Effect.promise(() =>
+          db.update(TB_users).set({ status: "disabled" }).where(eq(TB_users.id, parsedId.output)).returning(),
+        );
+        return updatedUser;
+      });
 
     return {
       create,
+      disable,
       findById,
       findByEmail,
       update,
@@ -123,7 +144,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
     } as const;
   }),
   dependencies: [DatabaseLive],
-}) { }
+}) {}
 
 export const UserLive = UserService.Default;
 export type UserInfo = Effect.Effect.Success<ReturnType<UserService["findById"]>>;

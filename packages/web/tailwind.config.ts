@@ -1,4 +1,5 @@
-/** @type {import('tailwindcss').Config} */
+import type { Config } from "tailwindcss";
+
 export default {
   darkMode: ["variant", [".dark &", '[data-kb-theme="dark"] &']],
   content: ["./src/**/*.{ts,tsx}"],
@@ -71,20 +72,20 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--kb-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--kb-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
         },
         "content-show": {
-          from: { opacity: 0, transform: "scale(0.96)" },
-          to: { opacity: 1, transform: "scale(1)" },
+          from: { opacity: "0", transform: "scale(0.96)" },
+          to: { opacity: "1", transform: "scale(1)" },
         },
         "content-hide": {
-          from: { opacity: 1, transform: "scale(1)" },
-          to: { opacity: 0, transform: "scale(0.96)" },
+          from: { opacity: "1", transform: "scale(1)" },
+          to: { opacity: "0", transform: "scale(0.96)" },
         },
         "caret-blink": {
           "0%,70%,100%": { opacity: "1" },
@@ -101,4 +102,4 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+} satisfies Config;

@@ -1,22 +1,9 @@
 import { Alert } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogClose,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAuthenticatedSession, getAuthenticatedUser, type UserSession } from "@/lib/api/auth";
-import { getUserOrganizations } from "@/lib/api/organizations";
-import { setCurrentOrganization } from "@/lib/api/user";
-import { deleteOrganization, disconnectFromOrganization } from "@/utils/api/actions";
+import { getAuthenticatedUser } from "@/lib/api/auth";
+import { deleteOrganization, disconnectFromOrganization, setCurrentOrganization } from "@/lib/api/organizations";
 import { A, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -27,10 +14,18 @@ import { toast } from "solid-sonner";
 import { cn } from "../../lib/utils";
 import { sleep } from "../../utils";
 import { NotLoggedIn } from "../NotLoggedIn";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogClose,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 
-export const Organizations = (props: { session: UserSession }) => {
+export const Organizations = () => {
   const user = createAsync(() => getAuthenticatedUser());
-  const organizations = createAsync(() => getUserOrganizations());
 
   const disconnectOrganization = useAction(disconnectFromOrganization);
   const isDisconnectingFromOrganization = useSubmission(disconnectFromOrganization);
@@ -41,8 +36,8 @@ export const Organizations = (props: { session: UserSession }) => {
   const removeOrganization = useAction(deleteOrganization);
 
   return (
-    <Show when={props.session} fallback={<NotLoggedIn />}>
-      {(s) => (
+    <Show when={user()} fallback={<NotLoggedIn />}>
+      {(u) => (
         <div class="flex flex-col items-start gap-8 w-full">
           <div class="flex flex-col items-start gap-4 w-full">
             <div class="flex flex-row items-center justify-between w-full gap-2">
@@ -70,7 +65,7 @@ export const Organizations = (props: { session: UserSession }) => {
           <div class="gap-4 w-full flex flex-col">
             <Suspense fallback={<For each={[0, 1]}>{() => <Skeleton class="w-full h-48" />}</For>}>
               <For
-                each={organizations()}
+                each={u().organizations.map((entity) => entity.org)}
                 fallback={
                   <Alert class="flex flex-col items-start gap-2 w-full bg-muted">
                     <span class="text-lg font-semibold">No organizations</span>
@@ -105,7 +100,7 @@ export const Organizations = (props: { session: UserSession }) => {
                                 Owner
                               </Badge>
                             </Show>
-                            <Show when={organization.id === s().current_organization?.id}>
+                            <Show when={organization.id === u().currenOrganizationId}>
                               <Badge class="text-xs px-3 py-1.5" variant="outline">
                                 Current
                               </Badge>
@@ -123,15 +118,6 @@ export const Organizations = (props: { session: UserSession }) => {
                                   <div class="w-full flex flex-col gap-2 items-start">
                                     <span class="font-medium text-sm">{user.name}</span>
                                     <span class="text-xs">{dayjs(user.createdAt).fromNow()}</span>
-                                    <span class="text-xs">
-                                      {
-                                        organization.d_colls
-                                          .map((d) => d.d_c)
-                                          .flat()
-                                          .filter((d) => d.owner_id === user.id).length
-                                      }{" "}
-                                      Documents
-                                    </span>
                                   </div>
                                 </div>
                               )}
@@ -162,14 +148,14 @@ export const Organizations = (props: { session: UserSession }) => {
                               class="w-max"
                               aria-label="Connect to Organization"
                               disabled={
-                                isSettingCurrentOrganization.pending || organization.id === s().current_organization?.id
+                                isSettingCurrentOrganization.pending || organization.id === u().currenOrganizationId
                               }
                               onClick={() => {
                                 toast.promise(
                                   Promise.all([
                                     setCurrentOrg(organization.id),
                                     sleep(150),
-                                    revalidate(getAuthenticatedSession.key),
+                                    revalidate(getAuthenticatedUser.key),
                                   ]),
                                   {
                                     loading: "Connecting to organization...",
@@ -190,13 +176,13 @@ export const Organizations = (props: { session: UserSession }) => {
                               type="submit"
                               class="w-max"
                               aria-label="Disconnect from organization"
-                              disabled={isDisconnectingFromOrganization.pending || organizations()!.length === 1}
+                              disabled={isDisconnectingFromOrganization.pending || u().organizations.length === 1}
                               onClick={() => {
                                 toast.promise(
                                   Promise.all([
                                     disconnectOrganization(organization.id),
                                     sleep(150),
-                                    revalidate(getAuthenticatedSession.key),
+                                    revalidate(getAuthenticatedUser.key),
                                   ]),
                                   {
                                     loading: "Disconnecting from organization...",
@@ -220,36 +206,32 @@ export const Organizations = (props: { session: UserSession }) => {
                               Delete
                             </AlertDialogTrigger>
                             <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you really sure, you want to delete this organization?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogClose>Cancel</AlertDialogClose>
-                                <AlertDialogAction
-                                  as={Button}
-                                  variant="destructive"
-                                  onClick={() => {
-                                    toast.promise(
-                                      Promise.all([
-                                        removeOrganization(organization.id),
-                                        sleep(150),
-                                        revalidate(getAuthenticatedSession.key),
-                                      ]),
-                                      {
-                                        loading: "Hold on a second, we're deleting the organization",
-                                        icon: <Loader2 class="size-4 animate-spin" />,
-                                        error: "There was an error deleting the organization",
-                                        success: "Organization has been deleted, redirecting to home page!",
-                                      },
-                                    );
-                                  }}
-                                >
-                                  Continue
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you really sure, you want to delete this organization?
+                              </AlertDialogDescription>
+                              <AlertDialogClose>Cancel</AlertDialogClose>
+                              <AlertDialogAction
+                                as={Button}
+                                variant="destructive"
+                                onClick={() => {
+                                  toast.promise(
+                                    Promise.all([
+                                      removeOrganization(organization.id),
+                                      sleep(150),
+                                      revalidate(getAuthenticatedUser.key),
+                                    ]),
+                                    {
+                                      loading: "Hold on a second, we're deleting the organization",
+                                      icon: <Loader2 class="size-4 animate-spin" />,
+                                      error: "There was an error deleting the organization",
+                                      success: "Organization has been deleted, redirecting to home page!",
+                                    },
+                                  );
+                                }}
+                              >
+                                Continue
+                              </AlertDialogAction>
                             </AlertDialogContent>
                           </AlertDialog>
                         </div>

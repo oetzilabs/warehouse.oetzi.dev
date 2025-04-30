@@ -1,11 +1,12 @@
-import { getAuthenticatedSession, type UserSession } from "@/lib/api/auth";
+import { getAuthenticatedUser } from "@/lib/api/auth";
 import { createAsync } from "@solidjs/router";
+import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
 import Loader2 from "lucide-solid/icons/loader-2";
 import { JSX, Show, Suspense } from "solid-js";
 import { NotLoggedIn } from "./NotLoggedIn";
 
-export const Authenticated = (props: { children: (props: { session: UserSession }) => JSX.Element }) => {
-  const session = createAsync(() => getAuthenticatedSession());
+export const Authenticated = (props: { children: (props: { user: UserInfo }) => JSX.Element }) => {
+  const user = createAsync(() => getAuthenticatedUser());
   const ChildComp = props.children;
 
   return (
@@ -17,7 +18,7 @@ export const Authenticated = (props: { children: (props: { session: UserSession 
       }
     >
       <Show
-        when={session()?.user && session()}
+        when={user()}
         fallback={
           <div class="flex p-4 w-full h-full items-center justify-center text-muted-foreground">
             <div class="w-max h-max min-w-96">
@@ -26,7 +27,7 @@ export const Authenticated = (props: { children: (props: { session: UserSession 
           </div>
         }
       >
-        {(s) => <ChildComp session={s()} />}
+        {(u) => <ChildComp user={u()} />}
       </Show>
     </Suspense>
   );

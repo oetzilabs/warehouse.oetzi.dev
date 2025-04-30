@@ -4,15 +4,12 @@ import {
   AlertDialogClose,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { getAuthenticatedSession, getAuthenticatedUser } from "@/lib/api/auth";
-import { getProfile } from "@/lib/api/profile";
-import { disableUser } from "@/lib/api/user";
+import { getAuthenticatedUser } from "@/lib/api/auth";
+import { disable } from "@/lib/api/users";
 import { revalidate, useAction, useSubmission } from "@solidjs/router";
 import AlertTriangleIcon from "lucide-solid/icons/alert-triangle";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -21,8 +18,8 @@ import { toast } from "solid-sonner";
 import { sleep } from "../../utils";
 
 export const Dangerzone = () => {
-  const isDisablingUser = useSubmission(disableUser);
-  const disableUserAction = useAction(disableUser);
+  const disableUserAction = useAction(disable);
+  const isDisablingUser = useSubmission(disable);
 
   return (
     <div class="flex flex-col items-start gap-8 w-full">
@@ -64,36 +61,28 @@ export const Dangerzone = () => {
                     </Switch>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you really sure, you want to disable your account?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogClose>Cancel</AlertDialogClose>
-                      <AlertDialogAction
-                        as={Button}
-                        variant="destructive"
-                        onClick={() => {
-                          toast.promise(
-                            Promise.all([
-                              disableUserAction,
-                              sleep(150),
-                              revalidate([getProfile.key, getAuthenticatedUser.key, getAuthenticatedSession.key]),
-                            ]),
-                            {
-                              loading: "Hold on a second, we're disabling your account",
-                              icon: <Loader2 class="size-4 animate-spin" />,
-                              error: "There was an error disabling your Account",
-                              success: "Account has been disabled, redirecting to home page!",
-                            },
-                          );
-                        }}
-                      >
-                        Continue
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you really sure, you want to disable your account?
+                    </AlertDialogDescription>
+                    <AlertDialogClose>Cancel</AlertDialogClose>
+                    <AlertDialogAction
+                      as={Button}
+                      variant="destructive"
+                      onClick={() => {
+                        toast.promise(
+                          Promise.all([disableUserAction, sleep(150), revalidate([getAuthenticatedUser.key])]),
+                          {
+                            loading: "Hold on a second, we're disabling your account",
+                            icon: <Loader2 class="size-4 animate-spin" />,
+                            error: "There was an error disabling your Account",
+                            success: "Account has been disabled, redirecting to home page!",
+                          },
+                        );
+                      }}
+                    >
+                      Continue
+                    </AlertDialogAction>
                   </AlertDialogContent>
                 </AlertDialog>
               </div>

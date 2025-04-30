@@ -1,120 +1,172 @@
-import { A } from "@solidjs/router";
-import { For, Show } from "solid-js";
-import { useTranslation } from "./providers/TranslationProvider";
-
-export const footer_links: Record<string, Array<{ name: string; href: string; note?: string }>> = {
-  Product: [
-    {
-      name: "Pricing",
-      href: "/pricing",
-    },
-    {
-      name: "Changelog",
-      href: "/blogs/changelog",
-      note: "Things change frequently",
-    },
-  ],
-  Company: [
-    {
-      name: "About Us",
-      href: "/about",
-    },
-    {
-      name: "Blog",
-      href: "/blogs",
-    },
-  ],
-  Project: [
-    {
-      name: "Roadmap",
-      href: "/roadmap",
-    },
-    {
-      name: "Team",
-      href: "/about#team",
-    },
-    {
-      name: "Brand",
-      href: "/brand",
-    },
-  ],
-};
+import { subscribe } from "@/lib/api/application";
+import { TextField } from "@kobalte/core/text-field";
+import { A, useAction, useSubmission } from "@solidjs/router";
+import { createSignal, For, Show } from "solid-js";
+import { toast } from "solid-sonner";
+import { Button } from "./ui/button";
+import { TextFieldInput, TextFieldLabel } from "./ui/text-field";
 
 export function Footer() {
+  const footer_links: Record<string, Array<{ name: string; href: string; note?: string }>> = {
+    Api: [
+      {
+        name: "API Docs",
+        href: "/api",
+      },
+      {
+        name: "Swagger UI",
+        href: "/swagger",
+      },
+    ],
+    Product: [
+      {
+        name: "Pricing",
+        href: "/pricing",
+      },
+      {
+        name: "Changelog",
+        href: "/blogs/changelog",
+      },
+    ],
+    Company: [
+      {
+        name: "About Us",
+        href: "/about",
+      },
+      {
+        name: "Blog",
+        href: "/blogs",
+      },
+    ],
+    Project: [
+      {
+        name: "Roadmap",
+        href: "/roadmap",
+      },
+      {
+        name: "Team",
+        href: "/about#team",
+      },
+      {
+        name: "Brand",
+        href: "/brand",
+      },
+    ],
+  };
+
+  const [email, setEmail] = createSignal("");
+
+  const subscribing = useAction(subscribe);
+  const isSubscribing = useSubmission(subscribe);
+
   return (
-    <>
-      <footer class="w-full container py-12 px-4 mx-auto">
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-10">
-          <div class="col-span-full hidden lg:col-span-1 lg:block">
-            <A class="flex-none text-xl font-black dark:text-white" href="/" aria-label="Brand">
-              WareHouse.
-            </A>
-            <div class="flex flex-col gap-1">
-              <p class="mt-3 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2024 ÖtziLabs.</p>
+    <footer class="w-full">
+      <div class="w-full p-4 border-t border-gray-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
+        <div class="container p-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 w-full">
+            <div class="flex flex-col gap-4 items-center justify-center md:items-start md:justify-start col-span-full sm:col-span-1 w-full">
+              <h4 class="text-xs font-semibold text-gray-900 uppercase dark:text-neutral-100">Newsletter</h4>
+              <div class="flex flex-col gap-3 ">
+                <span class="text-sm text-muted-foreground">
+                  If you want to receive our latest news, subscribe to our newsletter.
+                </span>
+                <div class="flex flex-row gap-2 items-center w-full justify-between">
+                  <TextField class="w-full ">
+                    <TextFieldLabel>Email</TextFieldLabel>
+                    <TextFieldInput
+                      placeholder="john@doe.com"
+                      class="bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-primary-500 dark:focus:ring-primary-400 text-sm rounded-md block w-full p-2 dark:text-white h-9"
+                    />
+                  </TextField>
+                  <Button
+                    class="w-max self-end"
+                    size="sm"
+                    onClick={() => {
+                      const value = email();
+                      if (!value) {
+                        toast.error("Please enter an email");
+                        return;
+                      }
+                      toast.promise(subscribing(value), {
+                        loading: "Hold on a second, we're subscribing you",
+                        error: "There was an error subscribing you",
+                        success: "You have been subscribed, redirecting to home page!",
+                      });
+                    }}
+                  >
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
             </div>
+            <For each={Object.entries(footer_links)}>
+              {([title, links]) => (
+                <div class="flex flex-col gap-4 items-center justify-center md:items-end md:justify-start">
+                  <h4 class="text-xs font-semibold text-gray-900 uppercase dark:text-neutral-100">{title}</h4>
+                  <div class="flex flex-col gap-3 text-center md:text-right items-center justify-center md:items-end md:justify-end">
+                    <For each={links}>
+                      {(link) => (
+                        <A
+                          href={link.href}
+                          class="inline-flex gap-x-2 text-sm text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200 flex-row w-max items-center justify-center  md:justify-end gap-1"
+                        >
+                          <Show when={link.note}>
+                            {(note) => (
+                              <div class="text-xs w-max h-min bg-teal-400 dark:bg-teal-500 py-1 px-2 rounded-sm text-white dark:text-teal-900 font-black">
+                                {note()}
+                              </div>
+                            )}
+                          </Show>
+                          {link.name}
+                        </A>
+                      )}
+                    </For>
+                  </div>
+                </div>
+              )}
+            </For>
           </div>
-          <For each={Object.entries(footer_links)}>
-            {([title, links]) => (
-              <div class="flex flex-col gap-4 items-center justify-center md:items-end md:justify-start">
-                <h4 class="text-xs font-semibold text-gray-900 uppercase dark:text-neutral-100">{title}</h4>
-                <div class="flex flex-col gap-3 text-center md:text-right items-center justify-center md:items-end md:justify-end">
-                  <For each={links}>
-                    {(link) => (
-                      <A
-                        href={link.href}
-                        class="inline-flex gap-x-2 text-sm text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200 flex-row w-max items-center justify-center  md:justify-end gap-1"
-                      >
-                        <Show when={link.note}>
-                          {(note) => (
-                            <div class="text-xs w-max h-min bg-teal-400 dark:bg-teal-500 py-1 px-2 rounded-sm text-white dark:text-teal-900 font-black">
-                              {note()}
-                            </div>
-                          )}
-                        </Show>
-                        {link.name}
-                      </A>
-                    )}
-                  </For>
-                </div>
-              </div>
-            )}
-          </For>
         </div>
-        <div class="pt-5 mt-5 border-t border-gray-200 dark:border-neutral-700">
-          <div class="sm:flex sm:justify-between sm:items-center">
-            <div class="flex items-center gap-x-3">
-              <div class="hs-dropdown [--placement:top-left] relative inline-flex"></div>
-              <div class="space-x-4 text-sm ms-4">
-                <a
-                  class="inline-flex gap-x-2 text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
-                  href="#"
-                >
-                  Terms
-                </a>
-                <a
-                  class="inline-flex gap-x-2 text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
-                  href="#"
-                >
-                  Privacy
-                </a>
-                <a
-                  class="inline-flex gap-x-2 text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
-                  href="#"
-                >
-                  Status
-                </a>
-              </div>
-            </div>
-            <div class="flex justify-between items-center">
-              <div class="mt-3 sm:hidden">
-                <A class="flex-none text-xl font-black dark:text-white" href="/" aria-label="Brand">
-                  WareHouse.
-                </A>
-                <div class="flex flex-col gap-1">
-                  <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2024 Ötzilabs.</p>
+      </div>
+      <div class="w-full p-4 border-t border-gray-200 dark:border-neutral-700">
+        <div class="container p-4 mx-auto">
+          <div class="flex flex-col w-full">
+            <div class="flex justify-between items-end">
+              <div class="flex flex-col gap-2 items-start">
+                <div class="flex flex-row gap-2 items-center">
+                  <A class="flex-none text-lg font-bold dark:text-white" href="/" aria-label="Brand">
+                    WareHouse.
+                  </A>
+                  <div class="flex flex-col gap-1">
+                    <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2024 Ötzilabs.</p>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex items-start gap-4 flex-col">
+                    <div class="text-sm flex flex-row gap-2">
+                      <a
+                        class="inline-flex gap-x-2 text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        href="#"
+                      >
+                        Terms
+                      </a>
+                      <a
+                        class="inline-flex gap-x-2 text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        href="#"
+                      >
+                        Privacy
+                      </a>
+                      <a
+                        class="inline-flex gap-x-2 text-gray-600 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        href="#"
+                      >
+                        Status
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="space-x-4">
+              <div class="flex flex-row gap-2 items-end justify-end h-full">
                 <a
                   class="inline-block text-gray-500 hover:text-gray-800 dark:text-neutral-500 dark:hover:text-neutral-200"
                   href="#"
@@ -164,7 +216,7 @@ export function Footer() {
             </div>
           </div>
         </div>
-      </footer>
-    </>
+      </div>
+    </footer>
   );
 }

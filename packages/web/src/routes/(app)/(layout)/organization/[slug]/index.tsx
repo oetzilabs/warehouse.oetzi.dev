@@ -1,5 +1,5 @@
 import { Footer } from "@/components/Footer";
-import { getAuthenticatedSession } from "@/lib/api/auth";
+import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getLocale } from "@/lib/api/locale";
 import { getOrganizationBySlug } from "@/lib/api/organizations";
 import { createAsync, RouteDefinition, useParams } from "@solidjs/router";
@@ -13,7 +13,7 @@ dayjs.extend(advancedFormat);
 
 export const route = {
   preload: async (props) => {
-    await getAuthenticatedSession();
+    await getAuthenticatedUser();
     await getLocale();
     const org = await getOrganizationBySlug(props.params.slug);
     return org;
@@ -25,7 +25,7 @@ export default function OrganizationStatisticsPage() {
   const organization = createAsync(() => getOrganizationBySlug(params.slug));
 
   onMount(() => {
-    document.title = `Dashboard - ${organization()?.name} | WareHouse Portal`;
+    document.title = `Dashboard - ${organization()?.name ?? "Unnamed Organization"} | WareHouse Portal`;
   });
 
   return (

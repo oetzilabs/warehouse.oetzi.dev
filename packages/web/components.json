@@ -2,7 +2,7 @@
   "$schema": "https://shadcn-solid.vercel.app/schema.json",
   "tailwind": {
     "config": "tailwind.config.cjs",
-    "css": "src/root.css",
+    "css": "src/app.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""

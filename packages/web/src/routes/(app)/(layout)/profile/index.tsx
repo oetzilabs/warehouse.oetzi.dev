@@ -1,4 +1,4 @@
-import { getAuthenticatedSession, getAuthenticatedUser } from "@/lib/api/auth";
+import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getLocale } from "@/lib/api/locale";
 import { createAsync, RouteDefinition, RouteLoadFuncArgs, RoutePreloadFunc } from "@solidjs/router";
 import { Match, Switch } from "solid-js";
@@ -6,9 +6,8 @@ import { Match, Switch } from "solid-js";
 export const route = {
   preload: async (params) => {
     await getLocale();
-    const session = await getAuthenticatedSession();
     const user = await getAuthenticatedUser();
-    return { session, user };
+    return { user };
   },
 } satisfies RouteDefinition;
 
@@ -25,7 +24,7 @@ export default function ProfilePage() {
         <Match when={user()}>
           {(u) => (
             <div class="flex flex-col items-start gap-2">
-              <span class="text-lg font-semibold">{u().username}</span>
+              <span class="text-lg font-semibold">{u().name}</span>
               <span class="text-sm text-muted-foreground">{u().email}</span>
             </div>
           )}

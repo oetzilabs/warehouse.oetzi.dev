@@ -5,6 +5,35 @@
 
 declare module "sst" {
   export interface Resource {
+    "Api": {
+      "type": "sst.aws.ApiGatewayV2"
+      "url": string
+    }
+    "Auth": {
+      "type": "sst.aws.Auth"
+      "url": string
+    }
+    "DatabaseProvider": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "DatabaseUrl": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "MainApp": {
+      "type": "sst.aws.SolidStart"
+      "url": string
+    }
+    "MainBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "websocket_api": {
+      "managementEndpoint": string
+      "type": "sst.aws.ApiGatewayWebSocket"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

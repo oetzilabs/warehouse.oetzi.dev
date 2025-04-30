@@ -1,7 +1,4 @@
 import { migrate } from "@warehouseoetzidev/core/src/drizzle/sql";
-import { DocTypes } from "@warehouseoetzidev/core/src/entities/doc_types";
-import { Parsers } from "@warehouseoetzidev/core/src/entities/parsers";
-import { VatCodes } from "@warehouseoetzidev/core/src/entities/vatCodes";
 import { ApiHandler, json } from "./utils";
 
 export const handler = ApiHandler(async (_evt) => {
@@ -14,14 +11,4 @@ export const handler = ApiHandler(async (_evt) => {
   return json({
     body: "Migrated!",
   });
-});
-
-export const seed_vat_codes = ApiHandler(async (_evt) => {
-  const vatCodes = await VatCodes.create(VatCodes.DEFAULT_VAT_CODES);
-  return json(vatCodes);
-});
-
-export const seed_doc_types = ApiHandler(async (_evt) => {
-  const docTypes = await DocTypes.create(DocTypes.DEFAULT_DOC_TYPES);
-  return json(docTypes);
 });

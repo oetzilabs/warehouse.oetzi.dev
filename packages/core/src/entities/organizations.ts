@@ -72,6 +72,23 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    const findBySlug = (slug: string) =>
+      Effect.gen(function* (_) {
+        return yield* Effect.promise(() =>
+          db.query.TB_organizations.findFirst({
+            where: (organizations, operations) => operations.eq(organizations.slug, slug),
+            with: {
+              users: {
+                with: {
+                  user: true,
+                },
+              },
+              owner: true,
+            },
+          }),
+        );
+      });
+
     const update = (input: InferInput<typeof OrganizationUpdateSchema>) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, input.id);
@@ -183,6 +200,52 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return entries[0];
       });
 
+    const removeUser = (organizationId: string, userId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new Error("Invalid organization ID"));
+        }
+        const parsedUserId = safeParse(prefixed_cuid2, userId);
+        if (!parsedUserId.success) {
+          return yield* Effect.fail(new Error("Invalid user ID"));
+        }
+        const organizationExists = yield* Effect.promise(() =>
+          db.query.TB_organizations.findFirst({
+            where: (organizations, operations) => operations.eq(organizations.id, parsedOrganizationId.output),
+          }),
+        );
+        if (!organizationExists) {
+          return yield* Effect.fail(new Error("Organization does not exist"));
+        }
+        const userExists = yield* Effect.promise(() =>
+          db.query.TB_users.findFirst({
+            where: (users, operations) => operations.eq(users.id, parsedUserId.output),
+          }),
+        );
+        if (!userExists) {
+          return yield* Effect.fail(new Error("User does not exist"));
+        }
+
+        const removed_entries = yield* Effect.promise(() =>
+          db
+            .delete(TB_organization_users)
+            .where(
+              and(
+                eq(TB_organization_users.user_id, parsedUserId.output),
+                eq(TB_organization_users.organization_id, parsedOrganizationId.output),
+              ),
+            )
+            .returning(),
+        );
+
+        if (removed_entries.length === 0) {
+          return yield* Effect.fail(new Error("Failed to remove user to organization"));
+        }
+
+        return removed_entries[0];
+      });
+
     const users = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
@@ -214,10 +277,12 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
     return {
       create,
       findById,
+      findBySlug,
       update,
       remove,
       safeRemove,
       addUser,
+      removeUser,
       users,
     } as const;
   }),

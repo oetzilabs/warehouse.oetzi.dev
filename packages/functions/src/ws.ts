@@ -4,13 +4,14 @@ import { StatusCodes } from "http-status-codes";
 import { ApiHandler, error, json, WebSocketApiHandler } from "./utils";
 
 export const connect = WebSocketApiHandler(async (event) => {
+  console.log({ event });
   const connectionId = event.requestContext.connectionId;
   if (!connectionId) return error("No connectionId", StatusCodes.BAD_REQUEST);
 
   const x = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(WebsocketService);
-      return service.connect(connectionId);
+      return yield* service.connect(connectionId);
     }).pipe(Effect.provide(WebsocketLive)),
   );
   return json(x);
@@ -22,7 +23,7 @@ export const disconnect = WebSocketApiHandler(async (event) => {
   const x = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(WebsocketService);
-      return service.disconnect(connectionId);
+      return yield* service.disconnect(connectionId);
     }).pipe(Effect.provide(WebsocketLive)),
   );
   return json(x);
