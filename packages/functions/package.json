@@ -7,7 +7,7 @@
     "typecheck": "tsc -noEmit"
   },
   "dependencies": {
-    "hono": "4.5.8",
+    "hono": "4.7.8",
     "@aws-sdk/client-s3": "3.637.0",
     "@aws-sdk/client-sesv2": "3.637.0",
     "@aws-sdk/client-sns": "3.637.0",
@@ -19,7 +19,6 @@
     "@warehouseoetzidev/core": "workspace:*",
     "@openauthjs/openauth": "0.4.3",
     "dayjs": "1.11.10",
-    "effect": "3.14.15",
     "http-status-codes": "2.3.0",
     "jszip": "^3.10.1",
     "solid-js": "1.8.17"

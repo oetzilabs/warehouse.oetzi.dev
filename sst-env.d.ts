@@ -29,11 +29,6 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "websocket_api": {
-      "managementEndpoint": string
-      "type": "sst.aws.ApiGatewayWebSocket"
-      "url": string
-    }
   }
 }
 /// <reference path="sst-env.d.ts" />

@@ -138,7 +138,7 @@ export function Footer() {
                     WareHouse.
                   </A>
                   <div class="flex flex-col gap-1">
-                    <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2024 Ötzilabs.</p>
+                    <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2025 Ötzilabs.</p>
                   </div>
                 </div>
                 <div>

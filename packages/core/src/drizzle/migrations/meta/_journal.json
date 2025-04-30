@@ -15,6 +15,13 @@
       "when": 1746008996788,
       "tag": "0001_fuzzy_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746018453172,
+      "tag": "0002_glossy_wind_dancer",
+      "breakpoints": true
     }
   ]
 }
