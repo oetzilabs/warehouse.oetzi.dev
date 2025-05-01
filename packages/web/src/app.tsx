@@ -1,5 +1,4 @@
 // @refresh reload
-import { Header } from "@/components/Header";
 import { Toaster } from "@/components/providers/Toaster";
 import { TranslationsProvider } from "@/components/providers/TranslationProvider";
 import { ColorModeProvider, ColorModeScript, cookieStorageManagerSSR } from "@kobalte/core";
@@ -15,6 +14,8 @@ import Loader2 from "lucide-solid/icons/loader-2";
 import { ErrorBoundary, Show, Suspense } from "solid-js";
 import { isServer } from "solid-js/web";
 import "./app.css";
+import { Header } from "./components/Header";
+import { AppLayout } from "./layout";
 
 export default function App() {
   // const queryClient = new QueryClient({
@@ -34,8 +35,12 @@ export default function App() {
         <div class="fixed z-[99999] flex flex-row items-center justify-center inset-0 top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
           <div class="flex flex-col gap-6 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 bg-neutral-50 dark:bg-neutral-950 items-center justify-center">
             <span class="text-red-500 font-medium">Something went wrong...</span>
-            <Show when={error}>
-              <pre class="font-mono w-96 h-80 overflow-x-scroll">{JSON.stringify(error, null, 2)}</pre>
+            <Show
+              when={error instanceof Error}
+              fallback={<pre class="font-mono w-96 h-80 overflow-x-scroll">{JSON.stringify(error, null, 2)}</pre>}
+            >
+              <pre class="font-mono w-96 h-80 overflow-x-scroll">{error.message}</pre>
+              <pre class="font-mono w-96 h-80 overflow-x-scroll">{error.stack}</pre>
             </Show>
             <div class="flex flex-row gap-2 w-max">
               <button onClick={() => reset()}>RESET</button>
@@ -49,7 +54,7 @@ export default function App() {
       <Router
         root={(props) => (
           <MetaProvider>
-            <Title>WareHouse Portal</Title>
+            <Title>WareHouse. Portal</Title>
             <Suspense
               fallback={
                 <div class="w-full h-screen items-center justify-center flex flex-col">
@@ -60,30 +65,30 @@ export default function App() {
                 </div>
               }
             >
-              <ColorModeScript storageType={storageManager.type} initialColorMode="system" />
-              <ColorModeProvider storageManager={storageManager}>
-                <Toaster
-                  icons={{
-                    info: <Info class="size-4" />,
-                    success: <CheckCheck class="size-4" />,
-                    error: <AlertCircleIcon class="size-4" />,
-                    loading: <Loader2 class="size-4 animate-spin" />,
-                    warning: <AlertCircleIcon class="size-4" />,
-                  }}
-                />
-                <div
-                  class="w-full flex flex-col"
-                  style={{
-                    "flex-grow": "1",
-                    "min-height": "100vh",
-                  }}
-                >
-                  <TranslationsProvider>
+              <TranslationsProvider>
+                <ColorModeScript storageType={storageManager.type} initialColorMode="system" />
+                <ColorModeProvider storageManager={storageManager}>
+                  <Toaster
+                    icons={{
+                      info: <Info class="size-4" />,
+                      success: <CheckCheck class="size-4" />,
+                      error: <AlertCircleIcon class="size-4" />,
+                      loading: <Loader2 class="size-4 animate-spin" />,
+                      warning: <AlertCircleIcon class="size-4" />,
+                    }}
+                  />
+                  <div
+                    class="w-full flex flex-col"
+                    style={{
+                      "flex-grow": "1",
+                      "min-height": "100vh",
+                    }}
+                  >
                     <Header />
-                    {props.children}
-                  </TranslationsProvider>
-                </div>
-              </ColorModeProvider>
+                    <AppLayout>{props.children}</AppLayout>
+                  </div>
+                </ColorModeProvider>
+              </TranslationsProvider>
             </Suspense>
           </MetaProvider>
         )}

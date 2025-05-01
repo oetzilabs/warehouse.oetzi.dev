@@ -31,9 +31,11 @@ const app = issuer({
         if (!u) {
           return yield* service.create({
             email: value.email,
-            name: "",
+            password: "none",
+            name: value.email,
             currentOrganizationId: null,
             currentWarehouseId: null,
+            status: "active",
           });
         }
         return u;

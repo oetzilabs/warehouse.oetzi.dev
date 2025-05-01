@@ -1,19 +1,25 @@
 import { A } from "@solidjs/router";
 import Fingerprint from "lucide-solid/icons/fingerprint";
+import Home from "lucide-solid/icons/home";
+import LogIn from "lucide-solid/icons/log-in";
+import { Button } from "./ui/button";
 
 export const NotLoggedIn = () => {
   return (
-    <div class="flex flex-col gap-6 items-center justify-center p-6 border border-neutral-200 dark:border-neutral-800 rounded-md text-muted-foreground text-sm">
-      <Fingerprint class="size-8" />
-      <div class="flex flex-col gap-2 items-center justify-center">
-        <span>You are not logged in.</span>
-        <span>
-          Please{" "}
-          <A class="hover:underline hover:underline-offset-2" href="/auth/login">
-            login
-          </A>{" "}
-          to continue
-        </span>
+    <div class="flex flex-col gap-10 items-center justify-center p-10 border text-sm bg-muted/5 rounded-lg drop-shadow-md -mt-40">
+      <Fingerprint class="size-10 text-muted-foreground/70 animate-pulse" />
+      <div class="flex flex-col gap-4 items-center justify-center">
+        <span>Seems like you are not logged in.</span>
+        <div class="flex flex-row gap-2 items-center justify-center">
+          <Button size="sm" as={A} href="/login">
+            <LogIn class="size-4" />
+            Go to Login
+          </Button>
+          <Button size="sm" as={A} href="/signup" variant="outline" class="">
+            <Home class="size-4" />
+            Homepage
+          </Button>
+        </div>
       </div>
     </div>
   );

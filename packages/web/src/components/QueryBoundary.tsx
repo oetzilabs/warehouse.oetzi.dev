@@ -1,10 +1,9 @@
-import type { CreateQueryResult } from "@tanstack/solid-query";
-import type { JSX } from "solid-js";
-import { Match, Suspense, Switch } from "solid-js";
+import type { UseQueryResult } from "@tanstack/solid-query";
+import { Match, Suspense, Switch, type JSX } from "solid-js";
 import { Button } from "./ui/button";
 
 export interface QueryBoundaryProps<T = unknown> {
-  query: CreateQueryResult<T, Error>;
+  query: UseQueryResult<T, Error>;
 
   /**
    * Triggered when the data is initially loading.

@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgEnum, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { object, omit, partial } from "valibot";
+import { object, omit, partial, string } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
 import { TB_organization_users } from "./organization_users";
@@ -15,8 +15,9 @@ export const user_status = pgEnum("user_status", ["active", "disabled", "suspend
 export const TB_users = commonTable(
   "users",
   {
-    name: text("name").notNull(),
     email: text("email").notNull(),
+    hashed_password: text("hashed_password").notNull(),
+    name: text("name").notNull(),
     image: text("image"),
     phone: text("phone"),
     verifiedAt: timestamp("verified_at", {
@@ -45,8 +46,11 @@ export const user_relation = relations(TB_users, ({ one, many }) => ({
 
 export type UserSelect = typeof TB_users.$inferSelect;
 export type UserInsert = typeof TB_users.$inferInsert;
-export const UserCreateSchema = omit(createInsertSchema(TB_users), ["createdAt", "updatedAt"]);
+export const UserCreateSchema = object({
+  ...omit(createInsertSchema(TB_users), ["createdAt", "updatedAt", "hashed_password"]).entries,
+  password: string(),
+});
 export const UserUpdateSchema = object({
-  ...partial(omit(createInsertSchema(TB_users), ["createdAt", "updatedAt"])).entries,
+  ...partial(UserCreateSchema).entries,
   id: prefixed_cuid2,
 });

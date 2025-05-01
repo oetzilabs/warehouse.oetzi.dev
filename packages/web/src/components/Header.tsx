@@ -11,7 +11,7 @@ export function Header() {
   const user = createAsync(() => getAuthenticatedUser(), { deferStream: true });
   const loginAction = useAction(login);
   return (
-    <header class="bg-neutral-50/[0.01] dark:bg-neutral-950/[0.01] backdrop-blur-md flex flex-col px-0  items-center justify-between fixed top-0 left-0 right-0 z-50 border-b">
+    <header class="bg-neutral-50/[0.01] dark:bg-neutral-950/[0.01] backdrop-blur-md flex flex-col px-0 items-center justify-between fixed top-0 left-0 right-0 z-50 border-b border-neutral-200 dark:border-neutral-800">
       <div class="flex flex-row w-full items-center justify-between px-4 py-2">
         <div class="flex flex-row items-center justify-start w-max gap-8 ">
           <A href="/" class="flex flex-row gap-4 items-center justify-center flex-1 w-max font-bold">

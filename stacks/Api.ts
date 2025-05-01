@@ -90,3 +90,14 @@ api.route("GET /preview/parser/{id}", {
   },
   timeout: "60 seconds",
 });
+
+api.route("GET /test", {
+  handler: "packages/functions/src/test.handler",
+  description: "This is the test function",
+  link,
+  copyFiles,
+  nodejs: {
+    install: ["@neondatabase/serverless", "postgres"],
+  },
+  timeout: "60 seconds",
+});

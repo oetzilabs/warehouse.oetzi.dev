@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
 import { TB_organization_users } from "./organization_users";
+import { TB_organizations_warehouses } from "./organizations_warehouses";
 import { TB_users } from "./users";
 
 export const TB_organizations = commonTable(
@@ -34,6 +35,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
     references: [TB_users.id],
   }),
   users: many(TB_organization_users),
+  warehouses: many(TB_organizations_warehouses),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

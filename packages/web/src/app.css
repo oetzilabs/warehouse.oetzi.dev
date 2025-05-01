@@ -114,7 +114,7 @@
 
   .step:before {
     @apply bg-muted border-background absolute inline-flex h-9 w-9 items-center justify-center rounded-full border-4 text-center -indent-px font-mono text-base font-medium;
-    @apply mt-[-4px] ml-[-50px];
+    @apply ml-[-50px] mt-[-4px];
     content: counter(step);
   }
 }

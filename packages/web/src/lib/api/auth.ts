@@ -56,19 +56,21 @@ export const login = action(async () => {
 
 export const getAuthenticatedUser = query(async () => {
   "use server";
-
+  const c = client("solidstart");
   const accessToken = getCookie("access_token");
-  const refreshToken = getCookie("access_token");
+  const refreshToken = getCookie("refresh_token");
 
   if (!accessToken) {
+    console.log("No access token");
     return undefined;
   }
 
-  const verified = await client("solidstart").verify(subjects, accessToken, {
+  const verified = await c.verify(subjects, accessToken, {
     refresh: refreshToken,
   });
 
   if (verified.err) {
+    console.log("Error verifying token", verified.err);
     return undefined;
   }
 
@@ -96,3 +98,29 @@ export const getAuthenticatedUser = query(async () => {
   );
   return user;
 }, "user");
+
+export const loginViaEmail = action(async (email: string, password: string) => {
+  "use server";
+  const loginAttempt = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(UserService);
+      const user = yield* service.findByEmail(email);
+      if (!user) {
+        return false;
+      }
+      const verified = yield* service.verifyPassword(user.id, password);
+      if (!verified) {
+        return false;
+      }
+      yield* service.update(user.id, { id: user.id, status: "active" });
+      return verified;
+    }).pipe(Effect.provide(UserLive)),
+  );
+  if (loginAttempt) {
+    // create session
+
+    // redirect to home page
+    return redirect("/");
+  }
+  return loginAttempt;
+});

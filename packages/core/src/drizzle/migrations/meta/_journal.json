@@ -22,6 +22,20 @@
       "when": 1746018453172,
       "tag": "0002_glossy_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746090214680,
+      "tag": "0003_fluffy_joystick",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1746105046176,
+      "tag": "0004_clever_zombie",
+      "breakpoints": true
     }
   ]
 }

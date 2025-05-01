@@ -7,6 +7,7 @@ import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
+import { TB_warehouse_storages } from "./warehouses_storages";
 
 export const TB_warehouses = commonTable(
   "warehouses",
@@ -23,6 +24,7 @@ export const TB_warehouses = commonTable(
 
 export const warehouse_relation = relations(TB_warehouses, ({ many }) => ({
   addresses: many(TB_warehouse_addresses),
+  storages: many(TB_warehouse_storages),
 }));
 
 export type WarehouseSelect = typeof TB_warehouses.$inferSelect;
