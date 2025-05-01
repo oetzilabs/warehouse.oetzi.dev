@@ -19,7 +19,7 @@ export const auth = new sst.aws.Auth(`Auth`, {
     copyFiles,
   },
   domain: {
-    name: "auth." + domain,
+    name: `auth.${domain}`,
     dns: cf,
   },
 });
