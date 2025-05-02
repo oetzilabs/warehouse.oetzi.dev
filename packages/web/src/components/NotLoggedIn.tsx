@@ -15,7 +15,7 @@ export const NotLoggedIn = () => {
             <LogIn class="size-4" />
             Go to Login
           </Button>
-          <Button size="sm" as={A} href="/signup" variant="outline" class="">
+          <Button size="sm" as={A} href="/" variant="outline" class="">
             <Home class="size-4" />
             Homepage
           </Button>

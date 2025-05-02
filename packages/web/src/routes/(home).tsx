@@ -51,7 +51,7 @@ export default function IndexPage() {
                 </div>
               </div>
               <div class="flex flex-col w-max gap-4 items-center justify-center">
-                <div class="flex flex-col w-full gap-4 p-2 rounded-lg text-white font-semibold bg-gradient-to-br from-teal-400 to-teal-300 px-4 border border-teal-200 dark:border-teal-800 text-sm">
+                <div class="flex flex-col w-full gap-4 p-2 max-w-xs md:max-w-full rounded-lg text-white font-semibold bg-gradient-to-br from-teal-400 to-teal-300 px-4 border border-teal-200 dark:border-teal-800 text-sm">
                   ANNOUNCEMENT: We are currently in the process of building the first version of WareHouse. Stay tuned
                   for updates!
                 </div>

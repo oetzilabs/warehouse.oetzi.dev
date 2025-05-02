@@ -44,7 +44,7 @@ export default function LoginPage() {
     <>
       <div class="flex grow w-full">
         <div class="flex flex-col w-full h-full grow items-center justify-center">
-          <div class="w-full max-w-xl flex flex-col border rounded-sm px-10 py-4 -mt-40 gap-4">
+          <div class="w-full max-w-xl flex flex-col border-none md:border rounded-none md:rounded-sm px-10 py-4 -mt-40 gap-4">
             <span class="text-lg font-bold text-neutral-800 dark:text-neutral-200">Login</span>
             <form
               class="flex flex-col gap-4 w-full"
