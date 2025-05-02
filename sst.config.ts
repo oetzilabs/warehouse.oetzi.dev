@@ -21,7 +21,7 @@ export default $config({
     const { bucket } = await import("./stacks/Bucket");
     // const notification = await import("./stacks/Notification");
     // const websocket = await import("./stacks/Websocket");
-    const auth = await import("./stacks/Auth");
+    // const auth = await import("./stacks/Auth");
     const api = await import("./stacks/Api");
     const web_apps = await import("./stacks/WebApps");
     const { migrate, generate, studio, drizzleKitUp, seed } = await import("./stacks/Database");
@@ -41,7 +41,7 @@ export default $config({
       drizzleKitUp: drizzleKitUp.urn,
       seed: seed.urn,
 
-      authUrl: auth.auth.url,
+      // authUrl: auth.auth.url,
 
       api: api.api.url,
       main_app_url: $dev ? "http://localhost:3000" : web_apps.main_app.url,

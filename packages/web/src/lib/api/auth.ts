@@ -1,126 +1,141 @@
-import { action, query, redirect } from "@solidjs/router";
-import { client } from "@warehouseoetzidev/core/src/auth/client";
-import { subjects } from "@warehouseoetzidev/core/src/auth/subjects";
-import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
+import { action, json, query, redirect } from "@solidjs/router";
+import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/auth";
 import { Effect } from "effect";
-import { getCookie, getHeader, setCookie } from "vinxi/http";
+import { status } from "effect/Fiber";
+import { getCookie, setCookie } from "vinxi/http";
 
 export const logout = action(async () => {
   "use server";
-  const cookieNames = ["access_token", "refresh_token"];
-  for (const name of cookieNames) {
-    setCookie(name, "", {
-      path: "/",
-      httpOnly: true,
-      sameSite: "strict",
-      maxAge: 0,
-    });
+  const sessionToken = getCookie("session_token");
+  if (sessionToken) {
+    await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const authService = yield* _(AuthService);
+        return yield* authService.removeSession(sessionToken);
+      }).pipe(Effect.provide(AuthLive)),
+    );
   }
+
+  setCookie("session_token", "", {
+    path: "/",
+    httpOnly: true,
+    sameSite: "strict",
+    maxAge: 0,
+  });
 
   redirect("/");
 });
 
-export const login = action(async () => {
-  "use server";
-  const c = client("solidstart");
-  const accessToken = getCookie("access_token");
-  const refreshToken = getCookie("refresh_token");
-
-  if (accessToken) {
-    const verified = await c.verify(subjects, accessToken, {
-      refresh: refreshToken,
-    });
-    if (!verified.err && verified.tokens) {
-      // await setTokens(verified.tokens.access, verified.tokens.refresh);
-      setCookie("access_token", verified.tokens.access, {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 34560000,
-      });
-      setCookie("refresh_token", verified.tokens.refresh, {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 34560000,
-      });
-      return redirect("/");
-    }
-  }
-
-  const host = getHeader("host");
-  const protocol = host?.includes("localhost") ? "http" : "https";
-  const { url } = await c.authorize(`${protocol}://${host}/api/callback`, "code");
-  return redirect(url);
-});
-
 export const getAuthenticatedUser = query(async () => {
   "use server";
-  const c = client("solidstart");
-  const accessToken = getCookie("access_token");
-  const refreshToken = getCookie("refresh_token");
+  const sessionToken = getCookie("session_token");
 
-  if (!accessToken) {
+  if (!sessionToken) {
     console.log("No access token");
     return undefined;
   }
 
-  const verified = await c.verify(subjects, accessToken, {
-    refresh: refreshToken,
-  });
+  const verified = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const authService = yield* _(AuthService);
+      return yield* authService.verify(sessionToken);
+    }).pipe(Effect.provide(AuthLive)),
+  );
 
-  if (verified.err) {
-    console.log("Error verifying token", verified.err);
+  if (!verified.success) {
     return undefined;
   }
 
-  if (verified.tokens) {
-    // await setTokens(verified.tokens.access, verified.tokens.refresh);
-    setCookie("access_token", verified.tokens.access, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 34560000,
-    });
-    setCookie("refresh_token", verified.tokens.refresh, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 34560000,
-    });
-  }
-  const user = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const service = yield* _(UserService);
-      const user = yield* service.findById(verified.subject.properties.id);
-      return user;
-    }).pipe(Effect.provide(UserLive)),
-  );
-  return user;
+  return verified.user;
 }, "user");
 
 export const loginViaEmail = action(async (email: string, password: string) => {
   "use server";
+  const sessionToken = getCookie("session_token");
+
+  if (sessionToken) {
+    await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const authService = yield* _(AuthService);
+        return yield* authService.removeSession(sessionToken);
+      }).pipe(Effect.provide(AuthLive)),
+    );
+
+    setCookie("session_token", "", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 0,
+    });
+  }
+
   const loginAttempt = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(UserService);
-      const user = yield* service.findByEmail(email);
-      if (!user) {
-        return false;
-      }
-      const verified = yield* service.verifyPassword(user.id, password);
-      if (!verified) {
-        return false;
-      }
-      yield* service.update(user.id, { id: user.id, status: "active" });
-      return verified;
-    }).pipe(Effect.provide(UserLive)),
+      const authService = yield* _(AuthService);
+      return yield* authService.login(email, password);
+    }).pipe(Effect.provide(AuthLive)),
   );
-  if (loginAttempt) {
-    // create session
 
-    // redirect to home page
-    return redirect("/");
+  if (!loginAttempt.success) {
+    throw loginAttempt.err;
   }
-  return loginAttempt;
+
+  setCookie("session_token", loginAttempt.session.access_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    expires: loginAttempt.session.expiresAt,
+  });
+
+  return json(loginAttempt, {
+    revalidate: [getAuthenticatedUser.key],
+    status: 302,
+    headers: {
+      Location: "/",
+    },
+  });
+});
+
+export const signupViaEmail = action(async (email: string, password: string, password2: string) => {
+  "use server";
+  if (password !== password2) {
+    throw new Error("Passwords do not match");
+  }
+  const sessionToken = getCookie("session_token");
+
+  if (sessionToken) {
+    await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const authService = yield* _(AuthService);
+        return yield* authService.removeSession(sessionToken);
+      }).pipe(Effect.provide(AuthLive)),
+    );
+
+    setCookie("session_token", "", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 0,
+    });
+  }
+
+  const signupAttempt = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const authService = yield* _(AuthService);
+      return yield* authService.signup(email, password);
+    }).pipe(Effect.provide(AuthLive)),
+  );
+
+  if (!signupAttempt.success) {
+    throw signupAttempt.err;
+  }
+
+  setCookie("session_token", signupAttempt.session.access_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    expires: signupAttempt.session.expiresAt,
+  });
+
+  return signupAttempt;
 });

@@ -1,11 +1,18 @@
+import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import { text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-valibot";
+import { object, omit, partial } from "valibot";
+import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { TB_organizations } from "./organizations";
 import { TB_users } from "./users";
 import { schema } from "./utils";
+import { TB_warehouses } from "./warehouses";
 
 export const TB_sessions = schema.table("session", {
-  id: text("id").primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => `session_${createId()}`),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",
@@ -26,8 +33,9 @@ export const TB_sessions = schema.table("session", {
     withTimezone: true,
     mode: "date",
   }).notNull(),
-  access_token: text("access_token"),
+  access_token: text("access_token").notNull(),
   current_organization_id: varchar("current_organization_id"),
+  current_warehouse_id: varchar("current_warehouse_id"),
 });
 
 export const session_relation = relations(TB_sessions, ({ one, many }) => ({
@@ -36,7 +44,14 @@ export const session_relation = relations(TB_sessions, ({ one, many }) => ({
     references: [TB_users.id],
   }),
   organizations: many(TB_organizations),
+  warehouses: many(TB_warehouses),
 }));
 
 export type SessionSelect = typeof TB_sessions.$inferSelect;
 export type SessionInsert = typeof TB_sessions.$inferInsert;
+
+export const SessionCreateSchema = omit(createInsertSchema(TB_sessions), ["id", "createdAt", "updatedAt"]);
+export const SessionUpdateSchema = object({
+  ...partial(SessionCreateSchema).entries,
+  id: prefixed_cuid2,
+});

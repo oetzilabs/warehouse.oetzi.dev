@@ -24,8 +24,6 @@ export const TB_users = commonTable(
       withTimezone: true,
       mode: "date",
     }),
-    currentOrganizationId: varchar("current_organization_id"),
-    currentWarehouseId: varchar("current_warehouse_id"),
     status: user_status("status").default("active"),
   },
   "user",
@@ -33,15 +31,7 @@ export const TB_users = commonTable(
 
 export const user_relation = relations(TB_users, ({ one, many }) => ({
   sessions: many(TB_sessions),
-  organizations: many(TB_organization_users),
-  currentOrganization: one(TB_organizations, {
-    fields: [TB_users.currentOrganizationId],
-    references: [TB_organizations.id],
-  }),
-  currentWarehouse: one(TB_warehouses, {
-    fields: [TB_users.currentWarehouseId],
-    references: [TB_warehouses.id],
-  }),
+  orgs: many(TB_organization_users),
 }));
 
 export type UserSelect = typeof TB_users.$inferSelect;

@@ -35,7 +35,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
     references: [TB_users.id],
   }),
   users: many(TB_organization_users),
-  warehouses: many(TB_organizations_warehouses),
+  whs: many(TB_organizations_warehouses),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

@@ -36,6 +36,20 @@
       "when": 1746105046176,
       "tag": "0004_clever_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1746178803376,
+      "tag": "0005_purple_sandman",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1746179706061,
+      "tag": "0006_last_black_tom",
+      "breakpoints": true
     }
   ]
 }

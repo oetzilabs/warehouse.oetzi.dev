@@ -1,8 +1,8 @@
-import {
-  // adminAuth,
-  auth,
-  // portalAuth
-} from "./Auth";
+// import {
+//   // adminAuth,
+//   auth,
+//   // portalAuth
+// } from "./Auth";
 import { bucket } from "./Bucket";
 import { cf, domain } from "./Domain";
 // import { Layers } from "./Layers";
@@ -27,7 +27,7 @@ export const api = new sst.aws.ApiGatewayV2("Api", {
 const link = [
   ...allSecrets,
   bucket,
-  auth,
+  // auth,
   // websocket_api,
 ];
 
@@ -85,17 +85,6 @@ api.route("GET /preview/parser/{id}", {
     },
     { from: "packages/imagemagick-layer", to: "opt" },
   ],
-  nodejs: {
-    install: ["@neondatabase/serverless", "postgres"],
-  },
-  timeout: "60 seconds",
-});
-
-api.route("GET /test", {
-  handler: "packages/functions/src/test.handler",
-  description: "This is the test function",
-  link,
-  copyFiles,
   nodejs: {
     install: ["@neondatabase/serverless", "postgres"],
   },
