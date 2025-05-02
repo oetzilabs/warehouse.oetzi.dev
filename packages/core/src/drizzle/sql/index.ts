@@ -44,9 +44,9 @@ export const migrate = async () => {
 };
 
 export class DatabaseService extends Effect.Service<DatabaseService>()("@warehouse/database", {
-  effect: Effect.gen(function*(_) {
+  effect: Effect.gen(function* (_) {
     return {
-      instance: Effect.gen(function*(_) {
+      instance: Effect.gen(function* (_) {
         if (Resource.DatabaseProvider.value === "local") {
           const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
           return localDrizzle(localClient, { schema });
@@ -57,7 +57,7 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
           });
         }
       }),
-      migrate: Effect.gen(function*(_) {
+      migrate: Effect.gen(function* (_) {
         const config = {
           migrationsFolder: join(process.cwd(), "drizzle/migrations"),
         };
@@ -77,6 +77,6 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
       }),
     } as const;
   }),
-}) { }
+}) {}
 
 export const DatabaseLive = DatabaseService.Default;
