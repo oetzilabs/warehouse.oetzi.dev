@@ -17,6 +17,14 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "JWTSecret1": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "JWTSecret2": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "MainApp": {
       "type": "sst.aws.SolidStart"
       "url": string

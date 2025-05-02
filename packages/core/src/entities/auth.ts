@@ -1,25 +1,80 @@
 import dayjs from "dayjs";
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
+import jwt from "jsonwebtoken";
+import ms from "ms";
+import { Resource } from "sst";
 import { SessionLive, SessionService } from "./sessions";
 import { UserLive, UserService } from "./users";
+
+export class JwtSecrets extends Context.Tag("JwtSecrets")<JwtSecrets, { readonly secrets: ReadonlyArray<string> }>() {}
+
+export const JwtSecretsLive = JwtSecrets.of({
+  secrets: [Resource.JWTSecret1.value, Resource.JWTSecret2.value].filter(Boolean),
+});
+
+interface JwtPayload {
+  userId: string;
+}
 
 export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth", {
   effect: Effect.gen(function* (_) {
     const sessionService = yield* _(SessionService);
     const userService = yield* _(UserService);
+    const { secrets: jwtSecrets } = yield* _(JwtSecrets); // Access the JWT secrets
+
+    if (jwtSecrets.length === 0) {
+      // Handle the critical error if no secrets are loaded
+      yield* Effect.die(new Error("JWT secrets are not configured. Cannot start Auth Service."));
+      // Or return an Effect.fail with a specific error
+    }
+
+    // Function to generate a JWT
+    const generateJwt = (userId: string, expiresIn: number): Effect.Effect<string, Error> =>
+      Effect.gen(function* (_) {
+        const payload: JwtPayload = { userId };
+        return jwt.sign(payload, jwtSecrets[0], { expiresIn });
+      });
+
+    // Function to verify a JWT
+    const verifyJwt = (token: string): Effect.Effect<JwtPayload, Error> =>
+      Effect.gen(function* (_) {
+        for (const secret of jwtSecrets) {
+          try {
+            const decoded = jwt.verify(token, secret) as JwtPayload;
+            return decoded; // Verification successful
+          } catch (error) {
+            // If verification fails, try the next secret.
+            // We can safely ignore jwt.JsonWebTokenError here as it just means this secret didn't work.
+            // We might want to log other types of errors if they occur during verification.
+            if (!(error instanceof jwt.JsonWebTokenError)) {
+              yield* _(
+                Effect.logError(
+                  `Unexpected error during JWT verification with secret: ${secret.substring(0, 5)}...`,
+                  error,
+                ),
+              );
+            }
+          }
+        }
+        // If loop finishes without returning, no secret worked
+        return yield* Effect.fail(new Error("Invalid or expired token"));
+      });
 
     const verify = (token: string) =>
       Effect.gen(function* (_) {
-        const session = yield* sessionService.findByToken(token);
-        if (!session) {
+        // Verify the JWT first
+        const decodedToken = yield* verifyJwt(token);
+
+        const sessionExists = yield* sessionService.findByToken(token);
+        if (!sessionExists) {
           return { err: new Error("Session not found"), success: false } as const;
         }
-        if (session.expiresAt < new Date()) {
-          return { err: new Error("Session expired"), success: false } as const;
-        }
-        const user = yield* userService.findById(session.userId);
+
+        // If JWT is valid, fetch the user based on the userId from the payload
+        const user = yield* userService.findById(decodedToken.userId);
         if (!user) {
-          return { err: new Error("User not found"), success: false } as const;
+          // If user is not found, treat as an invalid token (e.g., user deleted)
+          return { err: new Error("User associated with token not found"), success: false } as const;
         }
         return { success: true, user } as const;
       });
@@ -32,34 +87,43 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         }
         const user = yield* userService.findByEmail(email);
         if (!user) {
-          return { err: new Error("User not found"), success: false } as const;
+          // This case should ideally not happen if verifyPassword succeeded, but for safety
+          return { err: new Error("User not found after password verification"), success: false } as const;
         }
 
-        const token = yield* sessionService.generateToken();
-        const expiresAt = dayjs().add(7, "days").toDate();
+        // Generate the JWT
+        const expiresIn = ms("7 Days"); // Configure your JWT expiration time
+        const accessToken = yield* generateJwt(user.id, expiresIn);
+
+        const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
+
         const session = yield* sessionService.create({
           expiresAt,
           userId: user.id,
-          access_token: token,
+          access_token: accessToken, // Store the JWT in the database session record
         });
 
         if (!session) {
-          return { err: new Error("Session not found"), success: false } as const;
+          return { err: new Error("Failed to create session record"), success: false } as const;
         }
-        if (session.expiresAt < new Date()) {
-          return { err: new Error("Session expired"), success: false } as const;
-        }
-        return { success: true, user, session } as const;
+
+        return { success: true, user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
       });
 
     const removeSession = (token: string) =>
       Effect.gen(function* (_) {
+        // If you are using JWTs with a blocklist, this is where you would add the token's JTI to the blocklist.
+        // If you are still using database sessions to track active tokens, you'd remove the session record.
+
+        // Assuming you are still using database sessions for tracking/blocklisting:
         const session = yield* sessionService.findByToken(token);
         if (!session) {
           return { err: new Error("Session not found"), success: false } as const;
         }
         const removedSession = yield* sessionService.remove(session.id);
         return { success: true, session: removedSession } as const;
+
+        // we could use JTI to blocklist the session... (for now we wont do that, too much hastle to set it up)
       });
 
     const signup = (email: string, password: string) =>
@@ -73,21 +137,23 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
           return { err: new Error("Signup failed"), success: false } as const;
         }
 
-        const token = yield* sessionService.generateToken();
-        const expiresAt = dayjs().add(7, "days").toDate();
+        // Generate the JWT
+        const expiresIn = ms("7 Days"); // Configure your JWT expiration time
+        const accessToken = yield* generateJwt(attempt.id, expiresIn);
+
+        // Create a session record (if needed for blocklisting/tracking)
+        const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
         const session = yield* sessionService.create({
           expiresAt,
           userId: attempt.id,
-          access_token: token,
+          access_token: accessToken, // Store the JWT in the database session record
         });
 
         if (!session) {
-          return { err: new Error("Session not found"), success: false } as const;
+          return { err: new Error("Failed to create session record"), success: false } as const;
         }
-        if (session.expiresAt < new Date()) {
-          return { err: new Error("Session expired"), success: false } as const;
-        }
-        return { success: true, user: attempt, session } as const;
+
+        return { success: true, user: attempt, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
       });
 
     return {
@@ -97,7 +163,9 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       removeSession,
     } as const;
   }),
+  // Add JwtSecrets to the dependencies
   dependencies: [SessionLive, UserLive],
 }) {}
 
+// Provide the JwtSecrets Layer when using the AuthLive Layer
 export const AuthLive = AuthService.Default;

@@ -51,7 +51,12 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
           },
         },
-        sessions: true,
+        sessions: {
+          with: {
+            org: true,
+            wh: true,
+          },
+        },
       };
 
       if (options) {

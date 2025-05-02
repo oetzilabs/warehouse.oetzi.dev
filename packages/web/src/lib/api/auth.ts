@@ -1,5 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/auth";
+import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/auth";
 import { Effect } from "effect";
 import { status } from "effect/Fiber";
 import { getCookie, setCookie } from "vinxi/http";
@@ -7,23 +7,19 @@ import { getCookie, setCookie } from "vinxi/http";
 export const logout = action(async () => {
   "use server";
   const sessionToken = getCookie("session_token");
+
   if (sessionToken) {
     await Effect.runPromise(
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive)),
+      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
     );
   }
 
-  setCookie("session_token", "", {
-    path: "/",
-    httpOnly: true,
-    sameSite: "strict",
-    maxAge: 0,
+  return redirect("/", {
+    revalidate: [getAuthenticatedUser.key],
   });
-
-  redirect("/");
 });
 
 export const getAuthenticatedUser = query(async () => {
@@ -31,7 +27,6 @@ export const getAuthenticatedUser = query(async () => {
   const sessionToken = getCookie("session_token");
 
   if (!sessionToken) {
-    console.log("No access token");
     return undefined;
   }
 
@@ -39,15 +34,26 @@ export const getAuthenticatedUser = query(async () => {
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.verify(sessionToken);
-    }).pipe(Effect.provide(AuthLive)),
-  );
+    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+  ).catch((e) => ({ err: e, success: false }) as const);
 
   if (!verified.success) {
-    return undefined;
+    // Remove the session token from the cookie and redirect to home page
+    return redirect("/", {
+      status: 302,
+      headers: {
+        "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
+      },
+    });
   }
 
   return verified.user;
 }, "user");
+
+export const getSessionToken = query(async () => {
+  "use server";
+  return getCookie("session_token");
+}, "sessionToken");
 
 export const loginViaEmail = action(async (email: string, password: string) => {
   "use server";
@@ -58,7 +64,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive)),
+      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
     );
 
     setCookie("session_token", "", {
@@ -73,7 +79,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.login(email, password);
-    }).pipe(Effect.provide(AuthLive)),
+    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
   );
 
   if (!loginAttempt.success) {
@@ -87,12 +93,8 @@ export const loginViaEmail = action(async (email: string, password: string) => {
     expires: loginAttempt.session.expiresAt,
   });
 
-  return json(loginAttempt, {
+  return redirect("/", {
     revalidate: [getAuthenticatedUser.key],
-    status: 302,
-    headers: {
-      Location: "/",
-    },
   });
 });
 
@@ -108,7 +110,7 @@ export const signupViaEmail = action(async (email: string, password: string, pas
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive)),
+      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
     );
 
     setCookie("session_token", "", {
@@ -123,7 +125,7 @@ export const signupViaEmail = action(async (email: string, password: string, pas
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.signup(email, password);
-    }).pipe(Effect.provide(AuthLive)),
+    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
   );
 
   if (!signupAttempt.success) {
@@ -137,5 +139,7 @@ export const signupViaEmail = action(async (email: string, password: string, pas
     expires: signupAttempt.session.expiresAt,
   });
 
-  return signupAttempt;
+  return redirect("/", {
+    revalidate: [getAuthenticatedUser.key],
+  });
 });

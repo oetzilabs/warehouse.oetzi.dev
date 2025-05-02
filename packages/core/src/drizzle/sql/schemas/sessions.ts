@@ -43,8 +43,14 @@ export const session_relation = relations(TB_sessions, ({ one, many }) => ({
     fields: [TB_sessions.userId],
     references: [TB_users.id],
   }),
-  organizations: many(TB_organizations),
-  warehouses: many(TB_warehouses),
+  org: one(TB_organizations, {
+    fields: [TB_sessions.current_organization_id],
+    references: [TB_organizations.id],
+  }),
+  wh: one(TB_warehouses, {
+    fields: [TB_sessions.current_warehouse_id],
+    references: [TB_warehouses.id],
+  }),
 }));
 
 export type SessionSelect = typeof TB_sessions.$inferSelect;

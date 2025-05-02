@@ -10,45 +10,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
-import { useColorMode } from "@kobalte/core";
 import { A, revalidate, useAction, useSubmission } from "@solidjs/router";
+import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
 import LifeBuoy from "lucide-solid/icons/life-buoy";
 import LogIn from "lucide-solid/icons/log-in";
 import LogOut from "lucide-solid/icons/log-out";
 import MessagesSquare from "lucide-solid/icons/messages-square";
-import Moon from "lucide-solid/icons/moon";
 import Settings from "lucide-solid/icons/settings";
-import Sun from "lucide-solid/icons/sun";
 import User from "lucide-solid/icons/user";
 import { Match, Show, Switch } from "solid-js";
 import { toast } from "solid-sonner";
-import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
 
-export default function UserMenu(props: { user: UserInfo }) {
+export default function UserMenu(props: { user: UserInfo; sessionToken?: string }) {
   const isLoggingOut = useSubmission(logout);
   const logoutAction = useAction(logout);
 
-  const { colorMode, toggleColorMode } = useColorMode();
-
   return (
     <div class="w-max flex text-base gap-2">
-      <Button
-        size="icon"
-        variant="outline"
-        class="flex flex-row items-center justify-center p-2 size-8"
-        onClick={() => {
-          toggleColorMode();
-        }}
-      >
-        <Show when={colorMode() === "light"} fallback={<Sun class="size-4" />}>
-          <Moon class="size-4" />
-        </Show>
-      </Button>
       <Switch
         fallback={
           <div class="flex flex-row gap-2 items-center justify-end w-full">
             <A
-              href="/auth/login"
+              href="/login"
               class={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "flex flex-row gap-2 items-center justify-end w-full ",
@@ -60,7 +43,7 @@ export default function UserMenu(props: { user: UserInfo }) {
           </div>
         }
       >
-        <Match when={props.user !== null && props.user}>
+        <Match when={props.user !== null && props.sessionToken !== undefined && props.user}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>
               <DropdownMenuTrigger as={Button} class="flex flex-row items-center justify-center size-8 p-1">
@@ -69,17 +52,16 @@ export default function UserMenu(props: { user: UserInfo }) {
               <DropdownMenuContent class="w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuGroupLabel class="font-normal">
-                    <div class="flex flex-col space-y-1">
+                    <div class="flex flex-col gap-1">
                       <p class="text-sm font-medium leading-none">{s().name}</p>
                       <p class="text-xs leading-none text-muted-foreground">{s().email}</p>
-                      {/*
+
                       <Show
-                        when={s().}
+                        when={s().sessions.find((s) => s.access_token === props.sessionToken!)}
                         fallback={<p class="text-xs leading-none text-muted-foreground">No organization</p>}
                       >
-                        {(o) => <p class="text-xs leading-none text-muted-foreground">{o().name}</p>}
+                        {(sess) => <p class="text-xs leading-none text-muted-foreground">{sess().org?.name}</p>}
                       </Show>
-                      */}
                     </div>
                   </DropdownMenuGroupLabel>
                   <DropdownMenuSeparator />

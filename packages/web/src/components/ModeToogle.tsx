@@ -19,7 +19,8 @@ const ModeToggle = () => {
       <DropdownMenuTrigger
         as={Button}
         variant="outline"
-        class="size-8 flex flex-row items-center justify-center gap-4 rounded-full"
+        size="icon"
+        class="size-8 flex flex-row items-center justify-center gap-4"
       >
         <div class="w-max flex">
           <Sun class="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
