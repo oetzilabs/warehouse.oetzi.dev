@@ -1,5 +1,5 @@
-import { Authenticated } from "../../../components/Authenticated";
+import { Authenticated } from "@/components/Authenticated";
 
 export default function DashboardPage() {
-  return <Authenticated>{(u) => <div>Hello {u.user?.name}</div>}</Authenticated>;
+  return <Authenticated>{(user) => <div class="w-full h-full flex"></div>}</Authenticated>;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."users" ADD COLUMN "has_finished_onboarding" boolean DEFAULT false;

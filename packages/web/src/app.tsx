@@ -84,7 +84,6 @@ export default function App() {
                       "min-height": "100vh",
                     }}
                   >
-                    <Header />
                     <AppLayout>{props.children}</AppLayout>
                   </div>
                 </ColorModeProvider>

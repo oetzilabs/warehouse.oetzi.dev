@@ -47,6 +47,10 @@ export const getAuthenticatedUser = query(async () => {
     });
   }
 
+  if (!verified.user.has_finished_onboarding) {
+    return redirect("/onboarding");
+  }
+
   return verified.user;
 }, "user");
 

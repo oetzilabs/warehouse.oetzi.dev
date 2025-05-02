@@ -10,16 +10,22 @@ import postgres from "postgres";
 import { Resource } from "sst";
 import * as schema from "./schema";
 
+let globalClient: ReturnType<typeof drizzle> | ReturnType<typeof localDrizzle> | undefined;
+
 export const database = () => {
+  if (globalClient) {
+    return globalClient;
+  }
   if (Resource.DatabaseProvider.value === "local") {
     const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
-    return localDrizzle(localClient, { schema });
+    globalClient = localDrizzle(localClient, { schema });
   } else {
     const client = neon(Resource.DatabaseUrl.value);
-    return drizzle(client, {
+    globalClient = drizzle(client, {
       schema,
     });
   }
+  return globalClient;
 };
 
 export const db = database();

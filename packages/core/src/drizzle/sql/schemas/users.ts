@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgEnum, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, pgEnum, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial, string } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
@@ -25,6 +25,7 @@ export const TB_users = commonTable(
       mode: "date",
     }),
     status: user_status("status").default("active"),
+    has_finished_onboarding: boolean("has_finished_onboarding").notNull().default(false),
   },
   "user",
 );

@@ -51,11 +51,10 @@ export default function UserMenu(props: { user: UserInfo; sessionToken?: string 
               </DropdownMenuTrigger>
               <DropdownMenuContent class="w-56">
                 <DropdownMenuGroup>
-                  <DropdownMenuGroupLabel class="font-normal">
-                    <div class="flex flex-col gap-1">
+                  <DropdownMenuGroupLabel class="font-normal p-0">
+                    <div class="flex flex-col gap-1 p-2">
                       <p class="text-sm font-medium leading-none">{s().name}</p>
                       <p class="text-xs leading-none text-muted-foreground">{s().email}</p>
-
                       <Show
                         when={s().sessions.find((s) => s.access_token === props.sessionToken!)}
                         fallback={<p class="text-xs leading-none text-muted-foreground">No organization</p>}

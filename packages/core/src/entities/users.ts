@@ -220,4 +220,4 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 }) {}
 
 export const UserLive = UserService.Default;
-export type UserInfo = Effect.Effect.Success<ReturnType<UserService["findById"]>>;
+export type UserInfo = NonNullable<Effect.Effect.Success<ReturnType<UserService["findById"]>>>;
