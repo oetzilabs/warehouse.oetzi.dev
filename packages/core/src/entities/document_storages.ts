@@ -121,7 +121,7 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
   dependencies: [DatabaseLive, S3StorageLive],
 }) {}
 
-export const DocumentStorageLive = DocumentStorageService.Default.pipe(Layer.provide(S3StorageLive));
+export const DocumentStorageLive = DocumentStorageService.Default;
 
 // Type exports
 export type Frontend = NonNullable<Awaited<ReturnType<DocumentStorageService["findById"]>>>;

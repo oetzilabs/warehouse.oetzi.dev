@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-export interface VirtualFileSystemService {
+export interface VirtualFileSystemServiceInterface {
   /**
    * Returns the base path of the virtual file system.
    */
@@ -101,7 +101,7 @@ export interface VirtualFileSystemItemInfo {
   // Add other relevant information like modification time
 }
 
-export const VirtualFileSystemService = Effect.Service<VirtualFileSystemService>();
+export const VirtualFileSystemService = Effect.Service<VirtualFileSystemServiceInterface>();
 
 export class BasePath extends Context.Tag<"@warehouse/vfs/base-path">("@warehouse/vfs/base-path")<BasePath, string>() {}
 

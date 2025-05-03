@@ -8,7 +8,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Context, Effect, Layer } from "effect";
-import { BasePath, VirtualFileSystemItemInfo } from "./";
+import { BasePath, VirtualFileSystemItemInfo, VirtualFileSystemServiceInterface } from "./";
+import { Resource } from "sst";
 
 interface S3ConfigInterface {
   bucket: string;
@@ -18,10 +19,10 @@ interface S3ConfigInterface {
 export class S3Config extends Context.Tag<"@warehouse/vfs/s3/config">("@warehouse/vfs/s3/config")<
   S3Config,
   S3ConfigInterface
->() {}
+>() { }
 
-export class S3StorageService extends Effect.Service<S3StorageService>()("@warehouse/vfs/s3", {
-  effect: Effect.gen(function* (_) {
+export class S3StorageService extends Effect.Service<VirtualFileSystemServiceInterface>()("@warehouse/vfs/s3", {
+  effect: Effect.gen(function*(_) {
     const config = yield* _(S3Config);
     const basePath = yield* _(BasePath);
 
@@ -133,7 +134,7 @@ export class S3StorageService extends Effect.Service<S3StorageService>()("@wareh
       });
 
     const listFileVersions = (filePath: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function*(_) {
         // Use ListObjectVersionsCommand to get all versions
         const response = yield* Effect.promise(() =>
           config.client.send(
@@ -246,7 +247,7 @@ export class S3StorageService extends Effect.Service<S3StorageService>()("@wareh
       getItemVersionInfo,
     } as const;
   }),
-}) {}
+}) { }
 
 export const S3StorageLive = S3StorageService.Default;
 

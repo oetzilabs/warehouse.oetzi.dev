@@ -1,9 +1,9 @@
 import { FileSystem, Path } from "@effect/platform";
 import { BunFileSystem } from "@effect/platform-bun";
 import { Effect } from "effect";
-import { BasePath, VirtualFileSystemItemInfo, VirtualFileSystemService } from "./";
+import { BasePath, VirtualFileSystemItemInfo, VirtualFileSystemServiceInterface } from "./";
 
-export class LocalStorageAdapter extends Effect.Service<VirtualFileSystemService>()("@warehouse/vfs/local", {
+export class LocalStorageAdapter extends Effect.Service<VirtualFileSystemServiceInterface>()("@warehouse/vfs/local", {
   effect: Effect.gen(function* (_) {
     const fs = yield* _(FileSystem.FileSystem);
     const path = yield* _(Path.Path);
