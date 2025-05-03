@@ -32,7 +32,7 @@ export default function WarehouseStepPage() {
             step={2}
             amountOfSteps={3}
             description="Before you can create a warehouse, you need to set up your company first."
-            image="https://picsum.photos/seed/warehouse/400/600?grayscale"
+            image="/assets/images/onboarding/warehouse.jpg"
             form={
               <div class="flex w-full flex-col gap-4 py-2 h-full grow">
                 <Button as={A} size="sm" href="/onboarding/step/company" class="w-max">

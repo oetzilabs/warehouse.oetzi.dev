@@ -6,6 +6,8 @@ export * from "./schemas/address";
 export * from "./schemas/storages";
 export * from "./schemas/storage_types";
 
+export * from "./schemas/document_storages";
+
 export * from "./schemas/warehouses";
 export * from "./schemas/warehouses_addresses";
 export * from "./schemas/warehouse_types";

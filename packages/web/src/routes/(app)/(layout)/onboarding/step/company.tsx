@@ -61,7 +61,7 @@ export default function OrganizationStepPage() {
         </Show>
       }
       description="Please enter the information of your company, which will be used to prepare your workspace."
-      image="https://picsum.photos/seed/picsum/400/600?grayscale"
+      image="/assets/images/onboarding/company.jpg"
       form={
         <Form
           onSubmit={(values) => {
