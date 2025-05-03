@@ -6,6 +6,7 @@ type OnboardingDialogProps = {
   form: JSXElement;
   step: number;
   amountOfSteps: number;
+  banner?: JSXElement;
 };
 
 export default function OnboardingDialog(props: OnboardingDialogProps) {
@@ -30,6 +31,7 @@ export default function OnboardingDialog(props: OnboardingDialogProps) {
             <div class="w-full flex flex-col gap-4">
               <span class="text-sm font-medium text-muted-foreground">Onboarding</span>
             </div>
+            {props.banner}
             <div class="w-full flex flex-col gap-4 grow">
               <div class="w-full flex flex-col gap-4 py-2">
                 <span class="text-sm font-normal leading-tight opacity-80">{props.description}</span>

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
+import { A } from "@solidjs/router";
 import { createForm } from "@tanstack/solid-form";
 import { type OrganizationCreate } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import ChevronRight from "lucide-solid/icons/chevron-right";
@@ -155,10 +156,10 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
       </div>
       <div class="flex grow w-full" />
       <div class="w-full flex flex-row gap-2 items-center justify-between">
-        <div class="w-max">
+        <div class="w-max flex flex-row gap-2">
           <Button size="sm" variant="outline" type="button">
             <FileUp class="size-4" />
-            Import Instead
+            Import Data
           </Button>
         </div>
         <div class="w-max">

@@ -8,6 +8,29 @@ import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
 
+export const getOrganizations = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const org = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(OrganizationService);
+      return yield* service.findByUserId(user.id);
+    }).pipe(Effect.provide(OrganizationLive)),
+  );
+  return org;
+}, "organizations");
+
 export const getOrganizationBySlug = query(async (slug: string) => {
   "use server";
   const auth = await withSession();

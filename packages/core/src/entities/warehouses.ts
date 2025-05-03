@@ -15,6 +15,32 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
+    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_warehouses.findMany>[0]>;
+
+    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
+      const defaultRelations: NonNullable<FindManyParams["with"]> = {
+        addresses: {
+          with: {
+            address: true,
+          },
+        },
+        storages: {
+          with: {
+            storage: {
+              with: {
+                type: true,
+              },
+            },
+          },
+        },
+      };
+
+      if (options) {
+        return options;
+      }
+      return defaultRelations;
+    };
+
     const create = (userInput: InferInput<typeof WarehouseCreateSchema>, organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
@@ -26,7 +52,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return warehouse;
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -36,9 +62,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.promise(() =>
           db.query.TB_warehouses.findFirst({
             where: (warehouses, operations) => operations.eq(warehouses.id, parsedId.output),
-            with: {
-              organization: true,
-            },
+            with: relations,
           }),
         );
       });
@@ -76,7 +100,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         );
       });
 
-    const findByOrganization = (organizationId: string) =>
+    const findByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedOrgId.success) {
@@ -140,7 +164,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       update,
       remove,
       safeRemove,
-      findByOrganization,
+      findByOrganizationId,
     } as const;
   }),
   dependencies: [DatabaseLive],

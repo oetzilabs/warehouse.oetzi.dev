@@ -96,7 +96,7 @@ export const getWarehousesByOrganization = query(async (organizationId: string) 
   const warehouses = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(WarehouseService);
-      return yield* service.findByOrganization(organizationId);
+      return yield* service.findByOrganizationId(organizationId);
     }).pipe(Effect.provide(WarehouseLive)),
   );
   return warehouses;

@@ -34,6 +34,46 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       return `${slug}-${generateRandomLetters(6)}`;
     };
 
+    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_organizations.findMany>[0]>;
+
+    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
+      const defaultRelations: NonNullable<FindManyParams["with"]> = {
+        users: {
+          with: {
+            user: true,
+          },
+        },
+        owner: true,
+        whs: {
+          with: {
+            warehouse: {
+              with: {
+                addresses: {
+                  with: {
+                    address: true,
+                  },
+                },
+                storages: {
+                  with: {
+                    storage: {
+                      with: {
+                        type: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      if (options) {
+        return options;
+      }
+      return defaultRelations;
+    };
+
     const create = (userInput: InferInput<typeof OrganizationCreateSchema>, userId: string) =>
       Effect.gen(function* (_) {
         const parsedUserId = safeParse(prefixed_cuid2, userId);
@@ -66,7 +106,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return org;
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -76,31 +116,17 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.promise(() =>
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.id, parsedId.output),
-            with: {
-              users: {
-                with: {
-                  user: true,
-                },
-              },
-              owner: true,
-            },
+            with: relations,
           }),
         );
       });
 
-    const findBySlug = (slug: string) =>
+    const findBySlug = (slug: string, relations: FindManyParams["with"] = withRelations()) =>
       Effect.gen(function* (_) {
         return yield* Effect.promise(() =>
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.slug, slug),
-            with: {
-              users: {
-                with: {
-                  user: true,
-                },
-              },
-              owner: true,
-            },
+            with: relations,
           }),
         );
       });
@@ -290,10 +316,26 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    const findByUserId = (userId: string, relations: FindManyParams["with"] = withRelations()) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, userId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid user ID format"));
+        }
+
+        return yield* Effect.promise(() =>
+          db.query.TB_organizations.findMany({
+            where: (organizations, operations) => operations.eq(organizations.owner_id, parsedId.output),
+            with: relations,
+          }),
+        );
+      });
+
     return {
       create,
       findById,
       findBySlug,
+      findByUserId,
       update,
       remove,
       safeRemove,
