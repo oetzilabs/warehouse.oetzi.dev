@@ -41,7 +41,7 @@ export default function OrganizationStepPage() {
       step={1}
       amountOfSteps={3}
       banner={
-        <Show when={currentOrganization()} fallback={<div class="w-full h-full" />}>
+        <Show when={currentOrganization()} fallback={<div class="w-full" />}>
           {(cO) => (
             <div class="w-full h-max flex items-center justify-between bg-muted-foreground/10 rounded-lg pl-3 py-1 pr-1 border">
               <span class="text-sm text-muted-foreground">

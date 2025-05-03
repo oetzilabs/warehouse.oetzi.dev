@@ -8,13 +8,18 @@ import {
   NumberFieldLabel,
 } from "@/components/ui/number-field";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
-import { createForm } from "@tanstack/solid-form";
+import { clientOnly } from "@solidjs/start";
+import { createForm, FieldState } from "@tanstack/solid-form";
+import { createQuery, QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/solid-query";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import Loader2 from "lucide-solid/icons/loader-2";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
+import { toast } from "solid-sonner";
 import { minLength, number, pipe, string } from "valibot";
 import { Card } from "../ui/card";
+
+const CMap = clientOnly(() => import("@/components/ClientMap"));
 
 export type CreateWarehouseFormProps = {
   onSubmit: (values: any) => void;
@@ -38,6 +43,25 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
       },
     },
   }));
+
+  const [coords, setCoords] = createSignal<[number, number]>([0, 0]);
+
+  const checkAddress = (address: string) => {
+    // fetch geolocation data form nominatim
+    const url = `https://nominatim.openstreetmap.org/search?q=${address}&format=json`;
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.length > 0) {
+          setCoords([data[0].lat, data[0].lon]);
+        } else {
+          toast.error(`Error fetching geolocation data: No results found`);
+        }
+      })
+      .catch((e) => {
+        toast.error(`Error fetching geolocation data: ${e}`);
+      });
+  };
 
   const steps = [
     {
@@ -71,23 +95,40 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
     {
       title: "Location",
       component: (
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 w-full">
           <form.Field
             name="address"
             validators={{ onChange: pipe(string(), minLength(5)) }}
             children={(field) => (
-              <TextField onChange={(e) => field().setValue(e)}>
+              <TextField onChange={(e) => field().setValue(e)} class="w-full">
                 <TextFieldLabel>
                   Address <span class="text-red-500">*</span>
                 </TextFieldLabel>
-                <TextFieldInput value={field().state.value} placeholder="123 Warehouse St." />
+                <TextFieldInput value={field().state.value} placeholder="123 Warehouse St." class="w-full" />
               </TextField>
             )}
+            listeners={{
+              onBlur: (props) => {
+                checkAddress(props.value);
+              },
+              onBlurDebounceMs: 500,
+              onChange: (props) => {
+                checkAddress(props.value);
+              },
+              onChangeDebounceMs: 500,
+            }}
           />
-          <Card class="h-[400px] w-full bg-muted">
-            {/* Map component will go here */}
-            <div class="w-full h-full flex items-center justify-center">Map Component (Coming Soon)</div>
-          </Card>
+          <form.Subscribe
+            selector={(state) => ({
+              visible: state.isDirty,
+            })}
+          >
+            {(state) => (
+              <div class="w-full aspect-square">
+                <CMap coords={coords} visible={() => state().visible && coords()[0] !== 0 && coords()[1] !== 0} />
+              </div>
+            )}
+          </form.Subscribe>
         </div>
       ),
     },
