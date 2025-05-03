@@ -76,7 +76,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
           // If user is not found, treat as an invalid token (e.g., user deleted)
           return { err: new Error("User associated with token not found"), success: false } as const;
         }
-        return { success: true, user } as const;
+        return { success: true, user, session: sessionExists } as const;
       });
 
     const login = (email: string, password: string) =>

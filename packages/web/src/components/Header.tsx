@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import UserMenu from "./UserMenu";
 
 export function Header() {
-  const user = createAsync(() => getAuthenticatedUser(), { deferStream: true });
+  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
   return (
     <div class="flex flex-col p-2 w-full">

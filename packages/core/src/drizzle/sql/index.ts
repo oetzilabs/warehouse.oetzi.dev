@@ -16,15 +16,15 @@ export const database = () => {
   if (globalClient) {
     return globalClient;
   }
-  if (Resource.DatabaseProvider.value === "local") {
-    const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
-    globalClient = localDrizzle(localClient, { schema });
-  } else {
-    const client = neon(Resource.DatabaseUrl.value);
-    globalClient = drizzle(client, {
-      schema,
-    });
-  }
+  const client = neon(Resource.DatabaseUrl.value);
+  globalClient = drizzle(client, {
+    schema,
+  });
+  // if (Resource.DatabaseProvider.value === "local") {
+  //   const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
+  //   globalClient = localDrizzle(localClient, { schema });
+  // } else {
+  // }
   return globalClient;
 };
 

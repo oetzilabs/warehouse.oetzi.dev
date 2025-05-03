@@ -41,12 +41,28 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
           return yield* Effect.fail(new Error("Invalid user ID format"));
         }
 
+        // check if organization already exists with the same name
+        const exists = yield* Effect.promise(() =>
+          db.query.TB_organizations.findFirst({
+            where: (organizations, operations) => operations.eq(organizations.slug, generateSlug(userInput.name)),
+          }),
+        );
+
+        if (exists) {
+          return yield* Effect.fail(new Error("Organization already exists"));
+        }
+
         const [org] = yield* Effect.promise(() =>
           db
             .insert(TB_organizations)
             .values({ ...userInput, owner_id: parsedUserId.output, slug: generateSlug(userInput.name) })
             .returning(),
         );
+        // TODO: Add organization to user's organizations
+        const added = yield* addUser(userId, org.id);
+        if (!added) {
+          return yield* Effect.fail(new Error("Failed to add user to organization"));
+        }
         return org;
       });
 

@@ -1,31 +1,27 @@
 import { client } from "@warehouseoetzidev/core/src/auth/client";
 import { subjects } from "@warehouseoetzidev/core/src/auth/subjects";
+import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/auth";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { Effect } from "effect";
 import { getCookie } from "vinxi/http";
 
 export const withSession = async () => {
-  const accessToken = getCookie("access_token");
-  const refreshToken = getCookie("access_token");
+  const sessionToken = getCookie("session_token");
 
-  if (!accessToken) {
+  if (!sessionToken) {
     return undefined;
   }
 
-  const verified = await client("solidstart").verify(subjects, accessToken, {
-    refresh: refreshToken,
-  });
-
-  if (verified.err) {
-    return undefined;
-  }
-
-  const user = await Effect.runPromise(
+  const verified = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(UserService);
-      const user = yield* service.findById(verified.subject.properties.id);
-      return user;
-    }).pipe(Effect.provide(UserLive)),
-  );
-  return user;
+      const authService = yield* _(AuthService);
+      return yield* authService.verify(sessionToken);
+    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+  ).catch((e) => ({ err: e, success: false, user: undefined, session: undefined }) as const);
+
+  if (!verified.success) {
+    throw verified.err;
+  }
+
+  return [verified.user, verified.session] as const;
 };

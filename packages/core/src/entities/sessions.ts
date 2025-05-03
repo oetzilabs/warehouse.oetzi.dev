@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
-import { SessionCreateSchema, TB_sessions } from "../drizzle/sql/schema";
+import { SessionCreateSchema, SessionUpdateSchema, TB_sessions } from "../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
 
 export class SessionService extends Effect.Service<SessionService>()("@warehouse/sessions", {
@@ -67,11 +67,12 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         );
       });
 
-    const findByToken = (token: string) =>
+    const findByToken = (token: string, relations: FindManyParams["with"] = withRelations()) =>
       Effect.gen(function* (_) {
         return yield* Effect.promise(() =>
           db.query.TB_sessions.findFirst({
             where: (sessions, operations) => operations.eq(sessions.access_token, token),
+            with: relations,
           }),
         );
       });
@@ -102,6 +103,23 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         );
       });
 
+    const update = (input: InferInput<typeof SessionUpdateSchema>) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, input.id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid session ID"));
+        }
+
+        const [updated] = yield* Effect.promise(() =>
+          db
+            .update(TB_sessions)
+            .set({ ...input, updatedAt: new Date() })
+            .where(eq(TB_sessions.id, parsedId.output))
+            .returning(),
+        );
+        return updated;
+      });
+
     return {
       create,
       findById,
@@ -110,6 +128,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
       remove,
       removeByUserId,
       generateToken,
+      update,
     } as const;
   }),
   dependencies: [DatabaseLive],

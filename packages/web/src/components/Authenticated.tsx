@@ -5,8 +5,11 @@ import Loader2 from "lucide-solid/icons/loader-2";
 import { JSX, Show, Suspense } from "solid-js";
 import { NotLoggedIn } from "./NotLoggedIn";
 
-export const Authenticated = (props: { children: (props: { user: UserInfo }) => JSX.Element }) => {
-  const user = createAsync(() => getAuthenticatedUser());
+export const Authenticated = (props: {
+  children: (props: { user: UserInfo }) => JSX.Element;
+  skipOnboarding: boolean;
+}) => {
+  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: props.skipOnboarding }));
   const ChildComp = props.children;
 
   return (
