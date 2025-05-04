@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { AnyPgColumn, boolean, text, uuid, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { InferInput, InferOutput, object, omit, partial } from "valibot";
+import { InferInput, InferOutput, minLength, object, omit, partial, pipe, string } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
@@ -41,15 +41,14 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;
 export type OrganizationInsert = typeof TB_organizations.$inferInsert;
 
-export const OrganizationCreateSchema = omit(createInsertSchema(TB_organizations), [
-  "owner_id",
-  "slug",
-  "createdAt",
-  "updatedAt",
-]);
+export const OrganizationCreateSchema = object({
+  ...omit(createInsertSchema(TB_organizations), ["owner_id", "slug", "createdAt", "updatedAt"]).entries,
+  name: pipe(string(), minLength(3)),
+});
 export type OrganizationCreate = InferInput<typeof OrganizationCreateSchema>;
 export const OrganizationUpdateSchema = object({
   ...partial(OrganizationCreateSchema).entries,
   id: prefixed_cuid2,
+  name: pipe(string(), minLength(3)),
 });
 export type OrganizationUpdate = InferInput<typeof OrganizationUpdateSchema>;

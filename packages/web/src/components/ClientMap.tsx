@@ -28,7 +28,7 @@ export default function ClientMap(props: { coords: Accessor<[number, number]>; v
     const coords = new LatLng(c[0], c[1]);
     const marker = L.marker(coords, {
       icon: L.divIcon({
-        html: `<div class="relative flex flex-col items-center justify-center bg-blue-500 -translate-x-[50%] -translate-y-[50%] w-[25px] h-[25px] rounded-full"></div>`,
+        html: `<div class="relative flex flex-col items-center justify-center bg-blue-500 -translate-x-[50%] -translate-y-[50%] w-[16px] h-[16px] rounded-full"></div>`,
         className: "bg-transparent",
       }),
     });
@@ -39,14 +39,12 @@ export default function ClientMap(props: { coords: Accessor<[number, number]>; v
         zoomControl: false,
         attributionControl: false,
       }).setView(c, 13);
-
       const featureGroup = L.featureGroup([marker]).addTo(newMap);
       newMap.fitBounds(featureGroup.getBounds());
       setMap(newMap);
     } else {
       const featureGroup = L.featureGroup([marker]).addTo(m);
       m.fitBounds(featureGroup.getBounds());
-      setMap(m);
     }
   });
 
@@ -64,7 +62,7 @@ export default function ClientMap(props: { coords: Accessor<[number, number]>; v
   });
 
   return (
-    <Show when={props.visible()} fallback={<div class="w-full h-full" />}>
+    <Show when={props.visible()} fallback={<div class="w-full h-full bg-muted/10 rounded-md" />}>
       <div class="w-full flex flex-col gap-4 h-full">
         <div class="border border-neutral-200 dark:border-neutral-800 rounded-md w-full flex flex-col items-center justify-center bg-muted h-full overflow-clip">
           <div

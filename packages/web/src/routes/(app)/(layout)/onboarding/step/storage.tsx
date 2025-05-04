@@ -1,39 +1,53 @@
 // import { CreateOrganizationForm } from "@/components/forms/create-organization";
 import OnboardingDialog from "@/components/OnboardingDialog";
+import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentOrganization } from "@/lib/api/organizations";
 import { createDocumentStorage } from "@/lib/api/storages";
 import { A, createAsync, useAction, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
-import { Show } from "solid-js";
+import { onMount, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 const Form = clientOnly(() => import("@/components/forms/create-document-storage"));
 
 export default function OrganizationStepPage() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+  onMount(() => {
+    setBreadcrumbs([
+      {
+        label: "Onboarding",
+        href: "/onboarding",
+      },
+      {
+        label: "Company",
+        href: "/onboarding/step/company",
+      },
+    ]);
+  });
   const currentOrganization = createAsync(() => getCurrentOrganization(), { deferStream: true });
   const createDocumentStorageAction = useAction(createDocumentStorage);
   const isCreatingDocumentStorage = useSubmission(createDocumentStorage);
   const FallbackSkeleton = (
     <div class="flex w-full flex-col gap-4 py-2 h-full grow">
-      <Skeleton class="w-full h-2" animate />
-      <Skeleton class="w-full h-8" animate />
+      <Skeleton class="w-full h-4" />
+      <Skeleton class="w-full h-8" />
 
-      <Skeleton class="w-full h-2" animate />
-      <Skeleton class="w-full h-8" animate />
+      <Skeleton class="w-full h-4" />
+      <Skeleton class="w-full h-8" />
 
-      <Skeleton class="w-full h-2" animate />
-      <Skeleton class="w-full h-8" animate />
+      <Skeleton class="w-full h-4" />
+      <Skeleton class="w-full h-8" />
 
-      <Skeleton class="w-full h-2" animate />
-      <Skeleton class="w-full h-8" animate />
+      <Skeleton class="w-full h-4" />
+      <Skeleton class="w-full h-8" />
 
-      <Skeleton class="w-full h-2" animate />
-      <Skeleton class="w-full h-8" animate />
+      <Skeleton class="w-full h-4" />
+      <Skeleton class="w-full h-8" />
 
-      <Skeleton class="w-full h-2" animate />
-      <Skeleton class="w-full h-8" animate />
+      <Skeleton class="w-full h-4" />
+      <Skeleton class="w-full h-8" />
     </div>
   );
 
@@ -62,7 +76,7 @@ export default function OrganizationStepPage() {
         </Show>
       }
       description="Please enter the information of your company, which will be used to prepare your workspace."
-      image="/assets/images/onboarding/storage.jpg"
+      image="/images/onboarding/storage.jpg"
       form={
         <Form
           onSubmit={(values) => {

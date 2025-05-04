@@ -1,11 +1,22 @@
 import OnboardingDialog from "@/components/OnboardingDialog";
+import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { A } from "@solidjs/router";
 import Play from "lucide-solid/icons/play";
 import UploadFile from "lucide-solid/icons/upload";
+import { onMount } from "solid-js";
 import { toast } from "solid-sonner";
 
 export default function OnboardingPage() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+  onMount(() => {
+    setBreadcrumbs([
+      {
+        label: "Onboarding",
+        href: "/onboarding",
+      },
+    ]);
+  });
   return (
     <OnboardingDialog
       step={-1}

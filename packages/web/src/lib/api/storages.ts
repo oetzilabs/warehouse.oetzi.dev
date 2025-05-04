@@ -5,7 +5,7 @@ import {
   DocumentStorageUpdateSchema,
 } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { DocumentStorageLive, DocumentStorageService } from "@warehouseoetzidev/core/src/entities/document_storages";
-import { makeS3Service, S3StorageLive } from "@warehouseoetzidev/core/src/entities/vfs/s3";
+import { makeS3Service } from "@warehouseoetzidev/core/src/entities/vfs/s3";
 import { Effect, Layer } from "effect";
 import { Resource } from "sst";
 import { InferInput } from "valibot";
@@ -26,10 +26,7 @@ export const getDocumentStorageById = query(async (id: string) => {
     Effect.gen(function* (_) {
       const service = yield* _(DocumentStorageService);
       return yield* service.findById(id);
-    }).pipe(
-      Effect.provide(DocumentStorageLive),
-      Effect.provide(makeS3Service({ bucket: Resource.MainBucket.name, client: new S3Client() }, "/warehouses")),
-    ),
+    }).pipe(Effect.provide(DocumentStorageLive)),
   );
   return Documentstorage;
 }, "Documentstorage-by-id");
@@ -51,10 +48,7 @@ export const createDocumentStorage = action(async (data: InferInput<typeof Docum
     Effect.gen(function* (_) {
       const service = yield* _(DocumentStorageService);
       return yield* service.create(data, orgId);
-    }).pipe(
-      Effect.provide(DocumentStorageLive),
-      Effect.provide(makeS3Service({ bucket: Resource.MainBucket.name, client: new S3Client() }, "/warehouses")),
-    ),
+    }).pipe(Effect.provide(DocumentStorageLive)),
   );
   return Documentstorage;
 });
@@ -73,10 +67,7 @@ export const updateDocumentStorage = action(async (data: InferInput<typeof Docum
     Effect.gen(function* (_) {
       const service = yield* _(DocumentStorageService);
       return yield* service.update(data);
-    }).pipe(
-      Effect.provide(DocumentStorageLive),
-      Effect.provide(makeS3Service({ bucket: Resource.MainBucket.name, client: new S3Client() }, "/warehouses")),
-    ),
+    }).pipe(Effect.provide(DocumentStorageLive)),
   );
   return Documentstorage;
 });
@@ -95,10 +86,7 @@ export const deleteDocumentStorage = action(async (id: string) => {
     Effect.gen(function* (_) {
       const service = yield* _(DocumentStorageService);
       return yield* service.remove(id);
-    }).pipe(
-      Effect.provide(DocumentStorageLive),
-      Effect.provide(makeS3Service({ bucket: Resource.MainBucket.name, client: new S3Client() }, "/warehouses")),
-    ),
+    }).pipe(Effect.provide(DocumentStorageLive)),
   );
   return Documentstorage;
 });
@@ -117,10 +105,7 @@ export const getDocumentStoragesByOrganization = query(async (organizationId: st
     Effect.gen(function* (_) {
       const service = yield* _(DocumentStorageService);
       return yield* service.findByOrganizationId(organizationId);
-    }).pipe(
-      Effect.provide(DocumentStorageLive),
-      Effect.provide(makeS3Service({ bucket: Resource.MainBucket.name, client: new S3Client() }, "/warehouses")),
-    ),
+    }).pipe(Effect.provide(DocumentStorageLive)),
   );
   return Documentstorages;
 }, "Documentstorages-by-organization");

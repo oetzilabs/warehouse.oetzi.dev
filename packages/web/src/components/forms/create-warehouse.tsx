@@ -9,21 +9,50 @@ import {
 } from "@/components/ui/number-field";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
 import { clientOnly } from "@solidjs/start";
-import { createForm, FieldState } from "@tanstack/solid-form";
-import { createQuery, QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/solid-query";
+import { createForm } from "@tanstack/solid-form";
+import Check from "lucide-solid/icons/check";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import Loader2 from "lucide-solid/icons/loader-2";
-import { createSignal, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
 import { minLength, number, pipe, string } from "valibot";
-import { Card } from "../ui/card";
 
 const CMap = clientOnly(() => import("@/components/ClientMap"));
 
 export type CreateWarehouseFormProps = {
   onSubmit: (values: any) => void;
   disabled?: boolean;
+};
+
+type AddressResult = {
+  place_id: number;
+  licence: string;
+  osm_type: string;
+  osm_id: number;
+  lat: string;
+  lon: string;
+  class: string;
+  type: string;
+  place_rank: number;
+  importance: number;
+  addresstype: string;
+  name: string;
+  display_name: string;
+  address: {
+    house_number: string;
+    road: string;
+    village: string;
+    municipality?: string;
+    county: string;
+    state: string;
+    "ISO3166-2-lvl4": string;
+    postcode: string;
+    country: string;
+    country_code: string;
+    town?: string;
+  };
+  boundingbox: Array<string>;
 };
 
 export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
@@ -35,25 +64,31 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
       address: "",
       latitude: 0,
       longitude: 0,
-      storageConfig: {
-        floors: 1,
-        sectionsPerFloor: 1,
-        shelvesPerSection: 1,
-        boxesPerShelf: 1,
-      },
     },
   }));
 
   const [coords, setCoords] = createSignal<[number, number]>([0, 0]);
 
+  const [addressResults, setAddressResults] = createSignal<AddressResult[]>([]);
+
+  createEffect(() => {
+    if (form.state.values.address.length === 0) {
+      setAddressResults([]);
+    }
+  });
+
+  const isSameCoords = (lat: string, lon: string) => {
+    return coords()[0] === Number(lat) && coords()[1] === Number(lon);
+  };
+
   const checkAddress = (address: string) => {
     // fetch geolocation data form nominatim
-    const url = `https://nominatim.openstreetmap.org/search?q=${address}&format=json`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${address}&format=json&addressdetails=1`;
     fetch(url)
       .then((response) => response.json())
-      .then((data) => {
+      .then((data: AddressResult[]) => {
         if (data.length > 0) {
-          setCoords([data[0].lat, data[0].lon]);
+          setAddressResults(data);
         } else {
           toast.error(`Error fetching geolocation data: No results found`);
         }
@@ -118,6 +153,35 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
               onChangeDebounceMs: 500,
             }}
           />
+          <Show when={addressResults().length > 0}>
+            <div class="flex flex-col rounded-md border max-h-[300px] overflow-y-auto w-full">
+              <For each={addressResults()}>
+                {(result) => (
+                  <div class="flex flex-row gap-2 items-center justify-center p-2 border-b last-of-type:border-b-0 hover:bg-muted/10 w-full">
+                    <div class="flex flex-col gap-1 w-full">
+                      <span class="text-xs ">{result.display_name}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={isSameCoords(result.lat, result.lon) ? "default" : "outline"}
+                      onClick={() => {
+                        if (isSameCoords(result.lat, result.lon)) {
+                          setCoords([0, 0]);
+                        } else {
+                          setCoords([Number(result.lat), Number(result.lon)]);
+                        }
+                      }}
+                      class="w-10"
+                    >
+                      <Show when={isSameCoords(result.lat, result.lon)} fallback="Use">
+                        <Check class="size-4" />
+                      </Show>
+                    </Button>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
           <form.Subscribe
             selector={(state) => ({
               visible: state.isDirty,
@@ -125,7 +189,7 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
           >
             {(state) => (
               <div class="w-full aspect-square">
-                <CMap coords={coords} visible={() => state().visible && coords()[0] !== 0 && coords()[1] !== 0} />
+                <CMap coords={coords} visible={() => state().visible && !isSameCoords("0", "0")} />
               </div>
             )}
           </form.Subscribe>
@@ -136,70 +200,7 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
       title: "Storage Configuration",
       component: (
         <div class="flex flex-col gap-4">
-          <form.Field
-            name="storageConfig.floors"
-            validators={{ onChange: pipe(number()) }}
-            children={(field) => (
-              <div class="flex flex-col gap-1.5">
-                <NumberField value={field().state.value} onRawValueChange={(val) => field().setValue(val)}>
-                  <NumberFieldLabel>Number of Floors</NumberFieldLabel>
-                  <NumberFieldGroup>
-                    <NumberFieldInput min={1} />
-                    <NumberFieldIncrementTrigger />
-                    <NumberFieldDecrementTrigger />
-                  </NumberFieldGroup>
-                </NumberField>
-              </div>
-            )}
-          />
-          <form.Field
-            name="storageConfig.sectionsPerFloor"
-            validators={{ onChange: pipe(number()) }}
-            children={(field) => (
-              <div class="flex flex-col gap-1.5">
-                <NumberField value={field().state.value} onRawValueChange={(val) => field().setValue(val)}>
-                  <NumberFieldLabel>Sections per Floor</NumberFieldLabel>
-                  <NumberFieldGroup>
-                    <NumberFieldInput min={1} />
-                    <NumberFieldIncrementTrigger />
-                    <NumberFieldDecrementTrigger />
-                  </NumberFieldGroup>
-                </NumberField>
-              </div>
-            )}
-          />
-          <form.Field
-            name="storageConfig.shelvesPerSection"
-            validators={{ onChange: pipe(number()) }}
-            children={(field) => (
-              <div class="flex flex-col gap-1.5">
-                <NumberField value={field().state.value} onRawValueChange={(val) => field().setValue(val)}>
-                  <NumberFieldLabel>Shelves per Section</NumberFieldLabel>
-                  <NumberFieldGroup>
-                    <NumberFieldInput min={1} />
-                    <NumberFieldIncrementTrigger />
-                    <NumberFieldDecrementTrigger />
-                  </NumberFieldGroup>
-                </NumberField>
-              </div>
-            )}
-          />
-          <form.Field
-            name="storageConfig.boxesPerShelf"
-            validators={{ onChange: pipe(number()) }}
-            children={(field) => (
-              <div class="flex flex-col gap-1.5">
-                <NumberField value={field().state.value} onRawValueChange={(val) => field().setValue(val)}>
-                  <NumberFieldLabel>Boxes per Shelf</NumberFieldLabel>
-                  <NumberFieldGroup>
-                    <NumberFieldInput min={1} />
-                    <NumberFieldIncrementTrigger />
-                    <NumberFieldDecrementTrigger />
-                  </NumberFieldGroup>
-                </NumberField>
-              </div>
-            )}
-          />
+          <span class="text-sm text-muted-foreground opacity-80">This configuration is not implemented yet.</span>
         </div>
       ),
     },
@@ -207,7 +208,7 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
 
   return (
     <form
-      class="w-full flex flex-col gap-4"
+      class="w-full flex flex-col gap-4 grow"
       onSubmit={(e) => {
         e.preventDefault();
         if (step() === steps.length - 1) {
@@ -219,8 +220,8 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
     >
       <div class="text-lg font-semibold">{steps[step()].title}</div>
       {steps[step()].component}
-
-      <div class="flex justify-end grow gap-2">
+      <div class="flex grow w-full" />
+      <div class="flex justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => setStep(step() - 1)} disabled={step() === 0}>
           <ChevronLeft class="size-4" />
           Back

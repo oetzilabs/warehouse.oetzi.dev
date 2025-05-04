@@ -4,13 +4,13 @@ import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import { DocumentStorageCreateSchema, DocumentStorageUpdateSchema, TB_document_storages } from "../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
-import { S3StorageLive, S3StorageService } from "./vfs/s3";
+import { generateBasePath } from "./utils";
+import { S3DocumentStorageLive, S3DocumentStorageService } from "./vfs/s3";
 
 export class DocumentStorageService extends Effect.Service<DocumentStorageService>()("@warehouse/document-storages", {
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
-    const vfs = yield* _(S3StorageService);
 
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_document_storages.findMany>[0]>;
 
@@ -36,7 +36,14 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
         const [storage] = yield* Effect.promise(() =>
           db
             .insert(TB_document_storages)
-            .values({ ...input, organization_id: parsedOrgId.output, path: vfs.basePath })
+            .values({
+              ...input,
+              organization_id: parsedOrgId.output,
+              path: generateBasePath({
+                organizationId: parsedOrgId.output,
+                version: `v0.0.0`,
+              }),
+            })
             .returning(),
         );
 
@@ -118,7 +125,7 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
       remove,
     } as const;
   }),
-  dependencies: [DatabaseLive, S3StorageLive],
+  dependencies: [DatabaseLive],
 }) {}
 
 export const DocumentStorageLive = DocumentStorageService.Default;

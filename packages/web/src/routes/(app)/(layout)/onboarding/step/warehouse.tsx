@@ -1,16 +1,30 @@
 import OnboardingDialog from "@/components/OnboardingDialog";
+import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentOrganization } from "@/lib/api/organizations";
 import { createWarehouse } from "@/lib/api/warehouses";
 import { A, createAsync, useAction, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
-import { Show, Suspense } from "solid-js";
+import { onMount, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
-import { Button } from "../../../../../components/ui/button";
 
 const Form = clientOnly(() => import("@/components/forms/create-warehouse"));
 
 export default function WarehouseStepPage() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+  onMount(() => {
+    setBreadcrumbs([
+      {
+        label: "Onboarding",
+        href: "/onboarding",
+      },
+      {
+        label: "Warehouse",
+        href: "/onboarding/step/warehouse",
+      },
+    ]);
+  });
   const currentOrganization = createAsync(() => getCurrentOrganization(), { deferStream: true });
   const createWarehouseAction = useAction(createWarehouse);
   const isCreatingWarehouse = useSubmission(createWarehouse);
@@ -19,9 +33,8 @@ export default function WarehouseStepPage() {
     <Suspense
       fallback={
         <div class="flex w-full flex-col gap-4 py-2 h-full grow">
-          <Skeleton class="w-full h-2" animate />
-          <Skeleton class="w-full h-8" animate />
-          <Skeleton class="w-full h-[400px]" animate />
+          <Skeleton class="w-full h-4" />
+          <Skeleton class="w-full h-8" />
         </div>
       }
     >
@@ -32,7 +45,7 @@ export default function WarehouseStepPage() {
             step={2}
             amountOfSteps={3}
             description="Before you can create a warehouse, you need to set up your company first."
-            image="/assets/images/onboarding/warehouse.jpg"
+            image="/images/onboarding/warehouse-2.jpg"
             form={
               <div class="flex w-full flex-col gap-4 py-2 h-full grow">
                 <Button as={A} size="sm" href="/onboarding/step/company" class="w-max">
@@ -48,7 +61,7 @@ export default function WarehouseStepPage() {
             step={2}
             amountOfSteps={3}
             description={`Let's set up your first warehouse for your organization '${cO().name}'. You can add more later.`}
-            image="https://picsum.photos/seed/warehouse/400/600?grayscale"
+            image="/images/onboarding/warehouse-2.jpg"
             form={
               <Form
                 onSubmit={(values) => {
@@ -61,9 +74,15 @@ export default function WarehouseStepPage() {
                 disabled={isCreatingWarehouse.pending}
                 fallback={
                   <div class="flex w-full flex-col gap-4 py-2 h-full grow">
-                    <Skeleton class="w-full h-2" animate />
-                    <Skeleton class="w-full h-8" animate />
-                    <Skeleton class="w-full h-[400px]" animate />
+                    <Skeleton class="w-20 h-4 mb-3" />
+                    <div class="flex flex-col gap-2">
+                      <Skeleton class="w-20 h-4" />
+                      <Skeleton class="w-full h-8" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                      <Skeleton class="w-20 h-4" />
+                      <Skeleton class="w-full h-16" />
+                    </div>
                   </div>
                 }
               />

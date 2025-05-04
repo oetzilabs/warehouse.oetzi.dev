@@ -12,9 +12,9 @@ type OnboardingDialogProps = {
 export default function OnboardingDialog(props: OnboardingDialogProps) {
   return (
     <div class="w-full h-full flex items-center justify-center grow">
-      <div class="w-full max-w-6xl md:min-h-[450px] md:h-max h-full border-0 md:border rounded-none md:rounded-lg md:shadow-2xl shadow-none overflow-clip">
+      <div class="w-full max-w-6xl md:min-h-[450px] md:h-max h-full border-0 md:border rounded-none md:rounded-lg md:shadow-2xl shadow-none overflow-clip grow">
         <div class="grid grid-cols-1 md:grid-cols-2 w-full h-full">
-          <div class="flex p-6 w-full flex-col gap-1 h-full">
+          <div class="flex p-6 w-full flex-col gap-1 h-full grow">
             <div class="w-full flex flex-row items-center justify-between">
               <span class="text-xl font-medium w-max">Welcome to WareHouse.</span>
               <Show
@@ -40,7 +40,7 @@ export default function OnboardingDialog(props: OnboardingDialogProps) {
             </div>
           </div>
           <div class="hidden md:flex w-full bg-muted h-full overflow-clip">
-            <img src={props.image} alt="placeholder" class="w-full h-full object-cover" />
+            <img src={props.image} alt="placeholder" class="w-full h-full object-cover grayscale" />
           </div>
         </div>
       </div>
