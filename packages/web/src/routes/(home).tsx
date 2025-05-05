@@ -7,13 +7,13 @@ import { Show } from "solid-js";
 
 export const route = {
   preload: async (props) => {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
     return { user };
   },
 } satisfies RouteDefinition;
 
 export default function IndexPage() {
-  const user = createAsync(() => getAuthenticatedUser(), { deferStream: true });
+  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
   const isMobile = createMediaQuery("(max-width: 640px)", true);
 
   return (

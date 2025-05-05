@@ -101,3 +101,22 @@ export const getWarehousesByOrganization = query(async (organizationId: string) 
   );
   return warehouses;
 }, "warehouses-by-organization");
+
+export const getTypes = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const types = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(WarehouseService);
+      return yield* service.allTypes();
+    }).pipe(Effect.provide(WarehouseLive)),
+  );
+  return types;
+}, "warehouse-types");
