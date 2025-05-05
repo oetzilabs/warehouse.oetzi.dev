@@ -53,42 +53,43 @@ export default function OrganizationStepPage() {
 
   return (
     <OnboardingDialog
-      step={1}
-      amountOfSteps={3}
-      banner={
-        <Show when={currentOrganization()} fallback={<div class="w-full" />}>
-          {(cO) => (
-            <div class="w-full h-max flex items-center justify-between bg-muted-foreground/10 rounded-lg pl-3 py-1 pr-1 border">
-              <span class="text-sm text-muted-foreground">
-                You have already set up a company: <span class="font-bold">{cO().name}</span>
-              </span>
-              <Button
-                as={A}
-                size="sm"
-                href="/onboarding/step/warehouse"
-                class="w-max text-xs px-2 py-1 h-max"
-                variant="secondary"
-              >
-                Choose
-              </Button>
-            </div>
-          )}
-        </Show>
-      }
-      description="Please enter the information of your company, which will be used to prepare your workspace."
-      image="/images/onboarding/storage.jpg"
-      form={
-        <Form
-          onSubmit={(values) => {
-            toast.promise(createDocumentStorageAction(values), {
-              loading: "Creating document storage...",
-              success: "document storage created successfully.",
-              error: "Error creating document storage",
-            });
-          }}
-          disabled={isCreatingDocumentStorage.pending}
-          fallback={FallbackSkeleton}
-        />
+      step={[3, 3]}
+      right={<img src="/images/onboarding/storage.jpg" class="w-full h-full object-cover" />}
+      left={
+        <div class="flex w-full flex-col gap-4 py-2 h-full grow">
+          <Show when={currentOrganization()} fallback={<div class="w-full" />}>
+            {(cO) => (
+              <div class="w-full h-max flex items-center justify-between bg-muted-foreground/10 rounded-lg pl-3 py-1 pr-1 border">
+                <span class="text-sm text-muted-foreground">
+                  You have already set up a company: <span class="font-bold">{cO().name}</span>
+                </span>
+                <Button
+                  as={A}
+                  size="sm"
+                  href="/onboarding/step/warehouse"
+                  class="w-max text-xs px-2 py-1 h-max"
+                  variant="secondary"
+                >
+                  Choose
+                </Button>
+              </div>
+            )}
+          </Show>
+          <span class="text-sm font-medium text-muted-foreground/80">
+            Please enter the information of your company, which will be used to prepare your workspace.
+          </span>
+          <Form
+            onSubmit={(values) => {
+              toast.promise(createDocumentStorageAction(values), {
+                loading: "Creating document storage...",
+                success: "document storage created successfully.",
+                error: "Error creating document storage",
+              });
+            }}
+            disabled={isCreatingDocumentStorage.pending}
+            fallback={FallbackSkeleton}
+          />
+        </div>
       }
     />
   );

@@ -42,15 +42,18 @@ export default function WarehouseStepPage() {
         when={currentOrganization()}
         fallback={
           <OnboardingDialog
-            step={2}
-            amountOfSteps={3}
-            description="Before you can create a warehouse, you need to set up your company first."
-            image="/images/onboarding/warehouse-2.jpg"
-            form={
-              <div class="flex w-full flex-col gap-4 py-2 h-full grow">
-                <Button as={A} size="sm" href="/onboarding/step/company" class="w-max">
-                  Go to organization setup
-                </Button>
+            step={[2, 3]}
+            right={<img src="/images/onboarding/warehouse-2.jpg" class="w-full h-full object-cover" />}
+            left={
+              <div class="w-full flex flex-col gap-2 h-full grow">
+                <span class="text-sm font-medium text-muted-foreground/80">
+                  Before you can create a warehouse, you need to set up your company first.
+                </span>
+                <div class="flex w-full flex-col gap-4 py-2 h-full grow">
+                  <Button as={A} size="sm" href="/onboarding/step/company" class="w-max">
+                    Go to organization setup
+                  </Button>
+                </div>
               </div>
             }
           />
@@ -58,34 +61,37 @@ export default function WarehouseStepPage() {
       >
         {(cO) => (
           <OnboardingDialog
-            step={2}
-            amountOfSteps={3}
-            description={`Let's set up your first warehouse for your organization '${cO().name}'. You can add more later.`}
-            image="/images/onboarding/warehouse-2.jpg"
-            form={
-              <Form
-                onSubmit={(values) => {
-                  toast.promise(createWarehouseAction(values), {
-                    loading: "Creating warehouse...",
-                    success: "Warehouse created successfully.",
-                    error: "Error creating warehouse",
-                  });
-                }}
-                disabled={isCreatingWarehouse.pending}
-                fallback={
-                  <div class="flex w-full flex-col gap-4 py-2 h-full grow">
-                    <Skeleton class="w-20 h-4 mb-3" />
-                    <div class="flex flex-col gap-2">
-                      <Skeleton class="w-20 h-4" />
-                      <Skeleton class="w-full h-8" />
+            step={[2, 3]}
+            right={<img src="/images/onboarding/warehouse-2.jpg" class="w-full h-full object-cover" />}
+            left={
+              <div class="flex w-full flex-col gap-4 py-2 h-full grow">
+                <span class="text-sm font-medium text-muted-foreground/80">
+                  {`Let's set up your first warehouse for your organization '${cO().name}'. You can add more later.`}
+                </span>
+                <Form
+                  onSubmit={(values) => {
+                    toast.promise(createWarehouseAction(values), {
+                      loading: "Creating warehouse...",
+                      success: "Warehouse created successfully.",
+                      error: "Error creating warehouse",
+                    });
+                  }}
+                  disabled={isCreatingWarehouse.pending}
+                  fallback={
+                    <div class="flex w-full flex-col gap-4 py-2 h-full grow">
+                      <Skeleton class="w-20 h-4 mb-3" />
+                      <div class="flex flex-col gap-2">
+                        <Skeleton class="w-20 h-4" />
+                        <Skeleton class="w-full h-8" />
+                      </div>
+                      <div class="flex flex-col gap-2">
+                        <Skeleton class="w-20 h-4" />
+                        <Skeleton class="w-full h-16" />
+                      </div>
                     </div>
-                    <div class="flex flex-col gap-2">
-                      <Skeleton class="w-20 h-4" />
-                      <Skeleton class="w-full h-16" />
-                    </div>
-                  </div>
-                }
-              />
+                  }
+                />
+              </div>
             }
           />
         )}
