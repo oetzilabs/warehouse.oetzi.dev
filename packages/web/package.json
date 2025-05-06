@@ -69,7 +69,7 @@
     "solid-js": "1.9.5",
     "solid-mdx": "0.0.7",
     "solid-sonner": "^0.2.8",
-    "solid-transition-group": "0.3.0",
+    "solid-transition-group": "^0.3.0",
     "tailwind-merge": "3.2.0",
     "tailwindcss-animate": "1.0.7",
     "unstorage": "1.16.0",

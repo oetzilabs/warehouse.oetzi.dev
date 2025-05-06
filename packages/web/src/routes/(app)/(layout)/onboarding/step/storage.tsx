@@ -1,5 +1,4 @@
 // import { CreateOrganizationForm } from "@/components/forms/create-organization";
-import OnboardingDialog from "@/components/OnboardingDialog";
 import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,45 +51,59 @@ export default function OrganizationStepPage() {
   );
 
   return (
-    <OnboardingDialog
-      step={[3, 3]}
-      right={<img src="/images/onboarding/storage.jpg" class="w-full h-full object-cover" />}
-      left={
-        <div class="flex w-full flex-col gap-4 py-2 h-full grow">
-          <Show when={currentOrganization()} fallback={<div class="w-full" />}>
-            {(cO) => (
-              <div class="w-full h-max flex items-center justify-between bg-muted-foreground/10 rounded-lg pl-3 py-1 pr-1 border">
-                <span class="text-sm text-muted-foreground">
-                  You have already set up a company: <span class="font-bold">{cO().name}</span>
+    <div class="w-full h-full flex items-start md:items-center md:justify-center grow">
+      <div class="w-full max-w-6xl md:min-h-[450px] md:h-max h-full border-0 md:border rounded-none md:rounded-lg md:shadow-2xl shadow-none overflow-clip grow">
+        <div class="grid grid-cols-1 md:grid-cols-2 w-full h-full">
+          <div class="flex p-6 w-full flex-col gap-1 h-full grow">
+            <div class="w-full flex flex-row items-center justify-between">
+              <span class="text-xl font-medium w-max">Welcome to WareHouse.</span>
+              <span class="text-xs font-medium w-max">3/3</span>
+            </div>
+            <div class="w-full flex flex-col gap-4">
+              <span class="text-sm font-medium text-muted-foreground">Onboarding</span>
+            </div>
+            <div class="w-full flex flex-col gap-4 grow">
+              <div class="flex w-full flex-col gap-4 py-2 h-full grow">
+                <Show when={currentOrganization()} fallback={<div class="w-full" />}>
+                  {(cO) => (
+                    <div class="w-full h-max flex items-center justify-between bg-muted-foreground/10 rounded-lg pl-3 py-1 pr-1 border">
+                      <span class="text-sm text-muted-foreground">
+                        You have already set up a company: <span class="font-bold">{cO().name}</span>
+                      </span>
+                      <Button
+                        as={A}
+                        size="sm"
+                        href="/onboarding/step/warehouse"
+                        class="w-max text-xs px-2 py-1 h-max"
+                        variant="secondary"
+                      >
+                        Choose
+                      </Button>
+                    </div>
+                  )}
+                </Show>
+                <span class="text-sm font-medium text-muted-foreground/80">
+                  Please enter the information of your company, which will be used to prepare your workspace.
                 </span>
-                <Button
-                  as={A}
-                  size="sm"
-                  href="/onboarding/step/warehouse"
-                  class="w-max text-xs px-2 py-1 h-max"
-                  variant="secondary"
-                >
-                  Choose
-                </Button>
+                <Form
+                  onSubmit={(values) => {
+                    toast.promise(createDocumentStorageAction(values), {
+                      loading: "Creating document storage...",
+                      success: "document storage created successfully.",
+                      error: "Error creating document storage",
+                    });
+                  }}
+                  disabled={isCreatingDocumentStorage.pending}
+                  fallback={FallbackSkeleton}
+                />
               </div>
-            )}
-          </Show>
-          <span class="text-sm font-medium text-muted-foreground/80">
-            Please enter the information of your company, which will be used to prepare your workspace.
-          </span>
-          <Form
-            onSubmit={(values) => {
-              toast.promise(createDocumentStorageAction(values), {
-                loading: "Creating document storage...",
-                success: "document storage created successfully.",
-                error: "Error creating document storage",
-              });
-            }}
-            disabled={isCreatingDocumentStorage.pending}
-            fallback={FallbackSkeleton}
-          />
+            </div>
+          </div>
+          <div class="hidden md:flex w-full bg-muted h-full overflow-clip">
+            <img src="/images/onboarding/storage.jpg" class="w-full h-full object-cover" />
+          </div>
         </div>
-      }
-    />
+      </div>
+    </div>
   );
 }

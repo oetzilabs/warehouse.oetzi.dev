@@ -139,3 +139,15 @@
 ::-webkit-scrollbar-corner {
   display: none;
 }
+
+.fade-enter-active,
+.fade-exit-active {
+  transition: opacity 0.1s ease-in-out;
+}
+.fade-enter,
+.fade-exit-to {
+  opacity: 0;
+}
+.fade-enter {
+  opacity: 1;
+}

@@ -12,8 +12,9 @@ export const TB_warehouse_types = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     code: text("code").notNull(), // for programmatic reference, e.g., "storage", "retail", etc.
+    image: text("image"),
   },
-  "warehouse_type",
+  "wht",
 );
 
 export const warehouse_type_relations = relations(TB_warehouse_types, ({ many }) => ({

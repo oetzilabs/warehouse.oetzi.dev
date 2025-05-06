@@ -16,14 +16,13 @@ const lightTile = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{
   maxZoom: 20,
 });
 
-export default function ClientMap(props: { coords: Accessor<[number, number]>; visible: Accessor<boolean> }) {
+export default function ClientMap(props: { coords: Accessor<[number, number]> }) {
   let mapDiv: any;
 
   const [map, setMap] = createSignal<L.Map | null>(null);
   const { colorMode } = useColorMode();
 
   createEffect(() => {
-    const visible = props.visible();
     let c = props.coords();
     const coords = new LatLng(c[0], c[1]);
     const marker = L.marker(coords, {
@@ -32,19 +31,19 @@ export default function ClientMap(props: { coords: Accessor<[number, number]>; v
         className: "bg-transparent",
       }),
     });
-    if (!visible) return;
-    const m = map();
+    let m = map();
     if (!m) {
-      const newMap = L.map(mapDiv, {
+      let newMap = L.map(mapDiv, {
         zoomControl: false,
         attributionControl: false,
-      }).setView(c, 13);
+      }).setView(c, 11);
       const featureGroup = L.featureGroup([marker]).addTo(newMap);
-      newMap.fitBounds(featureGroup.getBounds());
+      newMap = newMap.fitBounds(featureGroup.getBounds());
       setMap(newMap);
     } else {
       const featureGroup = L.featureGroup([marker]).addTo(m);
-      m.fitBounds(featureGroup.getBounds());
+      m = m.fitBounds(featureGroup.getBounds());
+      setMap(m);
     }
   });
 
@@ -62,22 +61,22 @@ export default function ClientMap(props: { coords: Accessor<[number, number]>; v
   });
 
   return (
-    <Show when={props.visible()} fallback={<div class="w-full h-full bg-muted/10 rounded-md" />}>
-      <div class="w-full flex flex-col gap-4 h-full">
-        <div class="border border-neutral-200 dark:border-neutral-800 rounded-md w-full flex flex-col items-center justify-center bg-muted h-full overflow-clip">
-          <div
-            ref={mapDiv}
-            id="main-map"
-            style={{
-              position: "relative",
-              "z-index": 10,
-              width: "100%",
-              height: "100%",
-              border: "none",
-            }}
-          />
-        </div>
-        <div class="w-max text-muted-foreground text-xs">
+    <div class="w-full flex flex-col gap-4 h-full relative">
+      <div class="w-full flex flex-col items-center justify-center bg-muted h-full overflow-clip">
+        <div
+          ref={mapDiv}
+          id="main-map"
+          style={{
+            position: "relative",
+            "z-index": 10,
+            width: "100%",
+            height: "100%",
+            border: "none",
+          }}
+        />
+      </div>
+      <div class="absolute bottom-0 p-2 z-20 w-full">
+        <div class="w-full text-muted-foreground text-xs bg-muted border shadow-sm rounded-md p-2">
           This map is provided by{" "}
           <A
             href="https://carto.com/attributions"
@@ -107,6 +106,6 @@ export default function ClientMap(props: { coords: Accessor<[number, number]>; v
           </A>
         </div>
       </div>
-    </Show>
+    </div>
   );
 }

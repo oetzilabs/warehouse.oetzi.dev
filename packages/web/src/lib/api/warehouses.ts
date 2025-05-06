@@ -1,5 +1,6 @@
 import { action, query, redirect } from "@solidjs/router";
 import { WarehouseCreateSchema, WarehouseUpdateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+import { WarehouseTypeLive, WarehouseTypeService } from "@warehouseoetzidev/core/src/entities/warehouse_types";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
@@ -114,9 +115,9 @@ export const getTypes = query(async () => {
   }
   const types = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(WarehouseService);
-      return yield* service.allTypes();
-    }).pipe(Effect.provide(WarehouseLive)),
+      const service = yield* _(WarehouseTypeService);
+      return yield* service.all();
+    }).pipe(Effect.provide(WarehouseTypeLive)),
   );
   return types;
 }, "warehouse-types");

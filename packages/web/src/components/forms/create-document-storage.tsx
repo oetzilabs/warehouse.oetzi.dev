@@ -44,18 +44,9 @@ export default function CreateDocumentStorageForm(props: CreateDocumentStorageFo
         <form.Field
           name="description"
           children={(field) => (
-            <TextField value={field().state.value} onChange={(e) => field().setValue(e)}>
+            <TextField value={field().state.value ?? undefined} onChange={(value) => field().setValue(() => value)}>
               <TextFieldLabel>Description</TextFieldLabel>
               <TextFieldTextArea placeholder="Description of your document storage" autoResize />
-            </TextField>
-          )}
-        />
-        <form.Field
-          name="location"
-          children={(field) => (
-            <TextField value={field().state.value} onChange={(e) => field().setValue(e)}>
-              <TextFieldLabel>Physical Location</TextFieldLabel>
-              <TextFieldInput placeholder="e.g. Building A, Room 101" />
             </TextField>
           )}
         />

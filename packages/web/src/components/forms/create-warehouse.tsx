@@ -14,12 +14,10 @@ import Check from "lucide-solid/icons/check";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import Loader2 from "lucide-solid/icons/loader-2";
-import { createEffect, createSignal, For, Show, Suspense } from "solid-js";
+import { createEffect, createSignal, For, JSXElement, onMount, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 import { minLength, pipe, string } from "valibot";
 import { Skeleton } from "../ui/skeleton";
-
-const CMap = clientOnly(() => import("@/components/ClientMap"));
 
 const warehouseForm = createForm(() => ({
   defaultValues: {
@@ -36,6 +34,8 @@ const warehouseForm = createForm(() => ({
 export type CreateWarehouseFormProps = {
   onSubmit: (values: typeof warehouseForm.state.values) => void;
   disabled?: boolean;
+  showMap: (lat: number, lon: number) => void;
+  hideMap: () => void;
 };
 
 type AddressResult = {
@@ -78,7 +78,10 @@ const BasicInfoStep = (props: StepComponentProps) => {
     <div class="flex flex-col gap-4">
       <warehouseForm.Field
         name="name"
-        validators={{ onChange: pipe(string(), minLength(3)), onBlur: pipe(string(), minLength(3)) }}
+        validators={{
+          // onChange: pipe(string(), minLength(3)),
+          onBlur: pipe(string(), minLength(3, "Please enter a name for your warehouse with at least 3 characters.")),
+        }}
         children={(field) => (
           <TextField
             value={field().state.value}
@@ -89,19 +92,19 @@ const BasicInfoStep = (props: StepComponentProps) => {
             <TextFieldLabel>
               Warehouse Name <span class="text-red-500">*</span>
             </TextFieldLabel>
-            <TextFieldInput placeholder="Main Warehouse" />
+            <TextFieldInput placeholder="Main Warehouse" onBlur={field().handleBlur} />
             <Show when={!field().state.meta.isValid}>
-              <TextFieldErrorMessage>
-                {field()
-                  .state.meta.errors.map((e) => e?.message)
-                  .join(", ")}
-              </TextFieldErrorMessage>
+              <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
             </Show>
           </TextField>
         )}
       />
       <warehouseForm.Field
         name="description"
+        validators={{
+          // onChange: pipe(string(), minLength(3)),
+          onBlur: string(),
+        }}
         children={(field) => (
           <TextField
             value={field().state.value}
@@ -117,7 +120,12 @@ const BasicInfoStep = (props: StepComponentProps) => {
   );
 };
 
-const LocationStep = (props: StepComponentProps) => {
+const LocationStep = (
+  props: StepComponentProps & {
+    showMap: (lat: number, lon: number) => void;
+    hideMap: () => void;
+  },
+) => {
   const [addressResults, setAddressResults] = createSignal<AddressResult[]>([]);
   const [isSearchingAddress, setIsSearchingAddress] = createSignal(false);
 
@@ -152,10 +160,6 @@ const LocationStep = (props: StepComponentProps) => {
     }
   };
 
-  const isSameCoords = (lat: string, lon: string) => {
-    return warehouseForm.state.values.latitude === Number(lat) && warehouseForm.state.values.longitude === Number(lon);
-  };
-
   return (
     <div class="flex flex-col gap-4 w-full">
       <warehouseForm.Field
@@ -172,12 +176,13 @@ const LocationStep = (props: StepComponentProps) => {
             <TextFieldLabel>
               Address <span class="text-red-500">*</span>
             </TextFieldLabel>
-            <TextFieldInput value={field().state.value} placeholder="123 Warehouse St." class="w-full" />
-            <TextFieldErrorMessage>
-              {field()
-                .state.meta.errors.map((e) => e?.message)
-                .join(", ")}
-            </TextFieldErrorMessage>
+            <TextFieldInput
+              value={field().state.value}
+              placeholder="123 Warehouse St."
+              class="w-full"
+              onBlur={field().handleBlur}
+            />
+            <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
           </TextField>
         )}
         listeners={{
@@ -190,7 +195,7 @@ const LocationStep = (props: StepComponentProps) => {
       <Show when={isSearchingAddress()}>
         <div class="flex items-center gap-2 text-muted-foreground w-full justify-center">
           <Loader2 class="size-4 animate-spin" />
-          Searching for address...
+          <span class="text-sm text-muted-foreground">Searching for address...</span>
         </div>
       </Show>
       <Show when={addressResults().length > 0}>
@@ -221,9 +226,11 @@ const LocationStep = (props: StepComponentProps) => {
                         if (isSame) {
                           warehouseForm.setFieldValue("latitude", () => 0);
                           warehouseForm.setFieldValue("longitude", () => 0);
+                          props.hideMap();
                         } else {
                           warehouseForm.setFieldValue("latitude", () => Number(result.lat));
                           warehouseForm.setFieldValue("longitude", () => Number(result.lon));
+                          props.showMap(warehouseForm.state.values.latitude, warehouseForm.state.values.longitude);
                         }
                       }}
                       class="w-10"
@@ -242,7 +249,7 @@ const LocationStep = (props: StepComponentProps) => {
           </For>
         </div>
       </Show>
-      <warehouseForm.Subscribe
+      {/* <warehouseForm.Subscribe
         selector={(state) => ({
           latitude: state.values.latitude,
           longitude: state.values.longitude,
@@ -250,26 +257,21 @@ const LocationStep = (props: StepComponentProps) => {
       >
         {(state) => (
           <Show when={state().latitude !== 0 || state().longitude !== 0}>
-            <div class="w-full aspect-video">
-              <CMap
-                coords={() => [state().latitude, state().longitude]}
-                visible={() => state().latitude !== 0 && state().longitude !== 0}
-              />
-            </div>
+            
           </Show>
         )}
-      </warehouseForm.Subscribe>
+      </warehouseForm.Subscribe> */}
     </div>
   );
 };
 
 const ChooseFromTemplateStep = (props: StepComponentProps) => {
   const wareHouseTypes = createAsync(() => getTypes(), { deferStream: true });
-  // Add storage configuration fields here
+
   return (
     <div class="flex flex-col gap-4 w-full">
       <span class="text-sm text-muted-foreground opacity-80">You can choose from a pre-configured template.</span>
-      <div class="flex flex-col gap-4 w-full">
+      <div class="flex flex-col gap-2 w-full max-h-[450px] overflow-y-auto">
         <Suspense
           fallback={
             <div class="flex flex-col gap-4">
@@ -294,45 +296,85 @@ const ChooseFromTemplateStep = (props: StepComponentProps) => {
                 }
               >
                 {(type) => (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    class="w-full"
-                    onClick={() => {
-                      warehouseForm.setFieldValue("warehouse_type_id", () => type.id);
-                    }}
-                  >
-                    <div class="flex flex-row gap-2 items-center justify-center">
-                      <div class="flex flex-col gap-1 w-full">
-                        <span class="text-xs ">
-                          {type.name} ({type.code})
-                        </span>
-                        <span class="text-xs text-muted-foreground opacity-80">
-                          {type.description ?? "No description"}
-                        </span>
+                  <div class="flex flex-row gap-2 items-center justify-center p-2 border rounded-md">
+                    <div class="flex flex-col gap-1 w-full">
+                      <div class="flex flex-row items-center justify-between gap-2 w-full">
+                        <div class="flex flex-col gap-1 w-full">
+                          <span class="text-xs ">
+                            {type.name} ({type.code})
+                          </span>
+                          <span class="text-xs text-muted-foreground opacity-80">
+                            {type.description ?? "No description"}
+                          </span>
+                        </div>
+                        <warehouseForm.Subscribe
+                          selector={(state) => ({
+                            wh_type_id: state.values.warehouse_type_id,
+                          })}
+                        >
+                          {(state) => (
+                            <Button
+                              size={type.id === state().wh_type_id ? "icon" : "sm"}
+                              variant={type.id === state().wh_type_id ? "default" : "secondary"}
+                              class="place-self-end size-8 p-2"
+                              onClick={() => {
+                                // toggle
+                                const wh_type_id = type.id === state().wh_type_id ? "" : type.id;
+                                warehouseForm.setFieldValue("warehouse_type_id", () => wh_type_id);
+                              }}
+                            >
+                              <Show when={type.id === state().wh_type_id} fallback="Use">
+                                <Check class="size-4" />
+                              </Show>
+                            </Button>
+                          )}
+                        </warehouseForm.Subscribe>
                       </div>
-                      <div class="flex flex-row gap-2 items-center justify-center">
-                        <Check class="size-4" />
-                      </div>
+
+                      <Show when={type.image} fallback={<div class="w-full h-40 bg-muted rounded-sm" />}>
+                        {(i) => <img src={i()} class="w-full h-40 object-cover rounded-sm overflow-clip" />}
+                      </Show>
                     </div>
-                  </Button>
+                  </div>
                 )}
               </For>
             )}
           </Show>
         </Suspense>
       </div>
-      <span class="text-sm text-muted-foreground opacity-80">Or you can create a new one from scratch.</span>
-      <div class="flex flex-row gap-4 w-full justify-end items-center">
-        <Button size="sm" variant="secondary" class="w-max" onClick={() => props.goto("advanced-storage")}>
-          Advanced Setup
-        </Button>
+      <div class="flex flex-row gap-4 w-full justify-between items-center">
+        <span class="text-sm text-muted-foreground opacity-80">Or you can create a new one from scratch.</span>
+        <warehouseForm.Subscribe
+          selector={(state) => ({
+            wh_type_id: state.values.warehouse_type_id !== "",
+          })}
+        >
+          {(state) => (
+            <Button
+              size="sm"
+              variant="secondary"
+              class="w-max"
+              onClick={() => props.goto("advanced-storage")}
+              disabled={state().wh_type_id}
+            >
+              Advanced Setup
+            </Button>
+          )}
+        </warehouseForm.Subscribe>
       </div>
     </div>
   );
 };
 
 const StorageConfigStep = (props: StepComponentProps) => {
+  return (
+    <div class="flex flex-col gap-4">
+      <span class="text-sm text-muted-foreground opacity-80">This configuration is not implemented yet.</span>
+    </div>
+  );
+};
+
+const OverviewStep = (props: StepComponentProps) => {
   return (
     <div class="flex flex-col gap-4">
       <span class="text-sm text-muted-foreground opacity-80">This configuration is not implemented yet.</span>
@@ -352,21 +394,34 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
       name: "basic",
       title: "Basic Information",
       component: <BasicInfoStep goto={goto} />,
+      next: "location",
     },
     {
       name: "location",
       title: "Location",
-      component: <LocationStep goto={goto} />,
+      component: <LocationStep goto={goto} showMap={props.showMap} hideMap={props.hideMap} />,
+      next: "choose-from-template",
+      prev: "basic",
     },
     {
       name: "choose-from-template",
       title: "Choose from Template",
       component: <ChooseFromTemplateStep goto={goto} />,
+      next: "overview",
+      prev: "location",
     },
     {
       name: "advanced-storage",
       title: "Advanced Storage",
       component: <StorageConfigStep goto={goto} />,
+      next: "overview",
+      prev: "choose-from-template",
+    },
+    {
+      name: "overview",
+      title: "Overview",
+      component: <OverviewStep goto={goto} />,
+      prev: "choose-from-template",
     },
   ];
 
@@ -375,10 +430,32 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
   return (
     <form class="w-full flex flex-col gap-4 grow">
       <div class="text-lg font-semibold">{steps[step()].title}</div>
-      {currentStepComponent()}
+      <Suspense
+        fallback={
+          <div class="flex flex-col gap-4 w-full bg-muted border p-4 rounded-md">
+            <Loader2 class="size-4 animate-spin" />
+          </div>
+        }
+      >
+        {currentStepComponent()}
+      </Suspense>
       <div class="flex grow w-full" />
       <div class="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => setStep(step() - 1)} disabled={step() === 0}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const prevStep = steps[step()].prev;
+            if (!prevStep) {
+              setStep(step() - 1);
+            } else {
+              const prevStepIndex = steps.findIndex((s) => s.name === prevStep);
+              setStep(prevStepIndex);
+            }
+          }}
+          disabled={step() === 0}
+        >
           <ChevronLeft class="size-4" />
           Back
         </Button>
@@ -392,7 +469,13 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
                 if (step() === steps.length - 1) {
                   props.onSubmit(warehouseForm.state.values);
                 } else {
-                  setStep(step() + 1);
+                  const nextStep = steps[step()].next;
+                  if (!nextStep) {
+                    setStep(step() + 1);
+                  } else {
+                    const nextStepIndex = steps.findIndex((s) => s.name === nextStep);
+                    setStep(nextStepIndex);
+                  }
                 }
               } else {
                 toast.error("Please fix the errors in the current step.");

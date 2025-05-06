@@ -71,6 +71,13 @@
       "when": 1746482932666,
       "tag": "0009_complex_infant_terrible",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1746536721032,
+      "tag": "0010_chubby_shotgun",
+      "breakpoints": true
     }
   ]
 }
