@@ -15,21 +15,29 @@ export const TB_warehouses = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     address_id: varchar("address").references(() => TB_addresses.id, { onDelete: "cascade" }),
-    warehouse_type_id: varchar("warehouse_type_id")
-      .notNull()
-      .references(() => TB_warehouse_types.id, { onDelete: "cascade" }),
+    warehouse_type_id: varchar("warehouse_type_id").references(() => TB_warehouse_types.id, { onDelete: "cascade" }),
   },
   "warehouse",
 );
 
-export const warehouse_relation = relations(TB_warehouses, ({ many }) => ({
+export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
   addresses: many(TB_warehouse_addresses),
   storages: many(TB_warehouse_storages),
+  type: one(TB_warehouse_types, {
+    fields: [TB_warehouses.warehouse_type_id],
+    references: [TB_warehouse_types.id],
+  }),
 }));
 
 export type WarehouseSelect = typeof TB_warehouses.$inferSelect;
 export type WarehouseInsert = typeof TB_warehouses.$inferInsert;
 export const WarehouseCreateSchema = omit(createInsertSchema(TB_warehouses), ["createdAt", "updatedAt"]);
+export const WarehouseCreateWithoutAddressAndTypeSchema = omit(createInsertSchema(TB_warehouses), [
+  "createdAt",
+  "updatedAt",
+  "address_id",
+  "warehouse_type_id",
+]);
 export type WarehouseCreate = InferInput<typeof WarehouseCreateSchema>;
 export const WarehouseUpdateSchema = object({
   ...partial(omit(createInsertSchema(TB_warehouses), ["createdAt", "updatedAt"])).entries,

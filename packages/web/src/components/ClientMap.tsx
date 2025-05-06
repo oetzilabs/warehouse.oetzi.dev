@@ -1,9 +1,9 @@
 // @refresh reload
 import { useColorMode } from "@kobalte/core";
 import { A } from "@solidjs/router";
-import L, { LatLng } from "leaflet";
+import L, { LatLng, Map } from "leaflet"; // Import Map type
 import "leaflet/dist/leaflet.css";
-import { Accessor, createEffect, createSignal, onMount, Show } from "solid-js";
+import { Accessor, createEffect, createSignal, onCleanup, onMount } from "solid-js"; // Import onCleanup
 import { toast } from "solid-sonner";
 
 const darkTile = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
@@ -17,40 +17,61 @@ const lightTile = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{
 });
 
 export default function ClientMap(props: { coords: Accessor<[number, number]> }) {
-  let mapDiv: any;
+  let mapDiv: HTMLDivElement | undefined; // Specify HTMLDivElement type and allow undefined initially
 
-  const [map, setMap] = createSignal<L.Map | null>(null);
+  const [map, setMap] = createSignal<Map | null>(null); // Specify Leaflet Map type
   const { colorMode } = useColorMode();
 
+  onMount(() => {
+    if (!mapDiv) {
+      // Should not happen with Solid's ref, but good practice
+      console.error("Map div not found!");
+      return;
+    }
+
+    const newMap = L.map(mapDiv, {
+      zoomControl: false,
+      attributionControl: false,
+    });
+
+    setMap(newMap);
+
+    // Clean up the map instance when the component is unmounted
+    onCleanup(() => {
+      newMap.remove();
+    });
+  });
+
   createEffect(() => {
+    const m = map();
+    if (!m) return; // Wait for the map to be initialized
+
     let c = props.coords();
     const coords = new LatLng(c[0], c[1]);
+
+    // Clear existing layers (specifically markers and feature groups)
+    m.eachLayer((layer) => {
+      if (layer instanceof L.Marker || layer instanceof L.FeatureGroup) {
+        m.removeLayer(layer);
+      }
+    });
+
     const marker = L.marker(coords, {
       icon: L.divIcon({
         html: `<div class="relative flex flex-col items-center justify-center bg-blue-500 -translate-x-[50%] -translate-y-[50%] w-[16px] h-[16px] rounded-full"></div>`,
         className: "bg-transparent",
       }),
     });
-    let m = map();
-    if (!m) {
-      let newMap = L.map(mapDiv, {
-        zoomControl: false,
-        attributionControl: false,
-      }).setView(c, 11);
-      const featureGroup = L.featureGroup([marker]).addTo(newMap);
-      newMap = newMap.fitBounds(featureGroup.getBounds());
-      setMap(newMap);
-    } else {
-      const featureGroup = L.featureGroup([marker]).addTo(m);
-      m = m.fitBounds(featureGroup.getBounds());
-      setMap(m);
-    }
+
+    const featureGroup = L.featureGroup([marker]).addTo(m);
+    m.fitBounds(featureGroup.getBounds(), { animate: false }); // Prevent excessive animation on re-render
   });
 
   createEffect(() => {
     const themeMode = colorMode();
     const m = map();
-    if (!m) return;
+    if (!m) return; // Wait for the map to be initialized
+
     if (themeMode === "dark") {
       darkTile.addTo(m);
       lightTile.removeFrom(m);

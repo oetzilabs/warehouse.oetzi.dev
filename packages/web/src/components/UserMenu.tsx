@@ -59,7 +59,22 @@ export default function UserMenu(props: { user: UserInfo; sessionToken?: string 
                         when={s().sessions.find((s) => s.access_token === props.sessionToken!)}
                         fallback={<p class="text-xs leading-none text-muted-foreground">No organization</p>}
                       >
-                        {(sess) => <p class="text-xs leading-none text-muted-foreground">{sess().org?.name}</p>}
+                        {(sess) => (
+                          <div class="flex flex-col gap-1">
+                            <p class="text-xs leading-none text-muted-foreground">
+                              {
+                                // @ts-ignore
+                                sess().org?.name ?? "no company"
+                              }
+                            </p>
+                            <p class="text-xs leading-none text-muted-foreground">
+                              {
+                                // @ts-ignore
+                                sess().wh?.name ?? "no warehouse"
+                              }
+                            </p>
+                          </div>
+                        )}
                       </Show>
                     </div>
                   </DropdownMenuGroupLabel>

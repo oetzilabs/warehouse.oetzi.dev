@@ -78,6 +78,27 @@
       "when": 1746536721032,
       "tag": "0010_chubby_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1746568618268,
+      "tag": "0011_superb_satana",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1746568982529,
+      "tag": "0012_zippy_chamber",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1746569235670,
+      "tag": "0013_overrated_prowler",
+      "breakpoints": true
     }
   ]
 }

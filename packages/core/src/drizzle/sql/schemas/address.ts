@@ -1,11 +1,12 @@
 import { relations } from "drizzle-orm";
-import { text, varchar } from "drizzle-orm/pg-core";
+import { integer, json, numeric, point, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
 import { TB_organizations } from "./organizations";
 import { TB_organization_addresses } from "./organizations_addresses";
+import { TB_warehouse_addresses } from "./warehouses_addresses";
 
 export const TB_addresses = commonTable(
   "addresses",
@@ -17,12 +18,15 @@ export const TB_addresses = commonTable(
     city: text("city").notNull(),
     state: text("state"),
     country: text("country").notNull(),
+    lat: numeric("lat", { mode: "number" }).notNull(),
+    lon: numeric("lon", { mode: "number" }).notNull(),
   },
   "addr",
 );
 
 export const addresses_relation = relations(TB_addresses, ({ many }) => ({
   organizations: many(TB_organization_addresses),
+  warehouses: many(TB_warehouse_addresses),
 }));
 
 export type AddressSelect = typeof TB_addresses.$inferSelect;

@@ -15,7 +15,21 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        user: true,
+        user: {
+          columns: {
+            hashed_password: false,
+          },
+          with: {
+            sessions: {
+              with: {
+                org: true,
+                wh: true,
+              },
+            },
+          },
+        },
+        org: true,
+        wh: true,
       };
 
       if (options) {

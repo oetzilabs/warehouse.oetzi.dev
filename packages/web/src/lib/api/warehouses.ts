@@ -1,9 +1,18 @@
-import { action, query, redirect } from "@solidjs/router";
-import { WarehouseCreateSchema, WarehouseUpdateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+import { action, json, query, redirect, revalidate } from "@solidjs/router";
+import {
+  AddressCreateSchema,
+  WarehouseCreateSchema,
+  WarehouseCreateWithoutAddressAndTypeSchema,
+  WarehouseUpdateSchema,
+} from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+import { AddressLive, AddressService } from "@warehouseoetzidev/core/src/entities/addresses";
+import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
+import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseTypeLive, WarehouseTypeService } from "@warehouseoetzidev/core/src/entities/warehouse_types";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
+import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
 
 export const getWarehouseById = query(async (id: string) => {
@@ -25,26 +34,67 @@ export const getWarehouseById = query(async (id: string) => {
   return warehouse;
 }, "warehouse-by-id");
 
-export const createWarehouse = action(async (data: InferInput<typeof WarehouseCreateSchema>) => {
-  "use server";
-  const auth = await withSession();
+export const createWarehouse = action(
+  async (
+    data: InferInput<typeof WarehouseCreateWithoutAddressAndTypeSchema> & {
+      address: InferInput<typeof AddressCreateSchema>;
+    },
+  ) => {
+    "use server";
+    const auth = await withSession();
 
-  if (!auth) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const session = auth[1];
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw new Error("You have to be part of an organization to perform this action.");
-  }
-  const warehouse = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const service = yield* _(WarehouseService);
-      return yield* service.create(data, orgId);
-    }).pipe(Effect.provide(WarehouseLive)),
-  );
-  return warehouse;
-});
+    if (!auth) {
+      throw new Error("You have to be logged in to perform this action.");
+    }
+    const session = auth[1];
+    const orgId = session.current_organization_id;
+    if (!orgId) {
+      throw new Error("You have to be part of an organization to perform this action.");
+    }
+    const warehouse = await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const warehouseService = yield* _(WarehouseService);
+        const addressService = yield* _(AddressService);
+        let address = yield* addressService.findByLatLon([data.address.lat, data.address.lon]);
+        if (!address) {
+          address = yield* addressService.create(data.address);
+        }
+        const createdWarehouse = yield* warehouseService.create(
+          {
+            ...data,
+            address_id: address.id,
+            // id from seed
+            warehouse_type_id: "wht_ul6fl08era8zwp4eytmumg26",
+          },
+          orgId,
+        );
+
+        // connect user to warehouse
+        const sessionService = yield* _(SessionService);
+        const sessionUpdated = yield* sessionService.update({
+          id: session.id,
+          current_warehouse_id: createdWarehouse.id,
+        });
+
+        const userService = yield* _(UserService);
+        const userUpdated = yield* userService.update(session.userId, {
+          id: session.userId,
+          has_finished_onboarding: true,
+        });
+
+        return createdWarehouse;
+      }).pipe(
+        Effect.provide(WarehouseLive),
+        Effect.provide(AddressLive),
+        Effect.provide(SessionLive),
+        Effect.provide(UserLive),
+      ),
+    );
+    return json(warehouse, {
+      revalidate: [getAuthenticatedUser.key],
+    });
+  },
+);
 
 export const updateWarehouse = action(async (data: InferInput<typeof WarehouseUpdateSchema>) => {
   "use server";
