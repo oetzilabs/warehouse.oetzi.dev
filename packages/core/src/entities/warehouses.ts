@@ -52,6 +52,20 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         }
 
         const [warehouse] = yield* Effect.promise(() => db.insert(TB_warehouses).values(userInput).returning());
+
+        const connectedToOrg = yield* Effect.promise(() =>
+          db
+            .insert(TB_organizations_warehouses)
+            .values({
+              organizationId: parsedOrgId.output,
+              warehouseId: warehouse.id,
+            })
+            .returning(),
+        );
+        if (!connectedToOrg) {
+          return yield* Effect.fail(new Error("Failed to connect warehouse to organization"));
+        }
+
         return warehouse;
       });
 

@@ -90,7 +90,7 @@ export const createWarehouse = action(
         Effect.provide(UserLive),
       ),
     );
-    return json(warehouse, {
+    return redirect("/dashboard", {
       revalidate: [getAuthenticatedUser.key],
     });
   },

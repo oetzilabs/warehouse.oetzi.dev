@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/api/auth";
 import { createMediaQuery } from "@kobalte/utils";
 import { A, createAsync, RouteDefinition } from "@solidjs/router";
 import { Show } from "solid-js";
+import { useBreadcrumbs } from "../components/providers/Breadcrumbs";
 
 export const route = {
   preload: async (props) => {
@@ -16,6 +17,8 @@ export default function IndexPage() {
   const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
   const isMobile = createMediaQuery("(max-width: 640px)", true);
 
+  const { reset } = useBreadcrumbs();
+  reset();
   return (
     <>
       <div class="flex grow w-full">
