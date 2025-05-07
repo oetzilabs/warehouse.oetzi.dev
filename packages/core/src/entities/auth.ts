@@ -65,18 +65,16 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         // Verify the JWT first
         const decodedToken = yield* verifyJwt(token);
 
-        const sessionExists = yield* sessionService.findByToken(token);
-        if (!sessionExists) {
-          return { err: new Error("Session not found"), success: false } as const;
+        const session = yield* sessionService.findByToken(token);
+        if (!session) {
+          return yield* Effect.fail(new Error("Session not found"));
         }
 
-        // If JWT is valid, fetch the user based on the userId from the payload
         const user = yield* userService.findById(decodedToken.userId);
         if (!user) {
-          // If user is not found, treat as an invalid token (e.g., user deleted)
-          return { err: new Error("User associated with token not found"), success: false } as const;
+          return yield* Effect.fail(new Error("User associated with token not found"));
         }
-        return { success: true, user, session: sessionExists } as const;
+        return yield* Effect.succeed({ user, session });
       });
 
     const login = (email: string, password: string) =>
@@ -97,12 +95,15 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
 
         const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
 
+        const lastOrganization = yield* userService.findLastOrganization(user.id);
+        const lastWarehouse = yield* userService.findLastWarehouse(user.id);
         const session = yield* sessionService.create({
           expiresAt,
           userId: user.id,
-          access_token: accessToken, // Store the JWT in the database session record
+          access_token: accessToken,
+          current_organization_id: lastOrganization?.id ?? null,
+          current_warehouse_id: lastWarehouse?.id ?? null,
         });
-
         if (!session) {
           return { err: new Error("Failed to create session record"), success: false } as const;
         }
@@ -163,9 +164,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       removeSession,
     } as const;
   }),
-  // Add JwtSecrets to the dependencies
   dependencies: [SessionLive, UserLive],
 }) {}
 
-// Provide the JwtSecrets Layer when using the AuthLive Layer
 export const AuthLive = AuthService.Default;

@@ -34,29 +34,30 @@ export const getAuthenticatedUser = query(
     if (!sessionToken) {
       return undefined;
     }
+    try {
+      const verified = await Effect.runPromise(
+        Effect.gen(function* (_) {
+          const authService = yield* _(AuthService);
+          return yield* authService.verify(sessionToken);
+        }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+      );
+      if (!verified) {
+        return redirect("/", {
+          status: 302,
+          headers: {
+            "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
+          },
+        });
+      }
 
-    const verified = await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const authService = yield* _(AuthService);
-        return yield* authService.verify(sessionToken);
-      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
-    ).catch((e) => ({ err: e, success: false }) as const);
+      if (!options.skipOnboarding && !verified.user.has_finished_onboarding) {
+        return redirect("/onboarding");
+      }
 
-    if (!verified.success) {
-      // Remove the session token from the cookie and redirect to home page
-      return redirect("/", {
-        status: 302,
-        headers: {
-          "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
-        },
-      });
+      return verified.user;
+    } catch (e) {
+      return undefined;
     }
-
-    if (!options.skipOnboarding && !verified.user.has_finished_onboarding) {
-      return redirect("/onboarding");
-    }
-
-    return verified.user;
   },
   "user",
 );

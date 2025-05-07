@@ -4,6 +4,7 @@ import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import {
   TB_organizations_warehouses,
+  TB_users_warehouses,
   TB_warehouse_types,
   TB_warehouses,
   WarehouseCreateSchema,
@@ -36,6 +37,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             },
           },
         },
+        owner: {
+          columns: {
+            hashed_password: false,
+          },
+        },
       };
 
       if (options) {
@@ -44,10 +50,14 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       return defaultRelations;
     };
 
-    const create = (userInput: InferInput<typeof WarehouseCreateSchema>, organizationId: string) =>
+    const create = (userInput: InferInput<typeof WarehouseCreateSchema>, organizationId: string, userId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedOrgId.success) {
+          return yield* Effect.fail(new Error("Invalid organization ID format"));
+        }
+        const parsedUserId = safeParse(prefixed_cuid2, userId);
+        if (!parsedUserId.success) {
           return yield* Effect.fail(new Error("Invalid organization ID format"));
         }
 
@@ -62,8 +72,22 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             })
             .returning(),
         );
+
         if (!connectedToOrg) {
           return yield* Effect.fail(new Error("Failed to connect warehouse to organization"));
+        }
+        const connectedToUser = yield* Effect.promise(() =>
+          db
+            .insert(TB_users_warehouses)
+            .values({
+              userId: parsedOrgId.output,
+              warehouseId: warehouse.id,
+            })
+            .returning(),
+        );
+
+        if (!connectedToUser) {
+          return yield* Effect.fail(new Error("Failed to connect warehouse to user"));
         }
 
         return warehouse;
@@ -180,6 +204,27 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.promise(() => db.query.TB_warehouses.findMany());
       });
 
+    const findByUserId = (userId: string, relations: FindManyParams["with"] = withRelations()) =>
+      Effect.gen(function* (_) {
+        const parsedUserId = safeParse(prefixed_cuid2, userId);
+        if (!parsedUserId.success) {
+          return yield* Effect.fail(new Error("Invalid user ID"));
+        }
+
+        const entries = yield* Effect.promise(() =>
+          db.query.TB_users_warehouses.findMany({
+            where: (fields, operations) => operations.eq(fields.userId, parsedUserId.output),
+            with: {
+              warehouse: {
+                with: relations,
+              },
+            },
+          }),
+        );
+
+        return entries.map((entry) => entry.warehouse);
+      });
+
     return {
       create,
       findById,
@@ -187,6 +232,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       remove,
       safeRemove,
       findByOrganizationId,
+      findByUserId,
       all,
     } as const;
   }),
@@ -196,4 +242,4 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
 export const WarehouseLive = WarehouseService.Default;
 
 // Type exports
-export type Frontend = NonNullable<Awaited<ReturnType<WarehouseService["findById"]>>>;
+export type WarehouseInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<WarehouseService["findById"]>>>>;

@@ -15,6 +15,25 @@ import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
 
+export const getWarehouses = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const warehouses = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(WarehouseService);
+      return yield* service.findByUserId(user.id);
+    }).pipe(Effect.provide(WarehouseLive)),
+  );
+  return warehouses;
+}, "user-warehouses");
+
 export const getWarehouseById = query(async (id: string) => {
   "use server";
   const auth = await withSession();
@@ -47,6 +66,9 @@ export const createWarehouse = action(
       throw new Error("You have to be logged in to perform this action.");
     }
     const session = auth[1];
+    if (!session) {
+      throw new Error("You have to be logged in to perform this action.");
+    }
     const orgId = session.current_organization_id;
     if (!orgId) {
       throw new Error("You have to be part of an organization to perform this action.");
@@ -67,6 +89,7 @@ export const createWarehouse = action(
             warehouse_type_id: "wht_ul6fl08era8zwp4eytmumg26",
           },
           orgId,
+          session.userId,
         );
 
         // connect user to warehouse
@@ -171,3 +194,41 @@ export const getTypes = query(async () => {
   );
   return types;
 }, "warehouse-types");
+
+export const changeWarehouseDimensions = action(
+  async (
+    data: InferInput<typeof WarehouseUpdateSchema>["dimensions"] & {
+      id: string;
+    },
+  ) => {
+    "use server";
+    const auth = await withSession();
+    if (!auth) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const user = auth[0];
+    if (!user) {
+      throw new Error("You have to be logged in to perform this action.");
+    }
+    const session = auth[1];
+    if (!session) {
+      throw new Error("You have to be logged in to perform this action.");
+    }
+    const orgId = session.current_organization_id;
+    if (!orgId) {
+      throw new Error("You have to be part of an organization to perform this action.");
+    }
+    const warehouse = await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const service = yield* _(WarehouseService);
+        const wh = yield* service.findById(data.id);
+        if (!wh) {
+          return yield* Effect.fail(new Error("Warehouse not found"));
+        }
+        const d = { dimensions: { width: data.width, height: data.height }, id: data.id };
+        return yield* service.update(d);
+      }).pipe(Effect.provide(WarehouseLive)),
+    );
+    return warehouse;
+  },
+);

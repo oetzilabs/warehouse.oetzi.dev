@@ -25,10 +25,14 @@ export const login = async (email: string, password: string) => {
       const sessionService = yield* _(SessionService);
       const token = yield* sessionService.generateToken();
       const expiresAt = dayjs().add(7, "days").toDate();
+      const lastOrganization = yield* userService.findLastOrganization(user.id);
+      const lastWarehouse = yield* userService.findLastWarehouse(user.id);
       const session = yield* sessionService.create({
         expiresAt,
         userId: user.id,
         access_token: token,
+        current_organization_id: lastOrganization?.id ?? null,
+        current_warehouse_id: lastWarehouse?.id ?? null,
       });
       if (!session) {
         return {

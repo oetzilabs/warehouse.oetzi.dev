@@ -20,10 +20,12 @@ import Settings from "lucide-solid/icons/settings";
 import User from "lucide-solid/icons/user";
 import { Match, Show, Switch } from "solid-js";
 import { toast } from "solid-sonner";
+import { useUser } from "./providers/User";
 
-export default function UserMenu(props: { user: UserInfo; sessionToken?: string }) {
-  const isLoggingOut = useSubmission(logout);
+export default function UserMenu() {
+  const user = useUser();
   const logoutAction = useAction(logout);
+  const isLoggingOut = useSubmission(logout);
 
   return (
     <div class="w-max flex text-base gap-2">
@@ -43,7 +45,7 @@ export default function UserMenu(props: { user: UserInfo; sessionToken?: string 
           </div>
         }
       >
-        <Match when={props.user !== null && props.sessionToken !== undefined && props.user}>
+        <Match when={user.ready() && user.user() !== null && user.session() !== null && user.user()}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>
               <DropdownMenuTrigger as={Button} class="flex flex-row items-center justify-center size-8 p-1">
@@ -56,22 +58,14 @@ export default function UserMenu(props: { user: UserInfo; sessionToken?: string 
                       <p class="text-sm font-medium leading-none">{s().name}</p>
                       <p class="text-xs leading-none text-muted-foreground">{s().email}</p>
                       <Show
-                        when={s().sessions.find((s) => s.access_token === props.sessionToken!)}
+                        when={user.session()}
                         fallback={<p class="text-xs leading-none text-muted-foreground">No organization</p>}
                       >
                         {(sess) => (
                           <div class="flex flex-col gap-1">
+                            <p class="text-sm leading-none text-muted-foreground">{sess().org?.name ?? "no company"}</p>
                             <p class="text-xs leading-none text-muted-foreground">
-                              {
-                                // @ts-ignore
-                                sess().org?.name ?? "no company"
-                              }
-                            </p>
-                            <p class="text-xs leading-none text-muted-foreground">
-                              {
-                                // @ts-ignore
-                                sess().wh?.name ?? "no warehouse"
-                              }
+                              {sess().wh?.name ?? "no warehouse"}
                             </p>
                           </div>
                         )}

@@ -19,10 +19,18 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           with: {
             org: {
               with: {
-                owner: true,
+                owner: {
+                  columns: {
+                    hashed_password: false,
+                  },
+                },
                 users: {
                   with: {
-                    user: true,
+                    user: {
+                      columns: {
+                        hashed_password: false,
+                      },
+                    },
                   },
                 },
                 whs: {
@@ -51,8 +59,35 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
           },
         },
+        whs: {
+          with: {
+            warehouse: {
+              with: {
+                storages: {
+                  with: {
+                    storage: {
+                      with: {
+                        type: true,
+                      },
+                    },
+                  },
+                },
+                addresses: {
+                  with: {
+                    address: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         sessions: {
           with: {
+            user: {
+              columns: {
+                hashed_password: false,
+              },
+            },
             org: true,
             wh: true,
           },
@@ -204,6 +239,34 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return typeof user !== "undefined";
       });
 
+    const findLastOrganization = (userId: string) =>
+      Effect.gen(function* (_) {
+        const parsedUserId = safeParse(prefixed_cuid2, userId);
+        if (!parsedUserId.success) {
+          return yield* Effect.fail(new Error("Invalid user ID format"));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_organizations.findFirst({
+            where: (users_warehouses, operations) => operations.eq(users_warehouses.owner_id, parsedUserId.output),
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+          }),
+        );
+      });
+
+    const findLastWarehouse = (userId: string) =>
+      Effect.gen(function* (_) {
+        const parsedUserId = safeParse(prefixed_cuid2, userId);
+        if (!parsedUserId.success) {
+          return yield* Effect.fail(new Error("Invalid user ID format"));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_warehouses.findFirst({
+            where: (users_warehouses, operations) => operations.eq(users_warehouses.ownerId, parsedUserId.output),
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+          }),
+        );
+      });
+
     return {
       create,
       disable,
@@ -214,6 +277,8 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       safeRemove,
       notify,
       verifyPassword,
+      findLastOrganization,
+      findLastWarehouse,
     } as const;
   }),
   dependencies: [DatabaseLive],

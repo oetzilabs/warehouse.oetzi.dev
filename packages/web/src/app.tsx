@@ -14,7 +14,7 @@ import Loader2 from "lucide-solid/icons/loader-2";
 import { ErrorBoundary, Show, Suspense } from "solid-js";
 import { isServer } from "solid-js/web";
 import "./app.css";
-import { Header } from "./components/Header";
+import { UserProvider } from "./components/providers/User";
 import { AppLayout } from "./layout";
 
 export default function App() {
@@ -84,7 +84,9 @@ export default function App() {
                       "min-height": "100vh",
                     }}
                   >
-                    <AppLayout>{props.children}</AppLayout>
+                    <UserProvider>
+                      <AppLayout>{props.children}</AppLayout>
+                    </UserProvider>
                   </div>
                 </ColorModeProvider>
               </TranslationsProvider>

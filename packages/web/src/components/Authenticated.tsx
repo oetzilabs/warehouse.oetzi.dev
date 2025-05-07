@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from "@/lib/api/auth";
+import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { createAsync } from "@solidjs/router";
 import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -6,10 +6,11 @@ import { JSX, Show, Suspense } from "solid-js";
 import { NotLoggedIn } from "./NotLoggedIn";
 
 export const Authenticated = (props: {
-  children: (props: { user: UserInfo }) => JSX.Element;
+  children: (props: { user: UserInfo; sessionToken?: string }) => JSX.Element;
   skipOnboarding: boolean;
 }) => {
-  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: props.skipOnboarding }));
+  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: props.skipOnboarding }), { deferStream: true });
+  const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
   const ChildComp = props.children;
 
   return (
@@ -30,7 +31,7 @@ export const Authenticated = (props: {
           </div>
         }
       >
-        {(u) => <ChildComp user={u()} />}
+        {(u) => <ChildComp user={u()} sessionToken={sessionToken()} />}
       </Show>
     </Suspense>
   );

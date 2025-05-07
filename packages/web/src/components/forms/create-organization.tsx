@@ -24,6 +24,9 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
       phone: "",
       location: "",
     } as OrganizationCreate,
+    onSubmit: (values) => {
+      props.onSubmit(values.value);
+    },
   }));
 
   return (
@@ -137,8 +140,8 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
         <form.Field
           name="location"
           validators={{
-            onChange: nullable(pipe(string(), minLength(3))),
-            onBlur: nullable(pipe(string(), minLength(3))),
+            onChange: pipe(string(), minLength(3)),
+            onBlur: pipe(string(), minLength(3)),
           }}
           children={(field) => (
             <TextField
@@ -148,8 +151,10 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
               onChange={(value) => field().setValue(value)}
               onBlur={field().handleBlur}
             >
-              <TextFieldLabel>Location</TextFieldLabel>
-              <TextFieldInput placeholder="Jane Street, London" />
+              <TextFieldLabel>
+                Location <span class="text-red-500">*</span>
+              </TextFieldLabel>
+              <TextFieldInput placeholder="Jane Street, London" required />
             </TextField>
           )}
         />
@@ -168,7 +173,14 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
             type="button"
             disabled={props.disabled}
             onClick={() => {
-              props.onSubmit(form.state.values);
+              form
+                .validateAllFields("submit")
+                .then((v) => {
+                  form.handleSubmit();
+                })
+                .catch((err) => {
+                  toast.error(err.message);
+                });
             }}
           >
             <Show

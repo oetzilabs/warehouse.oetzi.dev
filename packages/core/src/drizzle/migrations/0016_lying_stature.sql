@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."warehouses" ADD COLUMN "owner_id" varchar;--> statement-breakpoint
+ALTER TABLE "warehouse"."warehouses" ADD CONSTRAINT "warehouses_owner_id_users_id_fk" FOREIGN KEY ("owner_id") REFERENCES "warehouse"."users"("id") ON DELETE cascade ON UPDATE no action;

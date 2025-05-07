@@ -8,11 +8,10 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { A, createAsync, useAction } from "@solidjs/router";
+import { A, createAsync } from "@solidjs/router";
 import HomeIcon from "lucide-solid/icons/home";
 import LogIn from "lucide-solid/icons/log-in";
-import { createSignal, For, Show, Suspense } from "solid-js";
-import { toast } from "solid-sonner";
+import { For, Show, Suspense } from "solid-js";
 import { cn } from "../lib/utils";
 import ModeToggle from "./ModeToogle";
 import { useBreadcrumbs } from "./providers/Breadcrumbs";
@@ -20,8 +19,6 @@ import { Button } from "./ui/button";
 import UserMenu from "./UserMenu";
 
 export function Header() {
-  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
-  const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
   const { breadcrumbs, ready } = useBreadcrumbs();
   return (
     <div class="flex flex-col p-2 w-full">
@@ -103,17 +100,7 @@ export function Header() {
           <div class="w-max items-center justify-end flex flex-row gap-2">
             <ModeToggle />
             <Suspense fallback={<div>Loading...</div>}>
-              <Show
-                when={user()}
-                fallback={
-                  <Button as={A} href="/login" size="sm" class="w-max h-8">
-                    Login
-                    <LogIn class="size-4" />
-                  </Button>
-                }
-              >
-                {(u) => <UserMenu user={u()} sessionToken={sessionToken()} />}
-              </Show>
+              <UserMenu />
             </Suspense>
           </div>
         </div>

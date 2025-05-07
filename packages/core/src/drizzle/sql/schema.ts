@@ -12,6 +12,7 @@ export * from "./schemas/warehouses";
 export * from "./schemas/warehouses_addresses";
 export * from "./schemas/warehouse_types";
 export * from "./schemas/warehouses_storages";
+export * from "./schemas/users_warehouses";
 
 export * from "./schemas/organizations";
 export * from "./schemas/organizations_addresses";

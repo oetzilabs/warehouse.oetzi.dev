@@ -149,4 +149,4 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
 }) {}
 
 export const SessionLive = SessionService.Default;
-export type SessionInfo = Effect.Effect.Success<ReturnType<SessionService["findById"]>>;
+export type SessionInfo = NonNullable<Effect.Effect.Success<ReturnType<SessionService["findById"]>>>;

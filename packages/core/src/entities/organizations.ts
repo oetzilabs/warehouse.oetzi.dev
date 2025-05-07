@@ -350,4 +350,4 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 export const OrganizationLive = OrganizationService.Default;
 
 // Type exports
-export type Frontend = NonNullable<Awaited<ReturnType<OrganizationService["findById"]>>>;
+export type OrganizationInfo = NonNullable<Awaited<ReturnType<OrganizationService["findById"]>>>;

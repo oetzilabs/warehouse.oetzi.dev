@@ -17,11 +17,7 @@ export const withSession = async () => {
       const authService = yield* _(AuthService);
       return yield* authService.verify(sessionToken);
     }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
-  ).catch((e) => ({ err: e, success: false, user: undefined, session: undefined }) as const);
-
-  if (!verified.success) {
-    throw verified.err;
-  }
+  );
 
   return [verified.user, verified.session] as const;
 };
