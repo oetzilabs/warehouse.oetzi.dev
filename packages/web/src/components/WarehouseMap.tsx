@@ -18,6 +18,7 @@ import {
 import { changeWarehouseDimensions } from "@/lib/api/warehouses";
 import { useColorModeValue } from "@kobalte/core";
 import { useAction, useSubmission } from "@solidjs/router";
+import { clientOnly } from "@solidjs/start";
 import { type WarehouseInfo } from "@warehouseoetzidev/core/src/entities/warehouses";
 import PackagePlus from "lucide-solid/icons/package-plus";
 import ZoomReset from "lucide-solid/icons/redo";
@@ -25,11 +26,13 @@ import Settings from "lucide-solid/icons/settings";
 import Share from "lucide-solid/icons/share";
 import ZoomIn from "lucide-solid/icons/zoom-in";
 import ZoomOut from "lucide-solid/icons/zoom-out";
-import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 import { useUser } from "./providers/User";
 import { Button } from "./ui/button";
+
+const WarehouseSettingsForm = clientOnly(() => import("@/components/forms/warehouse-settings"));
 
 type WarehouseMapProps = {
   warehouses: WarehouseInfo[];
@@ -39,7 +42,13 @@ export default function WarehouseMap(props: WarehouseMapProps) {
   const user = useUser();
   let canvasRef: HTMLCanvasElement | undefined;
 
+  const [settingsOpen, setSettingsOpen] = createSignal(false);
+
   const [zoom, setZoom] = createSignal(1);
+
+  const dottedColor = useColorModeValue("#bbbbbb", "#333333");
+  const borderColor = useColorModeValue("#b5b5b5", "#444444");
+  const warehouseColor = useColorModeValue("#ffffff", "#222222");
 
   // Add function to handle DPI scaling
   const setupCanvas = (canvas: HTMLCanvasElement) => {
@@ -61,10 +70,6 @@ export default function WarehouseMap(props: WarehouseMapProps) {
     }
     return ctx;
   };
-
-  const dottedColor = useColorModeValue("#bbbbbb", "#333333");
-  const borderColor = useColorModeValue("#aaaaaa", "#444444");
-  const warehouseColor = useColorModeValue("#ffffff", "#222222");
 
   const drawDottedBackground = (
     ctx: CanvasRenderingContext2D,
@@ -171,6 +176,30 @@ export default function WarehouseMap(props: WarehouseMapProps) {
 
   const changeWarehouseDimensionsAction = useAction(changeWarehouseDimensions);
   const isChangingWarehouseDimensions = useSubmission(changeWarehouseDimensions);
+
+  createEffect(() => {
+    const canvas = canvasRef;
+    if (!canvas) return;
+
+    const ctx = setupCanvas(canvas);
+    if (!ctx) return;
+
+    const redraw = () => {
+      const rect = canvas.getBoundingClientRect();
+      setupCanvas(canvas);
+      drawDottedBackground(ctx, canvas, { dottedColor: dottedColor() });
+      const warehouse = user.currentWarehouse();
+      if (warehouse) {
+        drawWarehouseMapLayer(ctx, canvas, {
+          backgroundColor: warehouseColor(),
+          borderColor: borderColor(),
+          warehouse,
+        });
+      }
+    };
+
+    redraw();
+  });
 
   return (
     <div class="w-full h-full relative">
@@ -346,10 +375,27 @@ export default function WarehouseMap(props: WarehouseMapProps) {
               <PackagePlus class="size-4" />
               <span class="text-sm leading-none">Storage</span>
             </div>
-            <div class="flex flex-row gap-2 items-center justify-start hover:bg-muted p-2 cursor-pointer rounded-sm">
-              <Settings class="size-4" />
-              <span class="text-sm leading-none">Settings</span>
-            </div>
+            <Dialog open={settingsOpen()} onOpenChange={setSettingsOpen}>
+              <DialogTrigger
+                as="div"
+                // onClick={() => setSettingsOpen(true)}
+                class="flex flex-row gap-2 items-center justify-start hover:bg-muted p-2 cursor-pointer rounded-sm"
+              >
+                <Settings class="size-4" />
+                <span class="text-sm leading-none">Settings</span>
+              </DialogTrigger>
+              <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Warehouse Settings</DialogTitle>
+                  <DialogDescription>Configure your warehouse settings.</DialogDescription>
+                </DialogHeader>
+                <WarehouseSettingsForm
+                  onSubmit={() => {
+                    setSettingsOpen(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
             <div class="flex flex-row gap-2 items-center justify-start hover:bg-muted p-2 cursor-pointer rounded-sm">
               <Share class="size-4" />
               <span class="text-sm leading-none">Share</span>
