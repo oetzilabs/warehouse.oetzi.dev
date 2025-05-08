@@ -1,6 +1,8 @@
 import { action, json, query, redirect, revalidate } from "@solidjs/router";
 import {
   AddressCreateSchema,
+  WarehouseAreaCreateSchema,
+  WarehouseAreaUpdateSchema,
   WarehouseCreateSchema,
   WarehouseCreateWithoutAddressAndTypeSchema,
   WarehouseUpdateSchema,
@@ -232,3 +234,112 @@ export const changeWarehouseDimensions = action(
     return warehouse;
   },
 );
+
+export const changeWarehouse = action(async (whId) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const session = auth[1];
+  if (!session) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw new Error("You have to be part of an organization to perform this action.");
+  }
+  const warehouse = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const sessionService = yield* _(SessionService);
+      const warehouseService = yield* _(WarehouseService);
+      const wh = yield* warehouseService.findById(whId);
+      if (!wh) {
+        return yield* Effect.fail(new Error("Warehouse not found"));
+      }
+      const switched = yield* sessionService.update({
+        id: session.id,
+        current_warehouse_id: wh.id,
+      });
+      if (!switched) {
+        return yield* Effect.fail(new Error("Warehouse not updated"));
+      }
+      return wh;
+    }).pipe(Effect.provide(SessionLive), Effect.provide(WarehouseLive)),
+  );
+  return json(warehouse, {
+    revalidate: [getAuthenticatedUser.key],
+  });
+});
+
+export const addWarehouseArea = action(async (data: InferInput<typeof WarehouseAreaCreateSchema>) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const session = auth[1];
+  if (!session) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw new Error("You have to be part of an organization to perform this action.");
+  }
+  const area = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(WarehouseService);
+      const wh = yield* service.findById(data.warehouse_id);
+      if (!wh) {
+        return yield* Effect.fail(new Error("Warehouse not found"));
+      }
+      const area = yield* service.addArea(data, wh.id);
+      return area;
+    }).pipe(Effect.provide(WarehouseLive)),
+  );
+  return json(area, {
+    revalidate: [getAuthenticatedUser.key],
+  });
+});
+
+export const updateWarehouseArea = action(async (data: InferInput<typeof WarehouseAreaUpdateSchema>) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const session = auth[1];
+  if (!session) {
+    throw new Error("You have to be logged in to perform this action.");
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw new Error("You have to be part of an organization to perform this action.");
+  }
+  const area = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(WarehouseService);
+      const area = yield* service.findAreaById(data.id);
+      if (!area) {
+        return yield* Effect.fail(new Error("Area not found"));
+      }
+      const updatedArea = yield* service.updateArea(data, area.id);
+      return updatedArea;
+    }).pipe(Effect.provide(WarehouseLive)),
+  );
+  return json(area, {
+    revalidate: [getAuthenticatedUser.key],
+  });
+});

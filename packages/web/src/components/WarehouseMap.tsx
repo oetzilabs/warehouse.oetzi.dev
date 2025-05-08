@@ -17,16 +17,19 @@ import {
 } from "@/components/ui/number-field";
 import { changeWarehouseDimensions } from "@/lib/api/warehouses";
 import { useColorModeValue } from "@kobalte/core";
+import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { useAction, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
 import { type WarehouseInfo } from "@warehouseoetzidev/core/src/entities/warehouses";
+import LayoutGrid from "lucide-solid/icons/layout-grid";
+import Map from "lucide-solid/icons/map";
 import PackagePlus from "lucide-solid/icons/package-plus";
 import ZoomReset from "lucide-solid/icons/redo";
 import Settings from "lucide-solid/icons/settings";
 import Share from "lucide-solid/icons/share";
 import ZoomIn from "lucide-solid/icons/zoom-in";
 import ZoomOut from "lucide-solid/icons/zoom-out";
-import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createResource, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 import { useUser } from "./providers/User";
@@ -41,6 +44,19 @@ type WarehouseMapProps = {
 export default function WarehouseMap(props: WarehouseMapProps) {
   const user = useUser();
   let canvasRef: HTMLCanvasElement | undefined;
+
+  const [viewState, setViewState, initView] = makePersisted(
+    createStore({
+      isMapView: true,
+    }),
+    {
+      name: "warehouse-view",
+      storage: cookieStorage,
+    },
+  );
+
+  // Initialize persistent storage
+  createResource(() => initView)[0]();
 
   const [settingsOpen, setSettingsOpen] = createSignal(false);
 
@@ -110,7 +126,7 @@ export default function WarehouseMap(props: WarehouseMapProps) {
     if (!warehouse.dimensions) return;
 
     const { width, height } = warehouse.dimensions;
-    const cornerRadius = 6; // Adjust this value to change the roundness
+    const cornerRadius = 4; // Adjust this value to change the roundness
 
     // Calculate center position (using style dimensions for proper positioning)
     const rect = canvas.getBoundingClientRect();
@@ -181,6 +197,9 @@ export default function WarehouseMap(props: WarehouseMapProps) {
     const canvas = canvasRef;
     if (!canvas) return;
 
+    const visible = viewState.isMapView;
+    if (!visible) return;
+
     const ctx = setupCanvas(canvas);
     if (!ctx) return;
 
@@ -203,8 +222,21 @@ export default function WarehouseMap(props: WarehouseMapProps) {
 
   return (
     <div class="w-full h-full relative">
-      <canvas id="map" class="w-full h-full absolute top-0 left-0" ref={canvasRef!} />
+      <Show when={viewState.isMapView}>
+        <canvas id="map" class="w-full h-full absolute top-0 left-0" ref={canvasRef!} />
+      </Show>
+      {/* Add view toggle button */}
       <div class="absolute bottom-4 right-4 flex flex-col gap-2">
+        <Button
+          variant="secondary"
+          size="icon"
+          class="size-8 p-1"
+          onClick={() => setViewState({ isMapView: !viewState.isMapView })}
+        >
+          <Show when={viewState.isMapView} fallback={<Map class="size-4" />}>
+            <LayoutGrid class="size-4" />
+          </Show>
+        </Button>
         <Button
           variant="secondary"
           size="icon"

@@ -43,15 +43,15 @@ export function Header() {
                       <>
                         <BreadcrumbSeparator> / </BreadcrumbSeparator>
                         <BreadcrumbItem>
-                          <Skeleton class="w-20 h-4" />
+                          <Skeleton class="w-20 h-3.5" />
                         </BreadcrumbItem>
                         <BreadcrumbSeparator> / </BreadcrumbSeparator>
                         <BreadcrumbItem>
-                          <Skeleton class="w-16 h-4" />
+                          <Skeleton class="w-16 h-3.5" />
                         </BreadcrumbItem>
                         <BreadcrumbSeparator> / </BreadcrumbSeparator>
                         <BreadcrumbItem>
-                          <Skeleton class="w-20 h-4" />
+                          <Skeleton class="w-12 h-3.5" />
                         </BreadcrumbItem>
                       </>
                     }

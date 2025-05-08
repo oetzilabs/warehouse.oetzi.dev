@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."warehouse_areas" ALTER COLUMN "bounding_box" SET NOT NULL;

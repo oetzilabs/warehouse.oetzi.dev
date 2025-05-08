@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
 import { TB_users } from "./users";
+import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
 import { TB_warehouse_storages } from "./warehouses_storages";
@@ -37,6 +38,7 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
     fields: [TB_warehouses.ownerId],
     references: [TB_users.id],
   }),
+  areas: many(TB_warehouse_areas),
 }));
 
 export type WarehouseSelect = typeof TB_warehouses.$inferSelect;

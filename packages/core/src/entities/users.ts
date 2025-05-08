@@ -77,6 +77,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     address: true,
                   },
                 },
+                areas: true,
               },
             },
           },
@@ -89,7 +90,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
               },
             },
             org: true,
-            wh: true,
+            wh: {
+              with: {
+                storages: {
+                  with: {
+                    storage: {
+                      with: {
+                        type: true,
+                      },
+                    },
+                  },
+                },
+                addresses: {
+                  with: {
+                    address: true,
+                  },
+                },
+                areas: true,
+              },
+            },
           },
         },
       };
@@ -134,7 +153,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 
         return yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
-            where: (users, operations) => operations.eq(users.id, parsedId.output),
+            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: relations,
             columns: {
               hashed_password: false,
@@ -153,7 +172,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 
         return yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
-            where: (users, operations) => operations.eq(users.email, parsedEmail.output),
+            where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
             with: relations,
             columns: {
               hashed_password: false,
