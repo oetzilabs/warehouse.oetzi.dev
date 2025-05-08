@@ -34,8 +34,12 @@ export const TB_sessions = schema.table("session", {
     mode: "date",
   }).notNull(),
   access_token: text("access_token").notNull(),
-  current_organization_id: varchar("current_organization_id"),
-  current_warehouse_id: varchar("current_warehouse_id"),
+  current_organization_id: varchar("current_organization_id").references(() => TB_organizations.id, {
+    onDelete: "cascade",
+  }),
+  current_warehouse_id: varchar("current_warehouse_id").references(() => TB_warehouses.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const session_relation = relations(TB_sessions, ({ one, many }) => ({

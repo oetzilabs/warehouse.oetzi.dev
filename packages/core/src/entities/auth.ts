@@ -71,6 +71,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         }
 
         const user = yield* userService.findById(decodedToken.userId);
+        // console.dir(user, { depth: Infinity });
         if (!user) {
           return yield* Effect.fail(new Error("User associated with token not found"));
         }

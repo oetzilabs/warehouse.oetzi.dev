@@ -89,7 +89,46 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 hashed_password: false,
               },
             },
-            org: true,
+            org: {
+              with: {
+                owner: {
+                  columns: {
+                    hashed_password: false,
+                  },
+                },
+                users: {
+                  with: {
+                    user: {
+                      columns: {
+                        hashed_password: false,
+                      },
+                    },
+                  },
+                },
+                whs: {
+                  with: {
+                    warehouse: {
+                      with: {
+                        storages: {
+                          with: {
+                            storage: {
+                              with: {
+                                type: true,
+                              },
+                            },
+                          },
+                        },
+                        addresses: {
+                          with: {
+                            address: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
             wh: {
               with: {
                 storages: {
@@ -144,26 +183,28 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return user;
       });
 
-    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findById = (id: string, relations?: FindManyParams["with"]) =>
       Effect.gen(function* (_) {
+        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new Error("Invalid user ID format"));
         }
-
-        return yield* Effect.promise(() =>
+        const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: relations,
+            with: rels,
             columns: {
               hashed_password: false,
             },
           }),
         );
+        return user;
       });
 
-    const findByEmail = (emailInput: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findByEmail = (emailInput: string, relations?: FindManyParams["with"]) =>
       Effect.gen(function* (_) {
+        const rels = relations ?? withRelations();
         const emailX = pipe(string(), email());
         const parsedEmail = safeParse(emailX, emailInput);
         if (!parsedEmail.success) {
@@ -173,7 +214,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
-            with: relations,
+            with: rels,
             columns: {
               hashed_password: false,
             },

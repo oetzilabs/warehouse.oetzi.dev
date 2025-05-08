@@ -21,9 +21,10 @@
     "prettier": "3.5.3"
   },
   "peerDependencies": {
-    "effect": "3.14.20",
-    "@effect/platform": "0.80.20",
-    "@effect/platform-bun": "0.61.10"
+    "effect": "3.14.21",
+    "@effect/platform": "0.80.21",
+    "@effect/platform-bun": "0.61.11",
+    "valibot": "1.1.0"
   },
   "workspaces": [
     "packages/*"
