@@ -58,8 +58,8 @@ export default function DashboardPage() {
   onMount(() => {
     setBreadcrumbs([
       {
-        label: "Dashboard",
-        href: "/dashboard",
+        label: "Map",
+        href: "/map",
       },
     ]);
   });

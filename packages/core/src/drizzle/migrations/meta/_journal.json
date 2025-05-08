@@ -134,6 +134,13 @@
       "when": 1746696858040,
       "tag": "0018_petite_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1746726173592,
+      "tag": "0019_ambitious_sinister_six",
+      "breakpoints": true
     }
   ]
 }
