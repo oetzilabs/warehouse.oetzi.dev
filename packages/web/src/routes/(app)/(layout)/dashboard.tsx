@@ -435,6 +435,10 @@ export default function DashboardPage() {
                                             <div class="flex flex-col items-center gap-1">
                                               <NumberField
                                                 class="w-full"
+                                                value={
+                                                  mapStore.areas[mapStore.areas.findIndex((a) => a.id === area.id)]
+                                                    ?.bounding_box.width ?? area.bounding_box.width
+                                                }
                                                 defaultValue={area.bounding_box.width}
                                                 onRawValueChange={(v) => {
                                                   let vv = Number(v);
@@ -458,6 +462,10 @@ export default function DashboardPage() {
                                               </NumberField>
                                               <NumberField
                                                 class="w-full"
+                                                value={
+                                                  mapStore.areas[mapStore.areas.findIndex((a) => a.id === area.id)]
+                                                    ?.bounding_box.height ?? area.bounding_box.height
+                                                }
                                                 defaultValue={area.bounding_box.height}
                                                 onRawValueChange={(v) => {
                                                   let vv = Number(v);
