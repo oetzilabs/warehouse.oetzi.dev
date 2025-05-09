@@ -29,17 +29,19 @@ export default function DashboardPage() {
       <div class="flex flex-col gap-2">
         <h1 class="text-2xl font-medium">Dashboard</h1>
         <div class="flex flex-col gap-2">
-          <div class="w-full h-content border rounded-lg bg-muted/10 p-6 flex flex-col gap-2">
-            <div class="font-semibold">Document Storages</div>
-            <div class="w-full">
-              <Suspense fallback={<Skeleton class="w-full h-full" />}>
-                <Show when={documentStorage()}>
-                  {(storages) => (
+          <Suspense fallback={<Skeleton class="w-full h-full" />}>
+            <Show when={documentStorage()}>
+              {(storages) => (
+                <div class="w-full h-content border rounded-lg p-4 flex flex-col gap-2">
+                  <Show when={storages().length > 0}>
+                    <div class="font-semibold">Document Storages</div>
+                  </Show>
+                  <div class="w-full">
                     <For
                       each={storages()}
                       fallback={
                         <div class="flex flex-col gap-2">
-                          <div class="text-center text-xl text-muted-foreground">No document storages found</div>
+                          <div class="text-center text-sm text-muted-foreground">No document storages found</div>
                           <div class="flex justify-center">
                             <Dialog open={isOpen()} onOpenChange={setIsOpen}>
                               <DialogTrigger as={Button} size="sm" type="button">
@@ -58,13 +60,13 @@ export default function DashboardPage() {
                       }
                     >
                       {(storage) => (
-                        <div class="flex flex-col gap-2 w-full">
+                        <div class="grid grid-cols-2 gap-2 w-full">
                           <Progress
                             value={storage.documents.map((d) => d.size).reduce((a, b) => a + b, 0)}
                             minValue={0}
                             maxValue={storage.offer.maxSize}
                             getValueLabel={({ value, max, min }) => `${value} of ${max} GB`}
-                            class="space-y-1"
+                            class="space-y-2 border p-4 rounded-md"
                           >
                             <div class="flex justify-between">
                               <ProgressLabel>{String(storage.documents.length)} documents</ProgressLabel>
@@ -75,22 +77,22 @@ export default function DashboardPage() {
                             value={storage.queuedDocuments.length}
                             minValue={0}
                             maxValue={storage.offer.maxQueueSize}
-                            getValueLabel={({ value, max, min }) => `${value} of ${max} GB`}
-                            class="space-y-1"
+                            getValueLabel={({ value, max, min }) => `${value} of ${max} Documents`}
+                            class="space-y-2 border p-4 rounded-md"
                           >
                             <div class="flex justify-between">
-                              <ProgressLabel>{String(storage.documents.length)} documents</ProgressLabel>
+                              <ProgressLabel>{String(storage.documents.length)} documents in Queue</ProgressLabel>
                               <ProgressValueLabel />
                             </div>
                           </Progress>
                         </div>
                       )}
                     </For>
-                  )}
-                </Show>
-              </Suspense>
-            </div>
-          </div>
+                  </div>
+                </div>
+              )}
+            </Show>
+          </Suspense>
         </div>
       </div>
     </div>

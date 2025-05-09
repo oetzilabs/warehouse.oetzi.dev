@@ -30,6 +30,7 @@ export type DocumentStorageOfferInsert = typeof TB_document_storage_offers.$infe
 export const DocumentStorageOfferCreateSchema = omit(createInsertSchema(TB_document_storage_offers), [
   "createdAt",
   "updatedAt",
+  "deletedAt",
 ]);
 export const DocumentStorageOfferUpdateSchema = object({
   ...partial(omit(createInsertSchema(TB_document_storage_offers), ["createdAt", "updatedAt"])).entries,

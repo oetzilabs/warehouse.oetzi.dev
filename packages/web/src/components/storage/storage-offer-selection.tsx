@@ -17,18 +17,24 @@ export function StorageOfferSelection(props: { onSelect: () => void }) {
         <div class="grid grid-cols-2 gap-4">
           <For each={data()} fallback={<div class="w-full flex flex-col gap-2">No offers found</div>}>
             {(offer) => (
-              <div class="flex flex-col items-start">
-                <span>{offer.name}</span>
-                <span class="text-xs text-muted-foreground">{offer.maxSize}GB Storage</span>
-                <span class="text-xs text-muted-foreground">{offer.maxQueueSize} Documents for QueueProcessing</span>
+              <div class="flex flex-col items-start border p-6 rounded-lg bg-muted/10 hover:bg-muted/80 gap-4">
+                <div class="flex flex-col items-start gap-2">
+                  <span>{offer.name}</span>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-muted-foreground">{offer.maxSize / 1024 / 1024 / 1024}GB Storage</span>
+                    <span class="text-xs text-muted-foreground">
+                      {offer.maxQueueSize} Documents for QueueProcessing
+                    </span>
+                  </div>
+                </div>
                 <Button
-                  variant="outline"
                   disabled={isCreatingDocumentStorage.pending}
+                  class="w-full"
                   onClick={() => {
                     props.onSelect();
                     toast.promise(
                       createDocumentStorageAction({
-                        name: "New Storage",
+                        name: `${offer.name} Storage`,
                         offer_id: offer.id,
                       }),
                       {
@@ -39,10 +45,7 @@ export function StorageOfferSelection(props: { onSelect: () => void }) {
                     );
                   }}
                 >
-                  <div class="flex flex-col items-start">
-                    <span>{offer.name}</span>
-                    <span class="text-xs text-muted-foreground">{offer.maxSize}GB Storage</span>
-                  </div>
+                  Use
                 </Button>
               </div>
             )}

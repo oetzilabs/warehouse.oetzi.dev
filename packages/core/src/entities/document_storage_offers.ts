@@ -3,6 +3,7 @@ import { Effect, Layer } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import {
+  DocumentStorageOfferCreate,
   DocumentStorageOfferCreateSchema,
   DocumentStorageOfferUpdateSchema,
   TB_document_storage_offers,
@@ -125,12 +126,66 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
           );
         });
 
+      const seed = () =>
+        Effect.gen(function* (_) {
+          const offers = yield* Effect.promise(() => db.query.TB_document_storage_offers.findMany());
+
+          const storageOffers = [
+            {
+              id: "dso_kfpl4k5nrei8b7tmnhw66o99",
+              name: "basic",
+              description: "Basic storage offering",
+              price: 0.0,
+              maxSize: 1024 * 1024 * 1024,
+              maxQueueSize: 10,
+              shareable: false,
+            },
+            {
+              id: "dso_h47ql2wuzp7lp7c7m1xok37f",
+              name: "pro",
+              description: "Pro storage offering",
+              price: 10.0,
+              maxSize: 1024 * 1024 * 1024 * 10,
+              maxQueueSize: 100,
+              shareable: false,
+            },
+          ];
+
+          const existing = offers.map((v) => v.id);
+
+          const toCreate = storageOffers.filter((t) => !existing.includes(t.id));
+
+          if (toCreate.length > 0) {
+            const created = yield* Effect.promise(() =>
+              db.insert(TB_document_storage_offers).values(toCreate).returning(),
+            );
+            yield* Effect.log("Created storage offers", created);
+          }
+
+          const toUpdate = storageOffers.filter((t) => existing.includes(t.id));
+          if (toUpdate.length > 0) {
+            for (const storageOffer of toUpdate) {
+              const updated = yield* Effect.promise(() =>
+                db
+                  .update(TB_document_storage_offers)
+                  .set({ ...storageOffer, updatedAt: new Date() })
+                  .where(eq(TB_document_storage_offers.id, storageOffer.id))
+                  .returning(),
+              );
+              yield* Effect.log("Updated storage offer", updated);
+            }
+          }
+
+          return storageOffers;
+        });
+
       return {
         create,
         findById,
         update,
         remove,
         all,
+        seed,
       } as const;
     }),
     dependencies: [DatabaseLive],

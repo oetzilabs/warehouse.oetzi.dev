@@ -1,18 +1,18 @@
-import { Effect } from "effect";
+import { BunRuntime } from "@effect/platform-bun";
+import { Console, Effect } from "effect";
+import { DocumentStorageOfferLive, DocumentStorageOfferService } from "./entities/document_storage_offers";
 import { WarehouseTypeLive, WarehouseTypeService } from "./entities/warehouse_types";
 
-const seed = async () => {
-  console.log("Seeding...");
-  // TODO: WarehouseTypes seed
-  const seeded = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const service = yield* _(WarehouseTypeService);
-      return yield* service.seed();
-    }).pipe(Effect.provide(WarehouseTypeLive)),
-  );
-};
+const program = Effect.gen(function* (_) {
+  const warehouseTypeService = yield* _(WarehouseTypeService);
+  const documentStorageOfferService = yield* _(DocumentStorageOfferService);
+  const warehouseTypes = yield* warehouseTypeService.seed();
+  const documentStorageOffers = yield* documentStorageOfferService.seed();
+}).pipe(Effect.provide(WarehouseTypeLive), Effect.provide(DocumentStorageOfferLive));
 
-seed()
-  .then(() => console.log("Seeded"))
-  .catch((err) => console.error(err));
-process.exit(0);
+async function run() {
+  await Effect.runPromise(program);
+  process.exit(0);
+}
+
+run();
