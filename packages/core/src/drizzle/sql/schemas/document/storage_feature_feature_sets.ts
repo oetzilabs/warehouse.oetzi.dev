@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { primaryKey, varchar } from "drizzle-orm/pg-core";
+import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput } from "valibot";
 import { schema } from "../utils";
@@ -8,15 +8,17 @@ import { TB_document_storage_feature_sets } from "./storage_feature_sets";
 
 export const TB_document_storage_feature_feature_sets = schema.table(
   "document_storage_feature_feature_sets",
-  {
-    feature_id: varchar("feature_id")
+  (t) => ({
+    feature_id: t
+      .varchar("feature_id")
       .notNull()
       .references(() => TB_document_storage_feature.id),
-    feature_set_id: varchar("feature_set_id")
+    feature_set_id: t
+      .varchar("feature_set_id")
       .notNull()
       .references(() => TB_document_storage_feature_sets.id),
-  },
-  (table) => primaryKey({ columns: [table.feature_id, table.feature_set_id] }),
+  }),
+  (table) => [primaryKey({ columns: [table.feature_id, table.feature_set_id] })],
 );
 
 export const document_storage_feature_feature_sets_relations = relations(
