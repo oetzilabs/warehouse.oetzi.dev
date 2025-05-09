@@ -25,6 +25,9 @@ export * from "./schemas/warehouse_areas";
 export * from "./schemas/warehouses_storages";
 export * from "./schemas/users_warehouses";
 
+export * from "./schemas/payment_methods";
+export * from "./schemas/user_payment_methods";
+
 export * from "./schemas/organizations";
 export * from "./schemas/organizations_addresses";
 export * from "./schemas/organization_users";

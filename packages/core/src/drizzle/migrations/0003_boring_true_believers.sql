@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."document_storage_feature_feature_sets" ADD CONSTRAINT "document_storage_feature_feature_sets_feature_id_feature_set_id_pk" PRIMARY KEY("feature_id","feature_set_id");--> statement-breakpoint
+ALTER TABLE "warehouse"."document_storage_offers" ADD COLUMN "disabled" boolean DEFAULT false NOT NULL;

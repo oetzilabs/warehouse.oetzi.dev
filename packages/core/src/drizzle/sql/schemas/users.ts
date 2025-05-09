@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
 import { TB_organization_users } from "./organization_users";
 import { TB_sessions } from "./sessions";
+import { TB_user_payment_methods } from "./user_payment_methods";
 import { TB_users_warehouses } from "./users_warehouses";
 
 export const user_status = pgEnum("user_status", ["active", "disabled", "suspended"]);
@@ -32,6 +33,7 @@ export const user_relation = relations(TB_users, ({ one, many }) => ({
   sessions: many(TB_sessions),
   orgs: many(TB_organization_users),
   whs: many(TB_users_warehouses),
+  payment_methods: many(TB_user_payment_methods),
 }));
 
 export type UserSelect = typeof TB_users.$inferSelect;

@@ -5,8 +5,10 @@ import { createDocumentStorage } from "@/lib/api/storages";
 import { createAsync, useAction, useSubmission } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { toast } from "solid-sonner";
+import { useUser } from "../providers/User";
 
 export function StorageOfferSelection(props: { onSelect: () => void }) {
+  const user = useUser();
   const offers = createAsync(() => getOffers(), { deferStream: true });
   const createDocumentStorageAction = useAction(createDocumentStorage);
   const isCreatingDocumentStorage = useSubmission(createDocumentStorage);
@@ -28,7 +30,7 @@ export function StorageOfferSelection(props: { onSelect: () => void }) {
                   </div>
                 </div>
                 <Button
-                  disabled={isCreatingDocumentStorage.pending}
+                  disabled={isCreatingDocumentStorage.pending || offer.disabled || user.paymentMethods.length === 0}
                   class="w-full"
                   onClick={() => {
                     props.onSelect();
