@@ -5,6 +5,7 @@ import { object, omit, partial, string } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
 import { TB_organization_users } from "./organization_users";
+import { TB_payment_history } from "./payment_history";
 import { TB_sessions } from "./sessions";
 import { TB_user_payment_methods } from "./user_payment_methods";
 import { TB_users_warehouses } from "./users_warehouses";
@@ -34,6 +35,7 @@ export const user_relation = relations(TB_users, ({ one, many }) => ({
   orgs: many(TB_organization_users),
   whs: many(TB_users_warehouses),
   payment_methods: many(TB_user_payment_methods),
+  payment_history: many(TB_payment_history),
 }));
 
 export type UserSelect = typeof TB_users.$inferSelect;

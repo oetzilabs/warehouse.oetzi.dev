@@ -4,6 +4,7 @@ import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
+import { TB_payment_history } from "./payment_history";
 import { TB_user_payment_methods } from "./user_payment_methods";
 
 export const payment_method_type = pgEnum("payment_method_type", ["cash", "card", "bank_account"]);
@@ -21,6 +22,7 @@ export const TB_payment_methods = commonTable(
 
 export const payment_method_relations = relations(TB_payment_methods, ({ many }) => ({
   users: many(TB_user_payment_methods),
+  payment_history: many(TB_payment_history),
 }));
 
 export type PaymentMethodSelect = typeof TB_payment_methods.$inferSelect;

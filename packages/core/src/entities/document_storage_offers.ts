@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
-import { safeParse, type InferInput } from "valibot";
+import { array, object, parse, safeParse, type InferInput } from "valibot";
+import storageOffers from "../data/storage_offers.json";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import {
   DocumentStorageOfferCreate,
@@ -130,30 +131,19 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
         Effect.gen(function* (_) {
           const offers = yield* Effect.promise(() => db.query.TB_document_storage_offers.findMany());
 
-          const storageOffers = [
-            {
-              id: "dso_kfpl4k5nrei8b7tmnhw66o99",
-              name: "basic",
-              description: "Basic storage offering",
-              price: 0.0,
-              maxSize: 1024 * 1024 * 1024,
-              maxQueueSize: 10,
-              shareable: false,
-            },
-            {
-              id: "dso_h47ql2wuzp7lp7c7m1xok37f",
-              name: "pro",
-              description: "Pro storage offering",
-              price: 10.0,
-              maxSize: 1024 * 1024 * 1024 * 10,
-              maxQueueSize: 100,
-              shareable: false,
-            },
-          ];
+          const sos = parse(
+            array(
+              object({
+                ...DocumentStorageOfferCreateSchema.entries,
+                id: prefixed_cuid2,
+              }),
+            ),
+            storageOffers,
+          );
 
           const existing = offers.map((v) => v.id);
 
-          const toCreate = storageOffers.filter((t) => !existing.includes(t.id));
+          const toCreate = sos.filter((t) => !existing.includes(t.id));
 
           if (toCreate.length > 0) {
             const created = yield* Effect.promise(() =>
@@ -162,7 +152,7 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
             yield* Effect.log("Created storage offers", created);
           }
 
-          const toUpdate = storageOffers.filter((t) => existing.includes(t.id));
+          const toUpdate = sos.filter((t) => existing.includes(t.id));
           if (toUpdate.length > 0) {
             for (const storageOffer of toUpdate) {
               const updated = yield* Effect.promise(() =>
@@ -176,7 +166,7 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
             }
           }
 
-          return storageOffers;
+          return sos;
         });
 
       return {

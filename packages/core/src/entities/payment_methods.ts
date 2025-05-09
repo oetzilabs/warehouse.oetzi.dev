@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { InferInput, safeParse } from "valibot";
+import { array, InferInput, object, parse, safeParse } from "valibot";
+import paymentMethods from "../data/payment_methods.json";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import {
   PaymentMethodCreateSchema,
@@ -109,37 +110,26 @@ export class PaymentMethodService extends Effect.Service<PaymentMethodService>()
         yield* Effect.log("Seeding payment methods");
         const methods = yield* Effect.promise(() => db.query.TB_payment_methods.findMany());
 
-        const paymentMethods = [
-          {
-            id: "pm_w20kjt4rox50stdhawltfizy",
-            type: "cash" as PaymentMethodType,
-            provider: "none",
-            disabled: false,
-          },
-          {
-            id: "pm_k9vi6b678lirle2iiaxzgvs0",
-            type: "card" as PaymentMethodType,
-            provider: "Polar",
-            disabled: false,
-          },
-          {
-            id: "pm_fy1xh1544oixzznlsnnqhpq2",
-            type: "bank_account" as PaymentMethodType,
-            provider: "Polar",
-            disabled: false,
-          },
-        ];
+        const pms = parse(
+          array(
+            object({
+              ...PaymentMethodCreateSchema.entries,
+              id: prefixed_cuid2,
+            }),
+          ),
+          paymentMethods,
+        );
 
         const existing = methods.map((v) => v.id);
 
-        const toCreate = paymentMethods.filter((t) => !existing.includes(t.id));
+        const toCreate = pms.filter((t) => !existing.includes(t.id));
 
         if (toCreate.length > 0) {
           yield* Effect.log("Creating payment methods", toCreate);
           yield* Effect.promise(() => db.insert(TB_payment_methods).values(toCreate).returning());
         }
 
-        const toUpdate = paymentMethods.filter((t) => existing.includes(t.id));
+        const toUpdate = pms.filter((t) => existing.includes(t.id));
         if (toUpdate.length > 0) {
           yield* Effect.log("Updating payment methods", toUpdate);
           for (const method of toUpdate) {
@@ -154,7 +144,7 @@ export class PaymentMethodService extends Effect.Service<PaymentMethodService>()
           }
         }
 
-        return paymentMethods;
+        return pms;
       });
 
     return {

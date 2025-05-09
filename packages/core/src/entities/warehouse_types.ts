@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { safeParse, type InferInput } from "valibot";
+import { array, object, parse, safeParse, type InferInput } from "valibot";
+import warehouseTypes from "../data/warehouse_types.json";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import { TB_warehouse_types, WarehouseTypeCreateSchema, WarehouseTypeUpdateSchema } from "../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
@@ -73,30 +74,25 @@ export class WarehouseTypeService extends Effect.Service<WarehouseTypeService>()
         const versions = yield* Effect.promise(() => db.query.TB_warehouse_types.findMany());
         // compare and update if needed, otherwise create
 
-        const warehouseTypes = [
-          {
-            id: `wht_x8ocjjtose3s6fzgu42wlw8v`, // premade ids
-            name: "Retail",
-            code: "RETAIL",
-            description: "Retail warehouses are used for storing goods and products.",
-          },
-          {
-            id: `wht_ul6fl08era8zwp4eytmumg26`, // premade ids
-            name: "Warehouse",
-            code: "WAREHOUSE",
-            description: "Warehouses are used for storing goods and products.",
-          },
-        ];
+        const whts = parse(
+          array(
+            object({
+              ...WarehouseTypeCreateSchema.entries,
+              id: prefixed_cuid2,
+            }),
+          ),
+          warehouseTypes,
+        );
 
         const existing = versions.map((v) => v.id);
 
-        const toCreate = warehouseTypes.filter((t) => !existing.includes(t.id));
+        const toCreate = whts.filter((t) => !existing.includes(t.id));
 
         if (toCreate.length > 0) {
           yield* Effect.promise(() => db.insert(TB_warehouse_types).values(toCreate).returning());
         }
 
-        const toUpdate = warehouseTypes.filter((t) => existing.includes(t.id));
+        const toUpdate = whts.filter((t) => existing.includes(t.id));
         if (toUpdate.length > 0) {
           for (const warehouseType of toUpdate) {
             yield* Effect.promise(() =>
@@ -109,7 +105,7 @@ export class WarehouseTypeService extends Effect.Service<WarehouseTypeService>()
           }
         }
 
-        return warehouseTypes;
+        return whts;
       });
 
     return {

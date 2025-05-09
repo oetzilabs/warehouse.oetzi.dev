@@ -1,0 +1,14 @@
+[
+  {
+    "id": "wht_x8ocjjtose3s6fzgu42wlw8v",
+    "name": "Retail",
+    "code": "RETAIL",
+    "description": "Retail warehouses are used for storing goods and products."
+  },
+  {
+    "id": "wht_ul6fl08era8zwp4eytmumg26",
+    "name": "Warehouse",
+    "code": "WAREHOUSE",
+    "description": "Warehouses are used for storing goods and products."
+  }
+]

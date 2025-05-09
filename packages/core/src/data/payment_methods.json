@@ -1,0 +1,20 @@
+[
+  {
+    "id": "pm_w20kjt4rox50stdhawltfizy",
+    "type": "cash",
+    "provider": "none",
+    "disabled": false
+  },
+  {
+    "id": "pm_k9vi6b678lirle2iiaxzgvs0",
+    "type": "card",
+    "provider": "Polar",
+    "disabled": false
+  },
+  {
+    "id": "pm_fy1xh1544oixzznlsnnqhpq2",
+    "type": "bank_account",
+    "provider": "Polar",
+    "disabled": false
+  }
+]

@@ -30,7 +30,9 @@ export function StorageOfferSelection(props: { onSelect: () => void }) {
                   </div>
                 </div>
                 <Button
-                  disabled={isCreatingDocumentStorage.pending || offer.disabled || user.paymentMethods.length === 0}
+                  disabled={
+                    isCreatingDocumentStorage.pending || offer.disabled || user.user()?.payment_methods.length === 0
+                  }
                   class="w-full"
                   onClick={() => {
                     props.onSelect();

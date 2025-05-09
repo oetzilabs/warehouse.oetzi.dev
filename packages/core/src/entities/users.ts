@@ -15,6 +15,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
+        payment_methods: {
+          with: {
+            payment_method: true,
+          },
+        },
+        payment_history: {
+          with: {
+            payment_method: true,
+          },
+        },
         orgs: {
           with: {
             org: {
