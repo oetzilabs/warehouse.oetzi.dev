@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { safeParse, type InferInput } from "valibot";
+import { array, object, parse, safeParse, type InferInput } from "valibot";
+import warehouses from "../data/warehouses.json";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import {
   TB_organizations_warehouses,
@@ -286,6 +287,45 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return updatedArea;
       });
 
+    const seed = () =>
+      Effect.gen(function* (_) {
+        const dbAreas = yield* Effect.promise(() => db.query.TB_warehouse_areas.findMany());
+
+        const as = parse(
+          array(
+            object({
+              ...WarehouseCreateSchema.entries,
+              id: prefixed_cuid2,
+            }),
+          ),
+          warehouses,
+        );
+
+        const existing = dbAreas.map((u) => u.id);
+
+        const toCreate = as.filter((t) => !existing.includes(t.id));
+
+        if (toCreate.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_warehouses).values(toCreate).returning());
+          yield* Effect.log("Created warehouses", toCreate);
+        }
+
+        const toUpdate = as.filter((t) => existing.includes(t.id));
+        if (toUpdate.length > 0) {
+          for (const area of toUpdate) {
+            yield* Effect.promise(() =>
+              db
+                .update(TB_warehouses)
+                .set({ ...area, updatedAt: new Date() })
+                .where(eq(TB_warehouses.id, area.id))
+                .returning(),
+            );
+          }
+        }
+
+        return as;
+      });
+
     return {
       create,
       findById,
@@ -298,6 +338,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       findByUserId,
       findAreaById,
       updateArea,
+      seed,
     } as const;
   }),
   dependencies: [DatabaseLive],

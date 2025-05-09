@@ -1,0 +1,11 @@
+[
+  {
+    "id": "warehouse_fbl19yvmsq44uuodg8n4kvv2",
+    "name": "Test Warehouse",
+    "description": "Test Warehouse",
+    "address_id": null,
+    "warehouse_type_id": "wht_x8ocjjtose3s6fzgu42wlw8v",
+    "dimensions": null,
+    "ownerId": "user_fqvfli9fqv5u9s14l1zcec0h"
+  }
+]

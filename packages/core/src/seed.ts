@@ -1,17 +1,28 @@
-import { BunRuntime } from "@effect/platform-bun";
-import { Console, Effect } from "effect";
+import { Effect } from "effect";
 import { DocumentStorageOfferLive, DocumentStorageOfferService } from "./entities/document_storage_offers";
+import { OrganizationLive } from "./entities/organizations";
 import { PaymentMethodLive, PaymentMethodService } from "./entities/payment_methods";
+import { UserLive, UserService } from "./entities/users";
 import { WarehouseTypeLive, WarehouseTypeService } from "./entities/warehouse_types";
+import { WarehouseLive } from "./entities/warehouses";
 
 const program = Effect.gen(function* (_) {
   const warehouseTypeService = yield* _(WarehouseTypeService);
   const documentStorageOfferService = yield* _(DocumentStorageOfferService);
+  const userService = yield* _(UserService);
   const paymentMethodsService = yield* _(PaymentMethodService);
   const warehouseTypes = yield* warehouseTypeService.seed();
   const documentStorageOffers = yield* documentStorageOfferService.seed();
   const paymentMethods = yield* paymentMethodsService.seed();
-}).pipe(Effect.provide(WarehouseTypeLive), Effect.provide(DocumentStorageOfferLive), Effect.provide(PaymentMethodLive));
+  const users = yield* userService.seed();
+}).pipe(
+  Effect.provide(WarehouseTypeLive),
+  Effect.provide(DocumentStorageOfferLive),
+  Effect.provide(PaymentMethodLive),
+  Effect.provide(UserLive),
+  Effect.provide(OrganizationLive),
+  Effect.provide(WarehouseLive),
+);
 
 async function run() {
   await Effect.runPromise(program);

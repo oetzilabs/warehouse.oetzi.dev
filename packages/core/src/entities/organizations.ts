@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { safeParse, type InferInput } from "valibot";
+import { array, object, parse, safeParse, string, type InferInput } from "valibot";
+import organizations from "../data/organizations.json";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import {
   OrganizationCreateSchema,
@@ -331,6 +332,48 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    const seed = () =>
+      Effect.gen(function* (_) {
+        const dbOrgs = yield* Effect.promise(() => db.query.TB_organizations.findMany());
+
+        const os = parse(
+          array(
+            object({
+              ...OrganizationCreateSchema.entries,
+              owner_id: prefixed_cuid2,
+              id: prefixed_cuid2,
+              name: string(),
+              slug: string(),
+            }),
+          ),
+          organizations,
+        );
+
+        const existing = dbOrgs.map((u) => u.id);
+
+        const toCreate = os.filter((t) => !existing.includes(t.id));
+
+        if (toCreate.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_organizations).values(toCreate).returning());
+          yield* Effect.log("Created organizations", toCreate);
+        }
+
+        const toUpdate = os.filter((t) => existing.includes(t.id));
+        if (toUpdate.length > 0) {
+          for (const organization of toUpdate) {
+            yield* Effect.promise(() =>
+              db
+                .update(TB_organizations)
+                .set({ ...organization, updatedAt: new Date() })
+                .where(eq(TB_organizations.id, organization.id))
+                .returning(),
+            );
+          }
+        }
+
+        return os;
+      });
+
     return {
       create,
       findById,
@@ -342,6 +385,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       addUser,
       removeUser,
       users,
+      seed,
     } as const;
   }),
   dependencies: [DatabaseLive],

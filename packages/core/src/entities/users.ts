@@ -1,10 +1,24 @@
 import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-valibot";
 import { Effect } from "effect";
-import { email, InferInput, object, omit, pipe, safeParse, string } from "valibot";
+import { array, email, InferInput, object, omit, parse, pipe, safeParse, string } from "valibot";
+import org_wh from "../data/org_wh.json";
+import user_orgs from "../data/user_orgs.json";
+import user_wh from "../data/user_wh.json";
+import users from "../data/users.json";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
-import { TB_users, UserCreateSchema, UserUpdateSchema } from "../drizzle/sql/schema";
+import {
+  TB_organization_users,
+  TB_organizations_warehouses,
+  TB_users,
+  TB_users_warehouses,
+  UserCreateSchema,
+  UserUpdateSchema,
+} from "../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
+import { OrganizationLive, OrganizationService } from "./organizations";
+import { WarehouseLive, WarehouseService } from "./warehouses";
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
   effect: Effect.gen(function* (_) {
@@ -337,6 +351,82 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         );
       });
 
+    const seed = () =>
+      Effect.gen(function* (_) {
+        const dbUsers = yield* Effect.promise(() => db.query.TB_users.findMany());
+
+        const originalSchema = object({
+          ...omit(createInsertSchema(TB_users), ["createdAt", "updatedAt"]).entries,
+          id: prefixed_cuid2,
+        });
+
+        const us = parse(array(originalSchema), users);
+
+        const existing = dbUsers.map((u) => u.id);
+
+        const toCreate = us.filter((t) => !existing.includes(t.id));
+
+        if (toCreate.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_users).values(toCreate).returning());
+          yield* Effect.log("Created users", toCreate);
+        }
+
+        const toUpdate = us.filter((t) => existing.includes(t.id));
+        if (toUpdate.length > 0) {
+          for (const user of toUpdate) {
+            yield* Effect.promise(() =>
+              db
+                .update(TB_users)
+                .set({ ...user, updatedAt: new Date() })
+                .where(eq(TB_users.id, user.id))
+                .returning(),
+            );
+          }
+        }
+
+        // TODO: Add users to organizations
+        const orgsService = yield* _(OrganizationService);
+        const orgs = yield* orgsService.seed();
+
+        const userOrgs = parse(
+          array(
+            object({
+              organization_id: prefixed_cuid2,
+              user_id: prefixed_cuid2,
+            }),
+          ),
+          user_orgs,
+        );
+        yield* Effect.promise(() => db.insert(TB_organization_users).values(userOrgs).returning());
+
+        // TODO: Add users to warehouses
+        const whsService = yield* _(WarehouseService);
+        const whs = yield* whsService.seed();
+
+        const userWhs = parse(
+          array(
+            object({
+              userId: prefixed_cuid2,
+              warehouseId: prefixed_cuid2,
+            }),
+          ),
+          user_wh,
+        );
+        yield* Effect.promise(() => db.insert(TB_users_warehouses).values(userWhs).returning());
+
+        const orgWhs = parse(
+          array(
+            object({
+              organizationId: prefixed_cuid2,
+              warehouseId: prefixed_cuid2,
+            }),
+          ),
+          org_wh,
+        );
+        yield* Effect.promise(() => db.insert(TB_organizations_warehouses).values(orgWhs).returning());
+        return us;
+      });
+
     return {
       create,
       disable,
@@ -349,9 +439,10 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       verifyPassword,
       findLastOrganization,
       findLastWarehouse,
+      seed,
     } as const;
   }),
-  dependencies: [DatabaseLive],
+  dependencies: [DatabaseLive, OrganizationLive, WarehouseLive],
 }) {}
 
 export const UserLive = UserService.Default;
