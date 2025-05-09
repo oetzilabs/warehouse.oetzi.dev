@@ -3,6 +3,7 @@ import { Effect, Layer } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../drizzle/sql";
 import { DocumentStorageCreateSchema, DocumentStorageUpdateSchema, TB_document_storages } from "../drizzle/sql/schema";
+import { TB_organizations_storages } from "../drizzle/sql/schemas/organizations_storages";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
 import { generateBasePath } from "./utils";
 import { S3DocumentStorageLive, S3DocumentStorageService } from "./vfs/s3";
@@ -17,7 +18,8 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
         documents: true,
-        organization: true,
+        offer: true,
+        queuedDocuments: true,
       };
 
       if (options) {
@@ -33,19 +35,21 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
           return yield* Effect.fail(new Error("Invalid organization ID format"));
         }
 
-        const [storage] = yield* Effect.promise(() =>
+        const [storage] = yield* Effect.promise(() => db.insert(TB_document_storages).values(input).returning());
+
+        const connectedWithOrg = yield* Effect.promise(() =>
           db
-            .insert(TB_document_storages)
+            .insert(TB_organizations_storages)
             .values({
-              ...input,
-              organization_id: parsedOrgId.output,
-              path: generateBasePath({
-                organizationId: parsedOrgId.output,
-                version: `v0.0.0`,
-              }),
+              organizationId: parsedOrgId.output,
+              storageId: storage.id,
             })
             .returning(),
         );
+
+        if (!connectedWithOrg) {
+          return yield* Effect.fail(new Error("Failed to connect storage to organization"));
+        }
 
         return storage;
       });
@@ -72,12 +76,18 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
           return yield* Effect.fail(new Error("Invalid organization ID format"));
         }
 
-        return yield* Effect.promise(() =>
-          db.query.TB_document_storages.findMany({
-            where: (storages, operations) => operations.eq(storages.organization_id, parsedId.output),
-            with: relations,
+        const entries = yield* Effect.promise(() =>
+          db.query.TB_organizations_storages.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedId.output),
+            with: {
+              storage: {
+                with: relations,
+              },
+            },
           }),
         );
+
+        return entries.map((entry) => entry.storage);
       });
 
     const update = (input: InferInput<typeof DocumentStorageUpdateSchema>) =>

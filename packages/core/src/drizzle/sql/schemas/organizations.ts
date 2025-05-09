@@ -7,6 +7,7 @@ import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
 import { TB_organization_users } from "./organization_users";
 import { TB_organizations_warehouses } from "./organizations_warehouses";
+import { TB_sessions } from "./sessions";
 import { TB_users } from "./users";
 
 export const TB_organizations = commonTable(
@@ -36,6 +37,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   }),
   users: many(TB_organization_users),
   whs: many(TB_organizations_warehouses),
+  sessions: many(TB_sessions),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

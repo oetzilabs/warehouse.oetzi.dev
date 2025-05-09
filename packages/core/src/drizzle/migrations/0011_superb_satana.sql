@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."addresses" ADD COLUMN "lat_lon" json NOT NULL;--> statement-breakpoint

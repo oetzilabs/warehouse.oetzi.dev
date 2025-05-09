@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."warehouses" ALTER COLUMN "warehouse_type_id" DROP NOT NULL;

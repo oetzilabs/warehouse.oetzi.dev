@@ -6,12 +6,13 @@ import {
   TextFieldLabel,
   TextFieldTextArea,
 } from "@/components/ui/text-field";
+import { debounce } from "@solid-primitives/scheduled";
 import { createForm } from "@tanstack/solid-form";
 import Check from "lucide-solid/icons/check";
 import Loader2 from "lucide-solid/icons/loader-2";
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
-import { minLength, pipe, string } from "valibot";
+import { minLength, pipe, set, string } from "valibot";
 
 const warehouseForm = createForm(() => ({
   defaultValues: {
@@ -74,11 +75,14 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
   const [addressResults, setAddressResults] = createSignal<AddressResult[]>([]);
   const [isSearchingAddress, setIsSearchingAddress] = createSignal(false);
   const [input, setInput] = createSignal("");
+  const [debouncedI, setDebouncedInput] = createSignal("");
+
+  const debouncedInput = debounce((message: string) => setDebouncedInput(message), 500);
 
   // Effect to clear results and hide map when address input is cleared
   createEffect(() => {
     // Access the nested address field value
-    if (input() === "") {
+    if (debouncedI() === "") {
       setAddressResults([]);
       props.hideMap(); // Hide map when address is cleared
     } else {
@@ -162,7 +166,14 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
 
         {/* Update the name to address.street or similar if needed, based on your final address structure */}
         {/* For now, assuming the address TextField is for the full address string search */}
-        <TextField onChange={setInput} value={input()} class="w-full">
+        <TextField
+          onChange={(v) => {
+            setInput(v);
+            debouncedInput(v);
+          }}
+          value={input()}
+          class="w-full"
+        >
           <TextFieldLabel>
             Search Address <span class="text-red-500">*</span>
           </TextFieldLabel>

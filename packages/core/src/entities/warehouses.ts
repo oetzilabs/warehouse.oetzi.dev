@@ -84,7 +84,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           db
             .insert(TB_users_warehouses)
             .values({
-              userId: parsedOrgId.output,
+              userId: parsedUserId.output,
               warehouseId: warehouse.id,
             })
             .returning(),

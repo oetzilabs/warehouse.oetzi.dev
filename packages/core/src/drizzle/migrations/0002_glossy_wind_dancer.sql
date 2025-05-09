@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."users" ADD COLUMN "current_warehouse_id" varchar;

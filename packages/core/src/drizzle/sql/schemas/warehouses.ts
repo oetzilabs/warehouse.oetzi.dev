@@ -5,6 +5,7 @@ import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
+import { TB_sessions } from "./sessions";
 import { TB_users } from "./users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouse_types } from "./warehouse_types";
@@ -39,6 +40,7 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
     references: [TB_users.id],
   }),
   areas: many(TB_warehouse_areas),
+  sessions: many(TB_sessions),
 }));
 
 export type WarehouseSelect = typeof TB_warehouses.$inferSelect;

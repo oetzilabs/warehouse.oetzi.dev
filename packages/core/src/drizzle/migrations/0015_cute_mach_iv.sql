@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."warehouses" ADD COLUMN "dimensions" json;

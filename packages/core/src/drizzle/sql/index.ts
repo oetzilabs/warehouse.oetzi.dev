@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { migrate as mig } from "drizzle-orm/neon-http/migrator";
-import { drizzle as localDrizzle } from "drizzle-orm/postgres-js";
+import { drizzle as localDrizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { migrate as localMigrate } from "drizzle-orm/postgres-js/migrator";
 import { Config, Context, Effect, Layer } from "effect";
 import Pool from "pg-pool";
@@ -10,21 +10,28 @@ import postgres from "postgres";
 import { Resource } from "sst";
 import * as schema from "./schema";
 
-let globalClient: ReturnType<typeof drizzle> | ReturnType<typeof localDrizzle> | undefined;
+// Fix for "sorry, too many clients already"
+declare global {
+  // eslint-disable-next-line no-var -- only var works here
+  var globalClient: NeonHttpDatabase<typeof schema> | PostgresJsDatabase<typeof schema> | undefined;
+}
+
+let globalClient: NeonHttpDatabase<typeof schema> | PostgresJsDatabase<typeof schema> | undefined;
 
 export const database = () => {
-  if (globalClient) {
-    return globalClient;
+  if (global.globalClient) {
+    return global.globalClient;
   }
   const client = neon(Resource.DatabaseUrl.value);
   globalClient = drizzle(client, {
     schema,
   });
-  // if (Resource.DatabaseProvider.value === "local") {
-  //   const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
-  //   globalClient = localDrizzle(localClient, { schema });
-  // } else {
-  // }
+  if (Resource.DatabaseProvider.value === "local") {
+    const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
+    globalClient = localDrizzle(localClient, { schema });
+    global.globalClient = globalClient;
+  }
+  global.globalClient = globalClient;
   return globalClient;
 };
 
@@ -53,15 +60,21 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
   effect: Effect.gen(function* (_) {
     return {
       instance: Effect.gen(function* (_) {
+        if (global.globalClient) {
+          return global.globalClient;
+        }
         if (Resource.DatabaseProvider.value === "local") {
           const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
-          return localDrizzle(localClient, { schema });
+          const db = localDrizzle(localClient, { schema });
+          global.globalClient = db;
         } else {
           const client = neon(Resource.DatabaseUrl.value);
-          return drizzle(client, {
+          const db = drizzle(client, {
             schema,
           });
+          global.globalClient = db;
         }
+        return global.globalClient;
       }),
       migrate: Effect.gen(function* (_) {
         const config = {

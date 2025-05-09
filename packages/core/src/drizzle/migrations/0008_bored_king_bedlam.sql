@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."users" ALTER COLUMN "has_finished_onboarding" SET NOT NULL;

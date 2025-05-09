@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."users" ADD COLUMN "hashed_password" text NOT NULL;

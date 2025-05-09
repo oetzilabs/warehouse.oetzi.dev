@@ -19,10 +19,6 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
     defaultValues: {
       name: "",
       description: "",
-      website: "",
-      email: "",
-      phone: "",
-      location: "",
     } as OrganizationCreate,
     onSubmit: (values) => {
       props.onSubmit(values.value);
@@ -72,7 +68,7 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
             </TextField>
           )}
         />
-        <div class="w-full flex flex-row items-center gap-2">
+        {/* <div class="w-full flex flex-row items-center gap-2">
           <div class="w-4 bg-muted-foreground/20 h-px" />
           <div class="w-max flex flex-row items-center gap-1">
             <span class="w-max text-xs font-medium text-muted-foreground">Additional</span>
@@ -154,10 +150,10 @@ export default function CreateOrganizationForm(props: CreateOrganizationFormProp
               <TextFieldLabel>
                 Location <span class="text-red-500">*</span>
               </TextFieldLabel>
-              <TextFieldInput placeholder="Jane Street, London" required />
+              <TextFieldInput placeholder="Jane Street, London" />
             </TextField>
           )}
-        />
+        /> */}
       </div>
       <div class="flex grow w-full" />
       <div class="w-full flex flex-row gap-2 items-center justify-between">

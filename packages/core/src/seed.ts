@@ -1,9 +1,8 @@
 import { Effect } from "effect";
 import { WarehouseTypeLive, WarehouseTypeService } from "./entities/warehouse_types";
 
-export {};
-
 const seed = async () => {
+  console.log("Seeding...");
   // TODO: WarehouseTypes seed
   const seeded = await Effect.runPromise(
     Effect.gen(function* (_) {
@@ -13,4 +12,7 @@ const seed = async () => {
   );
 };
 
-await seed();
+seed()
+  .then(() => console.log("Seeded"))
+  .catch((err) => console.error(err));
+process.exit(0);
