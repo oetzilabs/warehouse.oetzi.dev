@@ -1,10 +1,9 @@
 import { relations } from "drizzle-orm";
-import { numeric, pgEnum, text, varchar } from "drizzle-orm/pg-core";
+import { text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
-import { TB_organizations } from "../organizations";
 import { TB_documents } from "./documents";
 import { TB_document_storage_offers } from "./storage_offers";
 import { TB_documents_storage_queue } from "./storage_queue";
@@ -20,7 +19,7 @@ export const TB_document_storages = commonTable(
         onDelete: "cascade",
       }),
   },
-  "ds",
+  "ds"
 );
 
 export const document_storage_relations = relations(TB_document_storages, ({ one, many }) => ({
