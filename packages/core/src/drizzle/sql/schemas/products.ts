@@ -29,17 +29,22 @@ export const TB_products = commonTable(
     model: text("model"),
 
     // Inventory Control
-    currentStock: integer("current_stock").notNull().default(0),
     minimumStock: integer("minimum_stock").notNull().default(0),
     maximumStock: integer("maximum_stock"),
     reorderPoint: integer("reorder_point"),
 
     // Quality Control & Tracking
+    /* Serial number of the product: e.g., "SN123456789" */
     serialNumber: text("serial_number"),
+    /* Lot number of the product: e.g., "LOT2023A". Groups products manufactured under the same condition or batch. */
     lotNumber: text("lot_number"),
+    /* Batch number of the product: e.g., "BATCH-2023-001" */
     batchNumber: text("batch_number"),
+    /* Date when the product was manufactured */
     manufacturingDate: timestamp("manufacturing_date", { withTimezone: true }),
+    /* Date when the product is expected to expire */
     expirationDate: timestamp("expiration_date", { withTimezone: true }),
+    /* Number of days until the product is considered "expired" */
     shelfLife: integer("shelf_life_days"),
 
     // Status & Condition

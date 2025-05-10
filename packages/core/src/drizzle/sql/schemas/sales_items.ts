@@ -3,6 +3,7 @@ import { decimal, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { TB_products } from "./products";
 import { TB_sales } from "./sales";
+import { TB_sales_discounts } from "./sales_discounts";
 import { schema } from "./utils";
 
 export const TB_sale_items = schema.table(
@@ -21,7 +22,7 @@ export const TB_sale_items = schema.table(
   }),
   (table) => [primaryKey({ columns: [table.saleId, table.productId] })],
 );
-export const sale_items_relations = relations(TB_sale_items, ({ one }) => ({
+export const sale_items_relations = relations(TB_sale_items, ({ one, many }) => ({
   sale: one(TB_sales, {
     fields: [TB_sale_items.saleId],
     references: [TB_sales.id],
@@ -30,6 +31,7 @@ export const sale_items_relations = relations(TB_sale_items, ({ one }) => ({
     fields: [TB_sale_items.productId],
     references: [TB_products.id],
   }),
+  salesDiscounts: many(TB_sales_discounts),
 }));
 
 export type SaleItemSelect = typeof TB_sale_items.$inferSelect;

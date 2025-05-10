@@ -29,7 +29,7 @@ export const TB_sales = commonTable(
       .notNull(),
     status: sale_status("status").default("pending").notNull(),
     note: text("note"),
-    total: decimal("total", { precision: 10, scale: 2, mode: "number" }).notNull().default("0"),
+    total: decimal("total", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
   },
   "sale",
 );

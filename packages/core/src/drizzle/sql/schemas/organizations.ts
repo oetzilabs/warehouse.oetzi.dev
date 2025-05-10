@@ -5,6 +5,7 @@ import { InferInput, InferOutput, minLength, object, omit, partial, pipe, string
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "./address";
 import { commonTable } from "./entity";
+import { TB_organization_discounts } from "./organization_discounts";
 import { TB_organization_users } from "./organization_users";
 import { TB_organizations_warehouses } from "./organizations_warehouses";
 import { TB_sessions } from "./sessions";
@@ -38,6 +39,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   users: many(TB_organization_users),
   whs: many(TB_organizations_warehouses),
   sessions: many(TB_sessions),
+  discounts: many(TB_organization_discounts),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

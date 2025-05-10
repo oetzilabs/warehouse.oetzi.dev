@@ -15,6 +15,9 @@ export * from "./schemas/supplier_products";
 export * from "./schemas/supplier_contacts";
 export * from "./schemas/supplier_notes";
 
+export * from "./schemas/discounts";
+export * from "./schemas/sales_discounts";
+
 export * from "./schemas/document/documents";
 export * from "./schemas/document/storages";
 export * from "./schemas/document/storage_queue";
@@ -39,6 +42,7 @@ export * from "./schemas/user_payment_methods";
 export * from "./schemas/payment_history";
 
 export * from "./schemas/organizations";
+export * from "./schemas/organization_discounts";
 export * from "./schemas/organizations_addresses";
 export * from "./schemas/organization_users";
 export * from "./schemas/organizations_warehouses";
