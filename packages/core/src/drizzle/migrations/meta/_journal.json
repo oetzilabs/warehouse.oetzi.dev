@@ -36,6 +36,34 @@
       "when": 1746824073149,
       "tag": "0004_nice_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1746871765345,
+      "tag": "0005_outgoing_iron_lad",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1746872057910,
+      "tag": "0006_absurd_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1746872377663,
+      "tag": "0007_brief_iron_lad",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1746884683122,
+      "tag": "0008_watery_songbird",
+      "breakpoints": true
     }
   ]
 }

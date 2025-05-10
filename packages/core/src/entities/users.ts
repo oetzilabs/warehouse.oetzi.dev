@@ -36,7 +36,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         },
         payment_history: {
           with: {
-            payment_method: true,
+            paymentMethod: true,
           },
         },
         orgs: {
@@ -397,7 +397,12 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           ),
           user_orgs,
         );
-        yield* Effect.promise(() => db.insert(TB_organization_users).values(userOrgs).returning());
+        const existingUserOrgs = yield* Effect.promise(() => db.query.TB_organization_users.findMany());
+        const existingUserOrgsIds = existingUserOrgs.map((u) => u.user_id);
+        const toCreateUserOrgs = userOrgs.filter((t) => !existingUserOrgsIds.includes(t.user_id));
+        if (toCreateUserOrgs.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_organization_users).values(toCreateUserOrgs).returning());
+        }
 
         // TODO: Add users to warehouses
         const whsService = yield* _(WarehouseService);
@@ -412,7 +417,12 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           ),
           user_wh,
         );
-        yield* Effect.promise(() => db.insert(TB_users_warehouses).values(userWhs).returning());
+        const existingUserWhs = yield* Effect.promise(() => db.query.TB_users_warehouses.findMany());
+        const existingUserWhsIds = existingUserWhs.map((u) => u.userId);
+        const toCreateUserWhs = userWhs.filter((t) => !existingUserWhsIds.includes(t.userId));
+        if (toCreateUserWhs.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_users_warehouses).values(toCreateUserWhs).returning());
+        }
 
         const orgWhs = parse(
           array(
@@ -423,7 +433,12 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           ),
           org_wh,
         );
-        yield* Effect.promise(() => db.insert(TB_organizations_warehouses).values(orgWhs).returning());
+        const existingOrgWhs = yield* Effect.promise(() => db.query.TB_organizations_warehouses.findMany());
+        const existingOrgWhsIds = existingOrgWhs.map((u) => u.organizationId);
+        const toCreateOrgWhs = orgWhs.filter((t) => !existingOrgWhsIds.includes(t.organizationId));
+        if (toCreateOrgWhs.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_organizations_warehouses).values(toCreateOrgWhs).returning());
+        }
         return us;
       });
 

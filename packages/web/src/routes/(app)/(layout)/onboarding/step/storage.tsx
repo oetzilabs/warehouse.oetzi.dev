@@ -2,8 +2,8 @@
 import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { createDocumentStorage } from "@/lib/api/document_storages";
 import { getCurrentOrganization } from "@/lib/api/organizations";
-import { createDocumentStorage } from "@/lib/api/storages";
 import { A, createAsync, useAction, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
 import { onMount, Show } from "solid-js";

@@ -1,0 +1,130 @@
+import { eq } from "drizzle-orm";
+import { Effect } from "effect";
+import { InferInput, number, object, parse, safeParse } from "valibot";
+import { DatabaseLive, DatabaseService } from "../drizzle/sql";
+import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
+import { WarehouseLive, WarehouseService } from "./warehouses";
+
+export class SalesService extends Effect.Service<SalesService>()("@warehouse/sales", {
+  effect: Effect.gen(function* (_) {
+    const database = yield* _(DatabaseService);
+    const warehousesService = yield* _(WarehouseService);
+    const db = yield* database.instance;
+    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_sales.findMany>[0]>;
+
+    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
+      const defaultRelations: NonNullable<FindManyParams["with"]> = {
+        items: {
+          with: {
+            product: true,
+          },
+        },
+        customer: true,
+        warehouse: {
+          with: {
+            addresses: {
+              with: {
+                address: true,
+              },
+            },
+          },
+        },
+      };
+
+      if (options) {
+        return options;
+      }
+      return defaultRelations;
+    };
+
+    const create = (saleInput: InferInput<typeof SaleCreateSchema>) =>
+      Effect.gen(function* (_) {
+        const [sale] = yield* Effect.promise(() => db.insert(TB_sales).values(saleInput).returning());
+        return findById(sale.id);
+      });
+
+    const findById = (id: string, relations?: FindManyParams["with"]) =>
+      Effect.gen(function* (_) {
+        const rels = relations ?? withRelations();
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid sale ID format"));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_sales.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+            with: rels,
+          }),
+        );
+      });
+
+    const update = (id: string, saleInput: InferInput<typeof SaleUpdateSchema>) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid sale ID format"));
+        }
+        const [updatedSale] = yield* Effect.promise(() =>
+          db
+            .update(TB_sales)
+            .set({ ...saleInput, updatedAt: new Date() })
+            .where(eq(TB_sales.id, parsedId.output))
+            .returning(),
+        );
+        return updatedSale;
+      });
+
+    const remove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid sale ID format"));
+        }
+        const [deletedSale] = yield* Effect.promise(() =>
+          db.delete(TB_sales).where(eq(TB_sales.id, parsedId.output)).returning(),
+        );
+        return deletedSale;
+      });
+
+    const calculateTotal = (id: string) =>
+      Effect.gen(function* (_) {
+        const sale = yield* findById(id);
+        if (!sale) {
+          return yield* Effect.fail(new Error("Sale not found"));
+        }
+        return sale.items.reduce((total, item) => total + item.quantity * item.price, 0);
+      });
+
+    const findWithinRange = (warehouseId: string, start: Date, end: Date) =>
+      Effect.gen(function* (_) {
+        const warehouse = yield* warehousesService.findById(warehouseId);
+        if (!warehouse) {
+          return yield* Effect.fail(new Error("Warehouse not found"));
+        }
+        const sales = yield* Effect.promise(() =>
+          db.query.TB_sales.findMany({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.warehouseId, warehouse.id),
+                operations.and(operations.gte(fields.createdAt, start), operations.lte(fields.createdAt, end)),
+              ),
+          }),
+        );
+        return sales;
+      });
+
+    return {
+      create,
+      findById,
+      update,
+      remove,
+      calculateTotal,
+      findWithinRange,
+    } as const;
+  }),
+  dependencies: [DatabaseLive, WarehouseLive],
+}) {}
+
+export const SalesLive = SalesService.Default;
+export type SaleInfo = NonNullable<Effect.Effect.Success<ReturnType<SalesService["findById"]>>>;

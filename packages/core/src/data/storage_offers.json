@@ -4,17 +4,20 @@
     "name": "basic",
     "description": "Basic storage offering (1GB)",
     "price": 0.0,
-    "maxSize": 1073741824,
+    "maxSize": 1048576,
     "maxQueueSize": 10,
-    "shareable": false
+    "shareable": false,
+    "requires_payment_method": false
   },
   {
     "id": "dso_h47ql2wuzp7lp7c7m1xok37f",
     "name": "pro",
     "description": "Pro storage offering (10GB)",
     "price": 10.0,
-    "maxSize": 10737418240,
+    "maxSize": 10485760,
     "maxQueueSize": 100,
-    "shareable": false
+    "shareable": false,
+    "disabled": true,
+    "requires_payment_method": true
   }
 ]

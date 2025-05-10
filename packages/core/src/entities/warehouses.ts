@@ -108,7 +108,28 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.promise(() =>
           db.query.TB_warehouses.findFirst({
             where: (warehouses, operations) => operations.eq(warehouses.id, parsedId.output),
-            with: relations,
+            with: {
+              addresses: {
+                with: {
+                  address: true,
+                },
+              },
+              storages: {
+                with: {
+                  storage: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                },
+              },
+              owner: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+              areas: true,
+            },
           }),
         );
       });
@@ -289,7 +310,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
 
     const seed = () =>
       Effect.gen(function* (_) {
-        const dbAreas = yield* Effect.promise(() => db.query.TB_warehouse_areas.findMany());
+        const dbAreas = yield* Effect.promise(() => db.query.TB_warehouses.findMany());
 
         const as = parse(
           array(

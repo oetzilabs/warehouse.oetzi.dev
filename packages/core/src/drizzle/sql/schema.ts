@@ -6,6 +6,15 @@ export * from "./schemas/address";
 export * from "./schemas/storages";
 export * from "./schemas/storage_types";
 
+export * from "./schemas/products";
+export * from "./schemas/sales";
+export * from "./schemas/sales_items";
+export * from "./schemas/customers";
+export * from "./schemas/suppliers";
+export * from "./schemas/supplier_products";
+export * from "./schemas/supplier_contacts";
+export * from "./schemas/supplier_notes";
+
 export * from "./schemas/document/documents";
 export * from "./schemas/document/storages";
 export * from "./schemas/document/storage_queue";
@@ -27,6 +36,7 @@ export * from "./schemas/users_warehouses";
 
 export * from "./schemas/payment_methods";
 export * from "./schemas/user_payment_methods";
+export * from "./schemas/payment_history";
 
 export * from "./schemas/organizations";
 export * from "./schemas/organizations_addresses";

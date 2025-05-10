@@ -17,6 +17,7 @@ export const TB_document_storage_offers = commonTable(
     maxQueueSize: numeric("max_queue_size", { mode: "number" }).notNull().default(0),
     shareable: boolean("shareable").notNull().default(false),
     disabled: boolean("disabled").notNull().default(false),
+    requiresPaymentMethod: boolean("requires_payment_method").notNull().default(true),
   },
   "dso",
 );
