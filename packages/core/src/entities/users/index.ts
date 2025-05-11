@@ -234,7 +234,153 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: rels,
+            with: {
+              payment_methods: {
+                with: {
+                  payment_method: true,
+                },
+              },
+              payment_history: {
+                with: {
+                  paymentMethod: true,
+                },
+              },
+              orgs: {
+                with: {
+                  org: {
+                    with: {
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      users: {
+                        with: {
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                      whs: {
+                        with: {
+                          warehouse: {
+                            with: {
+                              storages: {
+                                with: {
+                                  storage: {
+                                    with: {
+                                      type: true,
+                                    },
+                                  },
+                                },
+                              },
+                              addresses: {
+                                with: {
+                                  address: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              whs: {
+                with: {
+                  warehouse: {
+                    with: {
+                      storages: {
+                        with: {
+                          storage: {
+                            with: {
+                              type: true,
+                            },
+                          },
+                        },
+                      },
+                      addresses: {
+                        with: {
+                          address: true,
+                        },
+                      },
+                      areas: true,
+                    },
+                  },
+                },
+              },
+              sessions: {
+                with: {
+                  user: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                  org: {
+                    with: {
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      users: {
+                        with: {
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                      whs: {
+                        with: {
+                          warehouse: {
+                            with: {
+                              storages: {
+                                with: {
+                                  storage: {
+                                    with: {
+                                      type: true,
+                                    },
+                                  },
+                                },
+                              },
+                              addresses: {
+                                with: {
+                                  address: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  wh: {
+                    with: {
+                      storages: {
+                        with: {
+                          storage: {
+                            with: {
+                              type: true,
+                            },
+                          },
+                        },
+                      },
+                      addresses: {
+                        with: {
+                          address: true,
+                        },
+                      },
+                      areas: true,
+                    },
+                  },
+                },
+              },
+            },
             columns: {
               hashed_password: false,
             },

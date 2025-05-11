@@ -1,0 +1,14 @@
+[
+  {
+    "id": "wht_p0px872ogyol9cb8fqsmxyva",
+    "name": "area 1",
+    "description": "this is area 1",
+    "bounding_box": {
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 500
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  }
+]

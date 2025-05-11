@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
+import warehouseAreas from "../../data/warehouse_areas.json";
 import warehouses from "../../data/warehouses.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
@@ -336,9 +337,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
 
     const seed = () =>
       Effect.gen(function* (_) {
-        const dbAreas = yield* Effect.promise(() => db.query.TB_warehouses.findMany());
+        const dbWarehouses = yield* Effect.promise(() => db.query.TB_warehouses.findMany());
 
-        const as = parse(
+        const whs = parse(
           array(
             object({
               ...WarehouseCreateSchema.entries,
@@ -348,16 +349,16 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           warehouses,
         );
 
-        const existing = dbAreas.map((u) => u.id);
+        const existing = dbWarehouses.map((u) => u.id);
 
-        const toCreate = as.filter((t) => !existing.includes(t.id));
+        const toCreate = whs.filter((t) => !existing.includes(t.id));
 
         if (toCreate.length > 0) {
           yield* Effect.promise(() => db.insert(TB_warehouses).values(toCreate).returning());
           yield* Effect.log("Created warehouses", toCreate);
         }
 
-        const toUpdate = as.filter((t) => existing.includes(t.id));
+        const toUpdate = whs.filter((t) => existing.includes(t.id));
         if (toUpdate.length > 0) {
           for (const area of toUpdate) {
             yield* Effect.promise(() =>
@@ -369,8 +370,40 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             );
           }
         }
+        const dbAreas = yield* Effect.promise(() => db.query.TB_warehouse_areas.findMany());
+        const existingAreas = dbAreas.map((u) => u.id);
 
-        return as;
+        const areas = parse(
+          array(
+            object({
+              ...WarehouseAreaCreateSchema.entries,
+              id: prefixed_cuid2,
+            }),
+          ),
+          warehouseAreas,
+        );
+
+        const toCreateAreas = areas.filter((t) => !existingAreas.includes(t.id));
+
+        if (toCreateAreas.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_warehouse_areas).values(toCreateAreas).returning());
+          yield* Effect.log("Created warehouse areas", toCreateAreas);
+        }
+
+        const toUpdateAreas = areas.filter((t) => existingAreas.includes(t.id));
+        if (toUpdateAreas.length > 0) {
+          for (const area of toUpdateAreas) {
+            yield* Effect.promise(() =>
+              db
+                .update(TB_warehouse_areas)
+                .set({ ...area, updatedAt: new Date() })
+                .where(eq(TB_warehouse_areas.id, area.id))
+                .returning(),
+            );
+          }
+        }
+
+        return whs;
       });
 
     return {
