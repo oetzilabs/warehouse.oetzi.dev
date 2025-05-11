@@ -1,11 +1,11 @@
 import { relations } from "drizzle-orm";
-import { primaryKey, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { TB_users } from "../users/users";
+import { schema } from "../utils";
 import { TB_organizations } from "./organizations";
-import { TB_users } from "./users";
-import { schema } from "./utils";
 
 export const TB_organization_users = schema.table(
   "organization_users",

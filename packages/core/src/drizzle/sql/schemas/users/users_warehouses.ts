@@ -2,10 +2,10 @@ import { relations } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { schema } from "../utils";
+import { TB_warehouses } from "../warehouses/warehouses";
 import { TB_users } from "./users";
-import { schema } from "./utils";
-import { TB_warehouses } from "./warehouses";
 
 export const TB_users_warehouses = schema.table(
   "users_warehouses",

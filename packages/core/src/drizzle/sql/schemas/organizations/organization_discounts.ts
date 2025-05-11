@@ -1,8 +1,8 @@
 import { relations } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/pg-core";
-import { TB_discounts_v1 } from "./discounts";
+import { TB_discounts_v1 } from "../discounts";
+import { schema } from "../utils";
 import { TB_organizations } from "./organizations";
-import { schema } from "./utils";
 
 export const TB_organization_discounts = schema.table(
   "organization_discounts",

@@ -2,9 +2,9 @@ import { relations } from "drizzle-orm";
 import { varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { TB_addresses } from "./address";
-import { commonTable } from "./entity";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { TB_addresses } from "../address";
+import { commonTable } from "../entity";
 import { TB_organizations } from "./organizations";
 
 export const TB_organization_addresses = commonTable(

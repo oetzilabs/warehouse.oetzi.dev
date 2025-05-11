@@ -4,10 +4,10 @@ import { text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { TB_organizations } from "./organizations";
-import { TB_users } from "./users";
+import { TB_organizations } from "./organizations/organizations";
+import { TB_users } from "./users/users";
 import { schema } from "./utils";
-import { TB_warehouses } from "./warehouses";
+import { TB_warehouses } from "./warehouses/warehouses";
 
 export const TB_sessions = schema.table("session", {
   id: text("id")

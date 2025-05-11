@@ -2,10 +2,10 @@ import { relations } from "drizzle-orm";
 import { boolean, pgEnum, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { commonTable } from "../entity";
+import { TB_user_payment_methods } from "../users/user_payment_methods";
 import { TB_payment_history } from "./payment_history";
-import { TB_user_payment_methods } from "./user_payment_methods";
 
 export const payment_method_type = pgEnum("payment_method_type", ["cash", "card", "bank_account"]);
 export type PaymentMethodType = (typeof payment_method_type.enumValues)[number];

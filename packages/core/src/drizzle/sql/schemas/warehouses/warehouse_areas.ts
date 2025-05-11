@@ -2,8 +2,8 @@ import { relations } from "drizzle-orm";
 import { json, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { commonTable } from "../entity";
 import { TB_warehouses } from "./warehouses";
 
 export const TB_warehouse_areas = commonTable(

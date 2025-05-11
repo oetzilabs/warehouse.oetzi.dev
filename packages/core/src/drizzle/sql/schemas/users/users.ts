@@ -2,11 +2,11 @@ import { relations } from "drizzle-orm";
 import { boolean, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial, string } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
-import { TB_organization_users } from "./organization_users";
-import { TB_payment_history } from "./payment_history";
-import { TB_sessions } from "./sessions";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { commonTable } from "../entity";
+import { TB_organization_users } from "../organizations/organization_users";
+import { TB_payment_history } from "../payments/payment_history";
+import { TB_sessions } from "../sessions";
 import { TB_user_payment_methods } from "./user_payment_methods";
 import { TB_users_warehouses } from "./users_warehouses";
 

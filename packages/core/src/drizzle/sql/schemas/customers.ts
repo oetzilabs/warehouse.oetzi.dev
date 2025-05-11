@@ -4,8 +4,8 @@ import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
-import { TB_sales } from "./sales";
-import { TB_users } from "./users";
+import { TB_sales } from "./sales/sales";
+import { TB_users } from "./users/users";
 
 export const customer_status = pgEnum("customer_status", ["active", "inactive", "blocked"]);
 

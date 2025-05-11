@@ -56,18 +56,27 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return product;
       });
 
-    const checkStock = (id: string) =>
+    const remove = (id: string) =>
       Effect.gen(function* (_) {
-        const product = yield* findById(id);
-        if (!product) return yield* Effect.fail(new Error("Product not found"));
-        return {
-          inStock: product.currentStock > 0,
-          needsReorder: product.currentStock <= product.minimumStock,
-          quantity: product.currentStock,
-        };
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) return yield* Effect.fail(new Error("Invalid product ID"));
+        const [deleted] = yield* Effect.promise(() =>
+          db.delete(TB_products).where(eq(TB_products.id, parsedId.output)).returning(),
+        );
+        return deleted;
       });
 
-    return { create, findById, update, checkStock } as const;
+    const safeRemove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) return yield* Effect.fail(new Error("Invalid product ID"));
+        const [deleted] = yield* Effect.promise(() =>
+          db.update(TB_products).set({ deletedAt: new Date() }).where(eq(TB_products.id, parsedId.output)).returning(),
+        );
+        return deleted;
+      });
+
+    return { create, findById, update, remove, safeRemove } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

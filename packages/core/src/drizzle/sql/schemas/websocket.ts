@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { text, uuid, varchar } from "drizzle-orm/pg-core";
 import { commonTable } from "./entity";
-import { TB_users } from "./users";
+import { TB_users } from "./users/users";
 
 export const TB_websockets = commonTable(
   "websockets",
@@ -9,7 +9,7 @@ export const TB_websockets = commonTable(
     userId: varchar("user_id").references(() => TB_users.id, { onDelete: "cascade" }),
     connectionId: text("connection_id").notNull(),
   },
-  "ws"
+  "ws",
 );
 
 export type WebsocketsSelect = typeof TB_websockets.$inferSelect;

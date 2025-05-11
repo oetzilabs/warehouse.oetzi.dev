@@ -2,9 +2,9 @@ import { relations } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit } from "valibot";
-import { TB_payment_methods } from "./payment_methods";
+import { TB_payment_methods } from "../payments/payment_methods";
+import { schema } from "../utils";
 import { TB_users } from "./users";
-import { schema } from "./utils";
 
 export const TB_user_payment_methods = schema.table(
   "user_payment_methods",

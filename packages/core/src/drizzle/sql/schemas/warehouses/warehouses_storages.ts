@@ -2,11 +2,11 @@ import { relations } from "drizzle-orm";
 import { primaryKey, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
-import { TB_storages } from "./storages";
-import { schema } from "./utils";
-import { TB_warehouses } from "./warehouses";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { commonTable } from "../entity";
+import { TB_storages } from "../storages";
+import { schema } from "../utils";
+import { TB_warehouses } from "../warehouses/warehouses";
 
 export const TB_warehouse_storages = schema.table(
   "warehouse_storages",

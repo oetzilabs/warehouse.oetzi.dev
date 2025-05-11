@@ -1,11 +1,10 @@
 import { relations } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { TB_discounts_v1 } from "./discounts";
-import { TB_products } from "./products";
+import { TB_discounts_v1 } from "../discounts";
+import { TB_products } from "../products";
+import { schema } from "../utils";
 import { TB_sales } from "./sales";
-import { TB_sale_items } from "./sales_items";
-import { schema } from "./utils";
 
 export const TB_sales_discounts = schema.table(
   "sales_discounts",

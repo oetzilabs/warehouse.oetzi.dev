@@ -1,12 +1,11 @@
 import { relations } from "drizzle-orm";
 import { decimal, primaryKey, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
-import { TB_products } from "./products";
+import { object, partial } from "valibot";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { TB_products } from "../products";
+import { schema } from "../utils";
 import { TB_suppliers } from "./suppliers";
-import { schema } from "./utils";
 
 export const TB_supplier_products = schema.table(
   "supplier_products",
