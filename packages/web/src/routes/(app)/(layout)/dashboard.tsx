@@ -50,7 +50,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div class="flex flex-col container py-2">
+    <div class="flex flex-col container py-4">
       <div class="flex flex-col gap-4">
         <h1 class="text-2xl font-semibold">Dashboard</h1>
         <div class="flex flex-col gap-2">
@@ -63,11 +63,11 @@ export default function DashboardPage() {
                       <For
                         each={storages()}
                         fallback={
-                          <div class="flex flex-col gap-2">
-                            <div class="text-center text-sm text-muted-foreground">No document storages found</div>
+                          <div class="flex flex-col gap-2 w-full border rounded-md p-4">
+                            <div class="text-center text-xs text-muted-foreground">No document storages found</div>
                             <div class="flex justify-center">
                               <Dialog open={isOpen()} onOpenChange={setIsOpen}>
-                                <DialogTrigger as={Button} size="sm" type="button">
+                                <DialogTrigger as={Button} size="sm" type="button" class="h-8 px-2 w-max">
                                   <Plus class="size-4" />
                                   Create Document Storage
                                 </DialogTrigger>
@@ -160,7 +160,20 @@ export default function DashboardPage() {
             <div class="w-full h-full flex flex-col gap-2">
               <div class="flex flex-col gap-2 w-full h-full">
                 <Suspense fallback={<Skeleton class="w-full h-full" />}>
-                  <Show when={salesLastFewMonths()} fallback={<div class=""></div>}>
+                  <Show
+                    when={
+                      salesLastFewMonths() &&
+                      (salesLastFewMonths()
+                        ?.datasets.map((d) => d.data.length)
+                        .reduce((a, b) => a + b, 0) ?? 0) > 0 &&
+                      salesLastFewMonths()
+                    }
+                    fallback={
+                      <div class="w-full p-4 border rounded-lg h-full bg-muted flex items-center justify-center">
+                        <span class="text-xs text-muted-foreground">No sales data found</span>
+                      </div>
+                    }
+                  >
                     {(sales) => (
                       <div class="w-full p-4 border rounded-lg h-full">
                         <LineChart

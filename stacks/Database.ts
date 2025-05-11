@@ -2,7 +2,7 @@ import { allSecrets, secret } from "./Secrets";
 
 export const migrate = new sst.x.DevCommand("DatabaseMigrate", {
   dev: {
-    command: "pnpm drizzle-kit migrate",
+    command: "bun run drizzle-kit migrate",
     directory: "packages/core",
     autostart: false,
   },
