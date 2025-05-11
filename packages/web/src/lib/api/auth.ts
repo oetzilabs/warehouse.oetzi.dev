@@ -1,6 +1,6 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/auth";
-import { Effect } from "effect";
+import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/authentication";
+import { Cause, Chunk, Effect, Exit } from "effect";
 import { status } from "effect/Fiber";
 import { getCookie, setCookie } from "vinxi/http";
 
@@ -87,26 +87,32 @@ export const loginViaEmail = action(async (email: string, password: string) => {
     });
   }
 
-  const loginAttempt = await Effect.runPromise(
+  const loginAttempt = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.login(email, password);
     }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
   );
 
-  if (!loginAttempt.success) {
-    throw loginAttempt.err;
-  }
-
-  setCookie("session_token", loginAttempt.session.access_token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    expires: loginAttempt.session.expiresAt,
-  });
-
-  return redirect("/", {
-    revalidate: [getAuthenticatedUser.key],
+  return Exit.match(loginAttempt, {
+    onSuccess: ({ user, session }) => {
+      setCookie("session_token", session.access_token, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        expires: session.expiresAt,
+      });
+      return redirect("/", {
+        revalidate: [getAuthenticatedUser.key],
+      });
+    },
+    onFailure: (cause) => {
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return c.message;
+      });
+      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+    },
   });
 });
 
@@ -133,25 +139,31 @@ export const signupViaEmail = action(async (email: string, password: string, pas
     });
   }
 
-  const signupAttempt = await Effect.runPromise(
+  const signupAttempt = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.signup(email, password);
     }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
   );
 
-  if (!signupAttempt.success) {
-    throw signupAttempt.err;
-  }
-
-  setCookie("session_token", signupAttempt.session.access_token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    expires: signupAttempt.session.expiresAt,
-  });
-
-  return redirect("/", {
-    revalidate: [getAuthenticatedUser.key],
+  return Exit.match(signupAttempt, {
+    onSuccess: ({ user, session }) => {
+      setCookie("session_token", session.access_token, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        expires: session.expiresAt,
+      });
+      return redirect("/", {
+        revalidate: [getAuthenticatedUser.key],
+      });
+    },
+    onFailure: (cause) => {
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return c.message;
+      });
+      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+    },
   });
 });

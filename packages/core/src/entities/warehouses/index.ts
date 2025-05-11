@@ -1,8 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
-import warehouses from "../data/warehouses.json";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql";
+import warehouses from "../../data/warehouses.json";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   TB_organizations_warehouses,
   TB_users_warehouses,
@@ -15,8 +15,21 @@ import {
   WarehouseTypeCreateSchema,
   WarehouseTypeUpdateSchema,
   WarehouseUpdateSchema,
-} from "../drizzle/sql/schema";
-import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
+} from "../../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import {
+  WarehouseInvalidId,
+  WarehouseNotCreated,
+  WarehouseNotDeleted,
+  WarehouseNotFound,
+  WarehouseNotFoundForOrganization,
+  WarehouseNotUpdated,
+  WarehouseOrganizationInvalidId,
+  WarehouseOrganizationLinkFailed,
+  WarehouseOrganizationUnlinkFailed,
+  WarehouseUserInvalidId,
+  WarehouseUserLinkFailed,
+} from "./errors";
 
 export class WarehouseService extends Effect.Service<WarehouseService>()("@warehouse/warehouses", {
   effect: Effect.gen(function* (_) {
@@ -59,14 +72,17 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedOrgId.success) {
-          return yield* Effect.fail(new Error("Invalid organization ID format"));
+          return yield* Effect.fail(new WarehouseOrganizationInvalidId({ organizationId }));
         }
         const parsedUserId = safeParse(prefixed_cuid2, userId);
         if (!parsedUserId.success) {
-          return yield* Effect.fail(new Error("Invalid organization ID format"));
+          return yield* Effect.fail(new WarehouseUserInvalidId({ userId }));
         }
 
         const [warehouse] = yield* Effect.promise(() => db.insert(TB_warehouses).values(userInput).returning());
+        if (!warehouse) {
+          return yield* Effect.fail(new WarehouseNotCreated({}));
+        }
 
         const connectedToOrg = yield* Effect.promise(() =>
           db
@@ -79,8 +95,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         );
 
         if (!connectedToOrg) {
-          return yield* Effect.fail(new Error("Failed to connect warehouse to organization"));
+          return yield* Effect.fail(
+            new WarehouseOrganizationLinkFailed({ organizationId: parsedOrgId.output, warehouseId: warehouse.id }),
+          );
         }
+
         const connectedToUser = yield* Effect.promise(() =>
           db
             .insert(TB_users_warehouses)
@@ -92,7 +111,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         );
 
         if (!connectedToUser) {
-          return yield* Effect.fail(new Error("Failed to connect warehouse to user"));
+          return yield* Effect.fail(
+            new WarehouseUserLinkFailed({ userId: parsedUserId.output, warehouseId: warehouse.id }),
+          );
         }
 
         return warehouse;
@@ -102,43 +123,28 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID format"));
+          return yield* Effect.fail(new WarehouseInvalidId({ id }));
         }
 
-        return yield* Effect.promise(() =>
+        const warehouse = yield* Effect.promise(() =>
           db.query.TB_warehouses.findFirst({
             where: (warehouses, operations) => operations.eq(warehouses.id, parsedId.output),
-            with: {
-              addresses: {
-                with: {
-                  address: true,
-                },
-              },
-              storages: {
-                with: {
-                  storage: {
-                    with: {
-                      type: true,
-                    },
-                  },
-                },
-              },
-              owner: {
-                columns: {
-                  hashed_password: false,
-                },
-              },
-              areas: true,
-            },
+            with: relations,
           }),
         );
+
+        if (!warehouse) {
+          return yield* Effect.fail(new WarehouseNotFound({ id }));
+        }
+
+        return warehouse;
       });
 
     const update = (input: InferInput<typeof WarehouseUpdateSchema>) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, input.id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID"));
+          return yield* Effect.fail(new WarehouseInvalidId({ id: input.id }));
         }
 
         const [updated] = yield* Effect.promise(() =>
@@ -148,6 +154,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             .where(eq(TB_warehouses.id, parsedId.output))
             .returning(),
         );
+
+        if (!updated) {
+          return yield* Effect.fail(new WarehouseNotUpdated({ id: input.id }));
+        }
+
         return updated;
       });
 
@@ -155,46 +166,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID"));
-        }
-
-        return yield* Effect.promise(() =>
-          db
-            .delete(TB_warehouses)
-            .where(eq(TB_warehouses.id, parsedId.output))
-            .returning()
-            .then(([x]) => x),
-        );
-      });
-
-    const findByOrganizationId = (organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new Error("Invalid organization ID"));
-        }
-
-        const entries = yield* Effect.promise(() =>
-          db.query.TB_organizations_warehouses.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
-            with: {
-              warehouse: true,
-            },
-          }),
-        );
-
-        if (entries.length === 0) {
-          return yield* Effect.fail(new Error("No warehouses found for organization"));
-        }
-
-        return entries.map((entry) => entry.warehouse);
-      });
-
-    const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID"));
+          return yield* Effect.fail(new WarehouseInvalidId({ id }));
         }
 
         const entries = yield* Effect.promise(() =>
@@ -207,10 +179,58 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         );
 
         if (entries.length > 0) {
-          return yield* Effect.fail(new Error("Warehouse is still associated with organizations"));
+          // remove the warehouse from the associated organizations
+          yield* Effect.promise(() =>
+            db
+              .delete(TB_organizations_warehouses)
+              .where(eq(TB_organizations_warehouses.warehouseId, parsedId.output))
+              .returning(),
+          );
         }
 
-        const entries2 = yield* Effect.promise(() =>
+        // remove the warehouse itself
+        const [deleted] = yield* Effect.promise(() =>
+          db.delete(TB_warehouses).where(eq(TB_warehouses.id, parsedId.output)).returning(),
+        );
+
+        if (!deleted) {
+          return yield* Effect.fail(new WarehouseNotDeleted({ id }));
+        }
+
+        return deleted;
+      });
+
+    const findByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new WarehouseOrganizationInvalidId({ organizationId }));
+        }
+
+        const entries = yield* Effect.promise(() =>
+          db.query.TB_organizations_warehouses.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+            with: {
+              warehouse: true,
+            },
+          }),
+        );
+
+        if (entries.length === 0) {
+          return yield* Effect.fail(new WarehouseNotFoundForOrganization({ organizationId }));
+        }
+
+        return entries.map((entry) => entry.warehouse);
+      });
+
+    const safeRemove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id }));
+        }
+
+        const entries = yield* Effect.promise(() =>
           db
             .update(TB_warehouses)
             .set({ deletedAt: new Date() })
@@ -218,11 +238,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             .returning(),
         );
 
-        if (entries2.length === 0) {
-          return yield* Effect.fail(new Error("Failed to remove warehouse"));
+        if (entries.length === 0) {
+          return yield* Effect.fail(new WarehouseNotCreated({ message: "Failed to safe remove warehouse" }));
         }
 
-        return entries2[0];
+        return entries[0];
       });
 
     const all = () =>
@@ -234,7 +254,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       Effect.gen(function* (_) {
         const parsedUserId = safeParse(prefixed_cuid2, userId);
         if (!parsedUserId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID"));
+          return yield* Effect.fail(new WarehouseUserInvalidId({ userId }));
         }
 
         const entries = yield* Effect.promise(() =>
@@ -255,7 +275,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, warehouseId);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID format"));
+          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
         }
         const wh = yield* Effect.promise(() =>
           db.query.TB_warehouses.findFirst({
@@ -263,7 +283,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           }),
         );
         if (!wh) {
-          return yield* Effect.fail(new Error("Warehouse not found"));
+          return yield* Effect.fail(new WarehouseNotFound({ id: warehouseId }));
         }
         const [area] = yield* Effect.promise(() => db.insert(TB_warehouse_areas).values(data).returning());
 
@@ -274,21 +294,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID format"));
-        }
-        const area = yield* Effect.promise(() =>
-          db.query.TB_warehouse_areas.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-          }),
-        );
-        return area;
-      });
-
-    const updateArea = (data: InferInput<typeof WarehouseAreaUpdateSchema>, areaId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, areaId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid warehouse ID format"));
+          return yield* Effect.fail(new WarehouseInvalidId({ id }));
         }
         const area = yield* Effect.promise(() =>
           db.query.TB_warehouse_areas.findFirst({
@@ -296,7 +302,24 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           }),
         );
         if (!area) {
-          return yield* Effect.fail(new Error("Area not found"));
+          return yield* Effect.fail(new WarehouseNotFound({ id }));
+        }
+        return area;
+      });
+
+    const updateArea = (data: InferInput<typeof WarehouseAreaUpdateSchema>, areaId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, areaId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: areaId }));
+        }
+        const area = yield* Effect.promise(() =>
+          db.query.TB_warehouse_areas.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          }),
+        );
+        if (!area) {
+          return yield* Effect.fail(new WarehouseNotFound({ id: areaId }));
         }
         const [updatedArea] = yield* Effect.promise(() =>
           db
@@ -305,6 +328,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             .where(eq(TB_warehouse_areas.id, area.id))
             .returning(),
         );
+        if (!updatedArea) {
+          return yield* Effect.fail(new WarehouseNotUpdated({ id: areaId }));
+        }
         return updatedArea;
       });
 

@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-valibot";
 import { Effect } from "effect";
 import { array, email, InferInput, object, omit, parse, pipe, safeParse, string } from "valibot";
-import org_wh from "../data/org_wh.json";
-import user_orgs from "../data/user_orgs.json";
-import user_wh from "../data/user_wh.json";
-import users from "../data/users.json";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql";
+import org_wh from "../../data/org_wh.json";
+import user_orgs from "../../data/user_orgs.json";
+import user_wh from "../../data/user_wh.json";
+import users from "../../data/users.json";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   TB_organization_users,
   TB_organizations_warehouses,
@@ -15,10 +15,23 @@ import {
   TB_users_warehouses,
   UserCreateSchema,
   UserUpdateSchema,
-} from "../drizzle/sql/schema";
-import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
-import { OrganizationLive, OrganizationService } from "./organizations";
-import { WarehouseLive, WarehouseService } from "./warehouses";
+} from "../../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationLive, OrganizationService } from "../organizations";
+import { WarehouseLive, WarehouseService } from "../warehouses";
+import {
+  UserAuthenticationFailed,
+  UserDisableFailed,
+  UserInvalidEmail,
+  UserInvalidId,
+  UserLastOrgNotFound,
+  UserLastWarehouseNotFound,
+  UserNotCreated,
+  UserNotDeleted,
+  UserNotFound,
+  UserNotUpdated,
+  UserPasswordRequired,
+} from "./errors";
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
   effect: Effect.gen(function* (_) {
@@ -191,17 +204,20 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         let uI: InferInput<typeof WithHashedPassword>;
         const { password, ...cleanedUserInput } = userInput;
         if (!password) {
-          return yield* Effect.fail(new Error("Password is required"));
+          return yield* Effect.fail(new UserPasswordRequired({}));
         }
         uI = Object.assign(cleanedUserInput, {
           hashed_password: hashPassword(password),
         });
 
         const [x] = yield* Effect.promise(() => db.insert(TB_users).values(uI).returning());
+        if (!x) {
+          return yield* Effect.fail(new UserNotCreated({}));
+        }
 
         const user = yield* findById(x.id);
         if (!user) {
-          return yield* Effect.fail(new Error("Failed to create user"));
+          return yield* Effect.fail(new UserNotCreated({ message: "Failed to create user" }));
         }
 
         return user;
@@ -212,8 +228,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id }));
         }
+
         const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
@@ -223,6 +240,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
           }),
         );
+
+        if (!user) {
+          return yield* Effect.fail(new UserNotFound({ id }));
+        }
+
         return user;
       });
 
@@ -232,10 +254,10 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         const emailX = pipe(string(), email());
         const parsedEmail = safeParse(emailX, emailInput);
         if (!parsedEmail.success) {
-          return yield* Effect.fail(new Error("Invalid email format"));
+          return yield* Effect.fail(new UserInvalidEmail({ email: emailInput }));
         }
 
-        return yield* Effect.promise(() =>
+        const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
             with: rels,
@@ -244,13 +266,19 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
           }),
         );
+
+        if (!user) {
+          return yield* Effect.fail(new UserNotFound({ id: emailInput }));
+        }
+
+        return user;
       });
 
     const update = (id: string, userInput: InferInput<typeof UserUpdateSchema>) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id }));
         }
         const [updatedUser] = yield* Effect.promise(() =>
           db
@@ -259,6 +287,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             .where(eq(TB_users.id, parsedId.output))
             .returning(),
         );
+        if (!updatedUser) {
+          return yield* Effect.fail(new UserNotUpdated({ id }));
+        }
         return updatedUser;
       });
 
@@ -266,11 +297,14 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id }));
         }
         const [deletedUser] = yield* Effect.promise(() =>
           db.delete(TB_users).where(eq(TB_users.id, parsedId.output)).returning(),
         );
+        if (!deletedUser) {
+          return yield* Effect.fail(new UserNotDeleted({ id }));
+        }
         return deletedUser;
       });
 
@@ -278,11 +312,14 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id }));
         }
         const [deletedUser] = yield* Effect.promise(() =>
           db.update(TB_users).set({ deletedAt: new Date() }).where(eq(TB_users.id, parsedId.output)).returning(),
         );
+        if (!deletedUser) {
+          return yield* Effect.fail(new UserNotDeleted({ id }));
+        }
         return deletedUser;
       });
 
@@ -295,11 +332,14 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id }));
         }
         const [updatedUser] = yield* Effect.promise(() =>
           db.update(TB_users).set({ status: "disabled" }).where(eq(TB_users.id, parsedId.output)).returning(),
         );
+        if (!updatedUser) {
+          return yield* Effect.fail(new UserDisableFailed({ id }));
+        }
         return updatedUser;
       });
 
@@ -307,10 +347,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       Effect.gen(function* (_) {
         const parsedEmail = safeParse(pipe(string(), email()), emailInput);
         if (!parsedEmail.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidEmail({ email: emailInput }));
         }
 
-        // check if the user password matches
         const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (users, operations) =>
@@ -320,35 +359,48 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
               ),
           }),
         );
-        return typeof user !== "undefined";
+
+        if (!user) {
+          return yield* Effect.fail(new UserAuthenticationFailed({ email: emailInput }));
+        }
+
+        return true;
       });
 
     const findLastOrganization = (userId: string) =>
       Effect.gen(function* (_) {
         const parsedUserId = safeParse(prefixed_cuid2, userId);
         if (!parsedUserId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id: userId }));
         }
-        return yield* Effect.promise(() =>
+        const org = yield* Effect.promise(() =>
           db.query.TB_organizations.findFirst({
             where: (users_warehouses, operations) => operations.eq(users_warehouses.owner_id, parsedUserId.output),
             orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
           }),
         );
+        if (!org) {
+          return yield* Effect.fail(new UserLastOrgNotFound({ userId }));
+        }
+        return org;
       });
 
     const findLastWarehouse = (userId: string) =>
       Effect.gen(function* (_) {
         const parsedUserId = safeParse(prefixed_cuid2, userId);
         if (!parsedUserId.success) {
-          return yield* Effect.fail(new Error("Invalid user ID format"));
+          return yield* Effect.fail(new UserInvalidId({ id: userId }));
         }
-        return yield* Effect.promise(() =>
+        const warehouse = yield* Effect.promise(() =>
           db.query.TB_warehouses.findFirst({
             where: (users_warehouses, operations) => operations.eq(users_warehouses.ownerId, parsedUserId.output),
             orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
           }),
         );
+        if (!warehouse) {
+          return yield* Effect.fail(new UserLastWarehouseNotFound({ userId }));
+        }
+        return warehouse;
       });
 
     const seed = () =>

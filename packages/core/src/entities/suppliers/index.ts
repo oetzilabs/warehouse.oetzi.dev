@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   SupplierContactCreateSchema,
   SupplierCreateSchema,
@@ -10,8 +10,15 @@ import {
   TB_supplier_contacts,
   TB_supplier_notes,
   TB_suppliers,
-} from "../drizzle/sql/schema";
-import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
+} from "../../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import {
+  SupplierContactNotCreated,
+  SupplierInvalidId,
+  SupplierNotCreated,
+  SupplierNoteNotCreated,
+  SupplierNotFound,
+} from "./errors";
 
 export class SupplierService extends Effect.Service<SupplierService>()("@warehouse/suppliers", {
   effect: Effect.gen(function* (_) {
@@ -34,6 +41,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
     const create = (input: InferInput<typeof SupplierCreateSchema>) =>
       Effect.gen(function* (_) {
         const [supplier] = yield* Effect.promise(() => db.insert(TB_suppliers).values(input).returning());
+        if (!supplier) {
+          return yield* Effect.fail(new SupplierNotCreated({}));
+        }
         return findById(supplier.id);
       });
 
@@ -41,38 +51,55 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       Effect.gen(function* (_) {
         const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) return yield* Effect.fail(new Error("Invalid supplier ID"));
-        return yield* Effect.promise(() =>
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id }));
+        }
+
+        const supplier = yield* Effect.promise(() =>
           db.query.TB_suppliers.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: rels,
           }),
         );
+
+        if (!supplier) {
+          return yield* Effect.fail(new SupplierNotFound({ id }));
+        }
+
+        return supplier;
       });
 
     const addContact = (supplierId: string, input: InferInput<typeof SupplierContactCreateSchema>) =>
       Effect.gen(function* (_) {
         const supplier = yield* findById(supplierId);
-        if (!supplier) return yield* Effect.fail(new Error("Supplier not found"));
         const [contact] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_contacts)
             .values({ ...input, supplierId: supplier.id })
             .returning(),
         );
+
+        if (!contact) {
+          return yield* Effect.fail(new SupplierContactNotCreated({ supplierId }));
+        }
+
         return contact;
       });
 
     const addNote = (supplierId: string, input: InferInput<typeof SupplierNoteCreateSchema>) =>
       Effect.gen(function* (_) {
         const supplier = yield* findById(supplierId);
-        if (!supplier) return yield* Effect.fail(new Error("Supplier not found"));
         const [note] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_notes)
             .values({ ...input, supplierId: supplier.id })
             .returning(),
         );
+
+        if (!note) {
+          return yield* Effect.fail(new SupplierNoteNotCreated({ supplierId }));
+        }
+
         return note;
       });
 

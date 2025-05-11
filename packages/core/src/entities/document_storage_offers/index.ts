@@ -1,18 +1,25 @@
 import { eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
-import storageOffers from "../data/storage_offers.json";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql";
+import storageOffers from "../../data/storage_offers.json";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   DocumentStorageOfferCreate,
   DocumentStorageOfferCreateSchema,
   DocumentStorageOfferUpdateSchema,
   TB_document_storage_offers,
   TB_organizations_storages,
-} from "../drizzle/sql/schema";
-import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
-import { generateBasePath } from "./utils";
-import { S3DocumentStorageLive, S3DocumentStorageService } from "./vfs/s3";
+} from "../../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { generateBasePath } from "../utils";
+import { S3DocumentStorageLive, S3DocumentStorageService } from "../vfs/s3";
+import {
+  DocumentStorageOfferCreateFailed,
+  DocumentStorageOfferDeleteFailed,
+  DocumentStorageOfferInvalidId,
+  DocumentStorageOfferNotFound,
+  DocumentStorageOfferUpdateFailed,
+} from "./errors";
 
 export class DocumentStorageOfferService extends Effect.Service<DocumentStorageOfferService>()(
   "@warehouse/document-storage-offers",
@@ -42,7 +49,7 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
         Effect.gen(function* (_) {
           const parsedOrgId = safeParse(prefixed_cuid2, organization_id);
           if (!parsedOrgId.success) {
-            return yield* Effect.fail(new Error("Invalid organization ID format"));
+            return yield* Effect.fail(new DocumentStorageOfferInvalidId({ id: organization_id }));
           }
 
           const [storage] = yield* Effect.promise(() =>
@@ -60,7 +67,7 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
           );
 
           if (!connectedWithOrg) {
-            return yield* Effect.fail(new Error("Failed to connect storage to organization"));
+            return yield* Effect.fail(new DocumentStorageOfferCreateFailed({ organizationId: organization_id }));
           }
 
           return storage;
@@ -70,15 +77,21 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
         Effect.gen(function* (_) {
           const parsedId = safeParse(prefixed_cuid2, id);
           if (!parsedId.success) {
-            return yield* Effect.fail(new Error("Invalid storage ID format"));
+            return yield* Effect.fail(new DocumentStorageOfferInvalidId({ id }));
           }
 
-          return yield* Effect.promise(() =>
+          const result = yield* Effect.promise(() =>
             db.query.TB_document_storage_offers.findFirst({
               where: (storages, operations) => operations.eq(storages.id, parsedId.output),
               with: relations,
             }),
           );
+
+          if (!result) {
+            return yield* Effect.fail(new DocumentStorageOfferNotFound({ id }));
+          }
+
+          return result;
         });
 
       const update = (input: InferInput<typeof DocumentStorageOfferUpdateSchema>) =>
@@ -89,8 +102,9 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
             }),
           );
           if (!exists) {
-            return yield* Effect.fail(new Error("Storage does not exist"));
+            return yield* Effect.fail(new DocumentStorageOfferNotFound({ id: input.id }));
           }
+
           const [updated] = yield* Effect.promise(() =>
             db
               .update(TB_document_storage_offers)
@@ -98,6 +112,11 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
               .where(eq(TB_document_storage_offers.id, input.id))
               .returning(),
           );
+
+          if (!updated) {
+            return yield* Effect.fail(new DocumentStorageOfferUpdateFailed({ id: input.id }));
+          }
+
           return updated;
         });
 
@@ -105,17 +124,22 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
         Effect.gen(function* (_) {
           const parsedId = safeParse(prefixed_cuid2, id);
           if (!parsedId.success) {
-            return yield* Effect.fail(new Error("Invalid storage ID"));
+            return yield* Effect.fail(new DocumentStorageOfferInvalidId({ id }));
           }
 
-          return yield* Effect.promise(() =>
+          const result = yield* Effect.promise(() =>
             db
               .update(TB_document_storage_offers)
               .set({ deletedAt: new Date() })
               .where(eq(TB_document_storage_offers.id, parsedId.output))
-              .returning()
-              .then(([x]) => x),
+              .returning(),
           );
+
+          if (result.length === 0) {
+            return yield* Effect.fail(new DocumentStorageOfferDeleteFailed({ id }));
+          }
+
+          return result;
         });
 
       const all = (relations: FindManyParams["with"] = withRelations()) =>

@@ -1,6 +1,6 @@
 import { client } from "@warehouseoetzidev/core/src/auth/client";
 import { subjects } from "@warehouseoetzidev/core/src/auth/subjects";
-import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/auth";
+import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/authentication";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { Effect } from "effect";
 import { getCookie } from "vinxi/http";

@@ -1,10 +1,18 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, number, object, parse, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql";
-import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../drizzle/sql/schema";
-import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
-import { WarehouseLive, WarehouseService } from "./warehouses";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
+import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { WarehouseLive, WarehouseService } from "../warehouses";
+import {
+  SaleInvalidId,
+  SaleNotCreated,
+  SaleNotDeleted,
+  SaleNotFound,
+  SaleNotUpdated,
+  SaleWarehouseNotFound,
+} from "./errors";
 
 export class SalesService extends Effect.Service<SalesService>()("@warehouse/sales", {
   effect: Effect.gen(function* (_) {
@@ -41,29 +49,38 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
     const create = (saleInput: InferInput<typeof SaleCreateSchema>) =>
       Effect.gen(function* (_) {
         const [sale] = yield* Effect.promise(() => db.insert(TB_sales).values(saleInput).returning());
+        if (!sale) {
+          return yield* Effect.fail(new SaleNotCreated({}));
+        }
         return findById(sale.id);
       });
 
     const findById = (id: string, relations?: FindManyParams["with"]) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid sale ID format"));
+          return yield* Effect.fail(new SaleInvalidId({ id }));
         }
-        return yield* Effect.promise(() =>
+
+        const sale = yield* Effect.promise(() =>
           db.query.TB_sales.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: rels,
+            with: relations ?? withRelations(),
           }),
         );
+
+        if (!sale) {
+          return yield* Effect.fail(new SaleNotFound({ id }));
+        }
+
+        return sale;
       });
 
     const update = (id: string, saleInput: InferInput<typeof SaleUpdateSchema>) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid sale ID format"));
+          return yield* Effect.fail(new SaleInvalidId({ id }));
         }
         const [updatedSale] = yield* Effect.promise(() =>
           db
@@ -72,6 +89,9 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
             .where(eq(TB_sales.id, parsedId.output))
             .returning(),
         );
+        if (!updatedSale) {
+          return yield* Effect.fail(new SaleNotUpdated({ id }));
+        }
         return updatedSale;
       });
 
@@ -79,11 +99,14 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid sale ID format"));
+          return yield* Effect.fail(new SaleInvalidId({ id }));
         }
         const [deletedSale] = yield* Effect.promise(() =>
           db.delete(TB_sales).where(eq(TB_sales.id, parsedId.output)).returning(),
         );
+        if (!deletedSale) {
+          return yield* Effect.fail(new SaleNotDeleted({ id }));
+        }
         return deletedSale;
       });
 
@@ -91,7 +114,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       Effect.gen(function* (_) {
         const sale = yield* findById(id);
         if (!sale) {
-          return yield* Effect.fail(new Error("Sale not found"));
+          return yield* Effect.fail(new SaleNotFound({ id }));
         }
         return sale.items.reduce((total, item) => total + item.quantity * item.price, 0);
       });
@@ -100,7 +123,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       Effect.gen(function* (_) {
         const warehouse = yield* warehousesService.findById(warehouseId);
         if (!warehouse) {
-          return yield* Effect.fail(new Error("Warehouse not found"));
+          return yield* Effect.fail(new SaleWarehouseNotFound({ warehouseId }));
         }
         const sales = yield* Effect.promise(() =>
           db.query.TB_sales.findMany({

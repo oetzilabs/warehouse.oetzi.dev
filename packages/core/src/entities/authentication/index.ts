@@ -3,8 +3,18 @@ import { Context, Effect } from "effect";
 import jwt from "jsonwebtoken";
 import ms from "ms";
 import { Resource } from "sst";
-import { SessionLive, SessionService } from "./sessions";
-import { UserLive, UserService } from "./users";
+import { SessionLive, SessionService } from "../sessions";
+import { UserLive, UserService } from "../users";
+import {
+  AuthInvalidToken,
+  AuthLoginFailed,
+  AuthNoJwtSecrets,
+  AuthSessionCreateFailed,
+  AuthSessionNotFound,
+  AuthSignupFailed,
+  AuthUserAlreadyExists,
+  AuthUserNotFound,
+} from "./errors";
 
 export class JwtSecrets extends Context.Tag("JwtSecrets")<JwtSecrets, { readonly secrets: ReadonlyArray<string> }>() {}
 
@@ -23,9 +33,9 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
     const { secrets: jwtSecrets } = yield* _(JwtSecrets); // Access the JWT secrets
 
     if (jwtSecrets.length === 0) {
-      // Handle the critical error if no secrets are loaded
-      yield* Effect.die(new Error("JWT secrets are not configured. Cannot start Auth Service."));
-      // Or return an Effect.fail with a specific error
+      return yield* Effect.fail(
+        new AuthNoJwtSecrets({ message: "JWT secrets are not configured. Cannot start Auth Service." }),
+      );
     }
 
     // Function to generate a JWT
@@ -57,7 +67,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
           }
         }
         // If loop finishes without returning, no secret worked
-        return yield* Effect.fail(new Error("Invalid or expired token"));
+        return yield* Effect.fail(new AuthInvalidToken({ message: "Invalid or expired token" }));
       });
 
     const verify = (token: string) =>
@@ -67,13 +77,13 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
 
         const session = yield* sessionService.findByToken(token);
         if (!session) {
-          return yield* Effect.fail(new Error("Session not found"));
+          return yield* Effect.fail(new AuthSessionNotFound({ token }));
         }
 
         const user = yield* userService.findById(decodedToken.userId);
         // console.dir(user, { depth: Infinity });
         if (!user) {
-          return yield* Effect.fail(new Error("User associated with token not found"));
+          return yield* Effect.fail(new AuthUserNotFound({ userId: decodedToken.userId }));
         }
         return yield* Effect.succeed({ user, session });
       });
@@ -82,12 +92,12 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       Effect.gen(function* (_) {
         const attempt = yield* userService.verifyPassword(email, password);
         if (!attempt) {
-          return { err: new Error("Login failed"), success: false } as const;
+          return yield* Effect.fail(new AuthLoginFailed({ email }));
         }
         const user = yield* userService.findByEmail(email);
         if (!user) {
           // This case should ideally not happen if verifyPassword succeeded, but for safety
-          return { err: new Error("User not found after password verification"), success: false } as const;
+          return yield* Effect.fail(new AuthUserNotFound({ userId: email }));
         }
 
         // Generate the JWT
@@ -106,10 +116,10 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
           current_warehouse_id: lastWarehouse?.id ?? null,
         });
         if (!session) {
-          return { err: new Error("Failed to create session record"), success: false } as const;
+          return yield* Effect.fail(new AuthSessionCreateFailed({ userId: user.id }));
         }
 
-        return { success: true, user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
+        return { user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
       });
 
     const removeSession = (token: string) =>
@@ -120,7 +130,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         // Assuming you are still using database sessions for tracking/blocklisting:
         const session = yield* sessionService.findByToken(token);
         if (!session) {
-          return { err: new Error("Session not found"), success: false } as const;
+          return yield* Effect.fail(new AuthSessionNotFound({ token }));
         }
         const removedSession = yield* sessionService.remove(session.id);
         return { success: true, session: removedSession } as const;
@@ -132,11 +142,11 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       Effect.gen(function* (_) {
         const user = yield* userService.findByEmail(email);
         if (user) {
-          return { err: new Error("User already exists"), success: false } as const;
+          return yield* Effect.fail(new AuthUserAlreadyExists({ email }));
         }
         const attempt = yield* userService.create({ email, password, name: email, status: "active" });
         if (!attempt) {
-          return { err: new Error("Signup failed"), success: false } as const;
+          return yield* Effect.fail(new AuthSignupFailed({ email }));
         }
 
         // Generate the JWT
@@ -152,10 +162,10 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         });
 
         if (!session) {
-          return { err: new Error("Failed to create session record"), success: false } as const;
+          return yield* Effect.fail(new AuthSessionCreateFailed({ userId: attempt.id }));
         }
 
-        return { success: true, user: attempt, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
+        return { user: attempt, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
       });
 
     return {

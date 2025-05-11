@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql";
-import { AddressCreateSchema, AddressUpdateSchema, TB_addresses } from "../drizzle/sql/schemas/address";
-import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
+import { AddressCreateSchema, AddressUpdateSchema, TB_addresses } from "../../drizzle/sql/schemas/address";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { AddressInvalidId, AddressNotDeleted, AddressNotFound, AddressNotUpdated } from "./errors";
 
 export class AddressService extends Effect.Service<AddressService>()("@warehouse/addresses", {
   effect: Effect.gen(function* (_) {
@@ -34,15 +35,21 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid address ID format"));
+          return yield* Effect.fail(new AddressInvalidId({ id }));
         }
 
-        return yield* Effect.promise(() =>
+        const result = yield* Effect.promise(() =>
           db.query.TB_addresses.findFirst({
             where: (addresses, { eq }) => eq(addresses.id, parsedId.output),
             with: relations,
           }),
         );
+
+        if (!result) {
+          return yield* Effect.fail(new AddressNotFound({ id }));
+        }
+
+        return result;
       });
 
     const findByLatLon = (lat_lon: [number, number]) =>
@@ -59,7 +66,7 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, input.id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid address ID"));
+          return yield* Effect.fail(new AddressInvalidId({ id: input.id }));
         }
 
         const [updated] = yield* Effect.promise(() =>
@@ -69,6 +76,11 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
             .where(eq(TB_addresses.id, parsedId.output))
             .returning(),
         );
+
+        if (!updated) {
+          return yield* Effect.fail(new AddressNotUpdated({ id: input.id }));
+        }
+
         return updated;
       });
 
@@ -76,16 +88,22 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new Error("Invalid address ID"));
+          return yield* Effect.fail(new AddressInvalidId({ id }));
         }
 
-        return yield* Effect.promise(() =>
+        const result = yield* Effect.promise(() =>
           db
             .delete(TB_addresses)
             .where(eq(TB_addresses.id, parsedId.output))
             .returning()
             .then(([x]) => x),
         );
+
+        if (!result) {
+          return yield* Effect.fail(new AddressNotDeleted({ id }));
+        }
+
+        return result;
       });
 
     const all = () =>
