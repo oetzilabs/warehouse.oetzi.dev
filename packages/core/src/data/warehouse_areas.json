@@ -22,5 +22,65 @@
       "height": 400
     },
     "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  },
+  {
+    "id": "wha_ud6oa2rj83gmn3vm3dk1r431",
+    "name": "area 3",
+    "description": "this is area 3",
+    "bounding_box": {
+      "x": 500,
+      "y": 0,
+      "width": 100,
+      "height": 400
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  },
+  {
+    "id": "wha_l821tcbiuyu5apzeay8glwjp",
+    "name": "area 4",
+    "description": "this is area 4",
+    "bounding_box": {
+      "x": 750,
+      "y": 0,
+      "width": 100,
+      "height": 300
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  },
+  {
+    "id": "wha_ty64plji93cuhy0ajm9sfu55",
+    "name": "area 5",
+    "description": "this is area 5",
+    "bounding_box": {
+      "x": 1000,
+      "y": 0,
+      "width": 100,
+      "height": 300
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  },
+  {
+    "id": "wha_xx9qrwjjg4m3sxp42pqnpo3i",
+    "name": "area 6",
+    "description": "this is area 6",
+    "bounding_box": {
+      "x": 1250,
+      "y": 0,
+      "width": 100,
+      "height": 100
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  },
+  {
+    "id": "wha_n7cnurweq4iwbzqarl0o0sbp",
+    "name": "area 7",
+    "description": "this is area 7",
+    "bounding_box": {
+      "x": 300,
+      "y": 500,
+      "width": 300,
+      "height": 100
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
   }
 ]

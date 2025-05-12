@@ -9,7 +9,7 @@ import Minus from "lucide-solid/icons/minus";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Settings from "lucide-solid/icons/settings";
-import { Accessor, createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
 const TFE = clientOnly(() => import("./ToggleFullscreenOnElement"));
 
@@ -43,6 +43,40 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
     };
   });
 
+  let parentRef: HTMLDivElement | undefined;
+
+  const zoomLevelChange = (bbox: ReturnType<typeof overallBoundingBox>) => {
+    // Check if the parentRef is available and if the bounding box has dimensions
+    if (parentRef && (bbox.width > 0 || bbox.height > 0)) {
+      const parentWidth = parentRef.clientWidth;
+      const parentHeight = parentRef.clientHeight;
+
+      const pad = 150;
+
+      // Calculate the zoom level needed to fit the content within the parent
+      // Consider both width and height to ensure everything is visible
+      // Also consider padding to ensure there's some space around the content
+      const scaleX = parentWidth / (bbox.width + pad);
+      const scaleY = parentHeight / (bbox.height + pad);
+
+      // Use the minimum scale to ensure all content fits
+      const newZoomLevel = Math.min(scaleX, scaleY);
+
+      // Set the new zoom level, ensuring it's a reasonable value (e.g., not exceeding a max zoom)
+      // You might want to add a max zoom limit here if needed.
+      setZoomLevel(newZoomLevel > 0 ? newZoomLevel : 1); // Ensure zoomLevel is at least 1 if bbox is tiny
+    } else {
+      // If there's no content or parent ref, reset zoom to 1 or another default
+      setZoomLevel(1);
+    }
+  };
+
+  createEffect(() => {
+    const bbox = overallBoundingBox();
+
+    zoomLevelChange(bbox);
+  });
+
   const lastUpdated = createMemo(() => {
     const warehouse = props.warehouse();
     return dayjs(warehouse.updatedAt ?? warehouse.createdAt).fromNow();
@@ -66,9 +100,20 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
     });
   });
 
+  onMount(() => {
+    const windowRezieHandler = () => {
+      const bbox = overallBoundingBox();
+      zoomLevelChange(bbox);
+    };
+    window.addEventListener("resize", windowRezieHandler);
+    onCleanup(() => {
+      window.removeEventListener("resize", windowRezieHandler);
+    });
+  });
+
   return (
-    <div class="rounded-md w-full aspect-video bg-muted/50 border relative overflow-clip" ref={warehousemapRef!}>
-      <div class="flex items-center justify-center w-full h-full relative">
+    <div class="rounded-md w-full aspect-video bg-background border relative overflow-clip" ref={warehousemapRef!}>
+      <div class="flex items-center justify-center w-full h-full relative bg-muted/50">
         <Show when={overallBoundingBox()}>
           {(bb) => (
             <div
@@ -79,31 +124,39 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
                 transform: `scale(${zoomLevel()})`, // Apply the scale transformation
                 "transform-origin": "center center", // Set the origin for the transformation
               }}
+              ref={parentRef!}
             >
               <For each={props.warehouse().areas}>
                 {(area) => (
                   <div
-                    class="absolute border bg-background rounded drop-shadow-sm group cursor-pointer"
+                    class="absolute border bg-background rounded drop-shadow-sm "
                     style={{
                       top: `${area.bounding_box.y - bb().y}px`,
                       left: `${area.bounding_box.x - bb().x}px`,
                       width: `${area.bounding_box.width}px`,
                       height: `${area.bounding_box.height}px`,
                     }}
-                    onClick={() => {
-                      if (isAreaSelected(area.id)) {
-                        setSelectedArea(undefined);
-                        return;
-                      }
-                      setSelectedArea(area.id);
-                    }}
                   >
-                    <div class="flex flex-col gap-2 items-center w-full h-full relative p-2">
-                      <For each={area.storages}>
-                        {(storage) => (
-                          <div class=" border bg-background rounded drop-shadow-sm border-b last:border-b-0"></div>
-                        )}
-                      </For>
+                    <div class="flex flex-col gap-2 items-center w-full h-full static ">
+                      <div
+                        class={cn("flex gap-2 items-center w-full h-full p-2 cursor-pointer", {
+                          "flex-col": area.bounding_box.width > area.bounding_box.height,
+                          "flex-row": area.bounding_box.width < area.bounding_box.height,
+                        })}
+                        onClick={() => {
+                          if (isAreaSelected(area.id)) {
+                            setSelectedArea(undefined);
+                            return;
+                          }
+                          setSelectedArea(area.id);
+                        }}
+                      >
+                        <For each={area.storages}>
+                          {(storage) => (
+                            <div class=" border bg-background rounded drop-shadow-sm border-b last:border-b-0"></div>
+                          )}
+                        </For>
+                      </div>
                       <div class="absolute top-0 -right-10 w-content h-content z-10">
                         <div class="flex flex-col gap-2 items-center">
                           <Button size="icon" class="size-8 border bg-background" variant="outline">
@@ -117,19 +170,19 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
                         </div>
                       </div>
                       <div class="absolute -bottom-6 left-0 w-content h-content">
-                        <span class="text-xs text-muted-foreground/50">{area.name}</span>
+                        <span class="text-xs text-muted-foreground/50 select-none">{area.name}</span>
                       </div>
                     </div>
                     <div
                       class={cn(
-                        "absolute top-0 w-content -left-6 h-content z-20 p-2 bg-background border rounded-sm drop-shadow-sm",
+                        "absolute top-0 -left-2 -translate-x-[100%] h-content z-20 bg-background border rounded-sm drop-shadow-sm flex flex-col gap-2 items-center justify-end",
                         {
-                          "hidden group-hover:flex": !isAreaSelected(area.id),
+                          hidden: !isAreaSelected(area.id),
                           flex: isAreaSelected(area.id),
                         },
                       )}
                     >
-                      {/*Here will be information about the area, meaning the storages and inventory spaces*/}
+                      <div class="min-w-40 flex flex-col p-2"></div>
                     </div>
                   </div>
                 )}
@@ -147,7 +200,17 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
       </div>
       <div class="absolute right-0 bottom-0 p-3 flex flex-row gap-2">
         <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
-          <TFE element={warehousemapRef!} />
+          <TFE
+            element={warehousemapRef!}
+            onFullscreenOn={() => {
+              setZoomLevel(1);
+            }}
+            onFullscreenOff={() => {
+              const bbox = overallBoundingBox();
+
+              zoomLevelChange(bbox);
+            }}
+          />
         </div>
         <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
           <Button
@@ -170,7 +233,11 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
             size="icon"
             class="size-8 rounded-l-none border bg-background"
             variant="secondary"
-            onClick={() => setZoomLevel(1)}
+            onClick={() => {
+              const bbox = overallBoundingBox();
+
+              zoomLevelChange(bbox);
+            }}
           >
             <RotateCw class="size-4" />
           </Button>
