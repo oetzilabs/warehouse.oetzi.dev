@@ -3,6 +3,7 @@ import { integer, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
+import { TB_warehouse_areas } from "../schema";
 import { commonTable } from "./entity";
 import { TB_storage_types } from "./storage_types";
 import { TB_warehouses } from "./warehouses/warehouses";
@@ -10,8 +11,8 @@ import { TB_warehouses } from "./warehouses/warehouses";
 export const TB_storages = commonTable(
   "storages",
   {
-    warehouseId: varchar("warehouse_id")
-      .references(() => TB_warehouses.id, { onDelete: "cascade" })
+    warehouseAreaId: varchar("warehouse_area_id")
+      .references(() => TB_warehouse_areas.id, { onDelete: "cascade" })
       .notNull(),
     typeId: varchar("type_id")
       .references(() => TB_storage_types.id, { onDelete: "cascade" })
@@ -27,9 +28,9 @@ export const TB_storages = commonTable(
 );
 
 export const storage_relations = relations(TB_storages, ({ one }) => ({
-  warehouse: one(TB_warehouses, {
-    fields: [TB_storages.warehouseId],
-    references: [TB_warehouses.id],
+  area: one(TB_warehouse_areas, {
+    fields: [TB_storages.warehouseAreaId],
+    references: [TB_warehouse_areas.id],
   }),
   type: one(TB_storage_types, {
     fields: [TB_storages.typeId],

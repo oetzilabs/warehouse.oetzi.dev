@@ -74,18 +74,23 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   with: {
                     warehouse: {
                       with: {
-                        storages: {
+                        addresses: {
                           with: {
-                            storage: {
+                            address: true,
+                          },
+                        },
+                        owner: {
+                          columns: {
+                            hashed_password: false,
+                          },
+                        },
+                        areas: {
+                          with: {
+                            storages: {
                               with: {
                                 type: true,
                               },
                             },
-                          },
-                        },
-                        addresses: {
-                          with: {
-                            address: true,
                           },
                         },
                       },
@@ -100,21 +105,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           with: {
             warehouse: {
               with: {
-                storages: {
+                addresses: {
                   with: {
-                    storage: {
+                    address: true,
+                  },
+                },
+                owner: {
+                  columns: {
+                    hashed_password: false,
+                  },
+                },
+                areas: {
+                  with: {
+                    storages: {
                       with: {
                         type: true,
                       },
                     },
                   },
                 },
-                addresses: {
-                  with: {
-                    address: true,
-                  },
-                },
-                areas: true,
               },
             },
           },
@@ -146,18 +155,23 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   with: {
                     warehouse: {
                       with: {
-                        storages: {
+                        addresses: {
                           with: {
-                            storage: {
+                            address: true,
+                          },
+                        },
+                        owner: {
+                          columns: {
+                            hashed_password: false,
+                          },
+                        },
+                        areas: {
+                          with: {
+                            storages: {
                               with: {
                                 type: true,
                               },
                             },
-                          },
-                        },
-                        addresses: {
-                          with: {
-                            address: true,
                           },
                         },
                       },
@@ -168,21 +182,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
             wh: {
               with: {
-                storages: {
+                addresses: {
                   with: {
-                    storage: {
+                    address: true,
+                  },
+                },
+                owner: {
+                  columns: {
+                    hashed_password: false,
+                  },
+                },
+                areas: {
+                  with: {
+                    storages: {
                       with: {
                         type: true,
                       },
                     },
                   },
                 },
-                addresses: {
-                  with: {
-                    address: true,
-                  },
-                },
-                areas: true,
               },
             },
           },
@@ -267,18 +285,23 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         with: {
                           warehouse: {
                             with: {
-                              storages: {
+                              addresses: {
                                 with: {
-                                  storage: {
+                                  address: true,
+                                },
+                              },
+                              owner: {
+                                columns: {
+                                  hashed_password: false,
+                                },
+                              },
+                              areas: {
+                                with: {
+                                  storages: {
                                     with: {
                                       type: true,
                                     },
                                   },
-                                },
-                              },
-                              addresses: {
-                                with: {
-                                  address: true,
                                 },
                               },
                             },
@@ -293,21 +316,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   warehouse: {
                     with: {
-                      storages: {
+                      addresses: {
                         with: {
-                          storage: {
+                          address: true,
+                        },
+                      },
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      areas: {
+                        with: {
+                          storages: {
                             with: {
                               type: true,
                             },
                           },
                         },
                       },
-                      addresses: {
-                        with: {
-                          address: true,
-                        },
-                      },
-                      areas: true,
                     },
                   },
                 },
@@ -339,18 +366,23 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         with: {
                           warehouse: {
                             with: {
-                              storages: {
+                              addresses: {
                                 with: {
-                                  storage: {
+                                  address: true,
+                                },
+                              },
+                              owner: {
+                                columns: {
+                                  hashed_password: false,
+                                },
+                              },
+                              areas: {
+                                with: {
+                                  storages: {
                                     with: {
                                       type: true,
                                     },
                                   },
-                                },
-                              },
-                              addresses: {
-                                with: {
-                                  address: true,
                                 },
                               },
                             },
@@ -361,21 +393,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   wh: {
                     with: {
-                      storages: {
+                      addresses: {
                         with: {
-                          storage: {
+                          address: true,
+                        },
+                      },
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      areas: {
+                        with: {
+                          storages: {
                             with: {
                               type: true,
                             },
                           },
                         },
                       },
-                      addresses: {
-                        with: {
-                          address: true,
-                        },
-                      },
-                      areas: true,
                     },
                   },
                 },

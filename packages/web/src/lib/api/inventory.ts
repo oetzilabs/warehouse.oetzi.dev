@@ -3,7 +3,7 @@ import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/ent
 import { Effect } from "effect";
 import { withSession } from "./session";
 
-export const getStorages = query(async () => {
+export const getInventory = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -24,15 +24,23 @@ export const getStorages = query(async () => {
     }
     throw new Error("You have to be part of an organization to perform this action.");
   }
-  const warehouse_storages = await Effect.runPromise(
+  const warehouse_inventory = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(WarehouseService);
       const wh = yield* service.findById(whId);
       if (!wh) {
         return yield* Effect.fail(new Error("Warehouse not found"));
       }
-      return wh.areas.map((a) => a.storages);
+      const areas = wh.areas.length;
+      const storages = wh.areas.map((a) => a.storages).flat();
+
+      return yield* Effect.succeed({
+        amounOfAreas: areas,
+        amounOfStorages: storages.length,
+        totalCapacity: storages.map((s) => s.capacity).reduce((a, b) => a + b, 0),
+        totalCurrentOccupancy: storages.map((s) => s.currentOccupancy ?? 0).reduce((a, b) => a + b, 0),
+      });
     }).pipe(Effect.provide(WarehouseLive)),
   );
-  return warehouse_storages;
-}, "warehouse-storages");
+  return warehouse_inventory;
+}, "warehouse-inventory");

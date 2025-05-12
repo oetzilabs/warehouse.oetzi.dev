@@ -5,11 +5,7 @@ export * from "./schemas/users/user_payment_methods";
 export * from "./schemas/sessions";
 export * from "./schemas/address";
 
-export * from "./schemas/storages";
-export * from "./schemas/storage_types";
-
 export * from "./schemas/discounts";
-
 export * from "./schemas/products";
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";
@@ -36,7 +32,9 @@ export * from "./schemas/warehouses/warehouses";
 export * from "./schemas/warehouses/warehouses_addresses";
 export * from "./schemas/warehouses/warehouse_types";
 export * from "./schemas/warehouses/warehouse_areas";
-export * from "./schemas/warehouses/warehouses_storages";
+
+export * from "./schemas/storages";
+export * from "./schemas/storage_types";
 
 export * from "./schemas/payments/payment_methods";
 export * from "./schemas/payments/payment_history";

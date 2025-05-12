@@ -10,7 +10,6 @@ import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
-import { TB_warehouse_storages } from "./warehouses_storages";
 
 export const TB_warehouses = commonTable(
   "warehouses",
@@ -29,8 +28,6 @@ export const TB_warehouses = commonTable(
 );
 
 export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
-  addresses: many(TB_warehouse_addresses),
-  storages: many(TB_warehouse_storages),
   type: one(TB_warehouse_types, {
     fields: [TB_warehouses.warehouse_type_id],
     references: [TB_warehouse_types.id],
@@ -39,6 +36,7 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
     fields: [TB_warehouses.ownerId],
     references: [TB_users.id],
   }),
+  addresses: many(TB_warehouse_addresses),
   areas: many(TB_warehouse_areas),
   sessions: many(TB_sessions),
 }));

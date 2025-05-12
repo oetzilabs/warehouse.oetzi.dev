@@ -1,3 +1,4 @@
+import { NewWarehouseMap } from "@/components/NewWarehouseMap";
 import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { useUser } from "@/components/providers/User";
 import { StorageOfferSelection } from "@/components/storage/storage-offer-selection";
@@ -24,8 +25,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Progress, ProgressLabel, ProgressValueLabel } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createDocumentStorage, getDocumentStorage } from "@/lib/api/document_storages";
+import { getInventory } from "@/lib/api/inventory";
 import { getSalesLastFewMonths } from "@/lib/api/sales";
-import { getStorages } from "@/lib/api/storages";
 import { changeWarehouse } from "@/lib/api/warehouses";
 import { A, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
 import Check from "lucide-solid/icons/check";
@@ -50,7 +51,7 @@ export default function DashboardPage() {
   const user = useUser();
 
   const documentStorage = createAsync(() => getDocumentStorage(), { deferStream: true });
-  const inventories = createAsync(() => getStorages(), { deferStream: true });
+  const inventory = createAsync(() => getInventory(), { deferStream: true });
   const salesLastFewMonths = createAsync(() => getSalesLastFewMonths(), { deferStream: true });
 
   const changeWarehouseAction = useAction(changeWarehouse);
@@ -70,33 +71,6 @@ export default function DashboardPage() {
     }
     setLeftPanelHeight(leftPanelRef.clientHeight);
   });
-
-  const [zoomLevel, setZoomLevel] = createSignal(1);
-
-  const overallBoundingBox = (areas: any[]) => {
-    if (areas.length === 0) {
-      return { x: 0, y: 0, width: 0, height: 0 };
-    }
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (const area of areas) {
-      minX = Math.min(minX, area.bounding_box.x);
-      minY = Math.min(minY, area.bounding_box.y);
-      maxX = Math.max(maxX, area.bounding_box.x + area.bounding_box.width);
-      maxY = Math.max(maxY, area.bounding_box.y + area.bounding_box.height);
-    }
-
-    return {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
-    };
-  };
 
   return (
     <div class="flex flex-col container py-4">
@@ -169,53 +143,79 @@ export default function DashboardPage() {
               </div>
               <div class="flex flex-row gap-4 w-full items-start h-full">
                 <Suspense fallback={<Skeleton class="w-full h-full" />}>
-                  <Show
-                    when={inventories() && inventories()!.length > 0 && inventories()}
-                    fallback={
-                      <div class="flex flex-col gap-4 w-full bg-muted/50 rounded-lg border p-4 items-center justify-center">
-                        <span class="text-sm text-muted-foreground">You have no inventory spaces</span>
-                        <div class="flex flex-row gap-2 items-center">
-                          <Button size="sm" class="h-8 pl-2 w-max drop-shadow-sm">
-                            <Plus class="size-4" />
-                            Add Storage Zone
-                          </Button>
-                          <Button
-                            size="sm"
-                            class="h-8 pl-2 w-max bg-background drop-shadow-sm"
-                            variant="outline"
-                            onClick={() => {
-                              toast.promise(revalidate(getStorages.key), {
-                                loading: "Refreshing storages...",
-                                success: "Storages refreshed",
-                                error: "Failed to refresh storages",
-                              });
-                            }}
-                          >
-                            <RotateCw class="size-4" />
-                            Refresh
-                          </Button>
-                        </div>
-                      </div>
-                    }
-                  >
-                    {(spaces) => (
+                  <Show when={inventory()}>
+                    {(storages) => (
                       <div class="flex flex-row gap-4 w-full">
-                        <Progress
-                          value={spaces()
-                            .map((d) => d.currentOccupancy ?? 0)
-                            .reduce((a, b) => a + b, 0)}
-                          minValue={0}
-                          maxValue={spaces()
-                            .map((d) => d.capacity)
-                            .reduce((a, b) => a + b, 0)}
-                          getValueLabel={({ value, max, min }) => `${value} of ${max} Inventory Spaces`}
-                          class="space-y-4 border p-4 rounded-lg w-full"
+                        <Show
+                          when={storages().amounOfAreas > 0 && storages().amounOfStorages > 0}
+                          fallback={
+                            <div class="flex flex-col gap-4 w-full bg-muted/50 rounded-lg border p-4 items-center justify-center">
+                              <Show when={storages().amounOfAreas > 0 && storages().amounOfStorages === 0}>
+                                <span class="text-sm text-muted-foreground">
+                                  You have storage areas but no storages set up.
+                                </span>
+                                <div class="flex flex-row gap-2 items-center">
+                                  <Button size="sm" class="h-8 pl-2 w-max drop-shadow-sm" onClick={() => {}}>
+                                    <Plus class="size-4" />
+                                    Add Storage Zone
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    class="h-8 pl-2 w-max bg-background drop-shadow-sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      toast.promise(revalidate(getInventory.key), {
+                                        loading: "Refreshing inventory...",
+                                        success: "Inventory refreshed",
+                                        error: "Failed to refresh inventory",
+                                      });
+                                    }}
+                                  >
+                                    <RotateCw class="size-4" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </Show>
+                              <Show when={storages().amounOfAreas === 0}>
+                                <span class="text-sm text-muted-foreground">No storage areas found</span>
+                                <div class="">
+                                  <Button size="sm" class="h-8 pl-2 w-max drop-shadow-sm" onClick={() => {}}>
+                                    <Plus class="size-4" />
+                                    Add Storage Zone
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    class="h-8 pl-2 w-max bg-background drop-shadow-sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      toast.promise(revalidate(getInventory.key), {
+                                        loading: "Refreshing inventory...",
+                                        success: "Inventory refreshed",
+                                        error: "Failed to refresh inventory",
+                                      });
+                                    }}
+                                  >
+                                    <RotateCw class="size-4" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </Show>
+                            </div>
+                          }
                         >
-                          <div class="flex justify-between">
-                            <ProgressLabel>{String(spaces().length)} Inventory Spaces</ProgressLabel>
-                            <ProgressValueLabel />
-                          </div>
-                        </Progress>
+                          <Progress
+                            value={storages().totalCurrentOccupancy}
+                            minValue={0}
+                            maxValue={storages().totalCapacity}
+                            getValueLabel={({ value, max, min }) => `${value} of ${max} Inventory Spaces`}
+                            class="space-y-4 border p-4 rounded-lg w-full"
+                          >
+                            <div class="flex justify-between">
+                              <ProgressLabel>{String(storages().totalCurrentOccupancy)} Goods</ProgressLabel>
+                              <ProgressValueLabel />
+                            </div>
+                          </Progress>
+                        </Show>
                       </div>
                     )}
                   </Show>
@@ -333,77 +333,7 @@ export default function DashboardPage() {
                       </DropdownMenu>
                     </div>
                   </div>
-                  <div class="rounded-md w-full aspect-video bg-muted/50 border relative overflow-clip">
-                    <div class="flex items-center justify-center w-full h-full relative">
-                      <Show when={overallBoundingBox(warehouse().areas)}>
-                        {(bb) => (
-                          <div
-                            class="relative"
-                            style={{
-                              width: `${bb().width}px`,
-                              height: `${bb().height}px`,
-                              transform: `scale(${zoomLevel()})`, // Apply the scale transformation
-                              "transform-origin": "center center", // Set the origin for the transformation
-                            }}
-                          >
-                            <For each={warehouse().areas}>
-                              {(area) => (
-                                <Popover
-                                  placement={
-                                    bb().x + bb().width / 2 > area.bounding_box.x + area.bounding_box.width / 2
-                                      ? "right-end"
-                                      : "left-start"
-                                  }
-                                >
-                                  <PopoverTrigger
-                                    as="div"
-                                    class="absolute border bg-background rounded drop-shadow-sm"
-                                    style={{
-                                      top: `${area.bounding_box.y - bb().y}px`,
-                                      left: `${area.bounding_box.x - bb().x}px`,
-                                      width: `${area.bounding_box.width}px`,
-                                      height: `${area.bounding_box.height}px`,
-                                    }}
-                                  />
-                                  <PopoverContent>
-                                    {/*Here will be information about the area, meaning the storages and inventory spaces*/}
-                                  </PopoverContent>
-                                </Popover>
-                              )}
-                            </For>
-                          </div>
-                        )}
-                      </Show>
-                    </div>
-                    <div class="absolute right-0 bottom-0 p-3">
-                      <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
-                        <Button
-                          size="icon"
-                          class="size-8 rounded-r-none border border-r-0 bg-background"
-                          variant="secondary"
-                          onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 2))}
-                        >
-                          <Plus class="size-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          class="size-8 rounded-none border border-r-0 bg-background"
-                          variant="secondary"
-                          onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.6))}
-                        >
-                          <Minus class="size-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          class="size-8 rounded-l-none border bg-background"
-                          variant="secondary"
-                          onClick={() => setZoomLevel(1)}
-                        >
-                          <RotateCw class="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <NewWarehouseMap warehouse={warehouse} />
                 </div>
               )}
             </Show>

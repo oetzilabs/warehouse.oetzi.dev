@@ -46,21 +46,20 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             address: true,
           },
         },
-        storages: {
+        owner: {
+          columns: {
+            hashed_password: false,
+          },
+        },
+        areas: {
           with: {
-            storage: {
+            storages: {
               with: {
                 type: true,
               },
             },
           },
         },
-        owner: {
-          columns: {
-            hashed_password: false,
-          },
-        },
-        areas: true,
       };
 
       if (options) {
@@ -130,7 +129,27 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         const warehouse = yield* Effect.promise(() =>
           db.query.TB_warehouses.findFirst({
             where: (warehouses, operations) => operations.eq(warehouses.id, parsedId.output),
-            with: relations,
+            with: {
+              addresses: {
+                with: {
+                  address: true,
+                },
+              },
+              owner: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+              areas: {
+                with: {
+                  storages: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                },
+              },
+            },
           }),
         );
 

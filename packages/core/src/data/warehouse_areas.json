@@ -1,13 +1,25 @@
 [
   {
-    "id": "wht_p0px872ogyol9cb8fqsmxyva",
+    "id": "wha_p0px872ogyol9cb8fqsmxyva",
     "name": "area 1",
     "description": "this is area 1",
     "bounding_box": {
       "x": 0,
       "y": 0,
-      "width": 80,
+      "width": 100,
       "height": 500
+    },
+    "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
+  },
+  {
+    "id": "wha_erkeww6qsooyga7guza6cet5",
+    "name": "area 2",
+    "description": "this is area 2",
+    "bounding_box": {
+      "x": 250,
+      "y": 0,
+      "width": 100,
+      "height": 400
     },
     "warehouse_id": "warehouse_fbl19yvmsq44uuodg8n4kvv2"
   }
