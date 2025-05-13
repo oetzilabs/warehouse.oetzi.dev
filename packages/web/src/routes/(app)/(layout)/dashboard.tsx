@@ -35,6 +35,29 @@ import RotateCw from "lucide-solid/icons/rotate-cw";
 import Warehouse from "lucide-solid/icons/warehouse";
 import { createEffect, createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
+
+export default function DashboardPage() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+  setBreadcrumbs([
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+    },
+  ]);
+
+  const user = useUser();
+
+  const documentStorage = createAsync(() => getDocumentStorage(), { deferStream: true });
+  const inventory = createAsync(() => getInventory(), { deferStream: true });
+  const salesLastFewMonths = createAsync(() => getSalesLastFewMonths(), { deferStream: true });
+
+  const changeWarehouseAction = useAction(changeWarehouse);
+  const isChangingWarehouse = useSubmission(changeWarehouse);
+
+  const [isOpen, setIsOpen] = createSignal(false);
+
+  const kbToGb = (kb: number) => kb / 1024 / 1024;
+
   let leftPanelRef: HTMLDivElement | undefined;
 
   const [leftPanelHeight, setLeftPanelHeight] = createSignal(110);
