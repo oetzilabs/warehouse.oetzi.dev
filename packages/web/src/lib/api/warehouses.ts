@@ -297,7 +297,7 @@ export const addWarehouseArea = action(async (data: InferInput<typeof WarehouseA
   const area = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(WarehouseService);
-      const wh = yield* service.findById(data.warehouse_id);
+      const wh = yield* service.findById(data.warehouse_facility_id);
       if (!wh) {
         return yield* Effect.fail(new Error("Warehouse not found"));
       }

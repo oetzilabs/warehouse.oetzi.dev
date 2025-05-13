@@ -1,5 +1,18 @@
 [
   {
-    "warehouseAreaId": "wht_p0px872ogyol9cb8fqsmxyva"
+    "warehouseAreaId": "wha_p0px872ogyol9cb8fqsmxyva",
+    "id": "stor_0px872ogyol9cb8fqsmxyva",
+    "typeId": "",
+
+    "name": "",
+    "description": "",
+    "capacity": 0,
+    "currentOccupancy": 0,
+    "location": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0
+    }
   }
 ]

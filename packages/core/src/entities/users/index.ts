@@ -84,11 +84,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             hashed_password: false,
                           },
                         },
-                        areas: {
+                        fcs: {
                           with: {
-                            storages: {
+                            areas: {
                               with: {
-                                type: true,
+                                storages: {
+                                  with: {
+                                    type: true,
+                                  },
+                                },
                               },
                             },
                           },
@@ -115,11 +119,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     hashed_password: false,
                   },
                 },
-                areas: {
+                fcs: {
                   with: {
-                    storages: {
+                    areas: {
                       with: {
-                        type: true,
+                        storages: {
+                          with: {
+                            type: true,
+                          },
+                        },
                       },
                     },
                   },
@@ -165,11 +173,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             hashed_password: false,
                           },
                         },
-                        areas: {
+                        fcs: {
                           with: {
-                            storages: {
+                            areas: {
                               with: {
-                                type: true,
+                                storages: {
+                                  with: {
+                                    type: true,
+                                  },
+                                },
                               },
                             },
                           },
@@ -192,11 +204,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     hashed_password: false,
                   },
                 },
-                areas: {
+                fcs: {
                   with: {
-                    storages: {
+                    areas: {
                       with: {
-                        type: true,
+                        storages: {
+                          with: {
+                            type: true,
+                          },
+                        },
                       },
                     },
                   },
@@ -295,11 +311,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   hashed_password: false,
                                 },
                               },
-                              areas: {
+                              fcs: {
                                 with: {
-                                  storages: {
+                                  areas: {
                                     with: {
-                                      type: true,
+                                      storages: {
+                                        with: {
+                                          type: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -326,11 +346,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           hashed_password: false,
                         },
                       },
-                      areas: {
+                      fcs: {
                         with: {
-                          storages: {
+                          areas: {
                             with: {
-                              type: true,
+                              storages: {
+                                with: {
+                                  type: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -376,11 +400,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   hashed_password: false,
                                 },
                               },
-                              areas: {
+                              fcs: {
                                 with: {
-                                  storages: {
+                                  areas: {
                                     with: {
-                                      type: true,
+                                      storages: {
+                                        with: {
+                                          type: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -403,11 +431,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           hashed_password: false,
                         },
                       },
-                      areas: {
+                      fcs: {
                         with: {
-                          storages: {
+                          areas: {
                             with: {
-                              type: true,
+                              storages: {
+                                with: {
+                                  type: true,
+                                },
+                              },
                             },
                           },
                         },

@@ -1,6 +1,6 @@
-import { NewWarehouseMap } from "@/components/NewWarehouseMap";
 import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { useUser } from "@/components/providers/User";
+import { StorageDataTable } from "@/components/storage/storage-data-table";
 import { StorageOfferSelection } from "@/components/storage/storage-offer-selection";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
@@ -21,46 +21,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress, ProgressLabel, ProgressValueLabel } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createDocumentStorage, getDocumentStorage } from "@/lib/api/document_storages";
+import { getDocumentStorage } from "@/lib/api/document_storages";
 import { getInventory } from "@/lib/api/inventory";
 import { getSalesLastFewMonths } from "@/lib/api/sales";
 import { changeWarehouse } from "@/lib/api/warehouses";
 import { A, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
 import Check from "lucide-solid/icons/check";
 import ChevronDown from "lucide-solid/icons/chevron-down";
-import Loader2 from "lucide-solid/icons/loader-2";
-import Minus from "lucide-solid/icons/minus";
-import MoreHorizontal from "lucide-solid/icons/more-horizontal";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import { createEffect, createMemo, createSignal, For, Show, Suspense } from "solid-js";
+import Warehouse from "lucide-solid/icons/warehouse";
+import { createEffect, createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
-
-export default function DashboardPage() {
-  const { setBreadcrumbs } = useBreadcrumbs();
-  setBreadcrumbs([
-    {
-      label: "Dashboard",
-      href: "/dashboard",
-    },
-  ]);
-
-  const user = useUser();
-
-  const documentStorage = createAsync(() => getDocumentStorage(), { deferStream: true });
-  const inventory = createAsync(() => getInventory(), { deferStream: true });
-  const salesLastFewMonths = createAsync(() => getSalesLastFewMonths(), { deferStream: true });
-
-  const changeWarehouseAction = useAction(changeWarehouse);
-  const isChangingWarehouse = useSubmission(changeWarehouse);
-
-  const [isOpen, setIsOpen] = createSignal(false);
-
-  const kbToGb = (kb: number) => kb / 1024 / 1024;
-
   let leftPanelRef: HTMLDivElement | undefined;
 
   const [leftPanelHeight, setLeftPanelHeight] = createSignal(110);
@@ -72,10 +46,58 @@ export default function DashboardPage() {
     setLeftPanelHeight(leftPanelRef.clientHeight);
   });
 
+  const [facility, setFacility] = createSignal("");
+
   return (
     <div class="flex flex-col container py-4">
       <div class="flex flex-col gap-4">
-        <h1 class="text-2xl font-semibold">Dashboard</h1>
+        <div class="w-full flex flex-row items-center justify-between">
+          <h1 class="text-2xl font-semibold">Dashboard</h1>
+          <Show when={user.currentWarehouse()}>
+            {(warehouse) => (
+              <div class="">
+                <DropdownMenu>
+                  <DropdownMenuTrigger as={Button} size="sm" class="h-8 pr-2 w-max">
+                    Warehouses
+                    <ChevronDown class="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Manage Warehouse</DropdownMenuLabel>
+                      <For
+                        each={user.user()!.whs.map((w) => w.warehouse)}
+                        fallback={<DropdownMenuItem disabled>No warehouses</DropdownMenuItem>}
+                      >
+                        {(wh) => (
+                          <DropdownMenuItem
+                            disabled={wh.id === warehouse().id}
+                            onSelect={() => {
+                              toast.promise(changeWarehouseAction(wh.id), {
+                                loading: "Changing warehouse...",
+                                success: "Warehouse changed",
+                                error: "Failed to change warehouse",
+                              });
+                            }}
+                          >
+                            <Show when={wh.id === warehouse().id}>
+                              <Check class="size-4" />
+                            </Show>
+                            {wh.name}
+                          </DropdownMenuItem>
+                        )}
+                      </For>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem as={A} href="/warehouses/new">
+                        <Plus class="size-4" />
+                        Create Warehouse
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+          </Show>
+        </div>
         <div class="flex flex-col gap-4">
           <div class="flex flex-row gap-4 w-full items-center justify-between">
             <div class="flex flex-col gap-4 w-full" ref={leftPanelRef!}>
@@ -295,45 +317,62 @@ export default function DashboardPage() {
                     <div class="w-max">
                       <DropdownMenu>
                         <DropdownMenuTrigger as={Button} size="sm" class="h-8 pr-2 w-max">
-                          Warehouses
+                          Facilities
                           <ChevronDown class="size-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          <DropdownMenuGroup>
-                            <DropdownMenuLabel>Manage Warehouse</DropdownMenuLabel>
-                            <For
-                              each={user.user()!.whs.map((w) => w.warehouse)}
-                              fallback={<DropdownMenuItem disabled>No warehouses</DropdownMenuItem>}
-                            >
-                              {(wh) => (
-                                <DropdownMenuItem
-                                  disabled={wh.id === warehouse().id}
-                                  onSelect={() => {
-                                    toast.promise(changeWarehouseAction(wh.id), {
-                                      loading: "Changing warehouse...",
-                                      success: "Warehouse changed",
-                                      error: "Failed to change warehouse",
-                                    });
-                                  }}
-                                >
-                                  <Show when={wh.id === warehouse().id}>
-                                    <Check class="size-4" />
-                                  </Show>
-                                  {wh.name}
-                                </DropdownMenuItem>
-                              )}
-                            </For>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem as={A} href="/warehouses/new">
-                              <Plus class="size-4" />
-                              Create Warehouse
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
+                          <For
+                            each={warehouse().fcs}
+                            fallback={<DropdownMenuItem disabled>No facilities</DropdownMenuItem>}
+                          >
+                            {(fc) => (
+                              <DropdownMenuItem
+                                disabled={fc.id === facility()}
+                                onSelect={() => {
+                                  setFacility(fc.id);
+                                }}
+                              >
+                                <Show when={fc.id === facility()} fallback={<Warehouse class="size-4" />}>
+                                  <Check class="size-4" />
+                                </Show>
+                                {fc.name}
+                              </DropdownMenuItem>
+                            )}
+                          </For>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem as={A} href="/warehouses/new">
+                            <Plus class="size-4" />
+                            Add Facility
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                   </div>
-                  <NewWarehouseMap warehouse={warehouse} />
+                  <div class="flex flex-col gap-4">
+                    <Show
+                      when={warehouse().fcs.find((fc) => fc.id === facility())}
+                      fallback={
+                        <div class="w-full h-full flex flex-col">
+                          <div class="flex flex-col gap-2 w-full py-4 bg-muted text-muted-foreground items-center text-sm rounded-md border">
+                            No facilities selected
+                          </div>
+                        </div>
+                      }
+                    >
+                      {(fc) => (
+                        <div class="w-full flex flex-col gap-2">
+                          <span class="text-sm font-medium">{fc().name}</span>
+                          <div class="flex flex-col gap-2">
+                            <StorageDataTable
+                              data={fc()
+                                .areas.map((a) => a.storages)
+                                .flat()}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </Show>
+                  </div>
                 </div>
               )}
             </Show>

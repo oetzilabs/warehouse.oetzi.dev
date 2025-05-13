@@ -16,15 +16,16 @@
     "@ianvs/prettier-plugin-sort-imports": "4.4.1",
     "prettier-plugin-tailwindcss": "0.6.11",
     "@tsconfig/node22": "22.0.1",
-    "sst": "3.14.12",
+    "sst": "3.14.16",
     "typescript": "5.8.3",
     "prettier": "3.5.3"
   },
   "peerDependencies": {
-    "effect": "3.14.21",
-    "@effect/platform": "0.80.21",
-    "@effect/platform-bun": "0.61.11",
-    "valibot": "1.1.0"
+    "effect": "3.15.0",
+    "@effect/platform": "0.82.0",
+    "@effect/platform-bun": "0.64.1",
+    "valibot": "1.1.0",
+    "dayjs": "1.11.13"
   },
   "workspaces": [
     "packages/*"

@@ -399,7 +399,7 @@ export default function DashboardPage() {
                                               onClick={() => {
                                                 toast.promise(
                                                   addAreaAction({
-                                                    warehouse_id: w().id,
+                                                    warehouse_facility_id: w().id,
                                                     name: "New Area",
                                                     bounding_box: {
                                                       x: 0,

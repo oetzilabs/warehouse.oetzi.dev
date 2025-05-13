@@ -8,6 +8,7 @@ import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
+import { TB_warehouse_facilities } from "./warehouse_facility";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
 
@@ -24,7 +25,7 @@ export const TB_warehouses = commonTable(
     }>(),
     ownerId: varchar("owner_id").references(() => TB_users.id, { onDelete: "cascade" }),
   },
-  "warehouse",
+  "wh",
 );
 
 export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
@@ -37,7 +38,7 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
     references: [TB_users.id],
   }),
   addresses: many(TB_warehouse_addresses),
-  areas: many(TB_warehouse_areas),
+  fcs: many(TB_warehouse_facilities),
   sessions: many(TB_sessions),
 }));
 

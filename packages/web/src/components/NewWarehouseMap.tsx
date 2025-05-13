@@ -1,24 +1,52 @@
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { cookieStorage, makePersisted } from "@solid-primitives/storage";
+import { A } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
 import { WarehouseInfo } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
+import Check from "lucide-solid/icons/check";
+import ChevronDown from "lucide-solid/icons/chevron-down";
 import Fullscreen from "lucide-solid/icons/fullscreen";
 import Minus from "lucide-solid/icons/minus";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Settings from "lucide-solid/icons/settings";
-import { Accessor, createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import Warehouse from "lucide-solid/icons/warehouse";
+import { Accessor, createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, Suspense } from "solid-js";
 
 const TFE = clientOnly(() => import("./ToggleFullscreenOnElement"));
 
 export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) => {
   const [zoomLevel, setZoomLevel] = createSignal(1);
 
+  const [selectedFacility, setSelectedFacility] = createSignal("");
+
+  const fc = createMemo(() => {
+    const facilityId = selectedFacility();
+    const facility = props.warehouse().fcs.find((f) => f.id === facilityId);
+    return facility;
+  });
+
   const overallBoundingBox = createMemo(() => {
-    const warehouse = props.warehouse();
-    const areas = warehouse.areas;
+    const facility = fc();
+
+    if (facility && facility.bounding_box) {
+      return facility.bounding_box;
+    }
+
+    const areas = facility?.areas ?? [];
     if (areas.length === 0) {
       return { x: 0, y: 0, width: 0, height: 0 };
     }
@@ -84,22 +112,6 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
 
   let warehousemapRef: HTMLDivElement | undefined;
 
-  const [selectedArea, setSelectedArea] = createSignal<string | undefined>(undefined);
-
-  const isAreaSelected = (id: string) => selectedArea() === id;
-
-  createEffect(() => {
-    const closeAreaSelectedKeyhandler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSelectedArea(undefined);
-      }
-    };
-    document.addEventListener("keydown", closeAreaSelectedKeyhandler);
-    onCleanup(() => {
-      document.removeEventListener("keydown", closeAreaSelectedKeyhandler);
-    });
-  });
-
   onMount(() => {
     const windowRezieHandler = () => {
       const bbox = overallBoundingBox();
@@ -112,137 +124,181 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
   });
 
   return (
-    <div class="rounded-md w-full aspect-video bg-background border relative overflow-clip" ref={warehousemapRef!}>
-      <div class="flex items-center justify-center w-full h-full relative bg-muted/50">
-        <Show when={overallBoundingBox()}>
-          {(bb) => (
-            <div
-              class="relative"
-              style={{
-                width: `${bb().width}px`,
-                height: `${bb().height}px`,
-                transform: `scale(${zoomLevel()})`, // Apply the scale transformation
-                "transform-origin": "center center", // Set the origin for the transformation
-              }}
-              ref={parentRef!}
-            >
-              <For each={props.warehouse().areas}>
-                {(area) => (
-                  <div
-                    class="absolute border bg-background rounded drop-shadow-sm "
-                    style={{
-                      top: `${area.bounding_box.y - bb().y}px`,
-                      left: `${area.bounding_box.x - bb().x}px`,
-                      width: `${area.bounding_box.width}px`,
-                      height: `${area.bounding_box.height}px`,
+    <Suspense fallback={<Skeleton class="w-full h-full" />}>
+      <div class="rounded-md w-full aspect-video bg-background border relative overflow-clip" ref={warehousemapRef!}>
+        <div class="absolute top-0 left-0 w-content h-content flex items-center justify-start z-20 p-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger as={Button} size="sm" class="h-8 pr-2">
+              {fc()?.name ?? "Facilities"}
+              <ChevronDown class="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <For each={props.warehouse().fcs}>
+                {(facility) => (
+                  <DropdownMenuItem
+                    disabled={facility.id === fc()?.id}
+                    onSelect={() => {
+                      setSelectedFacility(facility.id);
                     }}
                   >
-                    <div class="flex flex-col gap-2 items-center w-full h-full static ">
-                      <div
-                        class={cn("flex gap-2 items-center w-full h-full p-2 cursor-pointer", {
-                          "flex-col": area.bounding_box.width > area.bounding_box.height,
-                          "flex-row": area.bounding_box.width < area.bounding_box.height,
-                        })}
-                        onClick={() => {
-                          if (isAreaSelected(area.id)) {
-                            setSelectedArea(undefined);
-                            return;
-                          }
-                          setSelectedArea(area.id);
-                        }}
-                      >
-                        <For each={area.storages}>
-                          {(storage) => (
-                            <div class=" border bg-background rounded drop-shadow-sm border-b last:border-b-0"></div>
-                          )}
-                        </For>
-                      </div>
-                      <div class="absolute top-0 -right-10 w-content h-content z-10">
-                        <div class="flex flex-col gap-2 items-center">
-                          <Button size="icon" class="size-8 border bg-background" variant="outline">
-                            <Plus class="size-4" />
-                          </Button>
-                          <Show when={area.storages.length > 0}>
-                            <Button size="icon" class="size-8 border bg-background" variant="outline">
-                              <Settings class="size-4" />
-                            </Button>
-                          </Show>
-                        </div>
-                      </div>
-                      <div class="absolute -bottom-6 left-0 w-content h-content">
-                        <span class="text-xs text-muted-foreground/50 select-none">{area.name}</span>
-                      </div>
-                    </div>
-                    <div
-                      class={cn(
-                        "absolute top-0 -left-2 -translate-x-[100%] h-content z-20 bg-background border rounded-sm drop-shadow-sm flex flex-col gap-2 items-center justify-end",
-                        {
-                          hidden: !isAreaSelected(area.id),
-                          flex: isAreaSelected(area.id),
-                        },
-                      )}
-                    >
-                      <div class="min-w-40 flex flex-col p-2"></div>
-                    </div>
-                  </div>
+                    <Show when={facility.id === fc()?.id} fallback={<Warehouse class="size-4" />}>
+                      <Check class="size-4" />
+                    </Show>
+                    {facility.name}
+                  </DropdownMenuItem>
                 )}
               </For>
-            </div>
-          )}
-        </Show>
-      </div>
-      <div class="absolute left-0 bottom-0 p-3">
-        <div class="flex flex-row items-center justify-end shadow-sm rounded-md bg-background p-2 border">
-          <Show when={lastUpdated()}>
-            {(lu) => <span class="text-xs leading-none text-muted-foreground">Last Updated: {lu()}</span>}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem as={A} href={`/warehouses/${props.warehouse().id}/facilities/new`}>
+                <Plus class="size-4" />
+                Add Facility
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div class="flex items-center justify-center w-full h-full relative bg-muted/50">
+          <Show
+            when={fc()}
+            fallback={
+              <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+                <div class="text-sm text-muted-foreground">Please select a warehouse facility</div>
+                <div class="flex flex-row gap-2">
+                  <For each={props.warehouse().fcs}>
+                    {(facility) => (
+                      <div
+                        class="border border-neutral-300 dark:border-neutral-700 bg-muted rounded-md p-2 cursor-pointer flex flex-col gap-2"
+                        onClick={() => setSelectedFacility(facility.id)}
+                      >
+                        <span>{facility.name}</span>
+                        <span class="text-xs text-muted-foreground">{facility.description}</span>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </div>
+            }
+          >
+            {(facility) => (
+              <div
+                class="relative outline-1 outline-neutral-700 dark:outline-neutral-300 outline-dashed rounded-md"
+                style={{
+                  width: `${overallBoundingBox().width}px`,
+                  height: `${overallBoundingBox().height}px`,
+                  transform: `scale(${zoomLevel()})`, // Apply the scale transformation
+                  "transform-origin": "center center", // Set the origin for the transformation
+                }}
+                ref={parentRef!}
+              >
+                <For each={facility().areas}>
+                  {(area) => (
+                    <div
+                      class="absolute outline-1 outline-neutral-500/50 outline-dashed "
+                      style={{
+                        top: `${area.bounding_box.y - overallBoundingBox().y}px`,
+                        left: `${area.bounding_box.x - overallBoundingBox().x}px`,
+                        width: `${area.bounding_box.width}px`,
+                        height: `${area.bounding_box.height}px`,
+                        transform: `scale(1/${zoomLevel()})`,
+                        "transform-origin": "center center",
+                      }}
+                    >
+                      <div class="flex flex-col gap-2 items-center w-full h-full static ">
+                        <div
+                          class={cn("flex gap-2 items-center w-full h-full p-2", {
+                            "flex-col": area.bounding_box.width > area.bounding_box.height,
+                            "flex-row": area.bounding_box.width < area.bounding_box.height,
+                          })}
+                        >
+                          <For each={area.storages}>
+                            {(storage) => (
+                              <A
+                                class={cn(" border bg-background rounded drop-shadow-sm", {
+                                  "border-b last:border-b-0": area.bounding_box.width > area.bounding_box.height,
+                                  "border-r last:border-r-0": area.bounding_box.width < area.bounding_box.height,
+                                })}
+                                href={`/warehouse/${props.warehouse().id}/fc/${facility().id}/area/${area.id}/storage/${storage.id}`}
+                              ></A>
+                            )}
+                          </For>
+                        </div>
+                        <div class="absolute top-0 -right-10 w-content h-content z-10">
+                          <div class="flex flex-col gap-2 items-center">
+                            <Button size="icon" class="size-8 border bg-background" variant="outline">
+                              <Plus class="size-4" />
+                            </Button>
+                            <Show when={area.storages.length > 0}>
+                              <Button size="icon" class="size-8 border bg-background" variant="outline">
+                                <Settings class="size-4" />
+                              </Button>
+                            </Show>
+                          </div>
+                        </div>
+                        <div class="absolute -bottom-6 left-0 w-content h-content">
+                          <span class="text-xs text-muted-foreground/50 select-none">{area.name}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+            )}
           </Show>
         </div>
-      </div>
-      <div class="absolute right-0 bottom-0 p-3 flex flex-row gap-2">
-        <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
-          <TFE
-            element={warehousemapRef!}
-            onFullscreenOn={() => {
-              setZoomLevel(1);
-            }}
-            onFullscreenOff={() => {
-              const bbox = overallBoundingBox();
-
-              zoomLevelChange(bbox);
-            }}
-          />
+        <div class="absolute left-0 bottom-0 p-3 z-20">
+          <div class="flex flex-row items-center justify-end shadow-sm rounded-md bg-background p-2 border">
+            <Show when={lastUpdated()}>
+              {(lu) => <span class="text-xs leading-none text-muted-foreground">Last Updated: {lu()}</span>}
+            </Show>
+          </div>
         </div>
-        <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
-          <Button
-            size="icon"
-            class="size-8 rounded-r-none border border-r-0 bg-background"
-            variant="secondary"
-            onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 2))}
-          >
-            <Plus class="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            class="size-8 rounded-none border border-r-0 bg-background"
-            variant="secondary"
-            onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.6))}
-          >
-            <Minus class="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            class="size-8 rounded-l-none border bg-background"
-            variant="secondary"
-            onClick={() => {
-              const bbox = overallBoundingBox();
+        <div class="absolute right-0 bottom-0 p-3 flex flex-row gap-2 z-20">
+          <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
+            <TFE
+              element={warehousemapRef!}
+              onFullscreenOn={() => {
+                const bbox = overallBoundingBox();
 
-              zoomLevelChange(bbox);
-            }}
-          >
-            <RotateCw class="size-4" />
-          </Button>
+                zoomLevelChange(bbox);
+              }}
+              onFullscreenOff={() => {
+                const bbox = overallBoundingBox();
+
+                zoomLevelChange(bbox);
+              }}
+            />
+          </div>
+          <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
+            <Button
+              size="icon"
+              class="size-8 rounded-r-none border border-r-0 bg-background"
+              variant="secondary"
+              onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 2))}
+            >
+              <Plus class="size-4" />
+            </Button>
+            <Button
+              size="icon"
+              class="size-8 rounded-none border border-r-0 bg-background"
+              variant="secondary"
+              onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.6))}
+            >
+              <Minus class="size-4" />
+            </Button>
+            <Button
+              size="icon"
+              class="size-8 rounded-l-none border bg-background"
+              variant="secondary"
+              onClick={() => {
+                const bbox = overallBoundingBox();
+
+                zoomLevelChange(bbox);
+              }}
+            >
+              <RotateCw class="size-4" />
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };

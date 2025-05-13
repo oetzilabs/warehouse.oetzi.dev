@@ -2,17 +2,21 @@ import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
 import warehouseAreas from "../../data/warehouse_areas.json";
+import facilites from "../../data/warehouse_facilities.json";
 import warehouses from "../../data/warehouses.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   TB_organizations_warehouses,
   TB_users_warehouses,
   TB_warehouse_areas,
+  TB_warehouse_facilities,
   TB_warehouse_types,
   TB_warehouses,
   WarehouseAreaCreateSchema,
   WarehouseAreaUpdateSchema,
   WarehouseCreateSchema,
+  WarehouseFacilityCreateSchema,
+  WarehouseFacilityUpdateSchema,
   WarehouseTypeCreateSchema,
   WarehouseTypeUpdateSchema,
   WarehouseUpdateSchema,
@@ -51,11 +55,15 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             hashed_password: false,
           },
         },
-        areas: {
+        fcs: {
           with: {
-            storages: {
+            areas: {
               with: {
-                type: true,
+                storages: {
+                  with: {
+                    type: true,
+                  },
+                },
               },
             },
           },
@@ -140,11 +148,15 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                   hashed_password: false,
                 },
               },
-              areas: {
+              fcs: {
                 with: {
-                  storages: {
+                  areas: {
                     with: {
-                      type: true,
+                      storages: {
+                        with: {
+                          type: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -389,6 +401,42 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             );
           }
         }
+
+        // facilities
+
+        const dbFacilities = yield* Effect.promise(() => db.query.TB_warehouse_facilities.findMany());
+        const existingFacilities = dbFacilities.map((u) => u.id);
+
+        const facilities = parse(
+          array(
+            object({
+              ...WarehouseFacilityCreateSchema.entries,
+              id: prefixed_cuid2,
+            }),
+          ),
+          facilites,
+        );
+
+        const toCreateFacilities = facilities.filter((t) => !existingFacilities.includes(t.id));
+
+        if (toCreateFacilities.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_warehouse_facilities).values(toCreateFacilities).returning());
+          yield* Effect.log("Created warehouse facilities", toCreateFacilities);
+        }
+
+        const toUpdateFacilities = facilities.filter((t) => existingFacilities.includes(t.id));
+        if (toUpdateFacilities.length > 0) {
+          for (const facility of toUpdateFacilities) {
+            yield* Effect.promise(() =>
+              db
+                .update(TB_warehouse_facilities)
+                .set({ ...facility, updatedAt: new Date() })
+                .where(eq(TB_warehouse_facilities.id, facility.id))
+                .returning(),
+            );
+          }
+        }
+
         const dbAreas = yield* Effect.promise(() => db.query.TB_warehouse_areas.findMany());
         const existingAreas = dbAreas.map((u) => u.id);
 

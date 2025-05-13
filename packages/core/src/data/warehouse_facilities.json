@@ -1,0 +1,14 @@
+[
+  {
+    "id": "whfc_bx0og3lksiey55n025ghhujp",
+    "warehouse_id": "wh_fbl19yvmsq44uuodg8n4kvv2",
+    "name": "facility 1",
+    "description": "this is facility 1",
+    "bounding_box": {
+      "x": 0,
+      "y": 0,
+      "width": 1500,
+      "height": 600
+    }
+  }
+]

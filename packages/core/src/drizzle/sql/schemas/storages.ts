@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, text, varchar } from "drizzle-orm/pg-core";
+import { integer, json, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
@@ -22,7 +22,10 @@ export const TB_storages = commonTable(
     description: text("description"),
     capacity: integer("capacity").notNull(),
     currentOccupancy: integer("current_occupancy").default(0),
-    location: text("location").notNull(),
+    bounding_box: json("bounding_box").notNull().$type<{
+      width: number;
+      height: number;
+    }>(),
   },
   "storage",
 );

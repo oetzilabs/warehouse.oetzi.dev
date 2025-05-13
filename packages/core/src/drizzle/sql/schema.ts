@@ -29,6 +29,7 @@ export * from "./schemas/documents/storage_feature";
 export * from "./schemas/documents/storage_feature_feature_sets";
 
 export * from "./schemas/warehouses/warehouses";
+export * from "./schemas/warehouses/warehouse_facility";
 export * from "./schemas/warehouses/warehouses_addresses";
 export * from "./schemas/warehouses/warehouse_types";
 export * from "./schemas/warehouses/warehouse_areas";

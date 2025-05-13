@@ -31,11 +31,13 @@ export const getInventory = query(async () => {
       if (!wh) {
         return yield* Effect.fail(new Error("Warehouse not found"));
       }
-      const areas = wh.areas.length;
-      const storages = wh.areas.map((a) => a.storages).flat();
+      const facilites = wh.fcs;
+      const areas = facilites.map((fc) => fc.areas).flat();
+      const storages = areas.map((a) => a.storages).flat();
 
       return yield* Effect.succeed({
-        amounOfAreas: areas,
+        amountOfFacilities: facilites.length,
+        amounOfAreas: areas.length,
         amounOfStorages: storages.length,
         totalCapacity: storages.map((s) => s.capacity).reduce((a, b) => a + b, 0),
         totalCurrentOccupancy: storages.map((s) => s.currentOccupancy ?? 0).reduce((a, b) => a + b, 0),

@@ -107,10 +107,12 @@ export const loginViaEmail = action(async (email: string, password: string) => {
       });
     },
     onFailure: (cause) => {
+      console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
+      console.log(errors);
       throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
     },
   });

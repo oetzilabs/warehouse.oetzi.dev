@@ -78,6 +78,13 @@
       "when": 1747051914953,
       "tag": "0010_sharp_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1747135414549,
+      "tag": "0011_lame_the_watchers",
+      "breakpoints": true
     }
   ]
 }

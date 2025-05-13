@@ -5,6 +5,7 @@ import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_storages } from "../storages";
+import { TB_warehouse_facilities } from "./warehouse_facility";
 import { TB_warehouses } from "./warehouses";
 
 export const TB_warehouse_areas = commonTable(
@@ -18,17 +19,17 @@ export const TB_warehouse_areas = commonTable(
       width: number;
       height: number;
     }>(),
-    warehouse_id: text("warehouse_id")
+    warehouse_facility_id: text("warehouse_facility_id")
       .notNull()
-      .references(() => TB_warehouses.id, { onDelete: "cascade" }),
+      .references(() => TB_warehouse_facilities.id, { onDelete: "cascade" }),
   },
   "wha",
 );
 
 export const warehouse_area_relations = relations(TB_warehouse_areas, ({ one, many }) => ({
-  warehouse: one(TB_warehouses, {
-    fields: [TB_warehouse_areas.warehouse_id],
-    references: [TB_warehouses.id],
+  facility: one(TB_warehouse_facilities, {
+    fields: [TB_warehouse_areas.warehouse_facility_id],
+    references: [TB_warehouse_facilities.id],
   }),
   storages: many(TB_storages),
 }));
