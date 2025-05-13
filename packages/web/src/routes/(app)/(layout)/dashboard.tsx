@@ -389,6 +389,7 @@ export default function DashboardPage() {
                             <StorageDataTable
                               data={fc()
                                 .areas.map((a) => a.storages)
+                                .flat()
                                 .flat()}
                             />
                           </div>

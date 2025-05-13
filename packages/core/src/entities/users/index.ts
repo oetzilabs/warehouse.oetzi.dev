@@ -91,6 +91,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                 storages: {
                                   with: {
                                     type: true,
+                                    area: true,
                                   },
                                 },
                               },
@@ -126,6 +127,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         storages: {
                           with: {
                             type: true,
+                            area: true,
                           },
                         },
                       },
@@ -180,6 +182,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                 storages: {
                                   with: {
                                     type: true,
+                                    area: true,
                                   },
                                 },
                               },
@@ -211,6 +214,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         storages: {
                           with: {
                             type: true,
+                            area: true,
                           },
                         },
                       },
@@ -318,6 +322,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                       storages: {
                                         with: {
                                           type: true,
+                                          area: true,
                                         },
                                       },
                                     },
@@ -353,6 +358,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                               storages: {
                                 with: {
                                   type: true,
+                                  area: true,
                                 },
                               },
                             },
@@ -407,6 +413,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                       storages: {
                                         with: {
                                           type: true,
+                                          area: true,
                                         },
                                       },
                                     },
@@ -438,6 +445,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                               storages: {
                                 with: {
                                   type: true,
+                                  area: true,
                                 },
                               },
                             },
