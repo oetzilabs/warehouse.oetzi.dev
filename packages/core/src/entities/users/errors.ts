@@ -22,7 +22,7 @@ export class UserAuthenticationFailed extends Schema.TaggedError<UserAuthenticat
   "UserAuthenticationFailed",
   {
     email: Schema.String,
-  },
+  }
 ) {}
 
 export class UserNotUpdated extends Schema.TaggedError<UserNotUpdated>()("UserNotUpdated", {
@@ -47,5 +47,12 @@ export class UserLastWarehouseNotFound extends Schema.TaggedError<UserLastWareho
   "UserLastWarehouseNotFound",
   {
     userId: Schema.String,
-  },
+  }
+) {}
+
+export class UserLastFacilityNotFound extends Schema.TaggedError<UserLastFacilityNotFound>()(
+  "UserLastFacilityNotFound",
+  {
+    userId: Schema.String,
+  }
 ) {}

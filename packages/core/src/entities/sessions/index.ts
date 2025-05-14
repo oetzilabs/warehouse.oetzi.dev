@@ -32,12 +32,14 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
               with: {
                 org: true,
                 wh: true,
+                fc: true,
               },
             },
           },
         },
         org: true,
         wh: true,
+        fc: true,
       };
 
       if (options) {

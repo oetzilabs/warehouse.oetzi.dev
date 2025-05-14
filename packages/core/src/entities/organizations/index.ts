@@ -66,11 +66,20 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                     address: true,
                   },
                 },
-                storages: {
+                fcs: {
                   with: {
-                    storage: {
+                    ars: {
                       with: {
-                        type: true,
+                        strs: {
+                          with: {
+                            type: true,
+                            invs: {
+                              with: {
+                                labels: true,
+                              },
+                            },
+                          },
+                        },
                       },
                     },
                   },
@@ -398,4 +407,4 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 export const OrganizationLive = OrganizationService.Default;
 
 // Type exports
-export type OrganizationInfo = NonNullable<Awaited<ReturnType<OrganizationService["findById"]>>>;
+export type OrganizationInfo = NonNullable<Effect.Effect.Success<Awaited<ReturnType<OrganizationService["findById"]>>>>;

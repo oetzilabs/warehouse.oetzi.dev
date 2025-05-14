@@ -24,6 +24,7 @@ import {
   UserDisableFailed,
   UserInvalidEmail,
   UserInvalidId,
+  UserLastFacilityNotFound,
   UserLastOrgNotFound,
   UserLastWarehouseNotFound,
   UserNotCreated,
@@ -86,12 +87,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         },
                         fcs: {
                           with: {
-                            areas: {
+                            ars: {
                               with: {
-                                storages: {
+                                strs: {
                                   with: {
                                     type: true,
                                     area: true,
+                                    invs: {
+                                      with: {
+                                        labels: true,
+                                      },
+                                    },
                                   },
                                 },
                               },
@@ -122,12 +128,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 },
                 fcs: {
                   with: {
-                    areas: {
+                    ars: {
                       with: {
-                        storages: {
+                        strs: {
                           with: {
                             type: true,
                             area: true,
+                            invs: {
+                              with: {
+                                labels: true,
+                              },
+                            },
                           },
                         },
                       },
@@ -177,12 +188,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         },
                         fcs: {
                           with: {
-                            areas: {
+                            ars: {
                               with: {
-                                storages: {
+                                strs: {
                                   with: {
                                     type: true,
                                     area: true,
+                                    invs: {
+                                      with: {
+                                        labels: true,
+                                      },
+                                    },
                                   },
                                 },
                               },
@@ -209,12 +225,36 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 },
                 fcs: {
                   with: {
-                    areas: {
+                    ars: {
                       with: {
-                        storages: {
+                        strs: {
                           with: {
                             type: true,
                             area: true,
+                            invs: {
+                              with: {
+                                labels: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            fc: {
+              with: {
+                ars: {
+                  with: {
+                    strs: {
+                      with: {
+                        type: true,
+                        area: true,
+                        invs: {
+                          with: {
+                            labels: true,
                           },
                         },
                       },
@@ -317,12 +357,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                               },
                               fcs: {
                                 with: {
-                                  areas: {
+                                  ars: {
                                     with: {
-                                      storages: {
+                                      strs: {
                                         with: {
                                           type: true,
                                           area: true,
+                                          invs: {
+                                            with: {
+                                              labels: true,
+                                            },
+                                          },
                                         },
                                       },
                                     },
@@ -353,12 +398,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                       },
                       fcs: {
                         with: {
-                          areas: {
+                          ars: {
                             with: {
-                              storages: {
+                              strs: {
                                 with: {
                                   type: true,
                                   area: true,
+                                  invs: {
+                                    with: {
+                                      labels: true,
+                                    },
+                                  },
                                 },
                               },
                             },
@@ -408,12 +458,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                               },
                               fcs: {
                                 with: {
-                                  areas: {
+                                  ars: {
                                     with: {
-                                      storages: {
+                                      strs: {
                                         with: {
                                           type: true,
                                           area: true,
+                                          invs: {
+                                            with: {
+                                              labels: true,
+                                            },
+                                          },
                                         },
                                       },
                                     },
@@ -440,12 +495,36 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                       },
                       fcs: {
                         with: {
-                          areas: {
+                          ars: {
                             with: {
-                              storages: {
+                              strs: {
                                 with: {
                                   type: true,
                                   area: true,
+                                  invs: {
+                                    with: {
+                                      labels: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  fc: {
+                    with: {
+                      ars: {
+                        with: {
+                          strs: {
+                            with: {
+                              type: true,
+                              area: true,
+                              invs: {
+                                with: {
+                                  labels: true,
                                 },
                               },
                             },
@@ -625,6 +704,25 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return warehouse;
       });
 
+    const findLastFacility = (userId: string) =>
+      Effect.gen(function* (_) {
+        const parsedUserId = safeParse(prefixed_cuid2, userId);
+        if (!parsedUserId.success) {
+          return yield* Effect.fail(new UserInvalidId({ id: userId }));
+        }
+
+        const facility = yield* Effect.promise(() =>
+          db.query.TB_warehouse_facilities.findFirst({
+            where: (fields, operations) => operations.eq(fields.ownerId, parsedUserId.output),
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+          }),
+        );
+        if (!facility) {
+          return yield* Effect.fail(new UserLastFacilityNotFound({ userId }));
+        }
+        return facility;
+      });
+
     const seed = () =>
       Effect.gen(function* (_) {
         const dbUsers = yield* Effect.promise(() => db.query.TB_users.findMany());
@@ -728,6 +826,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       verifyPassword,
       findLastOrganization,
       findLastWarehouse,
+      findLastFacility,
       seed,
     } as const;
   }),

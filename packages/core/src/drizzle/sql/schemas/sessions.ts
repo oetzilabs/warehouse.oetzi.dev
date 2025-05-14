@@ -8,6 +8,7 @@ import { TB_organizations } from "./organizations/organizations";
 import { TB_users } from "./users/users";
 import { schema } from "./utils";
 import { TB_warehouses } from "./warehouses/warehouses";
+import { TB_warehouse_facilities } from "../schema";
 
 export const TB_sessions = schema.table("session", {
   id: text("id")
@@ -40,6 +41,9 @@ export const TB_sessions = schema.table("session", {
   current_warehouse_id: varchar("current_warehouse_id").references(() => TB_warehouses.id, {
     onDelete: "cascade",
   }),
+  current_warehouse_facility_id: varchar("current_warehouse_facility_id").references(() => TB_warehouse_facilities.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const session_relation = relations(TB_sessions, ({ one, many }) => ({
@@ -54,6 +58,10 @@ export const session_relation = relations(TB_sessions, ({ one, many }) => ({
   wh: one(TB_warehouses, {
     fields: [TB_sessions.current_warehouse_id],
     references: [TB_warehouses.id],
+  }),
+  fc: one(TB_warehouse_facilities, {
+    fields: [TB_sessions.current_warehouse_facility_id],
+    references: [TB_warehouse_facilities.id],
   }),
 }));
 

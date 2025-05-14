@@ -2,8 +2,8 @@ import { relations } from "drizzle-orm";
 import { text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { commonTable } from "../entity";
 import { TB_storages } from "./storages";
 
 export const TB_storage_types = commonTable(
@@ -13,7 +13,7 @@ export const TB_storage_types = commonTable(
     description: text("description"),
     code: text("code").notNull(),
   },
-  "storage_type",
+  "storagetype",
 );
 
 export const storage_type_relations = relations(TB_storage_types, ({ many }) => ({

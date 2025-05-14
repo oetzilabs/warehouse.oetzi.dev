@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { DocumentStorageOfferLive, DocumentStorageOfferService } from "./entities/document_storage_offers";
 import { OrganizationLive } from "./entities/organizations";
 import { PaymentMethodLive, PaymentMethodService } from "./entities/payment_methods";
+import { StorageLive, StorageService } from "./entities/storages";
 import { UserLive, UserService } from "./entities/users";
 import { WarehouseTypeLive, WarehouseTypeService } from "./entities/warehouse_types";
 import { WarehouseLive } from "./entities/warehouses";
@@ -11,11 +12,14 @@ const program = Effect.gen(function* (_) {
   const documentStorageOfferService = yield* _(DocumentStorageOfferService);
   const userService = yield* _(UserService);
   const paymentMethodsService = yield* _(PaymentMethodService);
+  const storageService = yield* _(StorageService);
+  const storages = yield* storageService.seed();
   const warehouseTypes = yield* warehouseTypeService.seed();
   const documentStorageOffers = yield* documentStorageOfferService.seed();
   const paymentMethods = yield* paymentMethodsService.seed();
   const users = yield* userService.seed();
 }).pipe(
+  Effect.provide(StorageLive),
   Effect.provide(WarehouseTypeLive),
   Effect.provide(DocumentStorageOfferLive),
   Effect.provide(PaymentMethodLive),

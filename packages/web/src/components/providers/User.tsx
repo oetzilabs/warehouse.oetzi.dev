@@ -1,31 +1,25 @@
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { createAsync } from "@solidjs/router";
+import { type FacilityInfo } from "@warehouseoetzidev/core/src/entities/facilities";
 import { type OrganizationInfo } from "@warehouseoetzidev/core/src/entities/organizations";
 import { type SessionInfo } from "@warehouseoetzidev/core/src/entities/sessions";
 import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
 import { type WarehouseInfo } from "@warehouseoetzidev/core/src/entities/warehouses";
-import {
-  Accessor,
-  createContext,
-  createEffect,
-  createMemo,
-  createSignal,
-  onMount,
-  ParentProps,
-  useContext,
-} from "solid-js";
+import { Accessor, createContext, createSignal, onMount, ParentProps, useContext } from "solid-js";
 
 export const UserContext = createContext<{
   user: Accessor<UserInfo | null>;
   session: Accessor<SessionInfo | null>;
   currentOrganization: Accessor<OrganizationInfo | null>;
   currentWarehouse: Accessor<WarehouseInfo | null>;
+  currentFacility: Accessor<FacilityInfo | null>;
   ready: Accessor<boolean>;
 }>({
   user: () => null,
   session: () => null,
   currentOrganization: () => null,
   currentWarehouse: () => null,
+  currentFacility: () => null,
   ready: () => false,
 });
 
@@ -66,7 +60,6 @@ export function UserProvider(props: ParentProps) {
     if (!session) {
       return null;
     }
-    // @ts-ignore
     return session.org;
   };
 
@@ -75,8 +68,15 @@ export function UserProvider(props: ParentProps) {
     if (!session) {
       return null;
     }
-    // @ts-ignore
     return session.wh;
+  };
+
+  const currentFacility = () => {
+    const session = currentSession();
+    if (!session) {
+      return null;
+    }
+    return session.fc;
   };
 
   const [ready, setReady] = createSignal(false);
@@ -89,9 +89,9 @@ export function UserProvider(props: ParentProps) {
     <UserContext.Provider
       value={{
         user,
+        currentFacility,
         currentOrganization,
         currentWarehouse,
-        // @ts-ignore
         session: currentSession,
         ready,
       }}

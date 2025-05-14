@@ -1,0 +1,51 @@
+[
+  {
+    "id": "storagetype_js2e1ykdt9738djzm7v9v3k8",
+    "name": "rack",
+    "description": null,
+    "code": "RACK-01"
+  },
+  {
+    "id": "storagetype_m2semzowvyisprcl0rrp5fgd",
+    "name": "bin",
+    "description": null,
+    "code": "BIN-01"
+  },
+  {
+    "id": "storagetype_uxyqa3nbs9r5o3eh7plfd72a",
+    "name": "pallet",
+    "description": null,
+    "code": "PALLET-01"
+  },
+  {
+    "id": "storagetype_fjx3lqb52u4991jrsd0vsga5",
+    "name": "shelf",
+    "description": null,
+    "code": "SHELF-01"
+  },
+  {
+    "id": "storagetype_f565rb8iexuoceozcjcam034",
+    "name": "box",
+    "description": null,
+    "code": "BOX-01"
+  },
+  {
+    "id": "storagetype_ulgcyr73tefx82qavkyqe6oi",
+    "name": "container",
+    "description": null,
+    "code": "CONTAINER-01"
+  },
+  {
+    "id": "storagetype_z6f1jxd1wjubxy1z9hdq7ku4",
+    "name": "cart",
+    "description": null,
+    "code": "CART-01"
+  },
+
+  {
+    "id": "storagetype_qkrcwck743uaqc5pbnnkwnw8",
+    "name": "locker",
+    "description": null,
+    "code": "LOCKER-01"
+  }
+]

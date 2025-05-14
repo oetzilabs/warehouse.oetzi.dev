@@ -1,11 +1,16 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
+import storages from "../../data/storages.json";
 import warehouseAreas from "../../data/warehouse_areas.json";
 import facilites from "../../data/warehouse_facilities.json";
 import warehouses from "../../data/warehouses.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
+  FacilityCreateSchema,
+  FacilityUpdateSchema,
+  StorageCreateSchema,
+  StorageUpdateSchema,
   TB_organizations_warehouses,
   TB_users_warehouses,
   TB_warehouse_areas,
@@ -15,8 +20,6 @@ import {
   WarehouseAreaCreateSchema,
   WarehouseAreaUpdateSchema,
   WarehouseCreateSchema,
-  WarehouseFacilityCreateSchema,
-  WarehouseFacilityUpdateSchema,
   WarehouseTypeCreateSchema,
   WarehouseTypeUpdateSchema,
   WarehouseUpdateSchema,
@@ -57,11 +60,16 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         },
         fcs: {
           with: {
-            areas: {
+            ars: {
               with: {
-                storages: {
+                strs: {
                   with: {
                     type: true,
+                    invs: {
+                      with: {
+                        labels: true,
+                      },
+                    },
                   },
                 },
               },
@@ -150,11 +158,16 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
               },
               fcs: {
                 with: {
-                  areas: {
+                  ars: {
                     with: {
-                      storages: {
+                      strs: {
                         with: {
                           type: true,
+                          invs: {
+                            with: {
+                              labels: true,
+                            },
+                          },
                         },
                       },
                     },
@@ -410,7 +423,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         const facilities = parse(
           array(
             object({
-              ...WarehouseFacilityCreateSchema.entries,
+              ...FacilityCreateSchema.entries,
               id: prefixed_cuid2,
             }),
           ),

@@ -4,6 +4,8 @@ import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
+import { TB_sessions } from "../sessions";
+import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouses } from "./warehouses";
 
@@ -21,6 +23,9 @@ export const TB_warehouse_facilities = commonTable(
     warehouse_id: text("warehouse_id")
       .notNull()
       .references(() => TB_warehouses.id, { onDelete: "cascade" }),
+    ownerId: text("ownerId")
+      .notNull()
+      .references(() => TB_users.id, { onDelete: "cascade" }),
   },
   "whfc",
 );
@@ -30,16 +35,18 @@ export const warehouse_facilities_relations = relations(TB_warehouse_facilities,
     fields: [TB_warehouse_facilities.warehouse_id],
     references: [TB_warehouses.id],
   }),
-  areas: many(TB_warehouse_areas),
+  ars: many(TB_warehouse_areas),
+  user: one(TB_users, {
+    fields: [TB_warehouse_facilities.ownerId],
+    references: [TB_users.id],
+  }),
+  sessions: many(TB_sessions),
 }));
 
-export type WarehouseFacilitySelect = typeof TB_warehouse_facilities.$inferSelect;
-export type WarehouseFacilityInsert = typeof TB_warehouse_facilities.$inferInsert;
-export const WarehouseFacilityCreateSchema = omit(createInsertSchema(TB_warehouse_facilities), [
-  "createdAt",
-  "updatedAt",
-]);
-export const WarehouseFacilityUpdateSchema = object({
+export type FacilitySelect = typeof TB_warehouse_facilities.$inferSelect;
+export type FacilityInsert = typeof TB_warehouse_facilities.$inferInsert;
+export const FacilityCreateSchema = omit(createInsertSchema(TB_warehouse_facilities), ["createdAt", "updatedAt"]);
+export const FacilityUpdateSchema = object({
   ...partial(omit(createInsertSchema(TB_warehouse_facilities), ["createdAt", "updatedAt"])).entries,
   id: prefixed_cuid2,
 });

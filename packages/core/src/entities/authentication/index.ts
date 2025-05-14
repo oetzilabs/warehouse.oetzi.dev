@@ -108,12 +108,14 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
 
         const lastOrganization = yield* userService.findLastOrganization(user.id);
         const lastWarehouse = yield* userService.findLastWarehouse(user.id);
+        const lastFacility = yield* userService.findLastFacility(user.id);
         const session = yield* sessionService.create({
           expiresAt,
           userId: user.id,
           access_token: accessToken,
           current_organization_id: lastOrganization?.id ?? null,
           current_warehouse_id: lastWarehouse?.id ?? null,
+          current_warehouse_facility_id: lastFacility?.id ?? null,
         });
         if (!session) {
           return yield* Effect.fail(new AuthSessionCreateFailed({ userId: user.id }));

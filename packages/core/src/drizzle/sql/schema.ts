@@ -34,8 +34,11 @@ export * from "./schemas/warehouses/warehouses_addresses";
 export * from "./schemas/warehouses/warehouse_types";
 export * from "./schemas/warehouses/warehouse_areas";
 
-export * from "./schemas/storages";
-export * from "./schemas/storage_types";
+export * from "./schemas/storages/storages";
+export * from "./schemas/storages/storage_types";
+export * from "./schemas/storages/storage_inventory";
+export * from "./schemas/storages/storage_inventory_to_labels";
+export * from "./schemas/storages/storage_labels";
 
 export * from "./schemas/payments/payment_methods";
 export * from "./schemas/payments/payment_history";
