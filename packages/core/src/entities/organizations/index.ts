@@ -140,7 +140,53 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         const org = yield* Effect.promise(() =>
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.id, parsedId.output),
-            with: relations,
+            with: {
+              users: {
+                with: {
+                  user: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                },
+              },
+              owner: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+              whs: {
+                with: {
+                  warehouse: {
+                    with: {
+                      addresses: {
+                        with: {
+                          address: true,
+                        },
+                      },
+                      fcs: {
+                        with: {
+                          ars: {
+                            with: {
+                              strs: {
+                                with: {
+                                  type: true,
+                                  invs: {
+                                    with: {
+                                      labels: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           }),
         );
 
@@ -156,7 +202,53 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.promise(() =>
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.slug, slug),
-            with: relations,
+            with: {
+              users: {
+                with: {
+                  user: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                },
+              },
+              owner: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+              whs: {
+                with: {
+                  warehouse: {
+                    with: {
+                      addresses: {
+                        with: {
+                          address: true,
+                        },
+                      },
+                      fcs: {
+                        with: {
+                          ars: {
+                            with: {
+                              strs: {
+                                with: {
+                                  type: true,
+                                  invs: {
+                                    with: {
+                                      labels: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           }),
         );
       });

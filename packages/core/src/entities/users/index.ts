@@ -425,6 +425,17 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     columns: {
                       hashed_password: false,
                     },
+                    with: {
+                      sessions: {
+                        with: {
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                   org: {
                     with: {
@@ -561,7 +572,241 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
-            with: rels,
+            with: {
+              payment_methods: {
+                with: {
+                  payment_method: true,
+                },
+              },
+              payment_history: {
+                with: {
+                  paymentMethod: true,
+                },
+              },
+              orgs: {
+                with: {
+                  org: {
+                    with: {
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      users: {
+                        with: {
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                      whs: {
+                        with: {
+                          warehouse: {
+                            with: {
+                              addresses: {
+                                with: {
+                                  address: true,
+                                },
+                              },
+                              owner: {
+                                columns: {
+                                  hashed_password: false,
+                                },
+                              },
+                              fcs: {
+                                with: {
+                                  ars: {
+                                    with: {
+                                      strs: {
+                                        with: {
+                                          type: true,
+                                          area: true,
+                                          invs: {
+                                            with: {
+                                              labels: true,
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              whs: {
+                with: {
+                  warehouse: {
+                    with: {
+                      addresses: {
+                        with: {
+                          address: true,
+                        },
+                      },
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      fcs: {
+                        with: {
+                          ars: {
+                            with: {
+                              strs: {
+                                with: {
+                                  type: true,
+                                  area: true,
+                                  invs: {
+                                    with: {
+                                      labels: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              sessions: {
+                with: {
+                  user: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                    with: {
+                      sessions: {
+                        with: {
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  org: {
+                    with: {
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      users: {
+                        with: {
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                      whs: {
+                        with: {
+                          warehouse: {
+                            with: {
+                              addresses: {
+                                with: {
+                                  address: true,
+                                },
+                              },
+                              owner: {
+                                columns: {
+                                  hashed_password: false,
+                                },
+                              },
+                              fcs: {
+                                with: {
+                                  ars: {
+                                    with: {
+                                      strs: {
+                                        with: {
+                                          type: true,
+                                          area: true,
+                                          invs: {
+                                            with: {
+                                              labels: true,
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  wh: {
+                    with: {
+                      addresses: {
+                        with: {
+                          address: true,
+                        },
+                      },
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      fcs: {
+                        with: {
+                          ars: {
+                            with: {
+                              strs: {
+                                with: {
+                                  type: true,
+                                  area: true,
+                                  invs: {
+                                    with: {
+                                      labels: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  fc: {
+                    with: {
+                      ars: {
+                        with: {
+                          strs: {
+                            with: {
+                              type: true,
+                              area: true,
+                              invs: {
+                                with: {
+                                  labels: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
             columns: {
               hashed_password: false,
             },

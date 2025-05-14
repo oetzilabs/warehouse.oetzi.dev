@@ -67,7 +67,25 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         const session = yield* Effect.promise(() =>
           db.query.TB_sessions.findFirst({
             where: (sessions, operations) => operations.eq(sessions.id, parsedId.output),
-            with: relations,
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+                with: {
+                  sessions: {
+                    with: {
+                      org: true,
+                      wh: true,
+                      fc: true,
+                    },
+                  },
+                },
+              },
+              org: true,
+              wh: true,
+              fc: true,
+            },
           }),
         );
 
@@ -94,7 +112,25 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         return yield* Effect.promise(() =>
           db.query.TB_sessions.findMany({
             where: (sessions, operations) => operations.eq(sessions.userId, parsedId.output),
-            with: relations,
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+                with: {
+                  sessions: {
+                    with: {
+                      org: true,
+                      wh: true,
+                      fc: true,
+                    },
+                  },
+                },
+              },
+              org: true,
+              wh: true,
+              fc: true,
+            },
           }),
         );
       });
@@ -104,7 +140,25 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         const session = yield* Effect.promise(() =>
           db.query.TB_sessions.findFirst({
             where: (sessions, operations) => operations.eq(sessions.access_token, token),
-            with: relations,
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+                with: {
+                  sessions: {
+                    with: {
+                      org: true,
+                      wh: true,
+                      fc: true,
+                    },
+                  },
+                },
+              },
+              org: true,
+              wh: true,
+              fc: true,
+            },
           }),
         );
 

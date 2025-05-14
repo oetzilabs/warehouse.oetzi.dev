@@ -44,7 +44,6 @@ export function UserProvider(props: ParentProps) {
   const currentSession = () => {
     const u = user();
     if (!u) {
-      console.log("no user");
       return null;
     }
     const t = sessionToken();
