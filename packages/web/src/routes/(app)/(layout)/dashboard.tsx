@@ -694,7 +694,7 @@ export default function DashboardPage() {
                                 <div class="flex flex-col gap-2 w-content h-content static ">
                                   <div
                                     class={cn(
-                                      "flex gap-2 p-2 outline-1 outline-neutral-300 dark:outline-neutral-700 hover:outline-neutral-500 dark:hover:outline-neutral-600 outline-dashed rounded-sm relative",
+                                      "flex gap-2 outline-1 outline-neutral-300 dark:outline-neutral-700 hover:outline-neutral-500 dark:hover:outline-neutral-600 outline-dashed rounded-sm absolute",
                                       {
                                         "flex-col": area.bounding_box.width > area.bounding_box.height,
                                         "flex-row": area.bounding_box.width < area.bounding_box.height,
@@ -707,61 +707,83 @@ export default function DashboardPage() {
                                       height: `${area.bounding_box.height}px`,
                                     }}
                                   >
-                                    <For each={area.strs}>
-                                      {(storage) => (
-                                        <div
-                                          class=" border bg-muted rounded drop-shadow-sm z-[2] cursor-pointer"
-                                          style={{
-                                            top: `${storage.bounding_box.y}px`,
-                                            left: `${storage.bounding_box.x}px`,
-                                            width: `${storage.bounding_box.width}px`,
-                                            height: `${storage.bounding_box.length}px`,
-                                          }}
-                                          // href={`/warehouse/${wh().id}/fc/${fc().id}/area/${area.id}/storage/${storage.id}`}
-                                        >
-                                          <div class="w-full h-full relative">
-                                            <For each={storage.invs}>
-                                              {(inventory) => (
-                                                <div
-                                                  class={cn("bg-teal-500 absolute rounded-sm", {
-                                                    "border-b last:border-b-0":
-                                                      area.bounding_box.width > area.bounding_box.height,
-                                                    "border-r last:border-r-0":
-                                                      area.bounding_box.width < area.bounding_box.height,
-                                                  })}
-                                                  style={
-                                                    inventory.bounding_box
-                                                      ? {
-                                                          top: `${inventory.bounding_box.y}px`,
-                                                          left: `${inventory.bounding_box.x}px`,
-                                                          width: `${inventory.bounding_box.width - 2}px`,
-                                                          height: `${inventory.bounding_box.height - 2}px`,
-                                                        }
-                                                      : {
-                                                          width: "100%",
-                                                          "aspect-ratio": 1,
-                                                        }
-                                                  }
-                                                ></div>
-                                              )}
-                                            </For>
+                                    <div class="w-full h-full relative p-2">
+                                      <For each={area.strs}>
+                                        {(storage) => (
+                                          <div
+                                            class=" border bg-muted rounded drop-shadow-sm z-[2] absolute"
+                                            style={{
+                                              top: `${storage.bounding_box.y}px`,
+                                              left: `${storage.bounding_box.x}px`,
+                                              width: `${storage.bounding_box.width}px`,
+                                              height: `${storage.bounding_box.length}px`,
+                                            }}
+                                            // href={`/warehouse/${wh().id}/fc/${fc().id}/area/${area.id}/storage/${storage.id}`}
+                                          >
+                                            <div class="w-full h-full relative">
+                                              <For each={storage.invs}>
+                                                {(inventory) => (
+                                                  <div
+                                                    class={cn("bg-teal-500 absolute rounded-sm cursor-pointer", {
+                                                      "border-b last:border-b-0":
+                                                        area.bounding_box.width > area.bounding_box.height,
+                                                      "border-r last:border-r-0":
+                                                        area.bounding_box.width < area.bounding_box.height,
+                                                    })}
+                                                    style={
+                                                      inventory.bounding_box
+                                                        ? {
+                                                            top: `${inventory.bounding_box.y}px`,
+                                                            left: `${inventory.bounding_box.x}px`,
+                                                            width: `${inventory.bounding_box.width - 2}px`,
+                                                            height: `${inventory.bounding_box.height - 2}px`,
+                                                          }
+                                                        : {
+                                                            width: "100%",
+                                                            "aspect-ratio": 1,
+                                                          }
+                                                    }
+                                                  ></div>
+                                                )}
+                                              </For>
+                                              <div
+                                                class="absolute w-max h-max flex"
+                                                style={
+                                                  // rotate if storage area is taller than wide
+                                                  storage.bounding_box.width < storage.bounding_box.height
+                                                    ? {
+                                                        transform: `rotate(-90deg)`,
+                                                        right: "-2.5rem",
+                                                        bottom: "1.25rem",
+                                                      }
+                                                    : {
+                                                        bottom: "-1.25rem",
+                                                        left: "0rem",
+                                                      }
+                                                }
+                                              >
+                                                <span class="text-xs text-muted-foreground select-none w-max flex-1 flex">
+                                                  {storage.name}
+                                                </span>
+                                              </div>
+                                            </div>
                                           </div>
-                                        </div>
-                                      )}
-                                    </For>
-                                    <div class="absolute bottom-0.5 right-2 w-content h-content">
-                                      <span class="text-xs text-muted-foreground select-none">{area.name}</span>
-                                    </div>
-                                    <div class="absolute -top-0 -right-10 w-content h-content z-10">
-                                      <div class="flex flex-col gap-2 items-center">
-                                        <Button size="icon" class="size-8">
-                                          <Plus class="size-4" />
-                                        </Button>
-                                        <Show when={area.strs.length > 0}>
-                                          <Button size="icon" class="size-8 border bg-background" variant="outline">
-                                            <Settings class="size-4" />
+                                        )}
+                                      </For>
+                                      <div class="absolute bottom-0.5 right-2 w-content h-content">
+                                        <span class="text-xs text-muted-foreground select-none">{area.name}</span>
+                                      </div>
+                                      <div class="absolute -top-0 -right-10 w-content h-content z-10">
+                                        <div class="flex flex-col gap-2 items-center">
+                                          <Button size="icon" class="size-8">
+                                            <Plus class="size-4" />
                                           </Button>
-                                        </Show>
+                                          <Show when={area.strs.length > 0}>
+                                            <Button size="icon" class="size-8 border bg-background" variant="outline">
+                                              <Settings class="size-4" />
+                                            </Button>
+                                          </Show>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
