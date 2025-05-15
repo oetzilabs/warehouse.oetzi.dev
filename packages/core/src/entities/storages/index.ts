@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, InferInput, object, parse, safeParse } from "valibot";
-import storage_inventories from "../../data/storage_inventories.json";
+import storage_spaces from "../../data/storage_spaces.json";
 import storage_types from "../../data/storage_types.json";
 import storages from "../../data/storages.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
@@ -12,7 +12,7 @@ import {
   StorageTypeCreateSchema,
   StorageTypeUpdateSchema,
   StorageUpdateSchema,
-  TB_storage_inventory,
+  TB_storage_spaces,
   TB_storage_types,
   TB_storages,
 } from "../../drizzle/sql/schema";
@@ -195,8 +195,8 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
           }
         }
 
-        const dbStorageInventories = yield* Effect.promise(() => db.query.TB_storage_inventory.findMany());
-        const existingStorageInventories = dbStorageInventories.map((u) => u.id);
+        const dbStorageSpaces = yield* Effect.promise(() => db.query.TB_storage_spaces.findMany());
+        const existingStorageInventories = dbStorageSpaces.map((u) => u.id);
 
         const storageInventories = parse(
           array(
@@ -205,14 +205,14 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
               id: prefixed_cuid2,
             }),
           ),
-          storage_inventories,
+          storage_spaces,
         );
 
         const toCreateStorageInventories = storageInventories.filter((t) => !existingStorageInventories.includes(t.id));
 
         if (toCreateStorageInventories.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_storage_inventory).values(toCreateStorageInventories).returning());
-          yield* Effect.log("Created storage inventories", toCreateStorageInventories);
+          yield* Effect.promise(() => db.insert(TB_storage_spaces).values(toCreateStorageInventories).returning());
+          yield* Effect.log("Created storage spaces", toCreateStorageInventories);
         }
 
         const toUpdateStorageInventories = storageInventories.filter((t) => existingStorageInventories.includes(t.id));
@@ -220,9 +220,9 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
           for (const storageInventory of toUpdateStorageInventories) {
             yield* Effect.promise(() =>
               db
-                .update(TB_storage_inventory)
+                .update(TB_storage_spaces)
                 .set({ ...storageInventory, updatedAt: new Date() })
-                .where(eq(TB_storage_inventory.id, storageInventory.id))
+                .where(eq(TB_storage_spaces.id, storageInventory.id))
                 .returning(),
             );
           }

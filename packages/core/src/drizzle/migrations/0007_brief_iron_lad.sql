@@ -1,2 +1,0 @@
-ALTER TABLE "warehouse"."document_storage_offers" ADD COLUMN "requires_payment_method" boolean DEFAULT true NOT NULL;--> statement-breakpoint
-ALTER TABLE "warehouse"."payment_methods" DROP COLUMN "requires_payment_method";

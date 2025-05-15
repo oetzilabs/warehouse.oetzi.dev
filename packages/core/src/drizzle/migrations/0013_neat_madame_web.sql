@@ -1,2 +1,0 @@
-ALTER TABLE "warehouse"."warehouse_facilities" ADD COLUMN "ownerId" text NOT NULL;--> statement-breakpoint
-ALTER TABLE "warehouse"."warehouse_facilities" ADD CONSTRAINT "warehouse_facilities_ownerId_users_id_fk" FOREIGN KEY ("ownerId") REFERENCES "warehouse"."users"("id") ON DELETE cascade ON UPDATE no action;

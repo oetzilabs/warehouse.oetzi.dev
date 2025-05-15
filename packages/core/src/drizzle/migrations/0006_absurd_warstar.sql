@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."payment_methods" ADD COLUMN "requires_payment_method" boolean DEFAULT true NOT NULL;

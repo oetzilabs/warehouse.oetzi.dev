@@ -1,14 +1,15 @@
 import { relations } from "drizzle-orm";
-import { boolean, decimal, json, numeric, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, numeric, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
 import { commonTable } from "./entity";
 import { TB_organization_discounts } from "./organizations/organization_discounts";
 import { TB_sales_discounts } from "./sales/sales_discounts";
+import { schema } from "./utils";
 
-export const discount_target = pgEnum("discount_target", ["product", "category", "customer"]);
-export const discount_type = pgEnum("discount_type", ["percentage", "fixed_amount", "buy_x_get_y"]);
+export const discount_target = schema.enum("discount_target", ["product", "category", "customer"]);
+export const discount_type = schema.enum("discount_type", ["percentage", "fixed_amount", "buy_x_get_y"]);
 
 export const TB_discounts_v1 = commonTable(
   "discounts_v1",

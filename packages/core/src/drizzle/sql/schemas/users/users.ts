@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial, string } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -7,10 +7,11 @@ import { commonTable } from "../entity";
 import { TB_organization_users } from "../organizations/organization_users";
 import { TB_payment_history } from "../payments/payment_history";
 import { TB_sessions } from "../sessions";
+import { schema } from "../utils";
 import { TB_user_payment_methods } from "./user_payment_methods";
 import { TB_users_warehouses } from "./users_warehouses";
 
-export const user_status = pgEnum("user_status", ["active", "disabled", "suspended"]);
+export const user_status = schema.enum("user_status", ["active", "disabled", "suspended"]);
 
 export const TB_users = commonTable(
   "users",

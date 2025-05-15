@@ -36,7 +36,7 @@ export * from "./schemas/warehouses/warehouse_areas";
 
 export * from "./schemas/storages/storages";
 export * from "./schemas/storages/storage_types";
-export * from "./schemas/storages/storage_inventory";
+export * from "./schemas/storages/storage_space";
 export * from "./schemas/storages/storage_inventory_to_labels";
 export * from "./schemas/storages/storage_labels";
 

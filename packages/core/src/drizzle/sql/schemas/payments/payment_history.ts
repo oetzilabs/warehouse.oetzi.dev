@@ -1,13 +1,14 @@
 import { relations } from "drizzle-orm";
-import { decimal, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { decimal, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_users } from "../users/users";
+import { schema } from "../utils";
 import { TB_payment_methods } from "./payment_methods";
 
-export const payment_status = pgEnum("payment_status", ["pending", "completed", "failed", "refunded"]);
+export const payment_status = schema.enum("payment_status", ["pending", "completed", "failed", "refunded"]);
 export type PaymentStatus = (typeof payment_status.enumValues)[number];
 
 export const TB_payment_history = commonTable(

@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."storage_inventory" DROP COLUMN "bounding_box";

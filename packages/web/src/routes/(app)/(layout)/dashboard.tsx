@@ -1,3 +1,4 @@
+import FacilityEditor from "@/components/FacilityEditor";
 import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
 import { useUser } from "@/components/providers/User";
 import { StorageDataTable } from "@/components/storage/storage-data-table";
@@ -114,6 +115,8 @@ export default function DashboardPage() {
       height: maxY - minY,
     };
   };
+
+  const [editing, setEditing] = createSignal(false);
 
   return (
     <Switch>
@@ -586,7 +589,7 @@ export default function DashboardPage() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                            <div class="flex flex-col">
+                            <div class="flex flex-col border-b">
                               <div class="flex flex-row gap-4 w-full items-start h-content">
                                 <Suspense fallback={<Skeleton class="w-full h-full" />}>
                                   <Show when={documentStorage()}>
@@ -663,6 +666,25 @@ export default function DashboardPage() {
                                 </Suspense>
                               </div>
                             </div>
+                            <div class="px-2 pb-2 flex flex-row gap-2">
+                              <Button
+                                size="sm"
+                                class="h-8 pl-2 w-full"
+                                onClick={() => {
+                                  const ed = editing();
+                                  if (ed) {
+                                    // TODO: Save facility
+
+                                    setEditing(false);
+                                  } else {
+                                    setEditing(true);
+                                  }
+                                }}
+                              >
+                                <Settings class="size-4" />
+                                {editing() ? "Done Editing" : "Edit Facility"}
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </Show>
@@ -674,140 +696,7 @@ export default function DashboardPage() {
             {/* CENTER THE MAP */}
             <div class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
               <div class="w-content h-content relative">
-                <Show when={user.currentWarehouse()}>
-                  {(wh) => (
-                    <Show when={user.currentFacility()}>
-                      {(fc) => (
-                        <div class="p-2 w-content h-content outline-1 outline-neutral-200 dark:outline-neutral-800 hover:outline-neutral-600 dark:hover:outline-neutral-700 outline-dashed rounded-md ">
-                          <div
-                            class="relative"
-                            style={{
-                              width: `${overallBoundingBox(fc()).width}px`,
-                              height: `${overallBoundingBox(fc()).height}px`,
-                            }}
-                          >
-                            <div class="absolute -bottom-8 -left-2">
-                              <span class="text-xs text-muted-foreground select-none">{fc().name}</span>
-                            </div>
-                            <For each={fc().ars}>
-                              {(area) => (
-                                <div class="flex flex-col gap-2 w-content h-content static ">
-                                  <div
-                                    class={cn(
-                                      "flex gap-2 outline-1 outline-neutral-300 dark:outline-neutral-700 hover:outline-neutral-500 dark:hover:outline-neutral-600 outline-dashed rounded-sm absolute",
-                                      {
-                                        "flex-col": area.bounding_box.width > area.bounding_box.height,
-                                        "flex-row": area.bounding_box.width < area.bounding_box.height,
-                                      },
-                                    )}
-                                    style={{
-                                      top: `${area.bounding_box.y}px`,
-                                      left: `${area.bounding_box.x}px`,
-                                      width: `${area.bounding_box.width}px`,
-                                      height: `${area.bounding_box.height}px`,
-                                    }}
-                                  >
-                                    <div class="w-full h-full relative p-2">
-                                      <For each={area.strs}>
-                                        {(storage) => (
-                                          <div
-                                            class=" border bg-muted rounded drop-shadow-sm z-[2] absolute"
-                                            style={{
-                                              top: `${storage.bounding_box.y}px`,
-                                              left: `${storage.bounding_box.x}px`,
-                                              width: `${storage.bounding_box.width}px`,
-                                              height: `${storage.bounding_box.length}px`,
-                                            }}
-                                            // href={`/warehouse/${wh().id}/fc/${fc().id}/area/${area.id}/storage/${storage.id}`}
-                                          >
-                                            <div class="w-full h-full relative">
-                                              <For each={storage.invs}>
-                                                {(inventory) => (
-                                                  <div
-                                                    class={cn("bg-teal-500 absolute rounded-sm cursor-pointer", {
-                                                      "border-b last:border-b-0":
-                                                        area.bounding_box.width > area.bounding_box.height,
-                                                      "border-r last:border-r-0":
-                                                        area.bounding_box.width < area.bounding_box.height,
-                                                    })}
-                                                    style={
-                                                      inventory.bounding_box
-                                                        ? {
-                                                            top: `${inventory.bounding_box.y}px`,
-                                                            left: `${inventory.bounding_box.x}px`,
-                                                            width: `${inventory.bounding_box.width - 2}px`,
-                                                            height: `${inventory.bounding_box.height - 2}px`,
-                                                          }
-                                                        : {
-                                                            width: "100%",
-                                                            "aspect-ratio": 1,
-                                                          }
-                                                    }
-                                                  ></div>
-                                                )}
-                                              </For>
-                                              <div
-                                                class="absolute w-max h-max flex"
-                                                style={
-                                                  // rotate if storage area is taller than wide
-                                                  storage.bounding_box.width < storage.bounding_box.height
-                                                    ? {
-                                                        transform: `rotate(-90deg)`,
-                                                        right: "-2.5rem",
-                                                        bottom: "1.25rem",
-                                                      }
-                                                    : {
-                                                        bottom: "-1.25rem",
-                                                        left: "0rem",
-                                                      }
-                                                }
-                                              >
-                                                <span class="text-xs text-muted-foreground select-none w-max flex-1 flex">
-                                                  {storage.name}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        )}
-                                      </For>
-                                      <div class="absolute bottom-0.5 right-2 w-content h-content">
-                                        <span class="text-xs text-muted-foreground select-none">{area.name}</span>
-                                      </div>
-                                      <div class="absolute -top-0 -right-10 w-content h-content z-10">
-                                        <div class="flex flex-col gap-2 items-center">
-                                          <Button size="icon" class="size-8">
-                                            <Plus class="size-4" />
-                                          </Button>
-                                          <Show when={area.strs.length > 0}>
-                                            <Button size="icon" class="size-8 border bg-background" variant="outline">
-                                              <Settings class="size-4" />
-                                            </Button>
-                                          </Show>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div class="absolute -top-2 -right-12 w-content h-content z-10">
-                                    <div class="flex flex-col gap-2 items-center">
-                                      <Button size="icon" class="size-8">
-                                        <Plus class="size-4" />
-                                      </Button>
-                                      <Show when={area.strs.length > 0}>
-                                        <Button size="icon" class="size-8 border bg-background" variant="outline">
-                                          <Settings class="size-4" />
-                                        </Button>
-                                      </Show>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </For>
-                          </div>
-                        </div>
-                      )}
-                    </Show>
-                  )}
-                </Show>
+                <Show when={user.currentFacility()}>{(fc) => <FacilityEditor facility={fc} editing={editing} />}</Show>
               </div>
             </div>
           </div>

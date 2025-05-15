@@ -1,14 +1,15 @@
 import { relations } from "drizzle-orm";
-import { pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_products } from "../products";
+import { schema } from "../utils";
 import { TB_supplier_contacts } from "./suppliers_contacts";
 import { TB_supplier_notes } from "./suppliers_notes";
 
-export const supplier_status = pgEnum("supplier_status", ["active", "inactive", "under_review", "blacklisted"]);
+export const supplier_status = schema.enum("supplier_status", ["active", "inactive", "under_review", "blacklisted"]);
 
 export const TB_suppliers = commonTable(
   "suppliers",

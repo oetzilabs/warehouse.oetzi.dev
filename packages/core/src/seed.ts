@@ -13,11 +13,11 @@ const program = Effect.gen(function* (_) {
   const userService = yield* _(UserService);
   const paymentMethodsService = yield* _(PaymentMethodService);
   const storageService = yield* _(StorageService);
-  const storages = yield* storageService.seed();
   const warehouseTypes = yield* warehouseTypeService.seed();
   const documentStorageOffers = yield* documentStorageOfferService.seed();
   const paymentMethods = yield* paymentMethodsService.seed();
   const users = yield* userService.seed();
+  const storages = yield* storageService.seed();
 }).pipe(
   Effect.provide(StorageLive),
   Effect.provide(WarehouseTypeLive),

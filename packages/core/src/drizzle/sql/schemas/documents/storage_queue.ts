@@ -1,13 +1,14 @@
 import { relations } from "drizzle-orm";
-import { numeric, pgEnum, text, varchar } from "drizzle-orm/pg-core";
+import { varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
+import { schema } from "../utils";
 import { TB_documents } from "./documents";
 import { TB_document_storages } from "./storages";
 
-export const document_storage_queue_status = pgEnum("document_storage_queue_status", [
+export const document_storage_queue_status = schema.enum("document_storage_queue_status", [
   "pending",
   "processing",
   "done",

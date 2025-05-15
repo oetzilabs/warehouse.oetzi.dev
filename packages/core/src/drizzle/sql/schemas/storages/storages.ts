@@ -5,9 +5,11 @@ import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_warehouse_areas } from "../../schema";
 import { commonTable } from "../entity";
-import { TB_warehouses } from "../warehouses/warehouses";
-import { TB_storage_inventory } from "./storage_inventory";
+import { schema } from "../utils";
+import { TB_storage_spaces } from "./storage_space";
 import { TB_storage_types } from "./storage_types";
+
+export const storage_variant = schema.enum("storage_variant", ["horizontal", "vertical"]);
 
 export const TB_storages = commonTable(
   "storages",
@@ -22,6 +24,7 @@ export const TB_storages = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     capacity: integer("capacity").notNull(),
+    variant: storage_variant("variant").notNull().default("horizontal"),
     currentOccupancy: integer("current_occupancy").default(0),
     bounding_box: json("bounding_box").notNull().$type<{
       x: number;
@@ -46,7 +49,7 @@ export const storage_relations = relations(TB_storages, ({ one, many }) => ({
     fields: [TB_storages.typeId],
     references: [TB_storage_types.id],
   }),
-  invs: many(TB_storage_inventory),
+  invs: many(TB_storage_spaces),
 }));
 
 export type StorageSelect = typeof TB_storages.$inferSelect;
