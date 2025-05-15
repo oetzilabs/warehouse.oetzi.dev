@@ -316,25 +316,6 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return entries.map((entry) => entry.warehouse);
       });
 
-    const addArea = (data: InferInput<typeof WarehouseAreaCreateSchema>, warehouseId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, warehouseId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
-        }
-        const wh = yield* Effect.promise(() =>
-          db.query.TB_warehouses.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-          }),
-        );
-        if (!wh) {
-          return yield* Effect.fail(new WarehouseNotFound({ id: warehouseId }));
-        }
-        const [area] = yield* Effect.promise(() => db.insert(TB_warehouse_areas).values(data).returning());
-
-        return area;
-      });
-
     const findAreaById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
@@ -350,33 +331,6 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           return yield* Effect.fail(new WarehouseNotFound({ id }));
         }
         return area;
-      });
-
-    const updateArea = (data: InferInput<typeof WarehouseAreaUpdateSchema>, areaId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, areaId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: areaId }));
-        }
-        const area = yield* Effect.promise(() =>
-          db.query.TB_warehouse_areas.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-          }),
-        );
-        if (!area) {
-          return yield* Effect.fail(new WarehouseNotFound({ id: areaId }));
-        }
-        const [updatedArea] = yield* Effect.promise(() =>
-          db
-            .update(TB_warehouse_areas)
-            .set({ ...data, updatedAt: new Date() })
-            .where(eq(TB_warehouse_areas.id, area.id))
-            .returning(),
-        );
-        if (!updatedArea) {
-          return yield* Effect.fail(new WarehouseNotUpdated({ id: areaId }));
-        }
-        return updatedArea;
       });
 
     const seed = () =>
@@ -494,10 +448,8 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       safeRemove,
       findByOrganizationId,
       all,
-      addArea,
       findByUserId,
       findAreaById,
-      updateArea,
       seed,
     } as const;
   }),

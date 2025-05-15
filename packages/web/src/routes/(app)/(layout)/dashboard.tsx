@@ -693,12 +693,7 @@ export default function DashboardPage() {
                 </Show>
               </div>
             </div>
-            {/* CENTER THE MAP */}
-            <div class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-              <div class="w-content h-content relative">
-                <Show when={user.currentFacility()}>{(fc) => <FacilityEditor facility={fc} editing={editing} />}</Show>
-              </div>
-            </div>
+            <Show when={user.currentFacility()}>{(fc) => <FacilityEditor facility={fc} editing={editing} />}</Show>
           </div>
         </div>
       </Match>

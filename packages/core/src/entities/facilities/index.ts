@@ -2,9 +2,17 @@ import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { FacilityCreateSchema, FacilityUpdateSchema, TB_warehouse_facilities } from "../../drizzle/sql/schema";
+import {
+  FacilityCreateSchema,
+  FacilityUpdateSchema,
+  TB_warehouse_areas,
+  TB_warehouse_facilities,
+  WarehouseAreaCreateSchema,
+  WarehouseAreaUpdateSchema,
+} from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { UserInvalidId } from "../users/errors";
+import { WarehouseInvalidId, WarehouseNotFound, WarehouseNotUpdated } from "../warehouses/errors";
 import {
   FacilityInvalidId,
   FacilityNotCreated,

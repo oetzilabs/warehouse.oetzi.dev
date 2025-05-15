@@ -7,8 +7,44 @@
     "bounding_box": {
       "x": 0,
       "y": 0,
+      "width": 500,
+      "height": 500
+    }
+  },
+  {
+    "id": "wha_cmf2azo4p1yncbfex3hptmrn",
+    "warehouse_facility_id": "whfc_bx0og3lksiey55n025ghhujp",
+    "name": "area 2",
+    "description": "this is area 2",
+    "bounding_box": {
+      "x": 600,
+      "y": 0,
       "width": 1000,
       "height": 500
+    }
+  },
+  {
+    "id": "wha_su1f0i9pchxzmhj6l6w1oygj",
+    "warehouse_facility_id": "whfc_bx0og3lksiey55n025ghhujp",
+    "name": "area 3",
+    "description": "this is area 3",
+    "bounding_box": {
+      "x": 0,
+      "y": 600,
+      "width": 700,
+      "height": 200
+    }
+  },
+  {
+    "id": "wha_zkqog49tju6gtawcyy5v1uqp",
+    "warehouse_facility_id": "whfc_bx0og3lksiey55n025ghhujp",
+    "name": "area 4",
+    "description": "this is area 4 - testing the maps zoom abilities",
+    "bounding_box": {
+      "x": 800,
+      "y": 600,
+      "width": 200,
+      "height": 200
     }
   }
 ]
