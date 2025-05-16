@@ -55,7 +55,7 @@ export default function App() {
       <Router
         root={(props) => (
           <MetaProvider>
-            <Title>WareHouse. Portal</Title>
+            <Title>warehouse.</Title>
             <Suspense
               fallback={
                 <div class="w-full h-screen items-center justify-center flex flex-col">

@@ -62,7 +62,7 @@ export const TranslationsProvider = (props: { children: JSXElement }) => {
           const l = language();
           let theT = translations[l][key];
           const k = Object.entries(replacer ?? {});
-          theT = theT.replaceAll("{props.app_name}", "WareHouse Portal");
+          theT = theT.replaceAll("{props.app_name}", "warehouse");
           for (let i = 0; i < k.length; i++) {
             const kkv = k[i];
             const kk = kkv[0];

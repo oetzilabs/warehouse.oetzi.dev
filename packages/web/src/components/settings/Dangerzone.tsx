@@ -36,8 +36,8 @@ export const Dangerzone = () => {
               <div class="flex flex-col gap-4 py-1">
                 <span class="text-red-500 dark:text-white text-sm">We understand. </span>
                 <span class="text-red-500 dark:text-white text-sm">
-                  You can disable your account and come back later if you change your mind. We appreciate you giving Zom
-                  Portal a try.
+                  You can disable your account and come back later if you change your mind. We appreciate you giving
+                  warehouse. a try.
                 </span>
               </div>
             </div>
