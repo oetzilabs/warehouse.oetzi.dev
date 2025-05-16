@@ -390,7 +390,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                             {(inventory) => (
                               <div
                                 class={cn(
-                                  "hover:bg-blue-200 dark:hover:bg-blue-600 active:bg-blue-300 dark:active:bg-blue-500 group/inv relative cursor-pointer",
+                                  "hover:bg-indigo-200 dark:hover:bg-indigo-600 active:bg-indigo-300 dark:active:bg-indigo-500 group/inv relative cursor-pointer",
                                   {
                                     "border-neutral-400 dark:border-neutral-500 border-r last:border-r-0":
                                       storage.variant === "vertical",

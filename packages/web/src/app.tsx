@@ -16,6 +16,7 @@ import { isServer } from "solid-js/web";
 import "./app.css";
 import { UserProvider } from "./components/providers/User";
 import { AppLayout } from "./layout";
+import "@fontsource/pacifico";
 
 export default function App() {
   // const queryClient = new QueryClient({

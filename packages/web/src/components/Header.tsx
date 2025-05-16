@@ -27,9 +27,9 @@ export function Header() {
           <div class="flex flex-row items-center justify-start w-max gap-4 ">
             <A
               href="/"
-              class="flex flex-row gap-4 items-center justify-center flex-1 w-max font-bold bg-black text-white dark:bg-white dark:text-black rounded-sm px-2 py-1"
+              class="flex flex-row gap-4 items-center justify-center flex-1 w-max font-[Pacifico] px-2 text-lg text-indigo-600 dark:text-indigo-500"
             >
-              WareHouse.
+              warehouse.
             </A>
             <div class="flex flex-row gap-4 items-center justify-start">
               {/* <Breadcrumb>

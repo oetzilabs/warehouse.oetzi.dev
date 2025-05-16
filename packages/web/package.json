@@ -29,6 +29,7 @@
     "@corvu/drawer": "0.2.4",
     "@corvu/otp-field": "0.1.4",
     "@corvu/resizable": "0.2.5",
+    "@fontsource/pacifico": "^5.2.5",
     "@iconify-json/lucide": "1.2.42",
     "@iconify/icons-lucide": "1.2.135",
     "@iconify/tailwind": "1.2.0",

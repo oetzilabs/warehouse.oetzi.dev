@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getAuthenticatedUser, logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { A, revalidate, useAction, useSubmission } from "@solidjs/router";
@@ -32,19 +33,16 @@ export default function UserMenu() {
       <Switch
         fallback={
           <div class="flex flex-row gap-2 items-center justify-end w-full">
-            <A
-              href="/login"
-              class={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "flex flex-row gap-2 items-center justify-end w-full ",
-              )}
-            >
+            <Button as={A} href="/login" variant="outline" size="sm" class="h-8">
               <LogIn class="size-4" />
               Login
-            </A>
+            </Button>
           </div>
         }
       >
+        <Match when={!user.ready()}>
+          <Skeleton class="w-24 h-8" />
+        </Match>
         <Match when={user.ready() && user.user() !== null && user.session() !== null && user.user()}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>

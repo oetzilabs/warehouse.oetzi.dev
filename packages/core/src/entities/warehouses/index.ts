@@ -25,6 +25,7 @@ import {
   WarehouseUpdateSchema,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { FacilityNotFound } from "../facilities/errors";
 import {
   WarehouseInvalidId,
   WarehouseNotCreated,
@@ -440,6 +441,43 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return whs;
       });
 
+    const findLastCreatedFacility = (warehouseId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, warehouseId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        }
+
+        const f = yield* Effect.promise(() =>
+          db.query.TB_warehouse_facilities.findFirst({
+            where: (fields, operations) => operations.eq(fields.ownerId, parsedId.output),
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+            with: {
+              ars: {
+                with: {
+                  strs: {
+                    with: {
+                      type: true,
+                      area: true,
+                      invs: {
+                        with: {
+                          labels: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        if (!f) {
+          return yield* Effect.fail(new FacilityNotFound({ id: parsedId.output }));
+        }
+
+        return f;
+      });
+
     return {
       create,
       findById,
@@ -451,6 +489,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       findByUserId,
       findAreaById,
       seed,
+      findLastCreatedFacility,
     } as const;
   }),
   dependencies: [DatabaseLive],

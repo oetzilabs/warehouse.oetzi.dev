@@ -17,6 +17,13 @@ export const logout = action(async () => {
     );
   }
 
+  setCookie("session_token", "", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(),
+  });
+
   return redirect("/", {
     revalidate: [getAuthenticatedUser.key],
   });

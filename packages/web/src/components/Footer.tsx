@@ -141,7 +141,11 @@ export function Footer() {
             <div class="flex justify-between items-end">
               <div class="flex flex-col gap-2 items-start">
                 <div class="flex flex-row gap-2 items-center">
-                  <A class="flex-none text-lg font-bold dark:text-white" href="/" aria-label="Brand">
+                  <A
+                    class="flex-none text-lg text-indigo-600 dark:text-indigo-500 font-[Pacifico]"
+                    href="/"
+                    aria-label="Brand"
+                  >
                     WareHouse.
                   </A>
                   <div class="flex flex-col gap-1">
