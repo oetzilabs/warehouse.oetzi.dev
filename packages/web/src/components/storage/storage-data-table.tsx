@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
+import { changeFacility } from "@/lib/api/facilities";
+import { useAction, useSubmission } from "@solidjs/router";
 import {
   createSolidTable,
   flexRender,
@@ -85,6 +87,9 @@ export function StorageDataTable({ data }: { data: StorageInfo[] }) {
   const [columnVisibility, setColumnVisibility] = createSignal<VisibilityState>({});
   const [rowSelection, setRowSelection] = createSignal({});
 
+  const changeFacilityAction = useAction(changeFacility);
+  const isChangingFacility = useSubmission(changeFacility);
+
   const table = createSolidTable({
     data,
     columns,
@@ -113,13 +118,14 @@ export function StorageDataTable({ data }: { data: StorageInfo[] }) {
   });
 
   return (
-    <div class="w-full">
-      <div class="flex items-center py-4">
+    <div class="w-full flex flex-col gap-4">
+      <div class="flex items-center gap-4">
         <TextField
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(value) => table.getColumn("email")?.setFilterValue(value)}
+          value={(table.getColumn("items")?.getFilterValue() as string) ?? ""}
+          onChange={(value) => table.getColumn("items")?.setFilterValue(value)}
+          class="w-full"
         >
-          <TextFieldInput placeholder="Filter emails..." class="max-w-sm" />
+          <TextFieldInput placeholder="Filter spaces..." class="max-w-full" />
         </TextField>
         <DropdownMenu placement="bottom-end">
           <DropdownMenuTrigger as={Button<"button">} variant="outline" class="ml-auto">
@@ -176,7 +182,7 @@ export function StorageDataTable({ data }: { data: StorageInfo[] }) {
           </TableBody>
         </Table>
       </div>
-      <div class="flex items-center justify-end space-x-2 py-4">
+      <div class="flex items-center justify-end space-x-2">
         <div class="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
           selected.

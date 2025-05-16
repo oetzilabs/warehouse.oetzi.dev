@@ -14,8 +14,10 @@ import ChevronDown from "lucide-solid/icons/chevron-down";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MinimizeIcon from "lucide-solid/icons/minimize";
 import Move from "lucide-solid/icons/move";
+import EditPenIcon from "lucide-solid/icons/pencil";
 import Plus from "lucide-solid/icons/plus";
 import RotateCcw from "lucide-solid/icons/rotate-ccw";
+import SaveIcon from "lucide-solid/icons/save";
 import Trash2 from "lucide-solid/icons/trash-2";
 import { Accessor, createEffect, createSignal, For, mergeProps, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -109,10 +111,11 @@ interface EditorState {
   resizingArea: string | null;
 }
 
-const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Accessor<boolean> }) => {
+const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
   const padding = 20;
   const initialCenter = calculateCombinedBoundingBox(props.facility());
   let mapRef: HTMLDivElement | undefined;
+  const [editing, setEditing] = createSignal(false);
 
   onMount(() => {
     if (isServer) return;
@@ -245,10 +248,49 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Acce
 
   return (
     <div class="w-full h-full relative" ref={mapRef!}>
-      <Button variant="outline" class="absolute top-4 right-4 px-3 z-50 h-8 bg-background" onClick={resetView}>
-        Reset View
-        <RotateCcw class="size-4" />
-      </Button>
+      <div class="absolute top-4 right-4 px-3 z-50 h-8 bg-background flex flex-row items-center gap-2 justify-end select-none">
+        <Button
+          class="px-3 h-8"
+          onClick={() => {
+            const ed = editing();
+            if (ed) {
+              // TODO: Save facility
+              toast.promise(
+                new Promise<void>((resolve, reject) => {
+                  setTimeout(() => {
+                    resolve();
+                  }, 1000);
+                }),
+                {
+                  loading: "Saving facility...",
+                  success: "Facility saved",
+                  error: "Failed to save facility",
+                },
+              );
+              setEditing(false);
+            } else {
+              setEditing(true);
+            }
+          }}
+        >
+          <Show
+            when={editing()}
+            fallback={
+              <>
+                <span>Edit</span>
+                <EditPenIcon class="size-4" />
+              </>
+            }
+          >
+            <span>Save</span>
+            <SaveIcon class="size-4" />
+          </Show>
+        </Button>
+        <Button variant="outline" class="px-3 h-8   bg-background" onClick={resetView}>
+          Reset View
+          <RotateCcw class="size-4" />
+        </Button>
+      </div>
       <Show
         when={state.ready}
         fallback={
@@ -278,7 +320,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Acce
                     height: `${area.bounding_box.height + 2 * padding}px`,
                   }}
                 >
-                  <Show when={props.editing()}>
+                  <Show when={editing()}>
                     <div class="absolute -top-14 right-0 flex gap-2 items-center z-50">
                       <DropdownMenu>
                         <DropdownMenuTrigger as={Button} size="sm" class="h-8">
@@ -298,7 +340,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Acce
                       </DropdownMenu>
                     </div>
                   </Show>
-                  <Show when={props.editing()}>
+                  <Show when={editing()}>
                     <div class="absolute -top-6 left-0 flex gap-2 items-center">
                       <span class="text-xs text-muted-foreground">{area.name}</span>
                       <span class="text-xs text-muted-foreground">
@@ -306,7 +348,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Acce
                       </span>
                     </div>
                   </Show>
-                  <Show when={props.editing()}>
+                  <Show when={editing()}>
                     <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <Ruler orientation="horizontal" length={area.bounding_box.width} offset={-20} padding={padding} />
                       <Ruler orientation="vertical" length={area.bounding_box.height} offset={-20} padding={padding} />
@@ -330,7 +372,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Acce
                             height: `${storage.bounding_box.length ?? storage.bounding_box.height}px`,
                           }}
                         >
-                          <Show when={props.editing()}>
+                          <Show when={editing()}>
                             <div class="absolute -top-6 left-0">
                               <span class="text-xs text-muted-foreground">{storage.name}</span>
                             </div>
@@ -368,7 +410,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo>; editing: Acce
                                       }
                                 }
                               >
-                                <Show when={props.editing()}>
+                                <Show when={editing()}>
                                   <Button
                                     size="icon"
                                     variant="destructive"
