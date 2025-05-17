@@ -146,7 +146,7 @@ export function Footer() {
                     href="/"
                     aria-label="Brand"
                   >
-                    WareHouse.
+                    warehouse.
                   </A>
                   <div class="flex flex-col gap-1">
                     <p class="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">© 2025 Ötzilabs.</p>

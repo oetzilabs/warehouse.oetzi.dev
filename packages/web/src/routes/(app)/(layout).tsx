@@ -66,7 +66,8 @@ const AppSidebar = () => {
 
   const changeFacilityAction = useAction(changeFacility);
   const isChangingFacility = useSubmission(changeFacility);
-
+  const location = useLocation();
+  const relativePath = useResolvedPath(() => location.pathname);
   return (
     <Sidebar>
       {/* <SidebarHeader></SidebarHeader> */}
@@ -97,6 +98,7 @@ const AppSidebar = () => {
                                 toast.info("You are already on this warehouse");
                                 return;
                               }
+                              if (isChangingWarehouse.pending) return;
                               toast.promise(changeWarehouseAction(wh.id), {
                                 loading: "Changing facility...",
                                 success: "Facility changed",
@@ -122,6 +124,7 @@ const AppSidebar = () => {
                                         toast.info("You are already on this facility");
                                         return;
                                       }
+                                      if (isChangingFacility.pending) return;
                                       toast.promise(changeFacilityAction(wh.id, fc.id), {
                                         loading: "Changing facility...",
                                         success: "Facility changed",
@@ -175,7 +178,7 @@ const AppSidebar = () => {
                       <Package2 class="size-4" />
                       Inventory
                       <SidebarMenuBadge class="mr-1">
-                        <div class="size-1 rounded-full outline outline-1 outline-indigo-600 bg-indigo-600 dark:outline-indigo-400 dark:bg-indigo-400 outline-offset-2 animate-ping"></div>
+                        <div class="size-1 rounded-full bg-current"></div>
                       </SidebarMenuBadge>
                     </Link>
                   </SidebarMenuItem>
@@ -183,8 +186,15 @@ const AppSidebar = () => {
                     <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`}>
                       <MapIcon class="size-4" />
                       Map
-                      <SidebarMenuBadge class="mr-1">
-                        <div class="size-1 rounded-full bg-neutral-400"></div>
+                      <SidebarMenuBadge
+                        class={cn("mr-1", {
+                          "text-indigo-600 dark:text-indigo-300":
+                            relativePath() !== `/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`,
+                          "text-white":
+                            relativePath() === `/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`,
+                        })}
+                      >
+                        <div class="size-1 rounded-full outline outline-1 outline-current bg-current outline-offset-2 animate-ping"></div>
                       </SidebarMenuBadge>
                     </Link>
                   </SidebarMenuItem>
@@ -232,25 +242,11 @@ const AppSidebar = () => {
                   <SidebarMenuBadge class="mr-1">1452</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/invoices`} disabled>
-                  <ReceiptText class="size-4" />
-                  Invoices
-                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/documents`} disabled>
-                  <Notebook class="size-4" />
-                  Documents
-                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
-                </Link>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>People</SidebarGroupLabel>
+          <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -265,6 +261,13 @@ const AppSidebar = () => {
                   <UsersRound class="size-4" />
                   Customers
                   <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/documents`}>
+                  <Notebook class="size-4" />
+                  Documents
+                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>

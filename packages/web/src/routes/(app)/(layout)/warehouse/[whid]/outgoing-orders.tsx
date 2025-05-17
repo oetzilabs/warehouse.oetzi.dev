@@ -90,7 +90,7 @@ export default function MapPage() {
                   fallback={
                     <div class="flex flex-col gap-2 w-full h-full items-center justify-center bg-muted-foreground/5 ">
                       <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground">
-                        <span class="text-sm">No sales data available</span>
+                        <span class="text-sm">No outgoing-orders data available</span>
                       </div>
                     </div>
                   }

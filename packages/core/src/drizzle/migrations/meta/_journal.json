@@ -78,6 +78,13 @@
       "when": 1747485372629,
       "tag": "0010_blue_triton",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1747492785326,
+      "tag": "0011_sticky_captain_america",
+      "breakpoints": true
     }
   ]
 }
