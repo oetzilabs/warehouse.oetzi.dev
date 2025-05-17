@@ -70,7 +70,6 @@ const AppSidebar = () => {
   const relativePath = useResolvedPath(() => location.pathname);
   return (
     <Sidebar>
-      {/* <SidebarHeader></SidebarHeader> */}
       <SidebarContent class="gap-0">
         <SidebarGroup>
           <div class="w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
@@ -274,21 +273,17 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
-      <SidebarRail />
     </Sidebar>
   );
 };
 
 export default function DashboardLayout(props: { children: JSXElement }) {
   return (
-    <div class="w-full flex flex-col gap-0 grow">
-      <div class="w-full flex flex-col grow">
-        <SidebarProvider>
-          <AppSidebar />
-          {props.children}
-        </SidebarProvider>
-      </div>
+    <div class="w-full flex flex-col gap-0 h-full">
+      <SidebarProvider>
+        <AppSidebar />
+        <div class="w-full h-full flex flex-col overflow-auto">{props.children}</div>
+      </SidebarProvider>
     </div>
   );
 }

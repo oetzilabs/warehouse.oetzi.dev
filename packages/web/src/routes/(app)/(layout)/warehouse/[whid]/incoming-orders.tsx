@@ -102,7 +102,7 @@ export default function MapPage() {
               </div>
               <OrdersDataTable data={() => os().map((o) => o.order)} onSelectedOrder={setSelectedOrder} />
             </div>
-            <div class="w-full max-w-lg border-l flex flex-col grow">
+            <div class="w-full lg:max-w-lg border-l lg:flex hidden flex-col grow">
               <For
                 each={selectedOrder()?.products}
                 fallback={

@@ -247,49 +247,51 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
   });
 
   return (
-    <div class="w-full h-full relative" ref={mapRef!}>
-      <div class="absolute top-4 right-4 px-3 z-50 h-8 bg-background flex flex-row items-center gap-2 justify-end select-none">
-        <Button
-          class="px-3 h-8"
-          onClick={() => {
-            const ed = editing();
-            if (ed) {
-              // TODO: Save facility
-              toast.promise(
-                new Promise<void>((resolve, reject) => {
-                  setTimeout(() => {
-                    resolve();
-                  }, 1000);
-                }),
-                {
-                  loading: "Saving facility...",
-                  success: "Facility saved",
-                  error: "Failed to save facility",
-                },
-              );
-              setEditing(false);
-            } else {
-              setEditing(true);
-            }
-          }}
-        >
-          <Show
-            when={editing()}
-            fallback={
-              <>
-                <span>Edit</span>
-                <EditPenIcon class="size-4" />
-              </>
-            }
+    <div class="flex flex-col w-full grow relative" ref={mapRef!}>
+      <div class="absolute top-0 z-50 bg-background border-b flex flex-row items-center gap-2 justify-end select-none w-full h-max">
+        <div class="flex flex-row items-center gap-2 p-2">
+          <Button
+            class="px-3 h-8"
+            onClick={() => {
+              const ed = editing();
+              if (ed) {
+                // TODO: Save facility
+                toast.promise(
+                  new Promise<void>((resolve, reject) => {
+                    setTimeout(() => {
+                      resolve();
+                    }, 1000);
+                  }),
+                  {
+                    loading: "Saving facility...",
+                    success: "Facility saved",
+                    error: "Failed to save facility",
+                  },
+                );
+                setEditing(false);
+              } else {
+                setEditing(true);
+              }
+            }}
           >
-            <span>Save</span>
-            <SaveIcon class="size-4" />
-          </Show>
-        </Button>
-        <Button variant="outline" class="px-3 h-8   bg-background" onClick={resetView}>
-          Reset View
-          <RotateCcw class="size-4" />
-        </Button>
+            <Show
+              when={editing()}
+              fallback={
+                <>
+                  <span>Edit</span>
+                  <EditPenIcon class="size-4" />
+                </>
+              }
+            >
+              <span>Save</span>
+              <SaveIcon class="size-4" />
+            </Show>
+          </Button>
+          <Button variant="outline" class="px-3 h-8   bg-background" onClick={resetView}>
+            Reset View
+            <RotateCcw class="size-4" />
+          </Button>
+        </div>
       </div>
       <Show
         when={state.ready}

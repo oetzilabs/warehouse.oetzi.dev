@@ -4,7 +4,6 @@ import { getAuthenticatedUser } from "@/lib/api/auth";
 import { createMediaQuery } from "@kobalte/utils";
 import { A, createAsync, RouteDefinition } from "@solidjs/router";
 import { Show } from "solid-js";
-import { useBreadcrumbs } from "../components/providers/Breadcrumbs";
 
 export const route = {
   preload: async (props) => {
@@ -17,8 +16,6 @@ export default function IndexPage() {
   const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
   const isMobile = createMediaQuery("(max-width: 640px)", true);
 
-  const { reset } = useBreadcrumbs();
-  reset();
   return (
     <>
       <div class="flex grow w-full">
@@ -34,8 +31,8 @@ export default function IndexPage() {
               <div class="w-full flex flex-col gap-8 items-center justify-center">
                 <div class="flex flex-col gap-4 items-center justify-center w-full">
                   <div class="flex flex-row gap-0.5 select-none items-baseline">
-                    <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-4xl leading-none tracking-tight">
-                      Welcome to
+                    <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-3xl leading-none tracking-tight">
+                      Supercharge your
                     </h1>
                     <span class="px-2 py-0.5 rounded font-[Pacifico] text-2xl md:text-4xl leading-none text-indigo-600 dark:text-indigo-500">
                       warehouse.

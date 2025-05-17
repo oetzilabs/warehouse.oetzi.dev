@@ -140,7 +140,7 @@ const SidebarProvider: Component<SidebarProviderProps> = (rawProps) => {
           ...local.style,
         }}
         class={cn(
-          "group/sidebar-wrapper flex min-h-full w-full text-sidebar-foreground has-[[data-variant=inset]]:bg-sidebar",
+          "group/sidebar-wrapper flex min-h-full grow w-full text-sidebar-foreground has-[[data-variant=inset]]:bg-sidebar",
           local.class,
         )}
         {...others}
@@ -197,14 +197,14 @@ const Sidebar: Component<SidebarProps> = (rawProps) => {
       </Match>
       <Match when={!isMobile()}>
         <div
-          class="group peer hidden md:block"
+          class="group peer hidden md:block relative grow"
           data-state={state()}
           data-collapsible={state() === "collapsed" ? local.collapsible : ""}
           data-variant={local.variant}
           data-side={local.side}
         >
           {/* This is what handles the sidebar gap on desktop */}
-          {/* <div
+          <div
             class={cn(
               "relative h-svh w-[--sidebar-width] bg-transparent transition-[width] duration-200 ease-linear",
               "group-data-[collapsible=offcanvas]:w-0",
@@ -213,10 +213,11 @@ const Sidebar: Component<SidebarProps> = (rawProps) => {
                 ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
                 : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
             )}
-          /> */}
+          />
+
           <div
             class={cn(
-              "hidden h-full w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex",
+              "absolute inset-y-0 z-10 bg-background hidden h-full w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex",
               local.side === "left"
                 ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
                 : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
