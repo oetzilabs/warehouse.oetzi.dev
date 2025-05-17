@@ -4,6 +4,7 @@ import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { ProductCreateSchema, ProductUpdateSchema, TB_products } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { WarehouseInvalidId } from "../warehouses/errors";
 import { ProductInvalidId, ProductNotCreated, ProductNotDeleted, ProductNotFound, ProductNotUpdated } from "./errors";
 
 export class ProductService extends Effect.Service<ProductService>()("@warehouse/products", {
@@ -20,6 +21,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
               customer: true,
             },
           },
+        },
+      },
+      orders: {
+        with: {
+          order: true,
         },
       },
     });
@@ -44,7 +50,22 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         const product = yield* Effect.promise(() =>
           db.query.TB_products.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: rels,
+            with: {
+              saleItems: {
+                with: {
+                  sale: {
+                    with: {
+                      customer: true,
+                    },
+                  },
+                },
+              },
+              orders: {
+                with: {
+                  order: true,
+                },
+              },
+            },
           }),
         );
 
@@ -105,9 +126,45 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return deleted;
       });
 
-    return { create, findById, update, remove, safeRemove } as const;
+    const findByWarehouseId = (warehouseId: string) =>
+      Effect.gen(function* (_) {
+        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
+        if (!parsedWarehouseId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_warehouse_products.findMany({
+            where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
+            with: {
+              product: {
+                with: {
+                  saleItems: {
+                    with: {
+                      sale: {
+                        with: {
+                          customer: true,
+                        },
+                      },
+                    },
+                  },
+                  orders: {
+                    with: {
+                      order: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+      });
+
+    return { create, findById, update, remove, safeRemove, findByWarehouseId } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}
 
 export const ProductLive = ProductService.Default;
+
+// Type exports
+export type ProductInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<ProductService["findById"]>>>>;

@@ -22,6 +22,62 @@
       "when": 1747309367425,
       "tag": "0002_sharp_vengeance",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747473492255,
+      "tag": "0003_lowly_puppet_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1747474189538,
+      "tag": "0004_outgoing_scrambler",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1747474442374,
+      "tag": "0005_shallow_boomer",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1747476177316,
+      "tag": "0006_peaceful_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1747476419044,
+      "tag": "0007_worthless_ezekiel_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1747476963513,
+      "tag": "0008_clammy_the_hood",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1747479885275,
+      "tag": "0009_friendly_warpath",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1747485372629,
+      "tag": "0010_blue_triton",
+      "breakpoints": true
     }
   ]
 }

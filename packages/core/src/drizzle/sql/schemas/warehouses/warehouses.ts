@@ -9,6 +9,7 @@ import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouse_facilities } from "./warehouse_facility";
+import { TB_warehouse_orders } from "./warehouse_orders";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
 
@@ -40,6 +41,7 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
   addresses: many(TB_warehouse_addresses),
   fcs: many(TB_warehouse_facilities),
   sessions: many(TB_sessions),
+  orders: many(TB_warehouse_orders),
 }));
 
 export type WarehouseSelect = typeof TB_warehouses.$inferSelect;

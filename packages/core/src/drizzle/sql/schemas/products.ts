@@ -3,9 +3,11 @@ import { boolean, decimal, integer, json, text, timestamp } from "drizzle-orm/pg
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
+import { TB_order_products } from "../schema";
 import { commonTable } from "./entity";
 import { TB_sale_items } from "./sales/sales_items";
 import { schema } from "./utils";
+import { TB_warehouse_products } from "./warehouses/warehouse_products";
 
 export const product_status = schema.enum("product_status", [
   "active",
@@ -99,6 +101,8 @@ export const TB_products = commonTable(
 
 export const product_relations = relations(TB_products, ({ many }) => ({
   saleItems: many(TB_sale_items),
+  orders: many(TB_order_products),
+  warehouses: many(TB_warehouse_products),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

@@ -2,10 +2,11 @@ import { relations } from "drizzle-orm";
 import { text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
-import { commonTable } from "./entity";
-import { TB_sales } from "./sales/sales";
-import { schema } from "./utils";
+import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { commonTable } from "../entity";
+import { TB_orders } from "../orders/orders";
+import { TB_sales } from "../sales/sales";
+import { schema } from "../utils";
 
 export const customer_status = schema.enum("customer_status", ["active", "inactive", "blocked"]);
 
@@ -26,6 +27,7 @@ export const TB_customers = commonTable(
 
 export const customer_relations = relations(TB_customers, ({ many, one }) => ({
   sales: many(TB_sales),
+  orders: many(TB_orders),
 }));
 
 export type CustomerSelect = typeof TB_customers.$inferSelect;

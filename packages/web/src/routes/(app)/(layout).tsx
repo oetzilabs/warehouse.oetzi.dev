@@ -1,16 +1,19 @@
 import { useUser } from "@/components/providers/User";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
@@ -18,11 +21,17 @@ import { changeFacility } from "@/lib/api/facilities";
 import { changeWarehouse } from "@/lib/api/warehouses";
 import { cn } from "@/lib/utils";
 import { A, useAction, useLocation, useResolvedPath, useSubmission } from "@solidjs/router";
-import { OrganizationInfo } from "@warehouseoetzidev/core/src/entities/organizations";
-import Home from "lucide-solid/icons/home";
+import BadgeEuro from "lucide-solid/icons/badge-euro";
+import Cpu from "lucide-solid/icons/cpu";
+import Forklift from "lucide-solid/icons/forklift";
 import MapIcon from "lucide-solid/icons/map";
+import Package2 from "lucide-solid/icons/package-2";
+import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
+import ReceiptText from "lucide-solid/icons/receipt-text";
 import Search from "lucide-solid/icons/search";
+import Tags from "lucide-solid/icons/tags";
+import UsersRound from "lucide-solid/icons/users-round";
 import Warehouse from "lucide-solid/icons/warehouse";
 import { For, JSXElement, ParentProps, Show } from "solid-js";
 import { toast } from "solid-sonner";
@@ -30,16 +39,18 @@ import { toast } from "solid-sonner";
 const Link = (
   props: ParentProps<{
     href: string;
+    disabled?: boolean;
   }>,
 ) => {
   const location = useLocation();
   const relativePath = useResolvedPath(() => location.pathname);
   return (
     <SidebarMenuButton
-      class={cn("hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3", {
+      class={cn("hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 select-none", {
         "text-white bg-indigo-600 font-medium hover:bg-indigo-600": relativePath() === props.href,
+        "opacity-50 hover:bg-transparent": props.disabled,
       })}
-      as={A}
+      as={props.disabled ? "div" : A}
       href={props.href}
     >
       {props.children}
@@ -55,95 +66,97 @@ const AppSidebar = () => {
   const changeFacilityAction = useAction(changeFacility);
   const isChangingFacility = useSubmission(changeFacility);
 
-  const location = useLocation();
-  const relativePath = useResolvedPath(() => location.pathname);
-
   return (
     <Sidebar>
-      <SidebarHeader>
-        <Show when={user.currentOrganization()}>
-          {(org) => (
-            <Select<OrganizationInfo["whs"][number]["warehouse"]>
-              value={user.currentWarehouse()}
-              onChange={(v) => {
-                if (!v) return;
-                toast.promise(changeWarehouseAction(v.id), {
-                  loading: "Changing warehouse...",
-                  success: "Warehouse changed",
-                  error: "Failed to change warehouse",
-                });
-              }}
-              disabled={isChangingWarehouse.pending}
-              options={org().whs.map((wh) => wh.warehouse) ?? []}
-              placeholder="Select a warehouse…"
-              itemComponent={(props) => (
-                <SelectItem item={props.item} class="cursor-pointer">
-                  <div class="flex flex-row items-center gap-2 w-full">
-                    <Warehouse class="size-4" />
-                    <span>{props.item.rawValue?.name}</span>
-                  </div>
-                </SelectItem>
-              )}
-            >
-              <SelectTrigger aria-label="Warehouse">
-                <SelectValue<OrganizationInfo["whs"][number]["warehouse"] | null>>
-                  {(state) => (
-                    <div class="flex flex-row items-center gap-2">
-                      <Warehouse class="size-4" />
-                      <span class="text-sm font-medium">{state.selectedOption()?.name ?? "Select a warehouse…"}</span>
-                    </div>
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent />
-            </Select>
-          )}
-        </Show>
-      </SidebarHeader>
+      {/* <SidebarHeader></SidebarHeader> */}
       <SidebarContent class="gap-0">
-        <SidebarGroup class="py-0">
+        <SidebarGroup>
           <div class="w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
             <span class="">Search</span>
             <Search class="size-4" />
           </div>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>Facilities</SidebarGroupLabel>
+          <SidebarGroupLabel>Warehouses</SidebarGroupLabel>
+          <SidebarGroupAction as={A} href="/warehouses/new" class="px-2 shrink-0 border ">
+            <Plus />
+          </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Show when={user.currentWarehouse()}>
-                {(wh) => (
+              <Show when={user.currentOrganization()}>
+                {(org) => (
                   <>
-                    <For each={user.currentWarehouse()?.fcs}>
-                      {(fc) => (
+                    <For each={org().whs.map((w) => w.warehouse)}>
+                      {(wh) => (
                         <SidebarMenuItem>
                           <SidebarMenuButton
                             onClick={() => {
-                              const cfc = user.currentFacility();
-                              if (cfc && cfc.id === fc.id) return;
-                              toast.promise(changeFacilityAction(wh().id, fc.id), {
+                              const cwh = user.currentWarehouse();
+                              if (cwh && cwh.id === wh.id) {
+                                toast.info("You are already on this warehouse");
+                                return;
+                              }
+                              toast.promise(changeWarehouseAction(wh.id), {
                                 loading: "Changing facility...",
                                 success: "Facility changed",
                                 error: "Failed to change facility",
                               });
                             }}
-                            class={cn("hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3", {
+                            class={cn("hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 select-none", {
                               "text-white bg-indigo-600 font-medium hover:bg-indigo-600":
-                                fc.id === user.currentFacility()?.id,
+                                wh.id === user.currentWarehouse()?.id,
                             })}
                           >
                             <Warehouse class="size-4" />
-                            {fc.name}
+                            {wh.name}
                           </SidebarMenuButton>
+                          <SidebarMenuSub class="pr-0 mr-0 pt-1">
+                            <For each={wh.fcs}>
+                              {(fc) => (
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    onClick={() => {
+                                      const cfc = user.currentFacility();
+                                      if (cfc && cfc.id === fc.id) {
+                                        toast.info("You are already on this facility");
+                                        return;
+                                      }
+                                      toast.promise(changeFacilityAction(wh.id, fc.id), {
+                                        loading: "Changing facility...",
+                                        success: "Facility changed",
+                                        error: "Failed to change facility",
+                                      });
+                                    }}
+                                    class={cn(
+                                      "hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 cursor-pointer",
+                                      {
+                                        "text-indigo-700 dark:text-foreground bg-indigo-600/10 font-medium hover:bg-indigo-600/20":
+                                          fc.id === user.currentFacility()?.id,
+                                      },
+                                    )}
+                                  >
+                                    <Warehouse class="size-4" />
+                                    {fc.name}
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              )}
+                            </For>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                as={A}
+                                href={`/warehouse/${wh.id}/facility/new`}
+                                class={cn(
+                                  "hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 cursor-pointer",
+                                )}
+                              >
+                                <Plus class="size-4" />
+                                New Facility
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          </SidebarMenuSub>
                         </SidebarMenuItem>
                       )}
                     </For>
-                    <SidebarMenuItem>
-                      <Link href={`/warehouses/${wh().id}/facilities/new`}>
-                        <Plus class="size-4" />
-                        New Facility
-                      </Link>
-                    </SidebarMenuItem>
                   </>
                 )}
               </Show>
@@ -151,27 +164,91 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
         <Show when={user.currentFacility()}>
-          <SidebarGroup>
-            <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <Link href="/dashboard">
-                    <Home class="size-4" />
-                    Home
-                  </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <Link href="/map">
-                    <MapIcon class="size-4" />
-                    Map
-                  </Link>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {(fc) => (
+            <SidebarGroup>
+              <SidebarGroupLabel>Facility: {fc().name}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/inventory`}>
+                      <Package2 class="size-4" />
+                      Inventory
+                    </Link>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`}>
+                      <MapIcon class="size-4" />
+                      Map
+                    </Link>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
         </Show>
-        <SidebarGroup />
+        <SidebarGroup>
+          <SidebarGroupLabel>Orders & Sales</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/orders`}>
+                  <Tags class="size-4" />
+                  Orders
+                  <SidebarMenuBadge class="mr-1">99+</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/sales`}>
+                  <BadgeEuro class="size-4" />
+                  Sales
+                  <SidebarMenuBadge class="mr-1">22</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/products`}>
+                  <PackageSearch class="size-4" />
+                  Products
+                  <SidebarMenuBadge class="mr-1">1452</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/invoices`} disabled>
+                  <ReceiptText class="size-4" />
+                  Invoices
+                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>People & Others</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/suppliers`} disabled>
+                  <Forklift class="size-4" />
+                  Suppliers
+                  <SidebarMenuBadge class="mr-1">8</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/customers`} disabled>
+                  <UsersRound class="size-4" />
+                  Customers
+                  <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/devices`} disabled>
+                  <Cpu class="size-4" />
+                  Devices
+                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter />
       <SidebarRail />

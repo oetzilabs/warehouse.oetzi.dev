@@ -9,6 +9,7 @@ import { FacilityLive, FacilityService } from "@warehouseoetzidev/core/src/entit
 import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
+import { WarehouseDoesNotContainFacility } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
@@ -48,6 +49,33 @@ export const getFacilityById = query(async (id: string) => {
       const service = yield* _(FacilityService);
       return yield* service.findById(id);
     }).pipe(Effect.provide(FacilityLive)),
+  );
+  return warehouse;
+}, "warehouse-by-id");
+
+export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const warehouse = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const whService = yield* _(WarehouseService);
+      const fcService = yield* _(FacilityService);
+      const wh = yield* whService.findById(whid);
+      if (!wh) {
+        return yield* Effect.fail(new Error("Warehouse not found"));
+      }
+      if (!wh.fcs.find((f) => f.id === fcid)) {
+        return yield* Effect.fail(new WarehouseDoesNotContainFacility({ id: whid, fcid }));
+      }
+      return yield* fcService.findById(fcid);
+    }).pipe(Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
   );
   return warehouse;
 }, "warehouse-by-id");

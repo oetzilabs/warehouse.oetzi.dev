@@ -5,6 +5,7 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { WarehouseLive, WarehouseService } from "../warehouses";
+import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   SaleInvalidId,
   SaleNotCreated,
@@ -65,7 +66,23 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         const sale = yield* Effect.promise(() =>
           db.query.TB_sales.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: relations ?? withRelations(),
+            with: {
+              items: {
+                with: {
+                  product: true,
+                },
+              },
+              customer: true,
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
+                    },
+                  },
+                },
+              },
+            },
           }),
         );
 
@@ -137,6 +154,37 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return sales;
       });
 
+    const findByWarehouseId = (warehouseId: string) =>
+      Effect.gen(function* (_) {
+        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
+        if (!parsedWarehouseId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        }
+        const sales = yield* Effect.promise(() =>
+          db.query.TB_sales.findMany({
+            where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
+            with: {
+              items: {
+                with: {
+                  product: true,
+                },
+              },
+              customer: true,
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        return sales;
+      });
+
     return {
       create,
       findById,
@@ -144,6 +192,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       remove,
       calculateTotal,
       findWithinRange,
+      findByWarehouseId,
     } as const;
   }),
   dependencies: [DatabaseLive, WarehouseLive],

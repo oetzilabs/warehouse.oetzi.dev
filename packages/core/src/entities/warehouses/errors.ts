@@ -62,3 +62,11 @@ export class WarehouseNotFoundForOrganization extends Schema.TaggedError<Warehou
     organizationId: Schema.String,
   },
 ) {}
+
+export class WarehouseDoesNotContainFacility extends Schema.TaggedError<WarehouseDoesNotContainFacility>()(
+  "WarehouseDoesNotContainFacility",
+  {
+    id: Schema.String,
+    fcid: Schema.String,
+  },
+) {}

@@ -1,16 +1,20 @@
 export * from "./schemas/users/users";
 export * from "./schemas/users/users_warehouses";
 export * from "./schemas/users/user_payment_methods";
+export * from "./schemas/users/user_orders";
 
 export * from "./schemas/sessions";
 export * from "./schemas/address";
+
+export * from "./schemas/orders/orders";
+export * from "./schemas/orders/order_products";
 
 export * from "./schemas/discounts";
 export * from "./schemas/products";
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";
 export * from "./schemas/sales/sales_discounts";
-export * from "./schemas/customers";
+export * from "./schemas/customers/customers";
 
 export * from "./schemas/suppliers/suppliers";
 export * from "./schemas/suppliers/suppliers_products";
@@ -33,6 +37,8 @@ export * from "./schemas/warehouses/warehouse_facility";
 export * from "./schemas/warehouses/warehouses_addresses";
 export * from "./schemas/warehouses/warehouse_types";
 export * from "./schemas/warehouses/warehouse_areas";
+export * from "./schemas/warehouses/warehouse_orders";
+export * from "./schemas/warehouses/warehouse_products";
 
 export * from "./schemas/storages/storages";
 export * from "./schemas/storages/storage_types";
