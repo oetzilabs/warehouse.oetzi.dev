@@ -62,7 +62,7 @@ export default function MapPage() {
           <div class="w-full flex flex-row grow">
             <div class="w-full p-4 flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="text-2xl font-bold leading-0">Orders</h1>
+                <h1 class="text-2xl font-bold leading-0">Incoming Orders</h1>
                 <div class="flex items-center gap-4">
                   <Button
                     size="icon"

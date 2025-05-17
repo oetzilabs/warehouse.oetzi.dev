@@ -25,6 +25,7 @@ import BadgeEuro from "lucide-solid/icons/badge-euro";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
 import MapIcon from "lucide-solid/icons/map";
+import Notebook from "lucide-solid/icons/notebook";
 import Package2 from "lucide-solid/icons/package-2";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
@@ -173,12 +174,25 @@ const AppSidebar = () => {
                     <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/inventory`}>
                       <Package2 class="size-4" />
                       Inventory
+                      <SidebarMenuBadge class="mr-1">
+                        <div class="size-1 rounded-full outline outline-1 outline-indigo-600 bg-indigo-600 dark:outline-indigo-400 dark:bg-indigo-400 outline-offset-2 animate-ping"></div>
+                      </SidebarMenuBadge>
                     </Link>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`}>
                       <MapIcon class="size-4" />
                       Map
+                      <SidebarMenuBadge class="mr-1">
+                        <div class="size-1 rounded-full bg-neutral-400"></div>
+                      </SidebarMenuBadge>
+                    </Link>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/devices`} disabled>
+                      <Cpu class="size-4" />
+                      Devices
+                      <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
                     </Link>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -187,14 +201,21 @@ const AppSidebar = () => {
           )}
         </Show>
         <SidebarGroup>
-          <SidebarGroupLabel>Orders & Sales</SidebarGroupLabel>
+          <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/orders`}>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/incoming-orders`}>
                   <Tags class="size-4" />
-                  Orders
+                  Incoming Orders
                   <SidebarMenuBadge class="mr-1">99+</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/outgoing-orders`}>
+                  <Tags class="size-4" />
+                  Outgoing Orders
+                  <SidebarMenuBadge class="mr-1">999+</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -218,15 +239,22 @@ const AppSidebar = () => {
                   <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/documents`} disabled>
+                  <Notebook class="size-4" />
+                  Documents
+                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>People & Others</SidebarGroupLabel>
+          <SidebarGroupLabel>People</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/suppliers`} disabled>
+                <Link href={`/suppliers`} disabled>
                   <Forklift class="size-4" />
                   Suppliers
                   <SidebarMenuBadge class="mr-1">8</SidebarMenuBadge>
@@ -237,13 +265,6 @@ const AppSidebar = () => {
                   <UsersRound class="size-4" />
                   Customers
                   <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/devices`} disabled>
-                  <Cpu class="size-4" />
-                  Devices
-                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>
