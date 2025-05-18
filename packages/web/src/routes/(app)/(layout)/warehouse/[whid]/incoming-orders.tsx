@@ -100,7 +100,9 @@ export default function MapPage() {
                   </div>
                 </Show>
               </div>
-              <OrdersDataTable data={() => os().map((o) => o.order)} onSelectedOrder={setSelectedOrder} />
+              <Show when={os().length > 0}>
+                <OrdersDataTable data={() => os().map((o) => o.order)} onSelectedOrder={setSelectedOrder} />
+              </Show>
             </div>
             <div class="w-full lg:max-w-lg border-l lg:flex hidden flex-col grow">
               <For

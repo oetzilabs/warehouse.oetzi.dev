@@ -33,7 +33,7 @@ export default function UserMenu() {
       <Switch
         fallback={
           <div class="flex flex-row gap-2 items-center justify-end w-full">
-            <Button as={A} href="/login" variant="outline" size="sm" class="h-8">
+            <Button as={A} href="/login" variant="outline" size="sm">
               <LogIn class="size-4" />
               Login
             </Button>

@@ -24,7 +24,9 @@ import { A, useAction, useLocation, useResolvedPath, useSubmission } from "@soli
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
+import Mail from "lucide-solid/icons/mail";
 import MapIcon from "lucide-solid/icons/map";
+import MessageSquare from "lucide-solid/icons/message-square";
 import Notebook from "lucide-solid/icons/notebook";
 import Package2 from "lucide-solid/icons/package-2";
 import PackageSearch from "lucide-solid/icons/package-search";
@@ -267,6 +269,27 @@ const AppSidebar = () => {
                   <Notebook class="size-4" />
                   Documents
                   <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Communication</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link href={`/messages`}>
+                  <MessageSquare class="size-4" />
+                  Messages
+                  <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/Mails`} disabled>
+                  <Mail class="size-4" />
+                  Mails
+                  <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>

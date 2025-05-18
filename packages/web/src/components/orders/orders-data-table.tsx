@@ -130,7 +130,7 @@ export function OrdersDataTable(props: { data: Accessor<OrderInfo[]>; onSelected
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} class="h-24 text-center">
+                <TableCell colSpan={columns.length} class="h-24 text-center text-muted-foreground">
                   No orders.
                 </TableCell>
               </TableRow>

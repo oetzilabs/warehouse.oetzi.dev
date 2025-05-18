@@ -23,9 +23,9 @@ export default function IndexPage() {
           <div class="w-full flex flex-col items-center text-center gap-10 md:gap-20">
             <div class="flex flex-col gap-20 items-center justify-center w-full">
               <div class="flex flex-col w-max gap-4 items-center justify-center">
-                <div class="flex flex-col w-full gap-4 p-2 max-w-xs md:max-w-full rounded-lg text-white font-semibold bg-gradient-to-br from-indigo-500 to-indigo-600 px-4 text-sm">
-                  ANNOUNCEMENT: We are currently in the process of building the first version of WareHouse. Stay tuned
-                  for updates!
+                <div class="flex flex-row w-full gap-1 p-2 max-w-xs md:max-w-full rounded-lg text-white font-semibold bg-gradient-to-br from-indigo-500 to-indigo-600 px-4 text-sm items-baseline">
+                  ANNOUNCEMENT: We are currently in the process of building the first version of{" "}
+                  <span class="font-[Pacifico] font-medium">warehouse.</span> Stay tuned for updates!
                 </div>
               </div>
               <div class="w-full flex flex-col gap-8 items-center justify-center">

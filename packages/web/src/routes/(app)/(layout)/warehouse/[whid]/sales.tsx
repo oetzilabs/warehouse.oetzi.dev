@@ -106,7 +106,9 @@ export default function SalesPage() {
                   </div>
                 </Show>
               </div>
-              <SalesDataTable data={salesList} onSelectedSale={setSelectedSale} />
+              <Show when={salesList().length > 0}>
+                <SalesDataTable data={salesList} onSelectedSale={setSelectedSale} />
+              </Show>
             </div>
             <div class="w-full max-w-lg border-l flex flex-col grow">
               <For

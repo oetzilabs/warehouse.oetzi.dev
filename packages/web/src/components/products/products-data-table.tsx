@@ -133,7 +133,7 @@ export function ProductsDataTable(props: {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} class="h-24 text-center">
+                <TableCell colSpan={columns.length} class="h-24 text-center text-muted-foreground">
                   No products.
                 </TableCell>
               </TableRow>

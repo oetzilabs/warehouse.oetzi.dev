@@ -139,7 +139,7 @@ const DocumentList = (props: {
               <RectangleHorizontal class="size-4" />
             </PopoverTrigger>
             <PopoverContent>
-              <For each={new Set(...props.documents().map((d) => d.type)).values()}>
+              <For each={Array.from(new Set(...props.documents().map((d) => d.type)).values())}>
                 {(type) => (
                   <Button
                     size="sm"

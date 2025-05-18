@@ -115,6 +115,10 @@ export function StorageDataTable({ data }: { data: StorageInfo[] }) {
         return rowSelection();
       },
     },
+    globalFilterFn: "fuzzy",
+    filterFns: {
+      fuzzy: fuzzyFilter,
+    },
   });
 
   return (
@@ -174,7 +178,7 @@ export function StorageDataTable({ data }: { data: StorageInfo[] }) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} class="h-24 text-center">
+                <TableCell colSpan={columns.length} class="h-24 text-center text-muted-foreground">
                   No results.
                 </TableCell>
               </TableRow>
