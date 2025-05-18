@@ -24,6 +24,7 @@ import { A, useAction, useLocation, useResolvedPath, useSubmission } from "@soli
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
+import Support from "lucide-solid/icons/heart-plus";
 import Mail from "lucide-solid/icons/mail";
 import MapIcon from "lucide-solid/icons/map";
 import MessageSquare from "lucide-solid/icons/message-square";
@@ -286,10 +287,9 @@ const AppSidebar = () => {
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Link href={`/Mails`} disabled>
-                  <Mail class="size-4" />
-                  Mails
-                  <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
+                <Link href={`/support`} disabled>
+                  <Support class="size-4" />
+                  Support
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>

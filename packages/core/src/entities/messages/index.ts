@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
@@ -142,7 +142,7 @@ export class MessageService extends Effect.Service<MessageService>()("@warehouse
         return deleted;
       });
 
-    const findByOrganizationId = (organizationId: string) =>
+    const findByOrganizationId = (organizationId: string, cursor?: number, pagesize = 20) =>
       Effect.gen(function* (_) {
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedOrganizationId.success) {
@@ -171,10 +171,17 @@ export class MessageService extends Effect.Service<MessageService>()("@warehouse
                 operations.inArray(messages.recipient, emails),
                 operations.inArray(messages.sender, emails),
               ),
+            orderBy: (messages, { desc }) => [desc(messages.createdAt)],
+            offset: cursor ? (cursor - 1) * pagesize : 0,
+            limit: pagesize + 1,
           }),
         );
 
-        return messages;
+        const amountOfMessages = yield* Effect.promise(() =>
+          db.$count(TB_messages, or(inArray(TB_messages.sender, emails), inArray(TB_messages.recipient, emails))),
+        );
+
+        return { messages, hasNextPage: messages.length > pagesize, pages: Math.ceil(amountOfMessages / pagesize) + 1 };
       });
 
     return {

@@ -3,7 +3,7 @@ import { MessageLive, MessageService } from "@warehouseoetzidev/core/src/entitie
 import { Effect } from "effect";
 import { withSession } from "./session";
 
-export const getMessages = query(async () => {
+export const getMessages = query(async (data: { cursor?: number }) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -24,7 +24,7 @@ export const getMessages = query(async () => {
       if (!session.current_organization_id) {
         throw new Error("You have to be part of an organization to perform this action.");
       }
-      return yield* service.findByOrganizationId(session.current_organization_id);
+      return yield* service.findByOrganizationId(session.current_organization_id, data.cursor);
     }).pipe(Effect.provide(MessageLive)),
   );
   return messages;
