@@ -187,7 +187,7 @@ const AppSidebar = () => {
                       Map
                       <SidebarMenuBadge
                         class={cn("mr-1", {
-                          "text-indigo-600 dark:text-indigo-300":
+                          "text-indigo-600 dark:text-indigo-500":
                             relativePath() !== `/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`,
                           "text-white":
                             relativePath() === `/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`,

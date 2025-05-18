@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."documents" ADD COLUMN "name" text NOT NULL;

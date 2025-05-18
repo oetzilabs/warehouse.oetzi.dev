@@ -36,7 +36,6 @@ export const columns: ColumnDef<OrderInfo>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "products",
     header: "Products",
     cell: (props) => (
       <div class="capitalize flex flex-wrap gap-2 flex-row">

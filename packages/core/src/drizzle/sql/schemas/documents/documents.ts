@@ -9,6 +9,7 @@ import { TB_document_storages } from "./storages";
 export const TB_documents = commonTable(
   "documents",
   {
+    name: text("name").notNull(),
     path: text("path").notNull(),
     previewPath: text("preview_path"),
     type: text("type").notNull().default("unknown"),

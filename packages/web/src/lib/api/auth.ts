@@ -17,15 +17,11 @@ export const logout = action(async () => {
     );
   }
 
-  setCookie("session_token", "", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(),
-  });
-
   return redirect("/", {
     revalidate: [getAuthenticatedUser.key],
+    headers: {
+      "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
+    },
   });
 });
 

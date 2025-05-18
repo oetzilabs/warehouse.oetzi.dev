@@ -56,19 +56,6 @@ export default function UserMenu() {
                     <div class="flex flex-col gap-1 p-2">
                       <p class="text-sm font-medium leading-none">{s().name}</p>
                       <p class="text-xs leading-none text-muted-foreground">{s().email}</p>
-                      <Show
-                        when={user.session()}
-                        fallback={<p class="text-xs leading-none text-muted-foreground">No organization</p>}
-                      >
-                        {(sess) => (
-                          <div class="flex flex-col gap-1">
-                            <p class="text-sm leading-none text-muted-foreground">{sess().org?.name ?? "no company"}</p>
-                            <p class="text-xs leading-none text-muted-foreground">
-                              {sess().wh?.name ?? "no warehouse"}
-                            </p>
-                          </div>
-                        )}
-                      </Show>
                     </div>
                   </DropdownMenuGroupLabel>
                   <DropdownMenuSeparator />
