@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getProductsByWarehouseId } from "@/lib/api/products";
-import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
+import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
@@ -60,7 +60,7 @@ export default function SalesPage() {
                       Add Product
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem as={A} href={`/warehouse/${params.whid}/products/new`} class="cursor-pointer">
                         <Plus class="size-4" />
                         Create New
                       </DropdownMenuItem>

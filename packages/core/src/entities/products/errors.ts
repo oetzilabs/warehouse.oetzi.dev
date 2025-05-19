@@ -38,3 +38,17 @@ export class ProductLabelAlreadyExists extends Schema.TaggedError<ProductLabelAl
 ) {}
 
 export class ProductLabelNotAdded extends Schema.TaggedError<ProductLabelNotAdded>()("ProductLabelNotAdded", {}) {}
+
+export class ProductLabelNotCreated extends Schema.TaggedError<ProductLabelNotCreated>()("ProductLabelNotCreated", {
+  message: Schema.optional(Schema.String),
+}) {}
+
+export class ProductLabelNotUpdated extends Schema.TaggedError<ProductLabelNotUpdated>()("ProductLabelNotUpdated", {
+  id: Schema.String,
+  message: Schema.optional(Schema.String),
+}) {}
+
+export class ProductLabelNotDeleted extends Schema.TaggedError<ProductLabelNotDeleted>()("ProductLabelNotDeleted", {
+  id: Schema.String,
+  message: Schema.optional(Schema.String),
+}) {}

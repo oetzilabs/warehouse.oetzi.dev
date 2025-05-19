@@ -1,0 +1,3 @@
+ALTER TABLE "warehouse"."products" ALTER COLUMN "supplier_id" SET DATA TYPE varchar;--> statement-breakpoint
+ALTER TABLE "warehouse"."products" ALTER COLUMN "manufacturer_id" SET DATA TYPE varchar;--> statement-breakpoint
+ALTER TABLE "warehouse"."products" ADD CONSTRAINT "products_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "warehouse"."suppliers"("id") ON DELETE set null ON UPDATE no action;

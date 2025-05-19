@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_products } from "../products/products";
 import { schema } from "../utils";
+import { TB_warehouse_suppliers } from "../warehouses/warehouse_suppliers";
 import { TB_supplier_contacts } from "./suppliers_contacts";
 import { TB_supplier_notes } from "./suppliers_notes";
 
@@ -31,6 +32,7 @@ export const supplier_relations = relations(TB_suppliers, ({ many }) => ({
   products: many(TB_products),
   notes: many(TB_supplier_notes),
   contacts: many(TB_supplier_contacts),
+  warehouses: many(TB_warehouse_suppliers),
 }));
 
 export type SupplierSelect = typeof TB_suppliers.$inferSelect;

@@ -1,5 +1,6 @@
 import { query, redirect } from "@solidjs/router";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
+import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
 import { Effect } from "effect";
@@ -29,3 +30,23 @@ export const getProductsByWarehouseId = query(async (whid: string) => {
   );
   return warehouse;
 }, "order-by-warehouse-id");
+
+export const getProductLabels = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const labels = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const productLabelsService = yield* _(ProductLabelsService);
+      const labels = yield* productLabelsService.findAllWithoutProducts();
+      return labels;
+    }).pipe(Effect.provide(ProductLabelsLive)),
+  );
+  return labels;
+}, "labels");

@@ -1,11 +1,12 @@
 import { relations } from "drizzle-orm";
-import { boolean, decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, decimal, integer, json, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { object, omit, partial } from "valibot";
+import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_order_products } from "../../schema";
 import { commonTable } from "../entity";
 import { TB_sale_items } from "../sales/sales_items";
+import { TB_suppliers } from "../suppliers/suppliers";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
 import { TB_products_to_labels } from "./product_labels";
@@ -58,9 +59,9 @@ export const TB_products = commonTable(
     requiresRefrigeration: boolean("requires_refrigeration").default(false),
 
     // Pricing & Costs
-    purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }),
-    sellingPrice: decimal("selling_price", { precision: 10, scale: 2 }).notNull(),
-    msrp: decimal("msrp", { precision: 10, scale: 2 }),
+    purchasePrice: decimal("purchase_price", { precision: 10, scale: 2, mode: "number" }),
+    sellingPrice: decimal("selling_price", { precision: 10, scale: 2, mode: "number" }).notNull(),
+    msrp: decimal("msrp", { precision: 10, scale: 2, mode: "number" }),
     currency: text("currency").default("USD"),
 
     // Physical Attributes
@@ -82,8 +83,9 @@ export const TB_products = commonTable(
     countryOfOrigin: text("country_of_origin"),
 
     // Supplier Information
-    supplierId: text("supplier_id"),
-    manufacturerId: text("manufacturer_id"),
+    supplierId: varchar("supplier_id").references(() => TB_suppliers.id, { onDelete: "set null" }),
+    manufacturerId: varchar("manufacturer_id"),
+    // .references(() => TB_suppliers.id, { onDelete: "set null" }),
 
     // Storage Requirements
     storageRequirements: json("storage_requirements").$type<{
@@ -100,11 +102,15 @@ export const TB_products = commonTable(
   "prod",
 );
 
-export const product_relations = relations(TB_products, ({ many }) => ({
+export const product_relations = relations(TB_products, ({ many, one }) => ({
   saleItems: many(TB_sale_items),
   orders: many(TB_order_products),
   warehouses: many(TB_warehouse_products),
   labels: many(TB_products_to_labels),
+  suppliers: one(TB_suppliers, {
+    fields: [TB_products.supplierId],
+    references: [TB_suppliers.id],
+  }),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;
@@ -114,3 +120,5 @@ export const ProductUpdateSchema = object({
   ...partial(omit(ProductCreateSchema, ["createdAt", "updatedAt"])).entries,
   id: prefixed_cuid2,
 });
+export type ProductCreate = InferInput<typeof ProductCreateSchema>;
+export type ProductUpdate = InferInput<typeof ProductUpdateSchema>;

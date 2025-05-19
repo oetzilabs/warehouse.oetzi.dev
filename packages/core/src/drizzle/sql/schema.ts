@@ -43,6 +43,7 @@ export * from "./schemas/warehouses/warehouse_types";
 export * from "./schemas/warehouses/warehouse_areas";
 export * from "./schemas/warehouses/warehouse_orders";
 export * from "./schemas/warehouses/warehouse_products";
+export * from "./schemas/warehouses/warehouse_suppliers";
 
 export * from "./schemas/storages/storages";
 export * from "./schemas/storages/storage_types";

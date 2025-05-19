@@ -30,6 +30,7 @@ import MapIcon from "lucide-solid/icons/map";
 import MessageSquare from "lucide-solid/icons/message-square";
 import Notebook from "lucide-solid/icons/notebook";
 import Package2 from "lucide-solid/icons/package-2";
+import PackagePlus from "lucide-solid/icons/package-plus";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import ReceiptText from "lucide-solid/icons/receipt-text";
@@ -242,6 +243,12 @@ const AppSidebar = () => {
                   <PackageSearch class="size-4" />
                   Products
                   <SidebarMenuBadge class="mr-1">1452</SidebarMenuBadge>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/products/new`}>
+                  <PackagePlus class="size-4" />
+                  New Product
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>

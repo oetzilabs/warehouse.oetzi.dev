@@ -12,6 +12,7 @@ import {
   TB_suppliers,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   SupplierContactNotCreated,
   SupplierInvalidId,
@@ -103,7 +104,32 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return note;
       });
 
-    return { create, findById, addContact, addNote } as const;
+    const findByWarehouseId = (warehouseId: string) =>
+      Effect.gen(function* (_) {
+        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
+        if (!parsedWarehouseId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_warehouse_suppliers.findMany({
+            where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
+            with: {
+              supplier: {
+                with: {
+                  products: {
+                    with: {
+                      labels: true,
+                    },
+                  },
+                  contacts: true,
+                },
+              },
+            },
+          }),
+        );
+      });
+
+    return { create, findById, addContact, addNote, findByWarehouseId } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

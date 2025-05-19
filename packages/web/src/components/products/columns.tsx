@@ -48,6 +48,18 @@ export const columns: ColumnDef<ProductInfo>[] = [
     filterFn: "fuzzy",
   },
   {
+    header: "Labels",
+    cell: (props) => {
+      return (
+        <div class="flex flex-wrap gap-2">
+          <For each={props.row.original.labels.map((l) => l.label)}>
+            {(label) => <Badge class="text-xs">{label.name}</Badge>}
+          </For>
+        </div>
+      );
+    },
+  },
+  {
     id: "actions",
     enableHiding: false,
     header: "Actions",
