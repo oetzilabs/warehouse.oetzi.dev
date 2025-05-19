@@ -3,7 +3,7 @@ import { decimal, primaryKey, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_products } from "../products";
+import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_suppliers } from "./suppliers";
 

@@ -21,3 +21,20 @@ export class ProductNotDeleted extends Schema.TaggedError<ProductNotDeleted>()("
   id: Schema.String,
   message: Schema.optional(Schema.String),
 }) {}
+
+export class ProductLabelInvalidId extends Schema.TaggedError<ProductLabelInvalidId>()("ProductLabelInvalidId", {
+  id: Schema.String,
+}) {}
+
+export class ProductLabelNotFound extends Schema.TaggedError<ProductLabelNotFound>()("ProductLabelNotFound", {
+  id: Schema.String,
+}) {}
+
+export class ProductLabelAlreadyExists extends Schema.TaggedError<ProductLabelAlreadyExists>()(
+  "ProductLabelAlreadyExists",
+  {
+    id: Schema.String,
+  },
+) {}
+
+export class ProductLabelNotAdded extends Schema.TaggedError<ProductLabelNotAdded>()("ProductLabelNotAdded", {}) {}

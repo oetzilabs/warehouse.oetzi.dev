@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { TB_discounts_v1 } from "../discounts";
-import { TB_products } from "../products";
+import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_sales } from "./sales";
 

@@ -3,7 +3,7 @@ import { integer, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput } from "valibot";
 import { commonTable } from "../entity";
-import { TB_products } from "../products";
+import { TB_products } from "../products/products";
 import { TB_orders } from "./orders";
 
 export const TB_order_products = commonTable(

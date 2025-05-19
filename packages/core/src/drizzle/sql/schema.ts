@@ -12,7 +12,9 @@ export * from "./schemas/orders/orders";
 export * from "./schemas/orders/order_products";
 
 export * from "./schemas/discounts";
-export * from "./schemas/products";
+export * from "./schemas/products/products";
+export * from "./schemas/products/product_labels";
+
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";
 export * from "./schemas/sales/sales_discounts";

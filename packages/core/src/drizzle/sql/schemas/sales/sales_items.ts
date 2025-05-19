@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { decimal, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { TB_products } from "../products";
+import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_sales } from "./sales";
 import { TB_sales_discounts } from "./sales_discounts";

@@ -2,10 +2,20 @@ import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { ProductCreateSchema, ProductUpdateSchema, TB_products } from "../../drizzle/sql/schema";
+import { ProductCreateSchema, ProductUpdateSchema, TB_products, TB_products_to_labels } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { WarehouseInvalidId } from "../warehouses/errors";
-import { ProductInvalidId, ProductNotCreated, ProductNotDeleted, ProductNotFound, ProductNotUpdated } from "./errors";
+import {
+  ProductInvalidId,
+  ProductLabelAlreadyExists,
+  ProductLabelInvalidId,
+  ProductLabelNotAdded,
+  ProductLabelNotFound,
+  ProductNotCreated,
+  ProductNotDeleted,
+  ProductNotFound,
+  ProductNotUpdated,
+} from "./errors";
 
 export class ProductService extends Effect.Service<ProductService>()("@warehouse/products", {
   effect: Effect.gen(function* (_) {
@@ -26,6 +36,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       orders: {
         with: {
           order: true,
+        },
+      },
+      labels: {
+        with: {
+          label: true,
         },
       },
     });
@@ -63,6 +78,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
               orders: {
                 with: {
                   order: true,
+                },
+              },
+              labels: {
+                with: {
+                  label: true,
                 },
               },
             },
@@ -152,6 +172,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                       order: true,
                     },
                   },
+                  labels: {
+                    with: {
+                      label: true,
+                    },
+                  },
                 },
               },
             },
@@ -159,7 +184,131 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         );
       });
 
-    return { create, findById, update, remove, safeRemove, findByWarehouseId } as const;
+    const addLabel = (productId: string, labelId: string) =>
+      Effect.gen(function* (_) {
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        const parsedLabelId = safeParse(prefixed_cuid2, labelId);
+        if (!parsedLabelId.success) {
+          return yield* Effect.fail(new ProductLabelInvalidId({ id: labelId }));
+        }
+
+        const product = yield* Effect.promise(() =>
+          db.query.TB_products.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedProductId.output),
+            with: {
+              labels: {
+                with: {
+                  label: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!product) {
+          return yield* Effect.fail(new ProductNotFound({ id: productId }));
+        }
+
+        const label = yield* Effect.promise(() =>
+          db.query.TB_product_labels.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedLabelId.output),
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!label) {
+          return yield* Effect.fail(new ProductLabelNotFound({ id: labelId }));
+        }
+
+        if (product.labels.some((l) => l.label.id === label.id)) {
+          return yield* Effect.fail(new ProductLabelAlreadyExists({ id: labelId }));
+        }
+
+        const added = yield* Effect.promise(() =>
+          db
+            .insert(TB_products_to_labels)
+            .values({ productId: parsedProductId.output, labelId: parsedLabelId.output })
+            .returning(),
+        );
+
+        if (!added) {
+          return yield* Effect.fail(new ProductLabelNotAdded());
+        }
+
+        return added;
+      });
+
+    const removeLabel = (productId: string, labelId: string) =>
+      Effect.gen(function* (_) {
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        const parsedLabelId = safeParse(prefixed_cuid2, labelId);
+        if (!parsedLabelId.success) {
+          return yield* Effect.fail(new ProductLabelInvalidId({ id: labelId }));
+        }
+
+        const product = yield* Effect.promise(() =>
+          db.query.TB_products.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedProductId.output),
+            with: {
+              labels: {
+                with: {
+                  label: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!product) {
+          return yield* Effect.fail(new ProductNotFound({ id: productId }));
+        }
+
+        const label = yield* Effect.promise(() =>
+          db.query.TB_product_labels.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedLabelId.output),
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!label) {
+          return yield* Effect.fail(new ProductLabelNotFound({ id: labelId }));
+        }
+
+        const removed = yield* Effect.promise(() =>
+          db
+            .delete(TB_products_to_labels)
+            .where(eq(TB_products_to_labels.productId, parsedProductId.output))
+            .returning(),
+        );
+
+        if (!removed) {
+          return yield* Effect.fail(new ProductLabelNotAdded());
+        }
+
+        return removed;
+      });
+
+    return { create, findById, update, remove, safeRemove, findByWarehouseId, addLabel, removeLabel } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}
