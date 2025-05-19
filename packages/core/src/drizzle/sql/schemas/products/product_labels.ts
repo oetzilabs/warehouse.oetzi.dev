@@ -13,6 +13,7 @@ export const TB_product_labels = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     color: text("color").default("#000000"),
+    image: text("image"),
   },
   "labl",
 );

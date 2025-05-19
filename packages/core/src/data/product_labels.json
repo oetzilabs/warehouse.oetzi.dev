@@ -1,0 +1,74 @@
+[
+  {
+    "id": "labl_w431nyfjau0cvzwcihzt1y0x",
+    "name": "Frozen",
+    "description": null,
+    "image": "https://images.unsplash.com/photo-1601599964574-cddabfa36549?q=80&w=160&h=160&auto=format&fit=crop&ixlib=rb-4.1.0"
+  },
+  {
+    "id": "labl_p6he24lup7a2v1082673nghv",
+    "name": "Non-Food",
+    "description": "Items that are not intended for consumption.",
+    "image": ""
+  },
+  {
+    "id": "labl_dwtf91rmignf3kveyud9f4gq",
+    "name": "Dairy",
+    "description": null,
+    "image": ""
+  },
+  {
+    "id": "labl_nouudon6lq130pysmsp4iiwn",
+    "name": "Fresh Produce",
+    "description": "Fruits and vegetables that are typically sold fresh.",
+    "image": ""
+  },
+  {
+    "id": "labl_w312ev280hsuara5x14lhi7r",
+    "name": "Meat",
+    "description": null,
+    "image": ""
+  },
+  {
+    "id": "labl_tlnaurlavwgni2rtpkkmyof3",
+    "name": "Seafood",
+    "description": null,
+    "image": ""
+  },
+  {
+    "id": "labl_ejocn9366uhc0v2r94nc6tsv",
+    "name": "Pantry Staples",
+    "description": "Everyday ingredients often kept in a pantry, such as rice, pasta, and canned goods.",
+    "image": ""
+  },
+  {
+    "id": "labl_d7kb1obaygleinsymd0lihna",
+    "name": "Beverages",
+    "description": null,
+    "image": ""
+  },
+  {
+    "id": "labl_brftb35nu1nduprgu5oakp9z",
+    "name": "Snacks",
+    "description": null,
+    "image": ""
+  },
+  {
+    "id": "labl_l8zixtfcvm7e8bif15y65m01",
+    "name": "Household",
+    "description": "Products for cleaning, maintenance, and other household needs.",
+    "image": ""
+  },
+  {
+    "id": "labl_xq9p1vmhvhdkblqlmqovnolx",
+    "name": "Health & Beauty",
+    "description": "Personal care and cosmetic products.",
+    "image": ""
+  },
+  {
+    "id": "labl_mhipj5xkrn7exvi9xkay59lq",
+    "name": "Unknown",
+    "description": null,
+    "image": ""
+  }
+]

@@ -12,6 +12,7 @@ import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getProductLabels, getProductsByWarehouseId } from "@/lib/api/products";
 import { getSuppliersByWarehouseId } from "@/lib/api/suppliers";
+import { cn } from "@/lib/utils";
 import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import { type ProductCreate } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/products/products";
@@ -82,7 +83,7 @@ export default function NewProductPage() {
       lastReceivedAt: null,
       lastCountedAt: null,
       lastQualityCheckAt: null,
-    } satisfies ProductCreate,
+    } satisfies Required<ProductCreate>,
   });
   const [chosenLabels, setChosenLabels] = createSignal<string[]>([]);
   const [chosenSuppliers, setChosenSuppliers] = createSignal<string[]>([]);
@@ -106,27 +107,27 @@ export default function NewProductPage() {
             <TabsList class="flex flex-row gap-0 w-full items-center justify-start h-max rounded-none bg-transparent p-0 !py-0">
               <TabsTrigger
                 value="basic-info"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b-2 border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
               >
                 Basic Information
               </TabsTrigger>
               <TabsTrigger
                 value="labels"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b-2 border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
               >
-                Labels
+                Labels {chosenLabels().length > 0 && `(${chosenLabels().length})`}
               </TabsTrigger>
               <TabsTrigger
                 value="suppliers"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b-2 border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
               >
                 Suppliers
               </TabsTrigger>
-              <div class="w-full h-[34px] border-b-2 border-neutral-300 dark:border-neutral-800 "></div>
+              <div class="w-full h-[34px] border-b border-neutral-300 dark:border-neutral-800 "></div>
             </TabsList>
             <form class="w-full grow flex flex-col gap-4">
               <TabsContent value="basic-info">
-                <div class="w-full flex flex-col gap-4 max-w-2xl py-4">
+                <div class="w-full flex flex-col gap-4 max-w-2xl py-2">
                   <form.Field name="name">
                     {(field) => (
                       <TextField
@@ -153,7 +154,7 @@ export default function NewProductPage() {
                   </form.Field>
                   <form.Field name="sku">
                     {(field) => (
-                      <div class="flex flex-row gap-2 items-center w-full">
+                      <div class="flex flex-row gap-4 items-center w-full">
                         <TextField
                           value={field().state.value}
                           onChange={(e) => field().setValue(e)}
@@ -163,7 +164,7 @@ export default function NewProductPage() {
                           <TextFieldInput class="h-9" placeholder="SKU" />
                         </TextField>
                         <div class="place-self-end w-max">
-                          <Button type="button" size="sm" variant="secondary" class="h-9" onClick={() => {}}>
+                          <Button type="button" size="sm" variant="secondary" class="h-9 px-4" onClick={() => {}}>
                             Generate
                           </Button>
                         </div>
@@ -172,7 +173,7 @@ export default function NewProductPage() {
                   </form.Field>
                   <form.Field name="barcode">
                     {(field) => (
-                      <div class="flex flex-row gap-2 items-center w-full">
+                      <div class="flex flex-row gap-4 items-center w-full">
                         <TextField
                           value={field().state.value}
                           onChange={(e) => field().setValue(e)}
@@ -182,7 +183,7 @@ export default function NewProductPage() {
                           <TextFieldInput class="h-9" placeholder="Barcode" />
                         </TextField>
                         <div class="place-self-end w-max">
-                          <Button type="button" size="sm" variant="secondary" class="h-9" onClick={() => {}}>
+                          <Button type="button" size="sm" variant="secondary" class="h-9 px-4" onClick={() => {}}>
                             Generate
                           </Button>
                         </div>
@@ -246,7 +247,7 @@ export default function NewProductPage() {
                     {(field) => (
                       <NumberField
                         class="w-full"
-                        value={field().state.value}
+                        value={typeof field().state.value !== "boolean" ? field().state.value : null}
                         onRawValueChange={(e) => field().setValue(e)}
                         minValue={0}
                       >
@@ -262,8 +263,8 @@ export default function NewProductPage() {
                 </div>
               </TabsContent>
               <TabsContent value="labels">
-                <div class="w-full flex flex-col gap-4 max-w-2xl py-4">
-                  <div class="grid grid-cols-6 gap-4">
+                <div class="w-full flex flex-col gap-4 py-2">
+                  <div class="grid grid-cols-6 gap-4 w-full">
                     <Suspense>
                       <Show when={labels()}>
                         {(labelsList) => (
@@ -293,16 +294,60 @@ export default function NewProductPage() {
                               </div>
                             }
                           >
-                            {(label) => <div class="bg-muted-foreground/5 rounded-lg p-4">{label.name}</div>}
+                            {(label) => (
+                              <div
+                                class={cn(
+                                  "bg-muted-foreground/5 rounded-lg p-4 flex flex-col gap-2 items-center justify-center border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer",
+                                  {
+                                    "text-white bg-indigo-600 font-medium hover:bg-indigo-600": chosenLabels().includes(
+                                      label.id,
+                                    ),
+                                  },
+                                )}
+                                onClick={() => {
+                                  if (chosenLabels().includes(label.id)) {
+                                    setChosenLabels((c) => c.filter((l) => l !== label.id));
+                                  } else {
+                                    setChosenLabels((c) => [...c, label.id]);
+                                  }
+                                }}
+                              >
+                                <Show when={(label.image?.length ?? 0) > 0 && label.image}>
+                                  {(i) => <img src={i()} class="size-40 rounded-lg" />}
+                                </Show>
+                                <span class="text-sm font-medium">{label.name}</span>
+                                <span
+                                  class={cn("text-sm text-muted-foreground text-center", {
+                                    "text-white/70": chosenLabels().includes(label.id),
+                                  })}
+                                >
+                                  {label.description ?? "No description available"}
+                                </span>
+                              </div>
+                            )}
                           </For>
                         )}
                       </Show>
                     </Suspense>
+                    <Button
+                      size="sm"
+                      class="h-8 w-max"
+                      onClick={() => {
+                        toast.promise(revalidate(getProductLabels.key), {
+                          loading: "Refreshing labels...",
+                          success: "Labels refreshed",
+                          error: "Failed to refresh labels",
+                        });
+                      }}
+                    >
+                      <RotateCw class="size-4" />
+                      Refresh
+                    </Button>
                   </div>
                 </div>
               </TabsContent>
               <TabsContent value="suppliers">
-                <div class="w-full flex flex-col gap-4 max-w-2xl py-4">
+                <div class="w-full flex flex-col gap-4 max-w-2xl py-2">
                   <div class="grid grid-cols-6 gap-4">
                     <Suspense>
                       <Show when={suppliers()}>

@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { DocumentStorageOfferLive, DocumentStorageOfferService } from "./entities/document_storage_offers";
 import { OrganizationLive } from "./entities/organizations";
 import { PaymentMethodLive, PaymentMethodService } from "./entities/payment_methods";
+import { ProductLabelsLive, ProductLabelsService } from "./entities/products/labels";
 import { StorageLive, StorageService } from "./entities/storages";
 import { UserLive, UserService } from "./entities/users";
 import { WarehouseTypeLive, WarehouseTypeService } from "./entities/warehouse_types";
@@ -13,11 +14,13 @@ const program = Effect.gen(function* (_) {
   const userService = yield* _(UserService);
   const paymentMethodsService = yield* _(PaymentMethodService);
   const storageService = yield* _(StorageService);
+  const productLabelsService = yield* _(ProductLabelsService);
   const warehouseTypes = yield* warehouseTypeService.seed();
   const documentStorageOffers = yield* documentStorageOfferService.seed();
   const paymentMethods = yield* paymentMethodsService.seed();
   const users = yield* userService.seed();
   const storages = yield* storageService.seed();
+  const productLabels = yield* productLabelsService.seed();
 }).pipe(
   Effect.provide(StorageLive),
   Effect.provide(WarehouseTypeLive),
@@ -26,6 +29,7 @@ const program = Effect.gen(function* (_) {
   Effect.provide(UserLive),
   Effect.provide(OrganizationLive),
   Effect.provide(WarehouseLive),
+  Effect.provide(ProductLabelsLive),
 );
 
 async function run() {

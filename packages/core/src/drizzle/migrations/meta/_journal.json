@@ -127,6 +127,13 @@
       "when": 1747664117361,
       "tag": "0017_rich_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1747666520743,
+      "tag": "0018_easy_jimmy_woo",
+      "breakpoints": true
     }
   ]
 }
