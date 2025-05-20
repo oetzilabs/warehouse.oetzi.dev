@@ -11,6 +11,7 @@ import { TB_suppliers } from "../suppliers/suppliers";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
 import { TB_products_to_labels } from "./product_labels";
+import { TB_products_to_certifications } from "./products_certificates";
 
 export const product_status = schema.enum("product_status", [
   "active",
@@ -74,7 +75,6 @@ export const TB_products = commonTable(
     }>(),
 
     // Regulatory & Compliance
-    certifications: json("certifications").$type<string[]>(),
     safetyStock: integer("safety_stock"),
     customsTariffNumber: text("customs_tariff_number"),
     countryOfOrigin: text("country_of_origin"),
@@ -92,6 +92,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
     fields: [TB_products.brand_id],
     references: [TB_brands.id],
   }),
+  certs: many(TB_products_to_certifications),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

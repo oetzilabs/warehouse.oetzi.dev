@@ -13,9 +13,12 @@ export * from "./schemas/orders/order_products";
 
 export * from "./schemas/brands/brands";
 
+export * from "./schemas/certificates/certificates";
+
 export * from "./schemas/discounts";
 export * from "./schemas/products/products";
 export * from "./schemas/products/product_labels";
+export * from "./schemas/products/products_certificates";
 
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";

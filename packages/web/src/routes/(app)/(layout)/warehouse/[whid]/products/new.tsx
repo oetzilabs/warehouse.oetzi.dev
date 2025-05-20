@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
+import { getCertificates } from "@/lib/api/certificates";
 import { getProductLabels, getProductsByWarehouseId } from "@/lib/api/products";
 import { getSuppliersByWarehouseId } from "@/lib/api/suppliers";
 import { cn } from "@/lib/utils";
@@ -36,12 +37,15 @@ export default function NewProductPage() {
   const params = useParams();
   const suppliers = createAsync(() => getSuppliersByWarehouseId(params.whid), { deferStream: true });
   const labels = createAsync(() => getProductLabels(), { deferStream: true });
+  const certificates = createAsync(() => getCertificates(), { deferStream: true });
   const formOps = formOptions({
     defaultValues: {
       name: "",
       description: "",
       sku: "",
       barcode: "",
+
+      brand_id: "",
 
       minimumStock: 0,
       maximumStock: null,
@@ -68,7 +72,6 @@ export default function NewProductPage() {
       },
       dimensions: null,
 
-      certifications: [],
       safetyStock: null,
       customsTariffNumber: "",
       countryOfOrigin: "",
@@ -76,6 +79,7 @@ export default function NewProductPage() {
   });
   const [chosenLabels, setChosenLabels] = createSignal<string[]>([]);
   const [chosenSuppliers, setChosenSuppliers] = createSignal<string[]>([]);
+  const [chosenCertificates, setChosenCertificates] = createSignal<string[]>([]);
   const form = createForm(() => ({
     ...formOps,
   }));
@@ -105,6 +109,12 @@ export default function NewProductPage() {
                 class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
               >
                 Labels {chosenLabels().length > 0 && `(${chosenLabels().length})`}
+              </TabsTrigger>
+              <TabsTrigger
+                value="labels"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+              >
+                Certificates {chosenCertificates().length > 0 && `(${chosenCertificates().length})`}
               </TabsTrigger>
               <TabsTrigger
                 value="suppliers"
@@ -290,6 +300,86 @@ export default function NewProductPage() {
                           loading: "Refreshing labels...",
                           success: "Labels refreshed",
                           error: "Failed to refresh labels",
+                        });
+                      }}
+                    >
+                      <RotateCw class="size-4" />
+                      Refresh
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="labels">
+                <div class="w-full flex flex-col gap-4 py-2">
+                  <div class="grid grid-cols-6 gap-4 w-full">
+                    <Suspense>
+                      <Show when={certificates()}>
+                        {(certificatesList) => (
+                          <For
+                            each={certificatesList()}
+                            fallback={
+                              <div class="col-span-full w-full flex flex-col gap-2 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
+                                <span class="text-muted-foreground text-sm">
+                                  There are currently no certificates in the system, please contact the administrator.
+                                </span>
+                                <div class="flex flex-row gap-2 items-center justify-center">
+                                  <Button
+                                    size="sm"
+                                    class="h-8"
+                                    onClick={() => {
+                                      toast.promise(revalidate(getCertificates.key), {
+                                        loading: "Refreshing certificates...",
+                                        success: "Certificates refreshed",
+                                        error: "Failed to refresh certificates",
+                                      });
+                                    }}
+                                  >
+                                    <RotateCw class="size-4" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </div>
+                            }
+                          >
+                            {(certificate) => (
+                              <div
+                                class={cn(
+                                  "bg-muted-foreground/5 rounded-lg p-4 flex flex-col gap-2 items-center justify-center border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer",
+                                  {
+                                    "text-white bg-indigo-600 font-medium hover:bg-indigo-600":
+                                      chosenCertificates().includes(certificate.id),
+                                  },
+                                )}
+                                onClick={() => {
+                                  if (chosenCertificates().includes(certificate.id)) {
+                                    setChosenCertificates((c) => c.filter((l) => l !== certificate.id));
+                                  } else {
+                                    setChosenCertificates((c) => [...c, certificate.id]);
+                                  }
+                                }}
+                              >
+                                <span class="text-sm font-medium">{certificate.name}</span>
+                                <span
+                                  class={cn("text-sm text-muted-foreground text-center", {
+                                    "text-white/70": chosenCertificates().includes(certificate.id),
+                                  })}
+                                >
+                                  {certificate.description ?? "No description available"}
+                                </span>
+                              </div>
+                            )}
+                          </For>
+                        )}
+                      </Show>
+                    </Suspense>
+                    <Button
+                      size="sm"
+                      class="h-8 w-max"
+                      onClick={() => {
+                        toast.promise(revalidate(getProductLabels.key), {
+                          loading: "Refreshing certificates...",
+                          success: "Labels refreshed",
+                          error: "Failed to refresh certificates",
                         });
                       }}
                     >
