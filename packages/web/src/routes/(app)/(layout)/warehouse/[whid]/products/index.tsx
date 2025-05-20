@@ -76,7 +76,7 @@ export default function SalesPage() {
                 when={productsList().length > 0}
                 fallback={
                   <div class="flex flex-col gap-2 w-full h-60 items-center justify-center bg-muted-foreground/5 border rounded-lg">
-                    <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground">
+                    <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground select-none">
                       <span class="text-sm">No products data available</span>
                     </div>
                   </div>

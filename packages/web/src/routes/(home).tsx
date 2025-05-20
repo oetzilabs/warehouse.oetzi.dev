@@ -18,61 +18,63 @@ export default function IndexPage() {
 
   return (
     <>
-      <div class="flex grow w-full">
-        <div class="flex flex-col container py-20 md:py-10 gap-32">
-          <div class="w-full flex flex-col items-center text-center gap-10 md:gap-20">
-            <div class="flex flex-col gap-20 items-center justify-center w-full">
-              <div class="flex flex-col w-max gap-4 items-center justify-center">
-                <div class="flex flex-row w-full gap-1 p-2 max-w-xs md:max-w-full rounded-lg text-white font-semibold bg-gradient-to-br from-indigo-500 to-indigo-600 px-4 text-sm items-baseline">
-                  ANNOUNCEMENT: We are currently in the process of building the first version of{" "}
-                  <span class="font-[Pacifico] font-medium">warehouse.</span> Stay tuned for updates!
-                </div>
-              </div>
-              <div class="w-full flex flex-col gap-8 items-center justify-center">
-                <div class="flex flex-col gap-4 items-center justify-center w-full">
-                  <div class="flex flex-row gap-0.5 select-none items-baseline">
-                    <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-3xl leading-none tracking-tight">
-                      Supercharge your
-                    </h1>
-                    <span class="px-2 py-0.5 rounded font-[Pacifico] text-2xl md:text-4xl leading-none text-indigo-600 dark:text-indigo-500">
-                      warehouse.
-                    </span>
+      <div class="flex flex-col h-full w-full overflow-y-auto">
+        <div class="flex grow w-full">
+          <div class="flex flex-col container py-20 md:py-10 gap-32">
+            <div class="w-full flex flex-col items-center text-center gap-10 md:gap-20">
+              <div class="flex flex-col gap-20 items-center justify-center w-full">
+                <div class="flex flex-col w-max gap-4 items-center justify-center">
+                  <div class="flex flex-row w-full gap-1 p-2 max-w-xs md:max-w-full rounded-lg text-white font-semibold bg-gradient-to-br from-indigo-500 to-indigo-600 px-4 text-sm items-baseline">
+                    ANNOUNCEMENT: We are currently in the process of building the first version of{" "}
+                    <span class="font-[Pacifico] font-medium">warehouse.</span> Stay tuned for updates!
                   </div>
-                  <p class="text-muted-foreground text-base md:text-lg font-medium">
-                    Empower your business with seamless and efficient inventory solutions.
-                  </p>
                 </div>
-                <div class="flex flex-row gap-4 items-center">
-                  <Show
-                    when={typeof user() === "undefined"}
-                    fallback={
+                <div class="w-full flex flex-col gap-8 items-center justify-center">
+                  <div class="flex flex-col gap-4 items-center justify-center w-full">
+                    <div class="flex flex-row gap-0.5 select-none items-baseline">
+                      <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-3xl leading-none tracking-tight">
+                        Supercharge your
+                      </h1>
+                      <span class="px-2 py-0.5 rounded font-[Pacifico] text-2xl md:text-4xl leading-none text-indigo-600 dark:text-indigo-500">
+                        warehouse.
+                      </span>
+                    </div>
+                    <p class="text-muted-foreground text-base md:text-lg font-medium">
+                      Empower your business with seamless and efficient inventory solutions.
+                    </p>
+                  </div>
+                  <div class="flex flex-row gap-4 items-center">
+                    <Show
+                      when={typeof user() === "undefined"}
+                      fallback={
+                        <Button size="sm" class="w-max" as={A} href="/dashboard">
+                          Open Warehouse
+                        </Button>
+                      }
+                    >
                       <Button size="sm" class="w-max" as={A} href="/dashboard">
-                        Open Warehouse
+                        Get Started
                       </Button>
-                    }
-                  >
-                    <Button size="sm" class="w-max" as={A} href="/dashboard">
-                      Get Started
+                    </Show>
+                    <Button size="sm" class="w-max" variant="secondary">
+                      Learn More
                     </Button>
-                  </Show>
-                  <Button size="sm" class="w-max" variant="secondary">
-                    Learn More
-                  </Button>
+                  </div>
+                </div>
+              </div>
+              <div class="w-full flex flex-row gap-4 items-center justify-center">
+                <div class="flex w-full md:w-5/6 rounded-lg h-auto aspect-video border border-neutral-200 dark:border-neutral-800 items-center justify-center">
+                  <span class="text-neutral-800 dark:text-neutral-200 text-lg font-medium select-none">
+                    Hero Image Placeholder
+                  </span>
                 </div>
               </div>
             </div>
-            <div class="w-full flex flex-row gap-4 items-center justify-center">
-              <div class="flex w-full md:w-5/6 rounded-lg h-auto aspect-video border border-neutral-200 dark:border-neutral-800 items-center justify-center">
-                <span class="text-neutral-800 dark:text-neutral-200 text-lg font-medium select-none">
-                  Hero Image Placeholder
-                </span>
-              </div>
-            </div>
+            <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8"></div>
           </div>
-          <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8"></div>
         </div>
+        <Footer />
       </div>
-      <Footer />
     </>
   );
 }

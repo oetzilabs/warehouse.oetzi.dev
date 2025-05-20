@@ -3,7 +3,8 @@ import { boolean, decimal, integer, json, text, timestamp, varchar } from "drizz
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_order_products } from "../../schema";
+import { TB_order_products, TB_supplier_products } from "../../schema";
+import { TB_brands } from "../brands/brands";
 import { commonTable } from "../entity";
 import { TB_sale_items } from "../sales/sales_items";
 import { TB_suppliers } from "../suppliers/suppliers";
@@ -29,9 +30,7 @@ export const TB_products = commonTable(
     description: text("description"),
     sku: text("sku").notNull(),
     barcode: text("barcode"),
-    category: text("category"),
-    brand: text("brand"),
-    model: text("model"),
+    brand_id: text("brand_id").references(() => TB_brands.id),
 
     // Inventory Control
     minimumStock: integer("minimum_stock").notNull().default(0),
@@ -55,8 +54,6 @@ export const TB_products = commonTable(
     // Status & Condition
     status: product_status("status").default("active").notNull(),
     condition: product_condition("condition").default("new").notNull(),
-    isHazardous: boolean("is_hazardous").default(false),
-    requiresRefrigeration: boolean("requires_refrigeration").default(false),
 
     // Pricing & Costs
     purchasePrice: decimal("purchase_price", { precision: 10, scale: 2, mode: "number" }),
@@ -81,23 +78,6 @@ export const TB_products = commonTable(
     safetyStock: integer("safety_stock"),
     customsTariffNumber: text("customs_tariff_number"),
     countryOfOrigin: text("country_of_origin"),
-
-    // Supplier Information
-    supplierId: varchar("supplier_id").references(() => TB_suppliers.id, { onDelete: "set null" }),
-    manufacturerId: varchar("manufacturer_id"),
-    // .references(() => TB_suppliers.id, { onDelete: "set null" }),
-
-    // Storage Requirements
-    storageRequirements: json("storage_requirements").$type<{
-      temperature?: { min: number; max: number; unit: "C" | "F" };
-      humidity?: { min: number; max: number; unit: "%" };
-      specialHandling?: string[];
-    }>(),
-
-    // Additional Tracking
-    lastReceivedAt: timestamp("last_received_at", { withTimezone: true }),
-    lastCountedAt: timestamp("last_counted_at", { withTimezone: true }),
-    lastQualityCheckAt: timestamp("last_quality_check_at", { withTimezone: true }),
   },
   "prod",
 );
@@ -107,17 +87,18 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
   orders: many(TB_order_products),
   warehouses: many(TB_warehouse_products),
   labels: many(TB_products_to_labels),
-  suppliers: one(TB_suppliers, {
-    fields: [TB_products.supplierId],
-    references: [TB_suppliers.id],
+  suppliers: many(TB_supplier_products),
+  brands: one(TB_brands, {
+    fields: [TB_products.brand_id],
+    references: [TB_brands.id],
   }),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;
 export type ProductInsert = typeof TB_products.$inferInsert;
-export const ProductCreateSchema = createInsertSchema(TB_products);
+export const ProductCreateSchema = omit(createInsertSchema(TB_products), ["createdAt", "updatedAt", "deletedAt", "id"]);
 export const ProductUpdateSchema = object({
-  ...partial(omit(ProductCreateSchema, ["createdAt", "updatedAt"])).entries,
+  ...partial(ProductCreateSchema).entries,
   id: prefixed_cuid2,
 });
 export type ProductCreate = InferInput<typeof ProductCreateSchema>;

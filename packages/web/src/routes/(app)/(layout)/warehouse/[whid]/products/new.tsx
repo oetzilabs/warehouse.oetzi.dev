@@ -42,9 +42,6 @@ export default function NewProductPage() {
       description: "",
       sku: "",
       barcode: "",
-      category: "",
-      brand: "",
-      model: "",
 
       minimumStock: 0,
       maximumStock: null,
@@ -59,30 +56,22 @@ export default function NewProductPage() {
 
       status: "active",
       condition: "new",
-      isHazardous: false,
-      requiresRefrigeration: false,
 
       purchasePrice: null,
       sellingPrice: 0,
       msrp: null,
       currency: "EUR",
 
-      weight: null,
+      weight: {
+        value: 0,
+        unit: "kg",
+      },
       dimensions: null,
 
       certifications: [],
       safetyStock: null,
       customsTariffNumber: "",
       countryOfOrigin: "",
-
-      supplierId: "",
-      manufacturerId: "",
-
-      storageRequirements: null,
-
-      lastReceivedAt: null,
-      lastCountedAt: null,
-      lastQualityCheckAt: null,
     } satisfies Required<ProductCreate>,
   });
   const [chosenLabels, setChosenLabels] = createSignal<string[]>([]);
@@ -152,7 +141,7 @@ export default function NewProductPage() {
                       </TextField>
                     )}
                   </form.Field>
-                  <form.Field name="sku">
+                  {/* <form.Field name="sku">
                     {(field) => (
                       <div class="flex flex-row gap-4 items-center w-full">
                         <TextField
@@ -189,43 +178,7 @@ export default function NewProductPage() {
                         </div>
                       </div>
                     )}
-                  </form.Field>
-                  <form.Field name="category">
-                    {(field) => (
-                      <TextField
-                        value={field().state.value}
-                        onChange={(e) => field().setValue(e)}
-                        class="gap-2 flex flex-col"
-                      >
-                        <TextFieldLabel class="capitalize pl-1">{field().name}</TextFieldLabel>
-                        <TextFieldInput class="h-9" placeholder="Category" />
-                      </TextField>
-                    )}
-                  </form.Field>
-                  <form.Field name="brand">
-                    {(field) => (
-                      <TextField
-                        value={field().state.value}
-                        onChange={(e) => field().setValue(e)}
-                        class="gap-2 flex flex-col"
-                      >
-                        <TextFieldLabel class="capitalize pl-1">{field().name}</TextFieldLabel>
-                        <TextFieldInput class="h-9" placeholder="Brand" />
-                      </TextField>
-                    )}
-                  </form.Field>
-                  <form.Field name="model">
-                    {(field) => (
-                      <TextField
-                        value={field().state.value}
-                        onChange={(e) => field().setValue(e)}
-                        class="gap-2 flex flex-col"
-                      >
-                        <TextFieldLabel class="capitalize pl-1">{field().name}</TextFieldLabel>
-                        <TextFieldInput class="h-9" placeholder="Model" />
-                      </TextField>
-                    )}
-                  </form.Field>
+                  </form.Field> */}
                   <form.Field name="minimumStock">
                     {(field) => (
                       <NumberField

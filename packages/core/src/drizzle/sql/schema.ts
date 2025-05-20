@@ -11,6 +11,8 @@ export * from "./schemas/address";
 export * from "./schemas/orders/orders";
 export * from "./schemas/orders/order_products";
 
+export * from "./schemas/brands/brands";
+
 export * from "./schemas/discounts";
 export * from "./schemas/products/products";
 export * from "./schemas/products/product_labels";
