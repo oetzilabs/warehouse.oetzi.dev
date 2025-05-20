@@ -31,7 +31,15 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
         contacts: true,
         notes: true,
-        products: true,
+        products: {
+          with: {
+            product: {
+              with: {
+                labels: true,
+              },
+            },
+          },
+        },
       };
       if (options) {
         return options;
@@ -118,10 +126,15 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                 with: {
                   products: {
                     with: {
-                      labels: true,
+                      product: {
+                        with: {
+                          labels: true,
+                        },
+                      },
                     },
                   },
                   contacts: true,
+                  notes: true,
                 },
               },
             },

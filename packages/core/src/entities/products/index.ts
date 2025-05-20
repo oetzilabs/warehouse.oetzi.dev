@@ -1,12 +1,20 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { InferInput, safeParse } from "valibot";
+import { array, InferInput, object, parse, safeParse } from "valibot";
+import products from "../../data/products.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { ProductCreateSchema, ProductUpdateSchema, TB_products, TB_products_to_labels } from "../../drizzle/sql/schema";
+import {
+  ProductCreateSchema,
+  ProductCreateWithDateTransformSchema,
+  ProductUpdateSchema,
+  TB_products,
+  TB_products_to_labels,
+} from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
+  ProductInvalidJson,
   ProductLabelAlreadyExists,
   ProductLabelInvalidId,
   ProductLabelNotAdded,
@@ -41,6 +49,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       labels: {
         with: {
           label: true,
+        },
+      },
+      stco: {
+        with: {
+          condition: true,
         },
       },
     });
@@ -83,6 +96,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
               labels: {
                 with: {
                   label: true,
+                },
+              },
+              stco: {
+                with: {
+                  condition: true,
                 },
               },
             },
@@ -175,6 +193,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   labels: {
                     with: {
                       label: true,
+                    },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
                     },
                   },
                 },
@@ -308,7 +331,43 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return removed;
       });
 
-    return { create, findById, update, remove, safeRemove, findByWarehouseId, addLabel, removeLabel } as const;
+    const seed = () =>
+      Effect.gen(function* (_) {
+        const dbProducts = yield* Effect.promise(() => db.query.TB_products.findMany());
+
+        const productsToSeedValid = safeParse(array(ProductCreateWithDateTransformSchema), products);
+        if (!productsToSeedValid.success) {
+          return yield* Effect.fail(new ProductInvalidJson({ json: products, issues: productsToSeedValid.issues }));
+        }
+
+        const productsToSeed = productsToSeedValid.output;
+
+        const existing = dbProducts.map((v) => v.id);
+        const toCreate = productsToSeed.filter((t) => !existing.includes(t.id));
+
+        if (toCreate.length > 0) {
+          const created = yield* Effect.promise(() => db.insert(TB_products).values(toCreate).returning());
+          yield* Effect.log("Created products", created);
+        }
+
+        const toUpdate = productsToSeed.filter((t) => existing.includes(t.id));
+        if (toUpdate.length > 0) {
+          for (const product of toUpdate) {
+            const updated = yield* Effect.promise(() =>
+              db
+                .update(TB_products)
+                .set({ ...product, updatedAt: new Date() })
+                .where(eq(TB_products.id, product.id))
+                .returning(),
+            );
+            yield* Effect.log("Updated product", updated);
+          }
+        }
+
+        return productsToSeed;
+      });
+
+    return { create, findById, update, remove, safeRemove, findByWarehouseId, addLabel, removeLabel, seed } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

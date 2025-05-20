@@ -116,7 +116,7 @@ export default function MessagesPage() {
       <ResizablePanel initialSize={sizes()[1] ?? 0.4} minSize={0.3} class="grow flex flex-col">
         <Tabs defaultValue="all" class="grow flex flex-col">
           <div class="flex flex-row items-center p-4 border-b border-neutral-200 dark:border-neutral-800 justify-between">
-            <h1 class="text-xl leading-0 font-bold">Inbox</h1>
+            <h1 class="text-xl leading-none font-bold">Inbox</h1>
             <TabsList class="!p-0 !py-0 border h-max rounded-lg overflow-clip">
               <TabsTrigger value="all" class="text-neutral-600 dark:text-neutral-200 h-[30px] rounded-r-none border-r">
                 All mail

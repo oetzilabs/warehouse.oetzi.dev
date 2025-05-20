@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { json, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { object, omit, partial } from "valibot";
+import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
@@ -45,8 +45,15 @@ export const warehouse_facilities_relations = relations(TB_warehouse_facilities,
 
 export type FacilitySelect = typeof TB_warehouse_facilities.$inferSelect;
 export type FacilityInsert = typeof TB_warehouse_facilities.$inferInsert;
-export const FacilityCreateSchema = omit(createInsertSchema(TB_warehouse_facilities), ["createdAt", "updatedAt"]);
+export const FacilityCreateSchema = omit(createInsertSchema(TB_warehouse_facilities), [
+  "createdAt",
+  "updatedAt",
+  "deletedAt",
+]);
 export const FacilityUpdateSchema = object({
-  ...partial(omit(createInsertSchema(TB_warehouse_facilities), ["createdAt", "updatedAt"])).entries,
+  ...partial(omit(createInsertSchema(TB_warehouse_facilities), ["createdAt", "updatedAt", "deletedAt"])).entries,
   id: prefixed_cuid2,
 });
+
+export type FacilityCreate = InferInput<typeof FacilityCreateSchema>;
+export type FacilityUpdate = InferInput<typeof FacilityUpdateSchema>;

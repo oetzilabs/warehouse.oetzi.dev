@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/solid-table";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
+import dayjs from "dayjs";
 import IconDots from "lucide-solid/icons/ellipsis";
 import { For } from "solid-js";
 
@@ -71,7 +72,7 @@ export const columns: ColumnDef<OrderInfo>[] = [
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: (props) => <div>{props.row.original.createdAt.toLocaleString()}</div>,
+    cell: (props) => <div>{dayjs(props.row.original.createdAt).format("DD/MM/YYYY")}</div>,
     filterFn: "fuzzy",
   },
   {

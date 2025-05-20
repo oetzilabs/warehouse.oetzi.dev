@@ -19,6 +19,7 @@ export * from "./schemas/discounts";
 export * from "./schemas/products/products";
 export * from "./schemas/products/product_labels";
 export * from "./schemas/products/products_certificates";
+export * from "./schemas/products/products_to_storage_conditions";
 
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";
@@ -55,6 +56,7 @@ export * from "./schemas/storages/storage_types";
 export * from "./schemas/storages/storage_space";
 export * from "./schemas/storages/storage_inventory_to_labels";
 export * from "./schemas/storages/storage_labels";
+export * from "./schemas/storages/storage_conditions";
 
 export * from "./schemas/payments/payment_methods";
 export * from "./schemas/payments/payment_history";

@@ -12,13 +12,20 @@ import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCertificates } from "@/lib/api/certificates";
 import { getProductLabels, getProductsByWarehouseId } from "@/lib/api/products";
+import { getStorageConditions } from "@/lib/api/storage_conditions";
 import { getSuppliersByWarehouseId } from "@/lib/api/suppliers";
 import { cn } from "@/lib/utils";
 import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import { type ProductCreate } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/products/products";
+import dayjs from "dayjs";
+import Award from "lucide-solid/icons/award";
+import Info from "lucide-solid/icons/info";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
+import Tag from "lucide-solid/icons/tag";
+import Thermometer from "lucide-solid/icons/thermometer";
+import Users from "lucide-solid/icons/users";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -29,7 +36,9 @@ export const route = {
     const sales = getProductsByWarehouseId(props.params.whid);
     const suppliers = getSuppliersByWarehouseId(props.params.whid);
     const labels = getProductLabels();
-    return { user, sessionToken, sales, suppliers, labels };
+    const certificates = getCertificates();
+    const conditions = getStorageConditions();
+    return { user, sessionToken, sales, suppliers, labels, certificates, conditions };
   },
 } as RouteDefinition;
 
@@ -38,6 +47,7 @@ export default function NewProductPage() {
   const suppliers = createAsync(() => getSuppliersByWarehouseId(params.whid), { deferStream: true });
   const labels = createAsync(() => getProductLabels(), { deferStream: true });
   const certificates = createAsync(() => getCertificates(), { deferStream: true });
+  const conditions = createAsync(() => getStorageConditions(), { deferStream: true });
   const formOps = formOptions({
     defaultValues: {
       name: "",
@@ -80,14 +90,15 @@ export default function NewProductPage() {
   const [chosenLabels, setChosenLabels] = createSignal<string[]>([]);
   const [chosenSuppliers, setChosenSuppliers] = createSignal<string[]>([]);
   const [chosenCertificates, setChosenCertificates] = createSignal<string[]>([]);
+  const [chosenConditions, setChosenConditions] = createSignal<string[]>([]);
   const form = createForm(() => ({
     ...formOps,
   }));
   return (
-    <div class="w-full flex flex-row grow">
-      <div class="w-full p-4 flex flex-col gap-4">
-        <div class="flex items-center gap-4 justify-between w-full">
-          <h1 class="text-2xl font-bold leading-0">New Product</h1>
+    <div class="container flex flex-row grow py-4">
+      <div class="w-full py-4 flex flex-col gap-4 border rounded-xl">
+        <div class="flex px-4 items-center gap-4 justify-between w-full">
+          <h1 class="font-semibold leading-none text-muted-foreground">New Product</h1>
           <div class="flex items-center gap-4">
             <Button size="sm" class="h-8" onClick={() => {}}>
               <Plus class="size-4" />
@@ -96,37 +107,50 @@ export default function NewProductPage() {
           </div>
         </div>
         <div class="w-full grow flex flex-col">
-          <Tabs defaultValue="basic-info" class="w-full">
+          <Tabs defaultValue="basic-info" class="w-full border-t overflow-clip h-full">
             <TabsList class="flex flex-row gap-0 w-full items-center justify-start h-max rounded-none bg-transparent p-0 !py-0">
               <TabsTrigger
                 value="basic-info"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b data-[selected]:border-primary rounded-none gap-2 py-3 px-4"
               >
+                <Info class="size-4" />
                 Basic Information
               </TabsTrigger>
               <TabsTrigger
                 value="labels"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b data-[selected]:border-primary rounded-none gap-2 py-3 px-4"
               >
-                Labels {chosenLabels().length > 0 && `(${chosenLabels().length})`}
+                <Tag class="size-4" />
+                Labels ({chosenLabels().length})
               </TabsTrigger>
               <TabsTrigger
-                value="labels"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                value="conditions"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b data-[selected]:border-primary rounded-none gap-2 py-3 px-4"
               >
-                Certificates {chosenCertificates().length > 0 && `(${chosenCertificates().length})`}
+                <Thermometer class="size-4" />
+                Conditions ({chosenConditions().length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="certificates"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b data-[selected]:border-primary rounded-none gap-2 py-3 px-4"
+              >
+                <Award class="size-4" />
+                Certificates ({chosenCertificates().length})
               </TabsTrigger>
               <TabsTrigger
                 value="suppliers"
-                class="!shadow-none bg-transparent data-[selected]:text-primary border-b border-neutral-300 dark:border-neutral-800 data-[selected]:border-indigo-600 rounded-none"
+                class="!shadow-none bg-transparent data-[selected]:text-primary border-b data-[selected]:border-primary rounded-none gap-2 py-3 px-4"
               >
-                Suppliers
+                <Users class="size-4" />
+                Suppliers ({chosenSuppliers().length})
               </TabsTrigger>
-              <div class="w-full h-[34px] border-b border-neutral-300 dark:border-neutral-800 "></div>
+              <div class="w-full border-b py-3 inline-flex px-4">
+                <div class="size-5 border-b border-transparent" />
+              </div>
             </TabsList>
             <form class="w-full grow flex flex-col gap-4">
               <TabsContent value="basic-info">
-                <div class="w-full flex flex-col gap-4 max-w-2xl py-2">
+                <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <form.Field name="name">
                     {(field) => (
                       <TextField
@@ -134,7 +158,9 @@ export default function NewProductPage() {
                         onChange={(e) => field().setValue(e)}
                         class="gap-2 flex flex-col"
                       >
-                        <TextFieldLabel class="capitalize pl-1">{field().name}</TextFieldLabel>
+                        <TextFieldLabel class="capitalize pl-1">
+                          Name <span class="text-red-500">*</span>
+                        </TextFieldLabel>
                         <TextFieldInput class="h-9" placeholder="Product Name" />
                       </TextField>
                     )}
@@ -146,102 +172,93 @@ export default function NewProductPage() {
                         onChange={(e) => field().setValue(e)}
                         class="gap-2 flex flex-col"
                       >
-                        <TextFieldLabel class="capitalize pl-1">{field().name}</TextFieldLabel>
-                        <TextFieldTextArea placeholder="Product Description" />
+                        <TextFieldLabel class="capitalize pl-1">Description</TextFieldLabel>
+                        <TextFieldTextArea placeholder="Product Description" autoResize />
                       </TextField>
                     )}
                   </form.Field>
-                  {/* <form.Field name="sku">
-                    {(field) => (
-                      <div class="flex flex-row gap-4 items-center w-full">
-                        <TextField
+                  <div class="flex flex-row gap-4 items-center w-full">
+                    <form.Field name="minimumStock">
+                      {(field) => (
+                        <NumberField
+                          class="w-full"
                           value={field().state.value}
-                          onChange={(e) => field().setValue(e)}
-                          class="gap-2 flex flex-col w-full"
+                          onRawValueChange={(e) => field().setValue(e)}
+                          minValue={0}
                         >
-                          <TextFieldLabel class="capitalize pl-1 w-full">SKU</TextFieldLabel>
-                          <TextFieldInput class="h-9" placeholder="SKU" />
-                        </TextField>
-                        <div class="place-self-end w-max">
-                          <Button type="button" size="sm" variant="secondary" class="h-9 px-4" onClick={() => {}}>
-                            Generate
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </form.Field>
-                  <form.Field name="barcode">
-                    {(field) => (
-                      <div class="flex flex-row gap-4 items-center w-full">
-                        <TextField
-                          value={field().state.value}
-                          onChange={(e) => field().setValue(e)}
-                          class="gap-2 flex flex-col w-full"
+                          <NumberFieldLabel class="capitalize pl-1">Minimum Stock</NumberFieldLabel>
+                          <NumberFieldGroup>
+                            <NumberFieldInput class="h-16 text-lg font-medium" />
+                            <NumberFieldIncrementTrigger class="width-auto h-full !p-5 [&>svg]:size-5" />
+                            <NumberFieldDecrementTrigger class="width-auto h-full !p-5 [&>svg]:size-5" />
+                          </NumberFieldGroup>
+                        </NumberField>
+                      )}
+                    </form.Field>
+                    <form.Field name="maximumStock">
+                      {(field) => (
+                        <NumberField
+                          class="w-full"
+                          value={typeof field().state.value !== "boolean" ? field().state.value : undefined}
+                          onRawValueChange={(e) => field().setValue(e)}
+                          minValue={form.state.values.minimumStock ?? 0}
                         >
-                          <TextFieldLabel class="capitalize pl-1">{field().name}</TextFieldLabel>
-                          <TextFieldInput class="h-9" placeholder="Barcode" />
-                        </TextField>
-                        <div class="place-self-end w-max">
-                          <Button type="button" size="sm" variant="secondary" class="h-9 px-4" onClick={() => {}}>
-                            Generate
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </form.Field> */}
-                  <form.Field name="minimumStock">
-                    {(field) => (
-                      <NumberField
-                        class="w-full"
-                        value={field().state.value}
-                        onRawValueChange={(e) => field().setValue(e)}
-                        minValue={0}
-                      >
-                        <NumberFieldLabel class="capitalize pl-1">{field().name}</NumberFieldLabel>
-                        <NumberFieldGroup>
-                          <NumberFieldInput class="h-9" />
-                          <NumberFieldIncrementTrigger />
-                          <NumberFieldDecrementTrigger />
-                        </NumberFieldGroup>
-                      </NumberField>
-                    )}
-                  </form.Field>
-                  <form.Field name="maximumStock">
-                    {(field) => (
-                      <NumberField
-                        class="w-full"
-                        value={typeof field().state.value !== "boolean" ? field().state.value : null}
-                        onRawValueChange={(e) => field().setValue(e)}
-                        minValue={0}
-                      >
-                        <NumberFieldLabel class="capitalize pl-1">{field().name}</NumberFieldLabel>
-                        <NumberFieldGroup>
-                          <NumberFieldInput class="h-9" />
-                          <NumberFieldIncrementTrigger />
-                          <NumberFieldDecrementTrigger />
-                        </NumberFieldGroup>
-                      </NumberField>
-                    )}
-                  </form.Field>
+                          <NumberFieldLabel class="capitalize pl-1">Maximum Stock</NumberFieldLabel>
+                          <NumberFieldGroup>
+                            <NumberFieldInput class="h-16 text-lg font-medium" />
+                            <NumberFieldIncrementTrigger class="width-auto h-full !p-5 [&>svg]:size-5" />
+                            <NumberFieldDecrementTrigger class="width-auto h-full !p-5 [&>svg]:size-5" />
+                          </NumberFieldGroup>
+                        </NumberField>
+                      )}
+                    </form.Field>
+                    <form.Field name="reorderPoint">
+                      {(field) => (
+                        <NumberField
+                          class="w-full"
+                          value={typeof field().state.value !== "boolean" ? field().state.value : undefined}
+                          onRawValueChange={(e) => field().setValue(e)}
+                          minValue={form.state.values.minimumStock ?? 0}
+                          maxValue={form.state.values.maximumStock ?? 0}
+                        >
+                          <NumberFieldLabel class="capitalize pl-1">Reorder Point</NumberFieldLabel>
+                          <NumberFieldGroup>
+                            <NumberFieldInput class="h-16 text-lg font-medium" />
+                            <NumberFieldIncrementTrigger class="width-auto h-full !p-5 [&>svg]:size-5" />
+                            <NumberFieldDecrementTrigger class="width-auto h-full !p-5 [&>svg]:size-5" />
+                          </NumberFieldGroup>
+                        </NumberField>
+                      )}
+                    </form.Field>
+                  </div>
                 </div>
               </TabsContent>
               <TabsContent value="labels">
-                <div class="w-full flex flex-col gap-4 py-2">
-                  <div class="grid grid-cols-6 gap-4 w-full">
+                <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
+                  <div class="grid  gap-4 w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     <Suspense>
                       <Show when={labels()}>
                         {(labelsList) => (
                           <For
-                            each={labelsList()}
+                            each={labelsList().sort((a, b) => {
+                              // has image and image length is greater than 0 is first.
+                              // then sort by updatedAt or createdAt
+                              // old code: (a.image?.length ?? 0) > 0 ? -1 : (b.image?.length ?? 0) > 0 ? 1 : 0,
+                              const aHasImage = a.image?.length ?? 0;
+                              const bHasImage = b.image?.length ?? 0;
+                              const aIsNewer = (a.updatedAt ?? a.createdAt) > (b.updatedAt ?? b.createdAt);
+                              return aHasImage > bHasImage ? -1 : aHasImage < bHasImage ? 1 : aIsNewer ? -1 : 1;
+                            })}
                             fallback={
                               <div class="col-span-full w-full flex flex-col gap-2 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
                                 <span class="text-muted-foreground text-sm">
                                   There are currently no labels in the system, please contact the administrator.
                                 </span>
-                                <div class="flex flex-row gap-2 items-center justify-center">
+                                <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8"
+                                    class="h-8 bg-background"
+                                    variant="outline"
                                     onClick={() => {
                                       toast.promise(revalidate(getProductLabels.key), {
                                         loading: "Refreshing labels...",
@@ -260,11 +277,9 @@ export default function NewProductPage() {
                             {(label) => (
                               <div
                                 class={cn(
-                                  "bg-muted-foreground/5 rounded-lg p-4 flex flex-col gap-2 items-center justify-center border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer",
+                                  "bg-muted-foreground/5 rounded-lg flex flex-col gap-2 border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer overflow-clip w-full h-content",
                                   {
-                                    "text-white bg-indigo-600 font-medium hover:bg-indigo-600": chosenLabels().includes(
-                                      label.id,
-                                    ),
+                                    "text-white bg-indigo-600 hover:bg-indigo-600": chosenLabels().includes(label.id),
                                   },
                                 )}
                                 onClick={() => {
@@ -275,16 +290,122 @@ export default function NewProductPage() {
                                   }
                                 }}
                               >
-                                <Show when={(label.image?.length ?? 0) > 0 && label.image}>
-                                  {(i) => <img src={i()} class="size-40 rounded-lg" />}
+                                <Show
+                                  when={(label.image?.length ?? 0) > 0 && label.image}
+                                  fallback={<div class="bg-muted-foreground w-full h-32"></div>}
+                                >
+                                  {(i) => <img src={i()} class="border-b w-full h-32 object-cover" />}
                                 </Show>
-                                <span class="text-sm font-medium">{label.name}</span>
+                                <div class="flex flex-col gap-2 p-4 pt-2 grow">
+                                  <div class="flex flex-col gap-1">
+                                    <span class="text-sm font-medium leading-none">{label.name}</span>
+                                    <span
+                                      class={cn("text-sm text-muted-foreground ", {
+                                        "text-white/70": chosenLabels().includes(label.id),
+                                      })}
+                                    >
+                                      {label.description ?? "No description available"}
+                                    </span>
+                                  </div>
+                                  <div class="flex grow"></div>
+                                  <div class="flex flex-col gap-1">
+                                    <span
+                                      class={cn("text-xs text-muted-foreground ", {
+                                        "text-white/70": chosenLabels().includes(label.id),
+                                      })}
+                                    >
+                                      {dayjs(label.updatedAt ?? label.createdAt).format("MMM DD, YYYY - h:mm A")}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </For>
+                        )}
+                      </Show>
+                    </Suspense>
+                    <Button
+                      size="sm"
+                      class="h-8 w-max"
+                      onClick={() => {
+                        toast.promise(revalidate(getProductLabels.key), {
+                          loading: "Refreshing labels...",
+                          success: "Labels refreshed",
+                          error: "Failed to refresh labels",
+                        });
+                      }}
+                    >
+                      <RotateCw class="size-4" />
+                      Refresh
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="conditions">
+                <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
+                  <div class="grid grid-cols-6 gap-4 w-full">
+                    <Suspense>
+                      <Show when={conditions()}>
+                        {(conditionsList) => (
+                          <For
+                            each={conditionsList()}
+                            fallback={
+                              <div class="col-span-full w-full flex flex-col gap-2 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
+                                <span class="text-muted-foreground text-sm">
+                                  There are currently no codnitions in the system, please contact the administrator.
+                                </span>
+                                <div class="flex flex-row gap-4 items-center justify-center">
+                                  <Button
+                                    size="sm"
+                                    class="h-8 bg-background"
+                                    variant="outline"
+                                    onClick={() => {
+                                      toast.promise(revalidate(getStorageConditions.key), {
+                                        loading: "Refreshing storage conditions...",
+                                        success: "Storage conditions refreshed",
+                                        error: "Failed to refresh storage conditions",
+                                      });
+                                    }}
+                                  >
+                                    <RotateCw class="size-4" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </div>
+                            }
+                          >
+                            {(condition) => (
+                              <div
+                                class={cn(
+                                  "bg-muted-foreground/5 rounded-lg p-4 flex flex-col gap-2 items-center justify-center border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer",
+                                  {
+                                    "text-white bg-indigo-600 hover:bg-indigo-600": chosenLabels().includes(
+                                      condition.id,
+                                    ),
+                                  },
+                                )}
+                                onClick={() => {
+                                  if (chosenConditions().includes(condition.id)) {
+                                    setChosenConditions((c) => c.filter((l) => l !== condition.id));
+                                  } else {
+                                    setChosenConditions((c) => [...c, condition.id]);
+                                  }
+                                }}
+                              >
+                                <span class="text-sm font-medium">{condition.name}</span>
                                 <span
                                   class={cn("text-sm text-muted-foreground text-center", {
-                                    "text-white/70": chosenLabels().includes(label.id),
+                                    "text-white/70": chosenConditions().includes(condition.id),
                                   })}
                                 >
-                                  {label.description ?? "No description available"}
+                                  {condition.description ?? "No description available"}
+                                </span>
+                                <span
+                                  class={cn("text-xs text-muted-foreground text-center", {
+                                    "text-white/70": chosenConditions().includes(condition.id),
+                                  })}
+                                >
+                                  {dayjs(condition.updatedAt ?? condition.createdAt).format("MMM DD, YYYY - h:mm A")}
                                 </span>
                               </div>
                             )}
@@ -309,8 +430,8 @@ export default function NewProductPage() {
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="labels">
-                <div class="w-full flex flex-col gap-4 py-2">
+              <TabsContent value="certificates">
+                <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <div class="grid grid-cols-6 gap-4 w-full">
                     <Suspense>
                       <Show when={certificates()}>
@@ -318,14 +439,15 @@ export default function NewProductPage() {
                           <For
                             each={certificatesList()}
                             fallback={
-                              <div class="col-span-full w-full flex flex-col gap-2 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
+                              <div class="col-span-full w-full flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
                                 <span class="text-muted-foreground text-sm">
-                                  There are currently no certificates in the system, please contact the administrator.
+                                  There are currently no certificates in the system, please create one.
                                 </span>
-                                <div class="flex flex-row gap-2 items-center justify-center">
+                                <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8"
+                                    class="h-8 bg-background"
+                                    variant="outline"
                                     onClick={() => {
                                       toast.promise(revalidate(getCertificates.key), {
                                         loading: "Refreshing certificates...",
@@ -337,6 +459,10 @@ export default function NewProductPage() {
                                     <RotateCw class="size-4" />
                                     Refresh
                                   </Button>
+                                  <Button size="sm" class="h-8" as={A} href="/certificates/new">
+                                    <Plus class="size-4" />
+                                    Add Certificate
+                                  </Button>
                                 </div>
                               </div>
                             }
@@ -344,7 +470,7 @@ export default function NewProductPage() {
                             {(certificate) => (
                               <div
                                 class={cn(
-                                  "bg-muted-foreground/5 rounded-lg p-4 flex flex-col gap-2 items-center justify-center border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer",
+                                  "bg-muted-foreground/5 rounded-lg p-4 flex flex-col gap-4 items-center justify-center border border-neutral-200 dark:border-neutral-800 select-none cursor-pointer",
                                   {
                                     "text-white bg-indigo-600 font-medium hover:bg-indigo-600":
                                       chosenCertificates().includes(certificate.id),
@@ -390,20 +516,21 @@ export default function NewProductPage() {
                 </div>
               </TabsContent>
               <TabsContent value="suppliers">
-                <div class="w-full flex flex-col gap-4 max-w-2xl py-2">
-                  <div class="grid grid-cols-6 gap-4">
+                <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
+                  <div class="grid grid-cols-6 gap-4 w-full">
                     <Suspense>
                       <Show when={suppliers()}>
                         {(suppliersList) => (
                           <For
                             each={suppliersList()}
                             fallback={
-                              <div class="col-span-full w-full flex flex-col gap-2 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
+                              <div class="col-span-full w-full flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border">
                                 <span class="text-muted-foreground text-sm">You don't have any suppliers</span>
-                                <div class="flex flex-row gap-2 items-center justify-center">
+                                <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8"
+                                    class="h-8 bg-background"
+                                    variant="outline"
                                     onClick={() => {
                                       toast.promise(revalidate(getSuppliersByWarehouseId.keyFor(params.whid)), {
                                         loading: "Refreshing suppliers...",
@@ -415,7 +542,7 @@ export default function NewProductPage() {
                                     <RotateCw class="size-4" />
                                     Refresh
                                   </Button>
-                                  <Button size="sm" class="h-8" as={A} href="/suppliers">
+                                  <Button size="sm" class="h-8" as={A} href="/suppliers/new">
                                     <Plus class="size-4" />
                                     Add Supplier
                                   </Button>
@@ -423,7 +550,53 @@ export default function NewProductPage() {
                               </div>
                             }
                           >
-                            {(s) => <div class="bg-muted-foreground/5 rounded-lg p-4">{s.supplier.name}</div>}
+                            {(s) => (
+                              <div
+                                class={cn("bg-muted-foreground/5 rounded-lg p-4", {
+                                  "text-white bg-indigo-600 hover:bg-indigo-600": chosenSuppliers().includes(
+                                    s.supplier.id,
+                                  ),
+                                })}
+                                onClick={() => {
+                                  if (chosenSuppliers().includes(s.supplier.id)) {
+                                    setChosenSuppliers((c) => c.filter((l) => l !== s.supplier.id));
+                                  } else {
+                                    setChosenSuppliers((c) => [...c, s.supplier.id]);
+                                  }
+                                }}
+                              >
+                                <span class="text-sm font-medium">{s.supplier.name}</span>
+                                <For each={s.supplier.notes}>
+                                  {(note) => (
+                                    <span
+                                      class={cn("text-xs text-muted-foreground text-center", {
+                                        "text-white/70": chosenSuppliers().includes(s.supplier.id),
+                                      })}
+                                    >
+                                      {note.content}
+                                    </span>
+                                  )}
+                                </For>
+                                <For each={s.supplier.contacts}>
+                                  {(contact) => (
+                                    <span
+                                      class={cn("text-xs text-muted-foreground text-center", {
+                                        "text-white/70": chosenSuppliers().includes(s.supplier.id),
+                                      })}
+                                    >
+                                      {contact.email}
+                                    </span>
+                                  )}
+                                </For>
+                                <span
+                                  class={cn("text-xs text-muted-foreground text-center", {
+                                    "text-white/70": chosenSuppliers().includes(s.supplier.id),
+                                  })}
+                                >
+                                  {dayjs(s.supplier.updatedAt ?? s.supplier.createdAt).format("MMM DD, YYYY - h:mm A")}
+                                </span>
+                              </div>
+                            )}
                           </For>
                         )}
                       </Show>

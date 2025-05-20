@@ -36,6 +36,12 @@ export const columns: ColumnDef<ProductInfo>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "name",
+    header: "Name",
+    cell: (props) => <div class="capitalize">{props.row.original.name}</div>,
+    filterFn: "fuzzy",
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: (props) => <div class="capitalize">{props.row.original.status}</div>,

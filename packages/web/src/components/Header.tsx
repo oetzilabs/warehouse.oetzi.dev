@@ -17,7 +17,7 @@ export function Header() {
             </A>
             <div class="flex flex-row gap-4 items-center justify-start"></div>
           </div>
-          <div class="w-max items-center justify-end flex flex-row gap-2">
+          <div class="w-max items-center justify-end flex flex-row gap-0">
             <ModeToggle />
             <Suspense fallback={<div>Loading...</div>}>
               <UserMenu />

@@ -46,7 +46,10 @@ export default function UserMenu() {
         <Match when={user.ready() && user.user() !== null && user.session() !== null && user.user()}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>
-              <DropdownMenuTrigger as={Button} class="flex flex-row items-center justify-center h-8 px-3">
+              <DropdownMenuTrigger
+                as={Button}
+                class="flex flex-row items-center justify-center h-8 px-3 rounded-l-none"
+              >
                 {s().name}
                 <User class="size-4" />
               </DropdownMenuTrigger>

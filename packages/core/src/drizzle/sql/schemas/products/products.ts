@@ -1,17 +1,18 @@
+import dayjs from "dayjs";
 import { relations } from "drizzle-orm";
-import { boolean, decimal, integer, json, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { InferInput, object, omit, partial } from "valibot";
+import { InferInput, nullable, object, omit, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_order_products, TB_supplier_products } from "../../schema";
 import { TB_brands } from "../brands/brands";
 import { commonTable } from "../entity";
 import { TB_sale_items } from "../sales/sales_items";
-import { TB_suppliers } from "../suppliers/suppliers";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
 import { TB_products_to_labels } from "./product_labels";
 import { TB_products_to_certifications } from "./products_certificates";
+import { TB_products_to_storage_conditions } from "./products_to_storage_conditions";
 
 export const product_status = schema.enum("product_status", [
   "active",
@@ -93,14 +94,32 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
     references: [TB_brands.id],
   }),
   certs: many(TB_products_to_certifications),
+  stco: many(TB_products_to_storage_conditions),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;
 export type ProductInsert = typeof TB_products.$inferInsert;
 export const ProductCreateSchema = omit(createInsertSchema(TB_products), ["createdAt", "updatedAt", "deletedAt", "id"]);
+
+export const ProductCreateWithDateTransformSchema = pipe(
+  object({
+    ...ProductCreateSchema.entries,
+    manufacturingDate: string(),
+    expirationDate: nullable(string()),
+    id: prefixed_cuid2,
+  }),
+  transform((input) => ({
+    ...input,
+    manufacturingDate: input.manufacturingDate ? dayjs(input.manufacturingDate).toDate() : null,
+    expirationDate: input.expirationDate ? dayjs(input.expirationDate).toDate() : null,
+  })),
+);
+
+export const ProductCreateWithDateStringToDateSchema = object({});
 export const ProductUpdateSchema = object({
   ...partial(ProductCreateSchema).entries,
   id: prefixed_cuid2,
 });
+
 export type ProductCreate = InferInput<typeof ProductCreateSchema>;
 export type ProductUpdate = InferInput<typeof ProductUpdateSchema>;

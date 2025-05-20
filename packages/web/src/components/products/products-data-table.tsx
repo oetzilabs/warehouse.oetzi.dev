@@ -84,7 +84,7 @@ export function ProductsDataTable(props: {
           onChange={(value) => table.getColumn("products")?.setFilterValue(value)}
           class="w-full"
         >
-          <TextFieldInput placeholder="Filter orders..." class="max-w-full leading-0 rounded-lg px-4" />
+          <TextFieldInput placeholder="Filter orders..." class="max-w-full leading-none rounded-lg px-4" />
         </TextField>
         <DropdownMenu placement="bottom-end">
           <DropdownMenuTrigger as={Button} size="sm">

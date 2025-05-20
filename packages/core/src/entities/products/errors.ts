@@ -52,3 +52,8 @@ export class ProductLabelNotDeleted extends Schema.TaggedError<ProductLabelNotDe
   id: Schema.String,
   message: Schema.optional(Schema.String),
 }) {}
+
+export class ProductInvalidJson extends Schema.TaggedError<ProductInvalidJson>()("ProductInvalidJson", {
+  json: Schema.Unknown,
+  issues: Schema.Any,
+}) {}

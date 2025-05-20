@@ -9,6 +9,7 @@ import { schema } from "../utils";
 import { TB_warehouse_suppliers } from "../warehouses/warehouse_suppliers";
 import { TB_supplier_contacts } from "./suppliers_contacts";
 import { TB_supplier_notes } from "./suppliers_notes";
+import { TB_supplier_products } from "./suppliers_products";
 
 export const supplier_status = schema.enum("supplier_status", ["active", "inactive", "under_review", "blacklisted"]);
 
@@ -29,7 +30,7 @@ export const TB_suppliers = commonTable(
 );
 
 export const supplier_relations = relations(TB_suppliers, ({ many }) => ({
-  products: many(TB_products),
+  products: many(TB_supplier_products),
   notes: many(TB_supplier_notes),
   contacts: many(TB_supplier_contacts),
   warehouses: many(TB_warehouse_suppliers),

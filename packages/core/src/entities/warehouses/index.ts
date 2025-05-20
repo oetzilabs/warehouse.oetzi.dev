@@ -4,6 +4,7 @@ import { array, object, parse, safeParse, type InferInput } from "valibot";
 import storages from "../../data/storages.json";
 import warehouseAreas from "../../data/warehouse_areas.json";
 import facilites from "../../data/warehouse_facilities.json";
+import warehouseProducts from "../../data/warehouse_products.json";
 import warehouses from "../../data/warehouses.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
@@ -15,6 +16,7 @@ import {
   TB_users_warehouses,
   TB_warehouse_areas,
   TB_warehouse_facilities,
+  TB_warehouse_products,
   TB_warehouse_types,
   TB_warehouses,
   WarehouseAreaCreateSchema,
@@ -436,6 +438,30 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                 .returning(),
             );
           }
+        }
+
+        // Seed warehouse products
+        const dbWarehouseProducts = yield* Effect.promise(() => db.query.TB_warehouse_products.findMany());
+
+        const whProducts = parse(
+          array(
+            object({
+              warehouseId: prefixed_cuid2,
+              productId: prefixed_cuid2,
+            }),
+          ),
+          warehouseProducts,
+        );
+
+        const existingWhProducts = dbWarehouseProducts.map((wp) => `${wp.warehouseId}-${wp.productId}`);
+
+        const toCreateWhProducts = whProducts.filter(
+          (wp) => !existingWhProducts.includes(`${wp.warehouseId}-${wp.productId}`),
+        );
+
+        if (toCreateWhProducts.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_warehouse_products).values(toCreateWhProducts).returning());
+          yield* Effect.log("Created warehouse-product relationships", toCreateWhProducts);
         }
 
         return whs;

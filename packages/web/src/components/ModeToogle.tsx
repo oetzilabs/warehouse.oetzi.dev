@@ -20,7 +20,7 @@ const ModeToggle = () => {
         as={Button}
         variant="outline"
         size="icon"
-        class="size-8 flex flex-row items-center justify-center gap-4"
+        class="w-9 h-8 flex flex-row items-center justify-center gap-4 rounded-r-none"
       >
         <div class="w-max flex">
           <Sun class="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

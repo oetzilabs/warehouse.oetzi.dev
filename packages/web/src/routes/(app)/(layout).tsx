@@ -218,16 +218,16 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/incoming-orders`}>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/customer-orders`}>
                   <Tags class="size-4" />
-                  Incoming Orders
+                  Customer Orders
                   <SidebarMenuBadge class="mr-1">99+</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Link href={`/warehouse/${user.currentWarehouse()?.id}/outgoing-orders`}>
+                <Link href={`/warehouse/${user.currentWarehouse()?.id}/supply-orders`}>
                   <Tags class="size-4" />
-                  Outgoing Orders
+                  Supply Orders
                   <SidebarMenuBadge class="mr-1">999+</SidebarMenuBadge>
                 </Link>
               </SidebarMenuItem>

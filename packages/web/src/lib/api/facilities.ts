@@ -80,7 +80,7 @@ export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
   return warehouse;
 }, "warehouse-by-id");
 
-export const createFacility = action(async (data: InferInput<typeof FacilityCreateSchema>) => {
+export const createFacility = action(async (data: Omit<InferInput<typeof FacilityCreateSchema>, "ownerId">) => {
   "use server";
   const auth = await withSession();
 
