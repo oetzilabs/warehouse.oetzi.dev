@@ -38,6 +38,7 @@ export function SalesDataTable(props: {
   const [columnFilters, setColumnFilters] = createSignal<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = createSignal<VisibilityState>({});
   const [rowSelection, setRowSelection] = createSignal({});
+  const [globalFilter, setGlobalFilter] = createSignal("");
 
   const table = createSolidTable({
     get data() {
@@ -65,6 +66,9 @@ export function SalesDataTable(props: {
       get rowSelection() {
         return rowSelection();
       },
+      get globalFilter() {
+        return globalFilter();
+      },
     },
     globalFilterFn: "fuzzy",
     filterFns: {
@@ -75,11 +79,7 @@ export function SalesDataTable(props: {
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex items-center gap-4 justify-between w-full">
-        <TextField
-          value={(table.getColumn("products")?.getFilterValue() as string) ?? ""}
-          onChange={(value) => table.getColumn("products")?.setFilterValue(value)}
-          class="w-full"
-        >
+        <TextField value={globalFilter()} onChange={setGlobalFilter} class="w-full">
           <TextFieldInput placeholder="Filter orders..." class="max-w-full ext-sm leading-none rounded-lg px-4" />
         </TextField>
         <DropdownMenu placement="bottom-end">

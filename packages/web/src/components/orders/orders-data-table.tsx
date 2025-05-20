@@ -35,6 +35,7 @@ export function OrdersDataTable(props: { data: Accessor<OrderInfo[]>; onSelected
   const [columnFilters, setColumnFilters] = createSignal<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = createSignal<VisibilityState>({});
   const [rowSelection, setRowSelection] = createSignal<Record<string, boolean>>({});
+  const [globalFilter, setGlobalFilter] = createSignal("");
 
   createEffect(() => {
     props.onSelectedOrder(props.data()[parseInt(Object.keys(rowSelection())[0])]);
@@ -66,6 +67,9 @@ export function OrdersDataTable(props: { data: Accessor<OrderInfo[]>; onSelected
       get rowSelection() {
         return rowSelection();
       },
+      get globalFilter() {
+        return globalFilter();
+      },
     },
     globalFilterFn: "fuzzy",
     filterFns: {
@@ -76,11 +80,7 @@ export function OrdersDataTable(props: { data: Accessor<OrderInfo[]>; onSelected
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex items-center gap-4 justify-between w-full">
-        <TextField
-          value={(table.getColumn("products")?.getFilterValue() as string) ?? ""}
-          onChange={(value) => table.getColumn("products")?.setFilterValue(value)}
-          class="w-full"
-        >
+        <TextField value={globalFilter()} onChange={setGlobalFilter} class="w-full">
           <TextFieldInput placeholder="Filter orders..." class="max-w-full text-sm leading-none rounded-lg px-4" />
         </TextField>
         <DropdownMenu placement="bottom-end">

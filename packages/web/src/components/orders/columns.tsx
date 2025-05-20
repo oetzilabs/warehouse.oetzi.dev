@@ -72,7 +72,7 @@ export const columns: ColumnDef<OrderInfo>[] = [
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: (props) => <div>{dayjs(props.row.original.createdAt).format("DD/MM/YYYY")}</div>,
+    cell: (props) => <div>{dayjs(props.row.original.createdAt ?? "").format("DD/MM/YYYY")}</div>,
     filterFn: "fuzzy",
   },
   {

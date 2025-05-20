@@ -25,7 +25,7 @@ export const route = {
 
 export default function MapPage() {
   const params = useParams();
-  const orders = createAsync(() => getOrdersByWarehouseId(params.whid), { deferStream: true });
+  const orders = createAsync(() => getOrdersByWarehouseId(params.whid), { deferStream: true, initialValue: [] });
   const [selectedOrder, setSelectedOrder] = createSignal<OrderInfo | null>(null);
   const [previewVisible, setPreviewVisible] = createSignal(false);
 
