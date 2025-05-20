@@ -68,38 +68,38 @@ export default function DocumentsPage() {
                     }}
                   />
                 </div>
-                <div
-                  class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
-                    "!hidden": !previewVisible(),
-                  })}
-                >
-                  <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                    <h2 class="font-semibold leading-none text-muted-foreground">Preview Document</h2>
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      class="size-8"
-                      onClick={() => {
-                        setPreviewVisible(false);
-                      }}
-                    >
-                      <X class="size-4" />
-                    </Button>
-                  </div>
-                  <Show
-                    when={selectedDocument()}
-                    fallback={
-                      <div class="p-4 w-full grow flex flex-col">
-                        <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
-                          <FileSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
-                          <span class="text-sm">No document selected</span>
-                        </div>
-                      </div>
-                    }
+              </div>
+              <div
+                class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
+                  "!hidden": !previewVisible(),
+                })}
+              >
+                <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
+                  <h2 class="font-semibold leading-none text-muted-foreground">Preview Document</h2>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    class="size-8"
+                    onClick={() => {
+                      setPreviewVisible(false);
+                    }}
                   >
-                    {(p) => <div class="p-4 w-full flex flex-col gap-4"></div>}
-                  </Show>
+                    <X class="size-4" />
+                  </Button>
                 </div>
+                <Show
+                  when={selectedDocument()}
+                  fallback={
+                    <div class="p-4 w-full grow flex flex-col">
+                      <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
+                        <FileSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
+                        <span class="text-sm">No document selected</span>
+                      </div>
+                    </div>
+                  }
+                >
+                  {(p) => <div class="p-4 w-full flex flex-col gap-4"></div>}
+                </Show>
               </div>
             </div>
           </div>
