@@ -8,6 +8,7 @@ import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouses } from "./warehouses";
+import { TB_devices } from "../devices/devices";
 
 export const TB_warehouse_facilities = commonTable(
   "warehouse_facilities",
@@ -41,6 +42,7 @@ export const warehouse_facilities_relations = relations(TB_warehouse_facilities,
     references: [TB_users.id],
   }),
   sessions: many(TB_sessions),
+  devices: many(TB_devices),
 }));
 
 export type FacilitySelect = typeof TB_warehouse_facilities.$inferSelect;

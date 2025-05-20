@@ -5,6 +5,8 @@ export * from "./schemas/users/user_orders";
 
 export * from "./schemas/messages/messages";
 
+export * from "./schemas/devices/devices";
+
 export * from "./schemas/sessions";
 export * from "./schemas/address";
 
