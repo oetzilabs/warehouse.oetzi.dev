@@ -31,14 +31,58 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
             sessions: {
               with: {
                 org: true,
-                wh: true,
+                wh: {
+                  with: {
+                    orders: {
+                      with: {
+                        order: true,
+                      },
+                    },
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                    sales: {
+                      with: {
+                        items: {
+                          with: {
+                            product: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 fc: true,
               },
             },
           },
         },
         org: true,
-        wh: true,
+        wh: {
+          with: {
+            orders: {
+              with: {
+                order: true,
+              },
+            },
+            products: {
+              with: {
+                product: true,
+              },
+            },
+            sales: {
+              with: {
+                items: {
+                  with: {
+                    product: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         fc: true,
       };
 
@@ -76,14 +120,58 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   sessions: {
                     with: {
                       org: true,
-                      wh: true,
+                      wh: {
+                        with: {
+                          orders: {
+                            with: {
+                              order: true,
+                            },
+                          },
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                          sales: {
+                            with: {
+                              items: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       fc: true,
                     },
                   },
                 },
               },
               org: true,
-              wh: true,
+              wh: {
+                with: {
+                  orders: {
+                    with: {
+                      order: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      items: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
               fc: true,
             },
           }),
@@ -121,14 +209,58 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   sessions: {
                     with: {
                       org: true,
-                      wh: true,
+                      wh: {
+                        with: {
+                          orders: {
+                            with: {
+                              order: true,
+                            },
+                          },
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                          sales: {
+                            with: {
+                              items: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       fc: true,
                     },
                   },
                 },
               },
               org: true,
-              wh: true,
+              wh: {
+                with: {
+                  orders: {
+                    with: {
+                      order: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      items: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
               fc: true,
             },
           }),
@@ -149,14 +281,58 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   sessions: {
                     with: {
                       org: true,
-                      wh: true,
+                      wh: {
+                        with: {
+                          orders: {
+                            with: {
+                              order: true,
+                            },
+                          },
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                          sales: {
+                            with: {
+                              items: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       fc: true,
                     },
                   },
                 },
               },
               org: true,
-              wh: true,
+              wh: {
+                with: {
+                  orders: {
+                    with: {
+                      order: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      items: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
               fc: true,
             },
           }),

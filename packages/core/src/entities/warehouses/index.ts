@@ -61,6 +61,25 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             hashed_password: false,
           },
         },
+        orders: {
+          with: {
+            order: true,
+          },
+        },
+        products: {
+          with: {
+            product: true,
+          },
+        },
+        sales: {
+          with: {
+            items: {
+              with: {
+                product: true,
+              },
+            },
+          },
+        },
         fcs: {
           with: {
             ars: {
@@ -157,6 +176,25 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
               owner: {
                 columns: {
                   hashed_password: false,
+                },
+              },
+              orders: {
+                with: {
+                  order: true,
+                },
+              },
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+              sales: {
+                with: {
+                  items: {
+                    with: {
+                      product: true,
+                    },
+                  },
                 },
               },
               fcs: {

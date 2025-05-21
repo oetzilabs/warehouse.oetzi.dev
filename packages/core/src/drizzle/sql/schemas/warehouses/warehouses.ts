@@ -5,11 +5,13 @@ import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "../address";
 import { commonTable } from "../entity";
+import { TB_sales } from "../sales/sales";
 import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouse_facilities } from "./warehouse_facility";
 import { TB_warehouse_orders } from "./warehouse_orders";
+import { TB_warehouse_products } from "./warehouse_products";
 import { TB_warehouse_suppliers } from "./warehouse_suppliers";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
@@ -44,6 +46,8 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
   sessions: many(TB_sessions),
   orders: many(TB_warehouse_orders),
   suppliers: many(TB_warehouse_suppliers),
+  sales: many(TB_sales),
+  products: many(TB_warehouse_products),
 }));
 
 export type WarehouseSelect = typeof TB_warehouses.$inferSelect;

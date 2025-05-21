@@ -18,7 +18,7 @@ import {
 import { changeFacility } from "@/lib/api/facilities";
 import { changeWarehouse } from "@/lib/api/warehouses";
 import { cn } from "@/lib/utils";
-import { A, useAction, useIsRouting, useLocation, useResolvedPath, useSubmission } from "@solidjs/router";
+import { A, useAction, useLocation, useResolvedPath, useSubmission } from "@solidjs/router";
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
@@ -38,7 +38,6 @@ import UsersRound from "lucide-solid/icons/users-round";
 import Warehouse from "lucide-solid/icons/warehouse";
 import { For, JSXElement, ParentProps, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
-import { Transition } from "solid-transition-group";
 
 const Link = (
   props: ParentProps<{
@@ -223,95 +222,107 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                 </SidebarGroup>
               )}
             </Show>
-            <SidebarGroup>
-              <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/customer-orders`}>
-                      <Tags class="size-4" />
-                      Customer Orders
-                      <SidebarMenuBadge class="mr-1">99+</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/supply-orders`}>
-                      <Tags class="size-4" />
-                      Supply Orders
-                      <SidebarMenuBadge class="mr-1">999+</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/sales`}>
-                      <BadgeEuro class="size-4" />
-                      Sales
-                      <SidebarMenuBadge class="mr-1">22</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/products`}>
-                      <PackageSearch class="size-4" />
-                      Products
-                      <SidebarMenuBadge class="mr-1">1452</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/warehouse/${user.currentWarehouse()?.id}/products/new`}>
-                      <PackagePlus class="size-4" />
-                      New Product
-                    </Link>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <Link href={`/suppliers`} disabled>
-                      <Forklift class="size-4" />
-                      Suppliers
-                      <SidebarMenuBadge class="mr-1">8</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/customers`} disabled>
-                      <UsersRound class="size-4" />
-                      Customers
-                      <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/documents`}>
-                      <Notebook class="size-4" />
-                      Documents
-                      <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>Communication</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <Link href={`/messages`}>
-                      <MessageSquare class="size-4" />
-                      Messages
-                      <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
-                    </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <Link href={`/support`} disabled>
-                      <Support class="size-4" />
-                      Support
-                    </Link>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <Show when={user.currentWarehouse()}>
+              {(warehouse) => (
+                <>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <Link href={`/warehouse/${user.currentWarehouse()?.id}/customer-orders`}>
+                            <Tags class="size-4" />
+                            Customer Orders
+                            <SidebarMenuBadge class="mr-1">
+                              {warehouse().orders.length > 99 ? "99+" : warehouse().orders.length}
+                            </SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/warehouse/${warehouse().id}/supply-orders`}>
+                            <Tags class="size-4" />
+                            Supply Orders
+                            <SidebarMenuBadge class="mr-1">
+                              {warehouse().orders.length > 99 ? "99+" : warehouse().orders.length}
+                            </SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/warehouse/${warehouse().id}/sales`}>
+                            <BadgeEuro class="size-4" />
+                            Sales
+                            <SidebarMenuBadge class="mr-1">
+                              {warehouse().sales.length > 99 ? "99+" : warehouse().sales.length}
+                            </SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/warehouse/${warehouse().id}/products`}>
+                            <PackageSearch class="size-4" />
+                            Products
+                            <SidebarMenuBadge class="mr-1">{warehouse().products.length}</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/warehouse/${warehouse().id}/products/new`}>
+                            <PackagePlus class="size-4" />
+                            New Product
+                          </Link>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <Link href={`/suppliers`} disabled>
+                            <Forklift class="size-4" />
+                            Suppliers
+                            <SidebarMenuBadge class="mr-1">8</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/customers`} disabled>
+                            <UsersRound class="size-4" />
+                            Customers
+                            <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/documents`}>
+                            <Notebook class="size-4" />
+                            Documents
+                            <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Communication</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <Link href={`/messages`}>
+                            <MessageSquare class="size-4" />
+                            Messages
+                            <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <Link href={`/support`} disabled>
+                            <Support class="size-4" />
+                            Support
+                          </Link>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </>
+              )}
+            </Show>
           </SidebarContent>
         </Sidebar>
         <div class="w-full h-full flex flex-col overflow-auto">
