@@ -13,6 +13,7 @@ import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/ent
 import { WarehouseDoesNotContainFacility } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
+import { getEvent } from "vinxi/http";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
 
@@ -198,6 +199,9 @@ export const changeFacilityDimensions = action(
 export const changeFacility = action(async (whId: string, fcId: string) => {
   "use server";
   const auth = await withSession();
+  const event = getEvent()!;
+  const currentUrl = event.web!.request!.headers.get("referer")!;
+  let newUrl = "";
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
@@ -213,7 +217,7 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
   if (!orgId) {
     throw new Error("You have to be part of an organization to perform this action.");
   }
-  const facility = await Effect.runPromise(
+  const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const sessionService = yield* _(SessionService);
       const warehouseService = yield* _(WarehouseService);
@@ -236,15 +240,22 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
       if (!switched) {
         return yield* Effect.fail(new Error("Facility not updated"));
       }
-      return wh;
+      return { wh, fc };
     }).pipe(Effect.provide(SessionLive), Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
   );
-  return json(facility, {
+
+  newUrl = currentUrl.replace(session.current_warehouse_facility_id!, result.fc.id);
+
+  return json(result.fc, {
     revalidate: [getAuthenticatedUser.key],
+    headers: {
+      Location: newUrl,
+    },
+    status: 302,
   });
 });
 
-export const getFacilityDevicesByWarehouseId = query(async (whid:string, fcid:string)=> {
+export const getFacilityDevicesByWarehouseId = query(async (whid: string, fcid: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -273,5 +284,4 @@ export const getFacilityDevicesByWarehouseId = query(async (whid:string, fcid:st
     }).pipe(Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
   );
   return warehouse;
-
 }, "device-by-facility-id");

@@ -4,17 +4,27 @@ import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
-import { TB_warehouse_facilities } from "../warehouses/warehouse_facility";
 import { schema } from "../utils";
+import { TB_warehouse_facilities } from "../warehouses/warehouse_facility";
 
-export const device_status = schema.enum("device_status", ["online", "offline", "unresponsive", "unknown"]);
+export const device_status = schema.enum("device_status", [
+  "online",
+  "offline",
+  "unresponsive",
+  "unknown",
+  "shutting-down",
+  "rebooting",
+  "maintenance",
+  "error",
+]);
 
 export const TB_devices = commonTable(
   "devices",
   {
     name: text("name").notNull(),
+    description: text("description"),
     status: device_status("status").default("unknown").notNull(),
-    facility_id: varchar("facility_id").references(() => TB_warehouse_facilities.id, { onDelete: "set null"}),
+    facility_id: varchar("facility_id").references(() => TB_warehouse_facilities.id, { onDelete: "set null" }),
   },
   "device",
 );
@@ -23,7 +33,7 @@ export const device_relations = relations(TB_devices, ({ one, many }) => ({
   facility: one(TB_warehouse_facilities, {
     fields: [TB_devices.facility_id],
     references: [TB_warehouse_facilities.id],
-  })
+  }),
 }));
 
 export type DeviceSelect = typeof TB_devices.$inferSelect;
@@ -33,4 +43,3 @@ export const DeviceUpdateSchema = object({
   ...partial(DeviceCreateSchema).entries,
   id: prefixed_cuid2,
 });
-

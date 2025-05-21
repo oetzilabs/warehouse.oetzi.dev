@@ -2,7 +2,7 @@ import { OrdersDataTable } from "@/components/orders/orders-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getOrdersByWarehouseId } from "@/lib/api/orders";
+import { getSupplyOrdersByWarehouseId } from "@/lib/api/orders";
 import { cn } from "@/lib/utils";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
@@ -18,14 +18,14 @@ export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser({ skipOnboarding: true });
     const sessionToken = getSessionToken();
-    const orders = getOrdersByWarehouseId(props.params.whid);
+    const orders = getSupplyOrdersByWarehouseId(props.params.whid);
     return { user, sessionToken, orders };
   },
 } as RouteDefinition;
 
 export default function MapPage() {
   const params = useParams();
-  const orders = createAsync(() => getOrdersByWarehouseId(params.whid), { deferStream: true, initialValue: [] });
+  const orders = createAsync(() => getSupplyOrdersByWarehouseId(params.whid), { deferStream: true, initialValue: [] });
   const [selectedOrder, setSelectedOrder] = createSignal<OrderInfo | null>(null);
   const [previewVisible, setPreviewVisible] = createSignal(false);
 
@@ -59,105 +59,107 @@ export default function MapPage() {
   };
 
   return (
-    <Suspense fallback={<div class="p-4 w-full">Loading...</div>}>
-      <Show when={orders()}>
-        {(os) => (
-          <div class="container flex flex-col grow py-4">
-            <div class="w-full flex flex-row h-full border rounded-xl">
-              <div class="w-full flex flex-col gap-4">
-                <div class="flex items-center gap-4 justify-between w-full border-b p-4">
-                  <h1 class="font-semibold leading-none text-muted-foreground">Supply Orders</h1>
-                  <div class="flex items-center gap-0">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      class="w-9 h-8 rounded-r-none bg-background"
-                      onClick={() => {
-                        toast.promise(revalidate(getOrdersByWarehouseId.keyFor(params.whid)), {
-                          loading: "Refreshing orders...",
-                          success: "Orders refreshed",
-                          error: "Failed to refresh orders",
-                        });
-                      }}
-                    >
-                      <RotateCw class="size-4" />
-                    </Button>
-                    <Button size="sm" class="h-8 pl-2.5 rounded-l-none">
-                      <Plus class="size-4" />
-                      Create
-                    </Button>
-                  </div>
+    <Show when={orders()}>
+      {(os) => (
+        <div class="container flex flex-col grow py-4">
+          <div class="w-full flex flex-row h-full border rounded-xl">
+            <div class="w-full flex flex-col gap-4">
+              <div class="flex items-center gap-4 justify-between w-full border-b p-4">
+                <h1 class="font-semibold leading-none text-muted-foreground">Supply Orders</h1>
+                <div class="flex items-center gap-0">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    class="w-9 h-8 rounded-r-none bg-background"
+                    onClick={() => {
+                      toast.promise(revalidate(getSupplyOrdersByWarehouseId.keyFor(params.whid)), {
+                        loading: "Refreshing orders...",
+                        success: "Orders refreshed",
+                        error: "Failed to refresh orders",
+                      });
+                    }}
+                  >
+                    <RotateCw class="size-4" />
+                  </Button>
+                  <Button size="sm" class="h-8 pl-2.5 rounded-l-none">
+                    <Plus class="size-4" />
+                    Create
+                  </Button>
                 </div>
-                <div class="flex flex-col gap-2 w-full grow px-4">
-                  <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
-                    <Show
-                      when={os().length > 0}
-                      fallback={
-                        <div class="flex flex-col gap-2 w-full h-full items-center justify-center bg-muted-foreground/5 ">
-                          <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground select-none">
-                            <span class="text-sm">No supply-orders data available</span>
-                          </div>
+              </div>
+              <div class="flex flex-col gap-2 w-full grow px-4">
+                <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
+                  <Show
+                    when={os().length > 0 && os()}
+                    fallback={
+                      <div class="flex flex-col gap-2 w-full h-full items-center justify-center bg-muted-foreground/5 ">
+                        <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground select-none">
+                          <span class="text-sm">No supply-orders data available</span>
                         </div>
-                      }
-                    >
-                      <div class="flex flex-col gap-2 w-full h-full">
-                        <LineChart data={calculateOrders(os().map((o) => o.order))} />
                       </div>
-                    </Show>
-                  </div>
-                  <Show when={os().length > 0}>
+                    }
+                  >
+                    {(ordersList) => (
+                      <div class="flex flex-col gap-2 w-full h-full">
+                        <LineChart data={calculateOrders(ordersList())} />
+                      </div>
+                    )}
+                  </Show>
+                </div>
+                <Show when={os().length > 0 && os()}>
+                  {(orderList) => (
                     <OrdersDataTable
-                      data={() => os().map((o) => o.order)}
+                      data={orderList}
                       onSelectedOrder={(order) => {
                         setSelectedOrder(order);
                         setPreviewVisible(true);
                       }}
                     />
-                  </Show>
-                </div>
-              </div>
-              <div
-                class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
-                  "!hidden": !previewVisible(),
-                })}
-              >
-                <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                  <h2 class="font-semibold leading-none text-muted-foreground">Preview Orders</h2>
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    class="size-8"
-                    onClick={() => {
-                      setPreviewVisible(false);
-                    }}
-                  >
-                    <X class="size-4" />
-                  </Button>
-                </div>
-                <For
-                  each={selectedOrder()?.products}
-                  fallback={
-                    <div class="p-4 w-full grow flex flex-col">
-                      <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
-                        <PackageSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
-                        <span class="text-sm">No order selected</span>
-                      </div>
-                    </div>
-                  }
-                >
-                  {(p) => (
-                    <div class="p-4 w-full flex flex-col gap-4">
-                      <div class="flex items-center gap-4 justify-between w-full">
-                        <h1 class="text-2xl font-bold mb-4">{p.product.name}</h1>
-                      </div>
-                    </div>
                   )}
-                </For>
+                </Show>
               </div>
             </div>
+            <div
+              class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
+                "!hidden": !previewVisible(),
+              })}
+            >
+              <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
+                <h2 class="font-semibold leading-none text-muted-foreground">Preview Orders</h2>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  class="size-8"
+                  onClick={() => {
+                    setPreviewVisible(false);
+                  }}
+                >
+                  <X class="size-4" />
+                </Button>
+              </div>
+              <For
+                each={selectedOrder()?.products}
+                fallback={
+                  <div class="p-4 w-full grow flex flex-col">
+                    <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
+                      <PackageSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
+                      <span class="text-sm">No order selected</span>
+                    </div>
+                  </div>
+                }
+              >
+                {(p) => (
+                  <div class="p-4 w-full flex flex-col gap-4">
+                    <div class="flex items-center gap-4 justify-between w-full">
+                      <h1 class="text-2xl font-bold mb-4">{p.product.name}</h1>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
           </div>
-        )}
-      </Show>
-    </Suspense>
+        </div>
+      )}
+    </Show>
   );
 }

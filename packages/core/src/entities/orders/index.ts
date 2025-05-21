@@ -194,7 +194,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
           return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
         }
 
-        return yield* Effect.promise(() =>
+        const whOrders = yield* Effect.promise(() =>
           db.query.TB_warehouse_orders.findMany({
             where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
             with: {
@@ -227,6 +227,8 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             },
           }),
         );
+
+        return whOrders.map((o) => o.order);
       });
 
     return {

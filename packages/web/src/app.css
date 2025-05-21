@@ -160,7 +160,7 @@
 
 .fade-enter-active,
 .fade-exit-active {
-  transition: opacity 0.1s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
 }
 .fade-enter,
 .fade-exit-to {

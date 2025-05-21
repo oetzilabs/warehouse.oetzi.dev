@@ -31,7 +31,7 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
     const sales = getProductsByWarehouseId(props.params.whid);
     const suppliers = getSuppliersByWarehouseId(props.params.whid);

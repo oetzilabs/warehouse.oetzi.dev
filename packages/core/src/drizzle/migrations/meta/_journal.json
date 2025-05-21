@@ -197,6 +197,13 @@
       "when": 1747740815193,
       "tag": "0027_awesome_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1747819090486,
+      "tag": "0028_stale_screwball",
+      "breakpoints": true
     }
   ]
 }

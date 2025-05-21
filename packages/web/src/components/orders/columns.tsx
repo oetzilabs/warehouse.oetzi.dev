@@ -58,7 +58,7 @@ export const columns: ColumnDef<OrderInfo>[] = [
     filterFn: "fuzzy",
   },
   {
-    accessorKey: "assignedTo",
+    accessorKey: "users",
     header: "Assigned To",
     cell: (props) => <div>{props.row.original.users.map((u) => u.user.name).join(", ")}</div>,
     filterFn: "fuzzy",
@@ -67,12 +67,6 @@ export const columns: ColumnDef<OrderInfo>[] = [
     accessorKey: "status",
     header: "Status",
     cell: (props) => <div class="capitalize">{props.row.original.status}</div>,
-    filterFn: "fuzzy",
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Created At",
-    cell: (props) => <div>{dayjs(props.row.original.createdAt ?? "").format("DD/MM/YYYY")}</div>,
     filterFn: "fuzzy",
   },
   {
