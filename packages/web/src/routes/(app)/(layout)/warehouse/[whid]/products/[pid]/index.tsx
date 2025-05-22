@@ -276,23 +276,23 @@ export default function ProductPage() {
                 </div>
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <div class="flex flex-row items-center gap-2 justify-between">
-                    <h2 class="font-medium">Brands</h2>
+                    <h2 class="font-medium">Brand</h2>
                     <div class="flex flex-row items-center">
                       <Button variant="ghost" size="icon" class="size-8">
                         <Plus class="size-4" />
                       </Button>
                     </div>
                   </div>
-                  <For
-                    each={productInfo().brands}
+                  <Show
+                    when={productInfo().brands}
                     fallback={<span class="text-sm text-muted-foreground">No brands added.</span>}
                   >
-                    {(brand) => (
+                    {(b) => (
                       <div class="flex flex-col gap-1">
-                        <span class="text-sm text-muted-foreground">{brand.name ?? "N/A"}</span>
+                        <span class="text-sm text-muted-foreground">{b().name ?? "N/A"}</span>
                       </div>
                     )}
-                  </For>
+                  </Show>
                 </div>
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <div class="flex flex-row items-center gap-2 justify-between">
@@ -337,7 +337,7 @@ export default function ProductPage() {
                   >
                     {(supplier) => (
                       <div class="flex flex-col gap-1">
-                        <span class="text-sm text-muted-foreground">{supplier.supplierName ?? "N/A"}</span>
+                        <span class="text-sm text-muted-foreground">{supplier.supplier.name ?? "N/A"}</span>
                       </div>
                     )}
                   </For>

@@ -562,7 +562,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
               product: {
                 with: {
                   labels: true,
-                  suppliers: true,
+                  suppliers: {
+                    with: {
+                      supplier: true,
+                    },
+                  },
                   brands: true,
                   certs: {
                     with: {
