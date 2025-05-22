@@ -405,7 +405,9 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
     const generatePDF = (product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>) =>
       Effect.gen(function* (_) {
-        return false;
+        const buffer = new Uint8Array(1024);
+
+        return buffer;
       });
 
     return {
