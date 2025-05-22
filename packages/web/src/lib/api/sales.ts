@@ -122,7 +122,7 @@ export const getWarehouseSaleById = query(async (whid, sid: string) => {
       if (sale.warehouseId !== warehouse.id) {
         return yield* Effect.fail(new Error("This sale is not associated with this warehouse"));
       }
-      return sales;
+      return sale;
     }).pipe(Effect.provide(SalesLive), Effect.provide(WarehouseLive)),
   );
   return sale;
