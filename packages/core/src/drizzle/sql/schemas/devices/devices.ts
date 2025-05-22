@@ -24,6 +24,7 @@ export const TB_devices = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     status: device_status("status").default("unknown").notNull(),
+    type: text("type").notNull(),
     facility_id: varchar("facility_id").references(() => TB_warehouse_facilities.id, { onDelete: "set null" }),
   },
   "device",

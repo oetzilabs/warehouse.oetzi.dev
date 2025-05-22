@@ -260,7 +260,9 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                           <Link href={`/warehouse/${warehouse().id}/products`}>
                             <PackageSearch class="size-4" />
                             Products
-                            <SidebarMenuBadge class="mr-1">{warehouse().products.length}</SidebarMenuBadge>
+                            <SidebarMenuBadge class="mr-1">
+                              {warehouse().products.filter((p) => p.product.deletedAt === null).length}
+                            </SidebarMenuBadge>
                           </Link>
                         </SidebarMenuItem>
                         <SidebarMenuItem>

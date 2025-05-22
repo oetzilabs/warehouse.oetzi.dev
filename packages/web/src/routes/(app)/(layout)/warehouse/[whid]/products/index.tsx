@@ -33,8 +33,6 @@ export const route = {
 export default function ProductsPage() {
   const params = useParams();
   const data = createAsync(() => getProductsByWarehouseId(params.whid), { deferStream: true });
-  const [selectedProducts, setSelectedProducts] = createSignal<ProductInfo[]>([]);
-  const [previewVisible, setPreviewVisible] = createSignal(false);
 
   return (
     <Show when={data()}>
@@ -78,12 +76,14 @@ export default function ProductsPage() {
                 </div>
               </div>
               <ProductsList
-                data={() => productsList().map((o) => o.product)}
-                onSelectedProducts={(products) => {
-                  setSelectedProducts(products);
-                  if (products.length > 0) setPreviewVisible(true);
-                  else setPreviewVisible(false);
-                }}
+                data={() =>
+                  productsList().sort((a, b) => {
+                    // if deleted, put it at the end
+                    if (a.deletedAt && !b.deletedAt) return 1;
+                    if (!a.deletedAt && b.deletedAt) return -1;
+                    return 0;
+                  })
+                }
               />
             </div>
           </div>

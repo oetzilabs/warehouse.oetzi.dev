@@ -28,6 +28,7 @@ import {
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { FacilityNotFound } from "../facilities/errors";
+import { ProductInvalidId, ProductNotDeleted, ProductNotFound } from "../products/errors";
 import {
   WarehouseInvalidId,
   WarehouseNotCreated,
@@ -542,6 +543,72 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return f;
       });
 
+    const findProductById = (whId: string, pid: string) =>
+      Effect.gen(function* (_) {
+        const parsedWhId = safeParse(prefixed_cuid2, whId);
+        if (!parsedWhId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: whId }));
+        }
+        const parsedPid = safeParse(prefixed_cuid2, pid);
+        if (!parsedPid.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: pid }));
+        }
+
+        const whProduct = yield* Effect.promise(() =>
+          db.query.TB_warehouse_products.findFirst({
+            where: (fields, operations) =>
+              operations.and(eq(fields.warehouseId, parsedWhId.output), eq(fields.productId, parsedPid.output)),
+            with: {
+              product: {
+                with: {
+                  labels: true,
+                  suppliers: true,
+                  brands: true,
+                  certs: {
+                    with: {
+                      cert: true,
+                    },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+
+        if (!whProduct) {
+          return yield* Effect.fail(new ProductNotFound({ id: pid }));
+        }
+
+        return whProduct.product;
+      });
+
+    const removeProduct = (whId: string, pid: string) =>
+      Effect.gen(function* (_) {
+        const parsedWhId = safeParse(prefixed_cuid2, whId);
+        if (!parsedWhId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: whId }));
+        }
+        const parsedPid = safeParse(prefixed_cuid2, pid);
+        if (!parsedPid.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: pid }));
+        }
+
+        const whProduct = yield* Effect.promise(() =>
+          db.delete(TB_warehouse_products).where(eq(TB_warehouse_products.warehouseId, parsedWhId.output)).returning(),
+        );
+
+        if (!whProduct) {
+          return yield* Effect.fail(new ProductNotDeleted({ id: pid }));
+        }
+
+        return whProduct;
+      });
+
     return {
       create,
       findById,
@@ -554,6 +621,8 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       findAreaById,
       seed,
       findLastCreatedFacility,
+      findProductById,
+      removeProduct,
     } as const;
   }),
   dependencies: [DatabaseLive],

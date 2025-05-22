@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
@@ -11,7 +12,6 @@ import { FilterPopover } from "./filter-popover";
 
 type ProductsListProps = {
   data: Accessor<ProductInfo[]>;
-  onSelectedProducts?: (products: ProductInfo[]) => void;
 };
 
 export const ProductsList = (props: ProductsListProps) => {
@@ -89,14 +89,22 @@ export const ProductsList = (props: ProductsListProps) => {
         {(product) => (
           <A
             href={`./${product.id}`}
-            class="flex flex-col gap-4 w-full h-content p-4 border rounded-lg hover:bg-primary-foreground hover:border-primary/50 shadow-sm hover:shadow-primary/10 transition-colors"
+            class={cn(
+              "flex flex-col gap-4 w-full h-content p-4 border rounded-lg shadow-sm  transition-colors h-auto hover:bg-primary-foreground hover:border-primary/50 hover:shadow-primary/10 hover:text-primary ",
+              {
+                "opacity-70": product.deletedAt,
+              },
+            )}
           >
             <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
               <div class="flex flex-row gap-4 items-center justify-start">
                 <span class="text-sm font-medium leading-none">{product.name}</span>
+                <Show when={product.deletedAt}>
+                  <span class="text-xs text-red-500">Deleted</span>
+                </Show>
               </div>
-              <span class="text-sm text-muted-foreground">
-                {product.sellingPrice} {product.currency}
+              <span class="text-sm text-current font-medium">
+                {product.sellingPrice.toFixed(2)} {product.currency}
               </span>
             </div>
             <div class="flex flex-col gap-2 w-full">

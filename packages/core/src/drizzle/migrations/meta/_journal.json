@@ -211,6 +211,13 @@
       "when": 1747907686403,
       "tag": "0029_narrow_magdalene",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1747930076954,
+      "tag": "0030_secret_harpoon",
+      "breakpoints": true
     }
   ]
 }

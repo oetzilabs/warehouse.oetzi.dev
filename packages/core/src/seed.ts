@@ -1,6 +1,7 @@
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { flatten } from "valibot";
 import { BrandLive, BrandService } from "./entities/brands";
+import { DeviceLive, DeviceService } from "./entities/devices";
 import { DocumentStorageOfferLive, DocumentStorageOfferService } from "./entities/document_storage_offers";
 import { OrganizationLive } from "./entities/organizations";
 import { PaymentMethodLive, PaymentMethodService } from "./entities/payment_methods";
@@ -13,6 +14,7 @@ import { WarehouseTypeLive, WarehouseTypeService } from "./entities/warehouse_ty
 import { WarehouseLive } from "./entities/warehouses";
 
 const program = Effect.gen(function* (_) {
+  //services
   const warehouseTypeService = yield* _(WarehouseTypeService);
   const documentStorageOfferService = yield* _(DocumentStorageOfferService);
   const userService = yield* _(UserService);
@@ -21,6 +23,9 @@ const program = Effect.gen(function* (_) {
   const productLabelsService = yield* _(ProductLabelsService);
   const brandService = yield* _(BrandService);
   const productService = yield* _(ProductService);
+  const deviceService = yield* _(DeviceService);
+
+  // seeding
   const warehouseTypes = yield* warehouseTypeService.seed();
   const documentStorageOffers = yield* documentStorageOfferService.seed();
   const paymentMethods = yield* paymentMethodsService.seed();
@@ -29,6 +34,7 @@ const program = Effect.gen(function* (_) {
   const productLabels = yield* productLabelsService.seed();
   const brands = yield* brandService.seed();
   const products = yield* productService.seed();
+  const devices = yield* deviceService.seed();
 }).pipe(
   Effect.provide(StorageLive),
   Effect.provide(WarehouseTypeLive),
@@ -40,6 +46,7 @@ const program = Effect.gen(function* (_) {
   Effect.provide(BrandLive),
   Effect.provide(ProductLabelsLive),
   Effect.provide(ProductLive),
+  Effect.provide(DeviceLive),
 );
 
 async function run() {

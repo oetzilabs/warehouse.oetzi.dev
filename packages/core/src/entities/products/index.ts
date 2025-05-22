@@ -11,6 +11,8 @@ import {
   TB_products_to_labels,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { DeviceInfo } from "../devices";
+import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
@@ -32,6 +34,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_products.findMany>[0]>;
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
+      brands: true,
       saleItems: {
         with: {
           sale: {
@@ -79,6 +82,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           db.query.TB_products.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: {
+              brands: true,
               saleItems: {
                 with: {
                   sale: {
@@ -170,12 +174,13 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         if (!parsedWarehouseId.success) {
           return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
         }
-        return yield* Effect.promise(() =>
+        const whProds = yield* Effect.promise(() =>
           db.query.TB_warehouse_products.findMany({
             where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
             with: {
               product: {
                 with: {
+                  brands: true,
                   saleItems: {
                     with: {
                       sale: {
@@ -205,6 +210,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             },
           }),
         );
+        return whProds.map((p) => p.product);
       });
 
     const addLabel = (productId: string, labelId: string) =>
@@ -367,7 +373,54 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return productsToSeed;
       });
 
-    return { create, findById, update, remove, safeRemove, findByWarehouseId, addLabel, removeLabel, seed } as const;
+    const printProductSheet = (
+      printer: DeviceInfo,
+      product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
+    ) =>
+      Effect.gen(function* (_) {
+        const parsedPrinterId = safeParse(prefixed_cuid2, printer.id);
+        if (!parsedPrinterId.success) {
+          return yield* Effect.fail(new DeviceInvalidId({ id: printer.id }));
+        }
+
+        const parsedProductId = safeParse(prefixed_cuid2, product.id);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: product.id }));
+        }
+
+        if (printer.type !== "printer") {
+          return yield* Effect.fail(new DeviceNotPrinter({ id: printer.id }));
+        }
+
+        if (printer.status !== "online") {
+          return yield* Effect.fail(new DeviceNotOnline({ id: printer.id }));
+        }
+
+        // const productSheet = yield* Effect.promise(() => {});
+
+        const buffer = new Uint8Array(1024);
+
+        return buffer;
+      });
+
+    const generatePDF = (product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>) =>
+      Effect.gen(function* (_) {
+        return false;
+      });
+
+    return {
+      create,
+      findById,
+      update,
+      remove,
+      safeRemove,
+      findByWarehouseId,
+      addLabel,
+      removeLabel,
+      seed,
+      printProductSheet,
+      generatePDF,
+    } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

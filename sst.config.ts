@@ -11,7 +11,9 @@ export default $config({
         aws: {
           region: "eu-central-1",
         },
-        cloudflare: true,
+        cloudflare: {
+          version: "5.37.1",
+        },
       },
     };
   },
