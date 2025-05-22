@@ -337,7 +337,7 @@ export default function ProductPage() {
                   >
                     {(supplier) => (
                       <div class="flex flex-col gap-1">
-                        <span class="text-sm text-muted-foreground">{supplier.supplier.name ?? "N/A"}</span>
+                        <span class="text-sm text-muted-foreground">{supplier.supplierName ?? "N/A"}</span>
                       </div>
                     )}
                   </For>

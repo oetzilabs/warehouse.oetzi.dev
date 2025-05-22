@@ -8,5 +8,5 @@ export default function QRCode(props: { value: string }) {
       value: props.value,
     });
   });
-  return <canvas id="qr" class="size-40"></canvas>;
+  return <canvas id="qr" class="size-40 bg-white p-4"></canvas>;
 }
