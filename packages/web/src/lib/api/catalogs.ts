@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/api/auth";
-import { action, query, redirect } from "@solidjs/router";
+import { action, json, query, redirect } from "@solidjs/router";
 import { CatalogCreateSchema, CatalogUpdateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { CatalogLive, CatalogService } from "@warehouseoetzidev/core/src/entities/catalogs";
 import { SessionLive } from "@warehouseoetzidev/core/src/entities/sessions";
@@ -62,6 +62,10 @@ export const createCatalog = action(async (data: InferInput<typeof CatalogCreate
   );
   return json(catalog, {
     revalidate: [getAuthenticatedUser.key, getCatalogs.key],
+    headers: {
+      Location: `/catalogs/${catalog.id}`,
+    },
+    status: 303,
   });
 });
 

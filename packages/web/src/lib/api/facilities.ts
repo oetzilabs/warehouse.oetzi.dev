@@ -251,7 +251,7 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
     headers: {
       Location: newUrl,
     },
-    status: 302,
+    status: 303,
   });
 });
 

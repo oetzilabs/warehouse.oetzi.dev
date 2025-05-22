@@ -46,7 +46,7 @@ export const getAuthenticatedUser = query(
       );
       if (!verified) {
         return redirect("/", {
-          status: 302,
+          status: 303,
           headers: {
             "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
           },
