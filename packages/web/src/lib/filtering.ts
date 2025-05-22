@@ -20,7 +20,8 @@ export type SortVariant<T> = {
   fn: (a: T, b: T) => number;
 };
 
-export interface FilterConfig<T> {
+export type FilterConfig<T> = {
+  disabled: Accessor<boolean>;
   dateRange: {
     start: Date;
     end: Date;
@@ -47,6 +48,7 @@ export type WithDates = object & {
 export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: FilterConfig<T>) {
   return createMemo(() => {
     let filtered = data();
+    if (config.disabled) return filtered;
 
     const { start, end, preset } = config.dateRange;
     if (preset === "start_of_week") {

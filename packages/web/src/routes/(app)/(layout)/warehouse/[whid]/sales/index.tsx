@@ -1,9 +1,14 @@
+import { FilterPopover } from "@/components/filter-popover";
+import { SalesList } from "@/components/sales-list";
 import { SalesDataTable } from "@/components/sales/sales-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getSalesByWarehouseId } from "@/lib/api/sales";
+import { FilterConfig, useFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
+import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
@@ -12,6 +17,7 @@ import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
+import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 
 export const route = {
@@ -26,8 +32,49 @@ export const route = {
 export default function SalesPage() {
   const params = useParams();
   const sales = createAsync(() => getSalesByWarehouseId(params.whid), { deferStream: true });
-  const [selectedSale, setSelectedSale] = createSignal<SaleInfo | null>(null);
-  const [previewVisible, setPreviewVisible] = createSignal(false);
+  const [search, setSearch] = createSignal("");
+  const [dsearch, setDSearch] = createSignal("");
+
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<SaleInfo>>({
+    disabled: () => (sales() ?? []).length === 0,
+    dateRange: {
+      start: sales()?.length ? sales()![0].createdAt : new Date(),
+      end: sales()?.length ? sales()![sales()!.length - 1].createdAt : new Date(),
+      preset: "clear",
+    },
+    search: { term: dsearch() },
+    sort: {
+      default: "date",
+      current: "date",
+      direction: "desc",
+      variants: [
+        {
+          field: "date",
+          label: "Date",
+          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
+        },
+        {
+          field: "total",
+          label: "Total",
+          fn: (a, b) => a.total - b.total,
+        },
+        {
+          field: "items",
+          label: "Items",
+          fn: (a, b) => a.items.length - b.items.length,
+        },
+      ],
+    },
+  });
+
+  const debouncedSearch = leadingAndTrailing(
+    debounce,
+    (text: string) => {
+      setDSearch(text);
+      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
+    },
+    500,
+  );
 
   const calculateSales = (sales: SaleInfo[]) => {
     // Calculate total sales for each day
@@ -62,9 +109,9 @@ export default function SalesPage() {
     <Show when={sales()}>
       {(salesList) => (
         <div class="container flex flex-col grow py-4">
-          <div class="w-full flex flex-row h-full border rounded-xl">
+          <div class="w-full flex flex-row h-full">
             <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full p-4 border-b">
+              <div class="flex items-center gap-4 justify-between w-full">
                 <h1 class="font-semibold leading-none">Sales</h1>
                 <div class="flex items-center gap-0">
                   <Button
@@ -87,71 +134,31 @@ export default function SalesPage() {
                   </Button>
                 </div>
               </div>
-              <div class="flex flex-col gap-2 w-full grow px-4">
-                <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
-                  <Show
-                    when={salesList().length > 0}
-                    fallback={
-                      <div class="flex flex-col gap-2 w-full h-full items-center justify-center bg-muted-foreground/5 ">
-                        <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground select-none">
-                          <span class="text-sm">No sales data available</span>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <div class="flex flex-col gap-2 w-full h-full">
+              <div class="flex flex-col gap-4 w-full grow">
+                <div class="flex flex-col gap-2 w-full">
+                  <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
+                    <div class="flex flex-col gap-2 w-full h-full p-4">
                       <LineChart data={calculateSales(salesList())} />
                     </div>
-                  </Show>
+                  </div>
                 </div>
-                <Show when={salesList().length > 0}>
-                  <SalesDataTable
-                    data={salesList}
-                    onSelectedSale={(sale) => {
-                      setSelectedSale(sale);
-                      setPreviewVisible(true);
+                <div class="flex flex-row items-center justify-between gap-4">
+                  <TextField
+                    value={search()}
+                    onChange={(e) => {
+                      setSearch(e);
+                      debouncedSearch(e);
                     }}
-                  />
-                </Show>
-              </div>
-            </div>
-            <div
-              class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
-                "!hidden": !previewVisible(),
-              })}
-            >
-              <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                <h2 class="font-semibold leading-none">Preview Sale</h2>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  class="size-8"
-                  onClick={() => {
-                    setPreviewVisible(false);
-                  }}
-                >
-                  <X class="size-4" />
-                </Button>
-              </div>
-              <For
-                each={selectedSale()?.items}
-                fallback={
-                  <div class="p-4 w-full grow flex flex-col">
-                    <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
-                      <PackageSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
-                      <span class="text-sm">No sale selected</span>
-                    </div>
+                    class="w-full max-w-full"
+                  >
+                    <TextFieldInput placeholder="Search sales" class="w-full max-w-full rounded-lg px-4" />
+                  </TextField>
+                  <div class="w-max">
+                    <FilterPopover config={filterConfig} onChange={setFilterConfig} data={salesList} />
                   </div>
-                }
-              >
-                {(item) => (
-                  <div class="p-4 w-full flex flex-col gap-4">
-                    <div class="flex items-center gap-4 justify-between w-full">
-                      <h1 class="text-2xl font-bold mb-4">{item.product.name}</h1>
-                    </div>
-                  </div>
-                )}
-              </For>
+                </div>
+                <SalesList data={salesList} />
+              </div>
             </div>
           </div>
         </div>

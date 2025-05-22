@@ -1,3 +1,4 @@
+import { ProductsList } from "@/components/products-list";
 import { ProductsDataTable } from "@/components/products/products-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
@@ -39,9 +40,9 @@ export default function ProductsPage() {
     <Show when={data()}>
       {(productsList) => (
         <div class="container flex flex-col grow py-4">
-          <div class="w-full flex flex-row h-full border rounded-xl">
+          <div class="w-full flex flex-row h-full">
             <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full border-b  p-4 ">
+              <div class="flex items-center gap-4 justify-between w-full ">
                 <h1 class="font-semibold leading-none">Products</h1>
                 <div class="flex items-center gap-0">
                   <Button
@@ -76,65 +77,14 @@ export default function ProductsPage() {
                   </DropdownMenu>
                 </div>
               </div>
-              <div class="flex flex-row gap-2 w-full grow px-4">
-                <Show
-                  when={productsList().length > 0}
-                  fallback={
-                    <div class="flex flex-col gap-2 w-full h-60 items-center justify-center bg-muted-foreground/5 border rounded-lg">
-                      <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground select-none">
-                        <span class="text-sm">No products data available</span>
-                      </div>
-                    </div>
-                  }
-                >
-                  <ProductsDataTable
-                    data={() => productsList().map((o) => o.product)}
-                    onSelectedProdcuts={(products) => {
-                      setSelectedProducts(products);
-                      if (products.length > 0) setPreviewVisible(true);
-                      else setPreviewVisible(false);
-                    }}
-                  />
-                </Show>
-              </div>
-            </div>
-            <div
-              class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
-                "lg:!hidden": !previewVisible(),
-              })}
-            >
-              <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                <h2 class="font-semibold leading-none">Preview Products</h2>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  class="size-8"
-                  onClick={() => {
-                    setPreviewVisible(false);
-                  }}
-                >
-                  <X class="size-4" />
-                </Button>
-              </div>
-              <For
-                each={selectedProducts()}
-                fallback={
-                  <div class="p-4 w-full grow flex flex-col">
-                    <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
-                      <PackageSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
-                      <span class="text-sm">No products selected</span>
-                    </div>
-                  </div>
-                }
-              >
-                {(product) => (
-                  <div class="p-4 w-full flex flex-col gap-4">
-                    <div class="flex items-center gap-4 justify-between w-full">
-                      <h1 class="text-lg font-semibold mb-4">{product.name}</h1>
-                    </div>
-                  </div>
-                )}
-              </For>
+              <ProductsList
+                data={() => productsList().map((o) => o.product)}
+                onSelectedProducts={(products) => {
+                  setSelectedProducts(products);
+                  if (products.length > 0) setPreviewVisible(true);
+                  else setPreviewVisible(false);
+                }}
+              />
             </div>
           </div>
         </div>

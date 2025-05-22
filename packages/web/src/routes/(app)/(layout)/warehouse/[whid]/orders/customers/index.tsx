@@ -31,8 +31,6 @@ export default function CustomerOrdersPage() {
   const [previewVisible, setPreviewVisible] = createSignal(false);
 
   const calculateOrders = (orders: OrderInfo[]) => {
-    if (orders.length === 0) return { labels: [], datasets: [] };
-    console.log(orders.length, orders);
     // Calculate total sales for each day
     const totalSales = orders.reduce(
       (acc, order) => {
@@ -90,20 +88,13 @@ export default function CustomerOrdersPage() {
                   </Button>
                 </div>
               </div>
-              <div class="flex flex-col gap-2 w-full grow">
+              <div class="flex flex-col gap-4 w-full grow">
                 <div class="flex flex-col gap-4 w-full rounded-lg border h-60">
-                  <div class="flex flex-col gap-2 w-full h-full p-4">
+                  <div class="flex flex-col gap-4 w-full h-full p-4">
                     <LineChart data={calculateOrders(os())} />
                   </div>
                 </div>
-                <CustomersOrdersList
-                  data={os}
-                  onSelectedOrder={(order) => {
-                    if (!order) return;
-                    setSelectedOrder(order);
-                    setPreviewVisible(true);
-                  }}
-                />
+                <CustomersOrdersList data={os} />
               </div>
             </div>
             <div

@@ -47,7 +47,7 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
 
   return (
     <Popover placement="bottom-end">
-      <PopoverTrigger as={Button} size="sm">
+      <PopoverTrigger as={Button} size="sm" disabled={props.config.disabled()} class="h-10 rounded-lg">
         Filters & Sort
       </PopoverTrigger>
       <PopoverContent class="w-[420px]">
@@ -363,14 +363,14 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
               </div>
             </div>
           </div>
-
           <Button
             variant="outline"
             onClick={() => {
               props.onChange({
+                disabled: () => props.data().length === 0,
                 dateRange: {
-                  start: props.data()[0].createdAt,
-                  end: props.data()[props.data().length - 1].createdAt,
+                  start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
+                  end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
                   preset: "clear",
                 },
                 search: { term: "" },
