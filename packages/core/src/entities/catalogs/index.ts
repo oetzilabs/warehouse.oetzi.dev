@@ -225,7 +225,41 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return yield* Effect.promise(() =>
           db.query.TB_catalogs.findMany({
             where: (catalogs, operations) => operations.eq(catalogs.organizationId, parsedOrgId.output),
-            with: withRelations(),
+            with: {
+              products: {
+                with: {
+                  product: {
+                    with: {
+                      brands: true,
+                      saleItems: {
+                        with: {
+                          sale: {
+                            with: {
+                              customer: true,
+                            },
+                          },
+                        },
+                      },
+                      orders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      labels: {
+                        with: {
+                          label: true,
+                        },
+                      },
+                      stco: {
+                        with: {
+                          condition: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           }),
         );
       });
