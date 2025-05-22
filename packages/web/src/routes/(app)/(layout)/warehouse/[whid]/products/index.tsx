@@ -42,7 +42,7 @@ export default function ProductsPage() {
           <div class="w-full flex flex-row h-full border rounded-xl">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full border-b  p-4 ">
-                <h1 class="font-semibold leading-none text-muted-foreground">Products</h1>
+                <h1 class="font-semibold leading-none">Products</h1>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
@@ -104,7 +104,7 @@ export default function ProductsPage() {
               })}
             >
               <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                <h2 class="font-semibold leading-none text-muted-foreground">Preview Products</h2>
+                <h2 class="font-semibold leading-none">Preview Products</h2>
                 <Button
                   size="icon"
                   variant="secondary"

@@ -16,6 +16,7 @@ export const TB_customers = commonTable(
     name: text("name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),
+    image: text("image"),
     status: customer_status("status").default("active").notNull(),
     verifiedAt: timestamp("verified_at", {
       withTimezone: true,

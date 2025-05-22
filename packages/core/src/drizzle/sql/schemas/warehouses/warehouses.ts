@@ -4,6 +4,7 @@ import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "../address";
+import { TB_devices } from "../devices/devices";
 import { commonTable } from "../entity";
 import { TB_sales } from "../sales/sales";
 import { TB_sessions } from "../sessions";

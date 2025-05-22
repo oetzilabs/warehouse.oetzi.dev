@@ -230,7 +230,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     <SidebarGroupContent>
                       <SidebarMenu>
                         <SidebarMenuItem>
-                          <Link href={`/warehouse/${user.currentWarehouse()?.id}/customer-orders`}>
+                          <Link href={`/warehouse/${user.currentWarehouse()?.id}/orders/customers`}>
                             <Tags class="size-4" />
                             Customer Orders
                             <SidebarMenuBadge class="mr-1">
@@ -239,7 +239,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                           </Link>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
-                          <Link href={`/warehouse/${warehouse().id}/supply-orders`}>
+                          <Link href={`/warehouse/${warehouse().id}/orders/suppliers`}>
                             <Tags class="size-4" />
                             Supply Orders
                             <SidebarMenuBadge class="mr-1">

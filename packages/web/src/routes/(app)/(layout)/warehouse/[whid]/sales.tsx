@@ -65,7 +65,7 @@ export default function SalesPage() {
           <div class="w-full flex flex-row h-full border rounded-xl">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full p-4 border-b">
-                <h1 class="font-semibold leading-none text-muted-foreground">Sales</h1>
+                <h1 class="font-semibold leading-none">Sales</h1>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
@@ -121,7 +121,7 @@ export default function SalesPage() {
               })}
             >
               <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                <h2 class="font-semibold leading-none text-muted-foreground">Preview Sale</h2>
+                <h2 class="font-semibold leading-none">Preview Sale</h2>
                 <Button
                   size="icon"
                   variant="secondary"

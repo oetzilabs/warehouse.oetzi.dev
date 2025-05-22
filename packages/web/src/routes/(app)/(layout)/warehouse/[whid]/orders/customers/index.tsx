@@ -1,3 +1,4 @@
+import { CustomersOrdersList } from "@/components/orders-list";
 import { OrdersDataTable } from "@/components/orders/orders-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
@@ -64,10 +65,10 @@ export default function CustomerOrdersPage() {
     <Show when={data()}>
       {(os) => (
         <div class="container flex flex-col grow py-4">
-          <div class="w-full flex flex-row h-full border rounded-xl">
+          <div class="w-full flex flex-row h-full gap-4">
             <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full border-b p-4">
-                <h1 class="font-semibold leading-none text-muted-foreground">Customer Orders</h1>
+              <div class="flex items-center gap-4 justify-between w-full">
+                <h1 class="font-semibold leading-none">Customer Orders</h1>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
@@ -89,45 +90,29 @@ export default function CustomerOrdersPage() {
                   </Button>
                 </div>
               </div>
-              <div class="flex flex-col gap-2 w-full grow px-4">
-                <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
-                  <Show
-                    when={os().length > 0 && os()}
-                    fallback={
-                      <div class="flex flex-col gap-2 w-full h-full items-center justify-center bg-muted-foreground/5 ">
-                        <div class="flex flex-col gap-4 items-center justify-center text-muted-foreground select-none">
-                          <span class="text-sm">No customer-orders data available</span>
-                        </div>
-                      </div>
-                    }
-                  >
-                    {(ordersList) => (
-                      <div class="flex flex-col gap-2 w-full h-full">
-                        <LineChart data={calculateOrders(ordersList())} />
-                      </div>
-                    )}
-                  </Show>
+              <div class="flex flex-col gap-2 w-full grow">
+                <div class="flex flex-col gap-4 w-full rounded-lg border h-60">
+                  <div class="flex flex-col gap-2 w-full h-full p-4">
+                    <LineChart data={calculateOrders(os())} />
+                  </div>
                 </div>
-                <Show when={os().length > 0 && os()}>
-                  {(ordersList) => (
-                    <OrdersDataTable
-                      data={ordersList}
-                      onSelectedOrder={(order) => {
-                        setSelectedOrder(order);
-                        setPreviewVisible(true);
-                      }}
-                    />
-                  )}
-                </Show>
+                <CustomersOrdersList
+                  data={os}
+                  onSelectedOrder={(order) => {
+                    if (!order) return;
+                    setSelectedOrder(order);
+                    setPreviewVisible(true);
+                  }}
+                />
               </div>
             </div>
             <div
-              class={cn("w-full lg:max-w-lg border-l lg:flex hidden flex-col grow", {
+              class={cn("w-full lg:max-w-lg border rounded-lg lg:flex hidden flex-col grow", {
                 "!hidden": !previewVisible(),
               })}
             >
               <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                <h2 class="font-semibold leading-none text-muted-foreground">Preview Orders</h2>
+                <h2 class="font-semibold leading-none">Preview Orders</h2>
                 <Button
                   size="icon"
                   variant="secondary"

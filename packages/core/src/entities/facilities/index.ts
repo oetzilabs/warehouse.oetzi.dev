@@ -5,7 +5,7 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   FacilityCreateSchema,
   FacilityUpdateSchema,
-  TB_facility_devices,
+  TB_devices,
   TB_warehouse_areas,
   TB_warehouse_facilities,
   WarehouseAreaCreateSchema,
@@ -54,6 +54,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           db.query.TB_warehouse_facilities.findFirst({
             where: (facilities, operations) => operations.eq(facilities.id, parsedId.output),
             with: {
+              devices: true,
               ars: {
                 with: {
                   strs: {
@@ -70,7 +71,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                 },
               },
             },
-          })
+          }),
         );
 
         if (!facility) {
@@ -92,7 +93,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
             .update(TB_warehouse_facilities)
             .set({ ...input, updatedAt: new Date() })
             .where(eq(TB_warehouse_facilities.id, parsedId.output))
-            .returning()
+            .returning(),
         );
 
         if (!updated) {
@@ -110,7 +111,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         }
 
         const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_warehouse_facilities).where(eq(TB_warehouse_facilities.id, parsedId.output)).returning()
+          db.delete(TB_warehouse_facilities).where(eq(TB_warehouse_facilities.id, parsedId.output)).returning(),
         );
 
         if (!deleted) {
@@ -125,6 +126,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.promise(() =>
           db.query.TB_warehouse_facilities.findMany({
             with: {
+              devices: true,
               ars: {
                 with: {
                   strs: {
@@ -141,7 +143,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                 },
               },
             },
-          })
+          }),
         );
       });
 
@@ -156,6 +158,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           db.query.TB_warehouse_facilities.findMany({
             where: (facilities, operations) => operations.eq(facilities.ownerId, parsedId.output),
             with: {
+              devices: true,
               ars: {
                 with: {
                   strs: {
@@ -172,7 +175,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                 },
               },
             },
-          })
+          }),
         );
       });
 
@@ -181,7 +184,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.promise(() =>
           db.query.TB_devices.findMany({
             where: (fields, operations) => operations.eq(fields.facility_id, facilityId),
-          })
+          }),
         );
       });
 

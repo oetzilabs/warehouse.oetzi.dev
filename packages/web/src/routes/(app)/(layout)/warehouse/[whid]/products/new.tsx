@@ -98,7 +98,7 @@ export default function NewProductPage() {
     <div class="container flex flex-row grow py-4">
       <div class="w-full py-4 flex flex-col gap-4 border rounded-xl">
         <div class="flex px-4 items-center gap-4 justify-between w-full">
-          <h1 class="font-semibold leading-none text-muted-foreground">New Product</h1>
+          <h1 class="font-semibold leading-none">New Product</h1>
           <div class="flex items-center gap-4">
             <Button size="sm" class="h-8" onClick={() => {}}>
               <Plus class="size-4" />

@@ -2,5 +2,6 @@
   "search.exclude": {
     "**/.sst": true
   },
-  "remote.autoForwardPortsFallback": 0
+  "remote.autoForwardPortsFallback": 0,
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
