@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."customers" ADD COLUMN "image" text;

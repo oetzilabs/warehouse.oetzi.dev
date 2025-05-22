@@ -26,6 +26,7 @@ const program = Effect.gen(function* (_) {
   const deviceService = yield* _(DeviceService);
 
   // seeding
+  const products = yield* productService.seed();
   const warehouseTypes = yield* warehouseTypeService.seed();
   const documentStorageOffers = yield* documentStorageOfferService.seed();
   const paymentMethods = yield* paymentMethodsService.seed();
@@ -33,7 +34,6 @@ const program = Effect.gen(function* (_) {
   const storages = yield* storageService.seed();
   const productLabels = yield* productLabelsService.seed();
   const brands = yield* brandService.seed();
-  const products = yield* productService.seed();
   const devices = yield* deviceService.seed();
 }).pipe(
   Effect.provide(StorageLive),

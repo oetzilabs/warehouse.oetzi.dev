@@ -4,6 +4,8 @@ import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, InferOutput, minLength, object, omit, partial, pipe, string } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "../address";
+import { TB_catalog_products } from "../catalogs/catalog_products";
+import { TB_catalogs } from "../catalogs/catalogs";
 import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
@@ -40,6 +42,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   whs: many(TB_organizations_warehouses),
   sessions: many(TB_sessions),
   discounts: many(TB_organization_discounts),
+  catalogs: many(TB_catalogs),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

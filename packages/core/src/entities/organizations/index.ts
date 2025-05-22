@@ -51,6 +51,15 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
+        catalogs: {
+          with: {
+            products: {
+              with: {
+                product: true,
+              },
+            },
+          },
+        },
         users: {
           with: {
             user: true,
@@ -141,6 +150,15 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.id, parsedId.output),
             with: {
+              catalogs: {
+                with: {
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
+              },
               users: {
                 with: {
                   user: {
@@ -203,6 +221,15 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.slug, slug),
             with: {
+              catalogs: {
+                with: {
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
+              },
               users: {
                 with: {
                   user: {

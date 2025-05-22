@@ -20,6 +20,7 @@ import { changeWarehouse } from "@/lib/api/warehouses";
 import { cn } from "@/lib/utils";
 import { A, useAction, useLocation, useResolvedPath, useSubmission } from "@solidjs/router";
 import BadgeEuro from "lucide-solid/icons/badge-euro";
+import BookOpenText from "lucide-solid/icons/book-open-text";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
 import Support from "lucide-solid/icons/heart-plus";
@@ -292,6 +293,19 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                             <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
                           </Link>
                         </SidebarMenuItem>
+                        <Show when={user.currentOrganization()}>
+                          {(org) => (
+                            <SidebarMenuItem>
+                              <Link href={`/catalogs`}>
+                                <BookOpenText class="size-4" />
+                                Catalogs
+                                <SidebarMenuBadge class="mr-1">
+                                  {org().catalogs.filter((c) => c.deletedAt === null).length}
+                                </SidebarMenuBadge>
+                              </Link>
+                            </SidebarMenuItem>
+                          )}
+                        </Show>
                         <SidebarMenuItem>
                           <Link href={`/documents`}>
                             <Notebook class="size-4" />

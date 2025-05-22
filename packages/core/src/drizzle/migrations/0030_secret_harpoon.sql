@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."devices" ADD COLUMN "type" text NOT NULL;

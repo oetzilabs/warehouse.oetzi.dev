@@ -1,2 +1,0 @@
-ALTER TABLE "warehouse"."orders" ADD COLUMN "sale_id" text;--> statement-breakpoint
-ALTER TABLE "warehouse"."orders" ADD CONSTRAINT "orders_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "warehouse"."sales"("id") ON DELETE set null ON UPDATE no action;

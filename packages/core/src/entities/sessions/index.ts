@@ -30,7 +30,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
           with: {
             sessions: {
               with: {
-                org: true,
+                org: {
+                  with: {
+                    catalogs: true,
+                  },
+                },
                 wh: {
                   with: {
                     orders: {
@@ -63,7 +67,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
             },
           },
         },
-        org: true,
+        org: {
+          with: {
+            catalogs: true,
+          },
+        },
         wh: {
           with: {
             orders: {
@@ -127,7 +135,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 with: {
                   sessions: {
                     with: {
-                      org: true,
+                      org: {
+                        with: {
+                          catalogs: true,
+                        },
+                      },
                       wh: {
                         with: {
                           orders: {
@@ -160,7 +172,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   },
                 },
               },
-              org: true,
+              org: {
+                with: {
+                  catalogs: true,
+                },
+              },
               wh: {
                 with: {
                   orders: {
@@ -224,7 +240,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 with: {
                   sessions: {
                     with: {
-                      org: true,
+                      org: {
+                        with: {
+                          catalogs: true,
+                        },
+                      },
                       wh: {
                         with: {
                           orders: {
@@ -257,7 +277,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   },
                 },
               },
-              org: true,
+              org: {
+                with: {
+                  catalogs: true,
+                },
+              },
               wh: {
                 with: {
                   orders: {
@@ -304,7 +328,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 with: {
                   sessions: {
                     with: {
-                      org: true,
+                      org: {
+                        with: {
+                          catalogs: true,
+                        },
+                      },
                       wh: {
                         with: {
                           orders: {
@@ -337,7 +365,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   },
                 },
               },
-              org: true,
+              org: {
+                with: {
+                  catalogs: true,
+                },
+              },
               wh: {
                 with: {
                   orders: {

@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."products" DROP COLUMN "certifications";

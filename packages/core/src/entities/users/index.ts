@@ -57,6 +57,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           with: {
             org: {
               with: {
+                catalogs: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                  },
+                },
                 owner: {
                   columns: {
                     hashed_password: false,
@@ -196,6 +205,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
             org: {
               with: {
+                catalogs: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                  },
+                },
                 owner: {
                   columns: {
                     hashed_password: false,
@@ -403,6 +421,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   org: {
                     with: {
+                      catalogs: {
+                        with: {
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
                       owner: {
                         columns: {
                           hashed_password: false,
@@ -553,6 +580,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
+                      catalogs: {
+                        with: {
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
                       owner: {
                         columns: {
                           hashed_password: false,
@@ -739,6 +775,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   org: {
                     with: {
+                      catalogs: {
+                        with: {
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
                       owner: {
                         columns: {
                           hashed_password: false,
@@ -889,6 +934,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
+                      catalogs: {
+                        with: {
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
                       owner: {
                         columns: {
                           hashed_password: false,

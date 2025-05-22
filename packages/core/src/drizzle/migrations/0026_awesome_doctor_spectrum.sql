@@ -1,2 +1,0 @@
-CREATE TYPE "warehouse"."certificate_types" AS ENUM('digital', 'physical');--> statement-breakpoint
-ALTER TABLE "warehouse"."certificates" ADD COLUMN "type" "warehouse"."certificate_types" DEFAULT 'digital' NOT NULL;
