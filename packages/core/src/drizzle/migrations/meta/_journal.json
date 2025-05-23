@@ -15,6 +15,13 @@
       "when": 1747989525614,
       "tag": "0001_odd_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748031748599,
+      "tag": "0002_bouncy_spirit",
+      "breakpoints": true
     }
   ]
 }

@@ -275,26 +275,30 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </SidebarGroup>
-                  <SidebarGroup>
-                    <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        <SidebarMenuItem>
-                          <Link href={`/suppliers`} disabled>
-                            <Forklift class="size-4" />
-                            Suppliers
-                            <SidebarMenuBadge class="mr-1">8</SidebarMenuBadge>
-                          </Link>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <Link href={`/customers`} disabled>
-                            <UsersRound class="size-4" />
-                            Customers
-                            <SidebarMenuBadge class="mr-1">40</SidebarMenuBadge>
-                          </Link>
-                        </SidebarMenuItem>
-                        <Show when={user.currentOrganization()}>
-                          {(org) => (
+                  <Show when={user.currentOrganization()}>
+                    {(org) => (
+                      <SidebarGroup>
+                        <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                          <SidebarMenu>
+                            <SidebarMenuItem>
+                              <Link href={`/suppliers`}>
+                                <Forklift class="size-4" />
+                                Suppliers
+                                <SidebarMenuBadge class="mr-1">
+                                  {org().suppliers.filter((c) => c.deletedAt === null).length}
+                                </SidebarMenuBadge>
+                              </Link>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                              <Link href={`/customers`}>
+                                <UsersRound class="size-4" />
+                                Customers
+                                <SidebarMenuBadge class="mr-1">
+                                  {org().customers.filter((c) => c.deletedAt === null).length}
+                                </SidebarMenuBadge>
+                              </Link>
+                            </SidebarMenuItem>
                             <SidebarMenuItem>
                               <Link href={`/catalogs`}>
                                 <BookOpenText class="size-4" />
@@ -304,18 +308,20 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                                 </SidebarMenuBadge>
                               </Link>
                             </SidebarMenuItem>
-                          )}
-                        </Show>
-                        <SidebarMenuItem>
-                          <Link href={`/documents`}>
-                            <Notebook class="size-4" />
-                            Documents
-                            <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
-                          </Link>
-                        </SidebarMenuItem>
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
+                            <SidebarMenuItem>
+                              <Link href={`/documents`}>
+                                <Notebook class="size-4" />
+                                Documents
+                                <SidebarMenuBadge class="mr-1">
+                                  {/* {org().documents.filter((c) => c.deletedAt === null).length} */}0
+                                </SidebarMenuBadge>
+                              </Link>
+                            </SidebarMenuItem>
+                          </SidebarMenu>
+                        </SidebarGroupContent>
+                      </SidebarGroup>
+                    )}
+                  </Show>
                   <SidebarGroup>
                     <SidebarGroupLabel>Communication</SidebarGroupLabel>
                     <SidebarGroupContent>

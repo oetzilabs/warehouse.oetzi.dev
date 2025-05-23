@@ -34,12 +34,11 @@ import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: async (props) => {
-    const user = await getAuthenticatedUser({ skipOnboarding: true });
-    const sessionToken = await getSessionToken();
-    const catalog = await getCatalogById(props.params.cid);
-    const printers = await getDevices();
-    return { user, sessionToken, catalog, printers };
+  preload: (props) => {
+    getAuthenticatedUser();
+    getSessionToken();
+    getCatalogById(props.params.cid);
+    getDevices();
   },
 } as RouteDefinition;
 

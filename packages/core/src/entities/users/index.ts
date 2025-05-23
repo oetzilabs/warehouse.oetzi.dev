@@ -57,6 +57,37 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           with: {
             org: {
               with: {
+                suppliers: {
+                  with: {
+                    supplier: {
+                      with: {
+                        products: {
+                          with: {
+                            product: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                customers: {
+                  with: {
+                    customer: {
+                      with: {
+                        sales: {
+                          with: {
+                            items: {
+                              with: {
+                                product: true,
+                              },
+                            },
+                            warehouse: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 catalogs: {
                   with: {
                     products: {
@@ -205,6 +236,37 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
             org: {
               with: {
+                suppliers: {
+                  with: {
+                    supplier: {
+                      with: {
+                        products: {
+                          with: {
+                            product: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                customers: {
+                  with: {
+                    customer: {
+                      with: {
+                        sales: {
+                          with: {
+                            items: {
+                              with: {
+                                product: true,
+                              },
+                            },
+                            warehouse: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 catalogs: {
                   with: {
                     products: {
@@ -421,6 +483,37 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   org: {
                     with: {
+                      suppliers: {
+                        with: {
+                          supplier: {
+                            with: {
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                      customers: {
+                        with: {
+                          customer: {
+                            with: {
+                              sales: {
+                                with: {
+                                  items: {
+                                    with: {
+                                      product: true,
+                                    },
+                                  },
+                                  warehouse: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       catalogs: {
                         with: {
                           products: {
@@ -580,6 +673,37 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
+                      suppliers: {
+                        with: {
+                          supplier: {
+                            with: {
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                      customers: {
+                        with: {
+                          customer: {
+                            with: {
+                              sales: {
+                                with: {
+                                  items: {
+                                    with: {
+                                      product: true,
+                                    },
+                                  },
+                                  warehouse: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       catalogs: {
                         with: {
                           products: {
@@ -775,6 +899,37 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   org: {
                     with: {
+                      suppliers: {
+                        with: {
+                          supplier: {
+                            with: {
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                      customers: {
+                        with: {
+                          customer: {
+                            with: {
+                              sales: {
+                                with: {
+                                  items: {
+                                    with: {
+                                      product: true,
+                                    },
+                                  },
+                                  warehouse: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       catalogs: {
                         with: {
                           products: {
@@ -934,6 +1089,37 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
+                      suppliers: {
+                        with: {
+                          supplier: {
+                            with: {
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                      customers: {
+                        with: {
+                          customer: {
+                            with: {
+                              sales: {
+                                with: {
+                                  items: {
+                                    with: {
+                                      product: true,
+                                    },
+                                  },
+                                  warehouse: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                       catalogs: {
                         with: {
                           products: {

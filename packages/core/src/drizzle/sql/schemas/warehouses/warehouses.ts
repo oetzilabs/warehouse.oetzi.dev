@@ -14,7 +14,6 @@ import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouse_facilities } from "./warehouse_facility";
 import { TB_warehouse_orders } from "./warehouse_orders";
 import { TB_warehouse_products } from "./warehouse_products";
-import { TB_warehouse_suppliers } from "./warehouse_suppliers";
 import { TB_warehouse_types } from "./warehouse_types";
 import { TB_warehouse_addresses } from "./warehouses_addresses";
 
@@ -47,7 +46,6 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
   fcs: many(TB_warehouse_facilities),
   sessions: many(TB_sessions),
   orders: many(TB_warehouse_orders),
-  suppliers: many(TB_warehouse_suppliers),
   sales: many(TB_sales),
   products: many(TB_warehouse_products),
   organization: many(TB_organizations_warehouses),

@@ -9,9 +9,8 @@ import { toast } from "solid-sonner";
 import { TextField, TextFieldInput, TextFieldLabel } from "../../components/ui/text-field";
 
 export const route = {
-  preload: async (props) => {
-    const user = await getAuthenticatedUser();
-    return { user };
+  preload: (props) => {
+    getAuthenticatedUser();
   },
 } satisfies RouteDefinition;
 

@@ -6,9 +6,8 @@ import { A, createAsync, RouteDefinition } from "@solidjs/router";
 import { Show } from "solid-js";
 
 export const route = {
-  preload: async (props) => {
-    const user = await getAuthenticatedUser({ skipOnboarding: true });
-    return { user };
+  preload: (props) => {
+    getAuthenticatedUser({ skipOnboarding: true });
   },
 } satisfies RouteDefinition;
 

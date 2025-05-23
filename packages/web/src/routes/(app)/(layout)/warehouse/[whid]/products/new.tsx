@@ -13,7 +13,7 @@ import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCertificates } from "@/lib/api/certificates";
 import { getProductLabels, getProductsByWarehouseId } from "@/lib/api/products";
 import { getStorageConditions } from "@/lib/api/storage_conditions";
-import { getSuppliersByWarehouseId } from "@/lib/api/suppliers";
+import { getSuppliers } from "@/lib/api/suppliers";
 import { cn } from "@/lib/utils";
 import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
@@ -31,20 +31,19 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: (props) => {
-    const user = getAuthenticatedUser();
-    const sessionToken = getSessionToken();
-    const sales = getProductsByWarehouseId(props.params.whid);
-    const suppliers = getSuppliersByWarehouseId(props.params.whid);
-    const labels = getProductLabels();
-    const certificates = getCertificates();
-    const conditions = getStorageConditions();
-    return { user, sessionToken, sales, suppliers, labels, certificates, conditions };
+    getAuthenticatedUser();
+    getSessionToken();
+    getProductsByWarehouseId(props.params.whid);
+    getSuppliers(props.params.whid);
+    getProductLabels();
+    getCertificates();
+    getStorageConditions();
   },
 } as RouteDefinition;
 
 export default function NewProductPage() {
   const params = useParams();
-  const suppliers = createAsync(() => getSuppliersByWarehouseId(params.whid), { deferStream: true });
+  const suppliers = createAsync(() => getSuppliers(), { deferStream: true });
   const labels = createAsync(() => getProductLabels(), { deferStream: true });
   const certificates = createAsync(() => getCertificates(), { deferStream: true });
   const conditions = createAsync(() => getStorageConditions(), { deferStream: true });

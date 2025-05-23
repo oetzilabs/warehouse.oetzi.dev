@@ -37,9 +37,9 @@ export const TB_sales = commonTable(
 );
 
 export const sales_relations = relations(TB_sales, ({ one, many }) => ({
-  customer: one(TB_users, {
+  customer: one(TB_customers, {
     fields: [TB_sales.customerId],
-    references: [TB_users.id],
+    references: [TB_customers.id],
   }),
   warehouse: one(TB_warehouses, {
     fields: [TB_sales.warehouseId],

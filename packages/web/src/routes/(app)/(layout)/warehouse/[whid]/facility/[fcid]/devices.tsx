@@ -6,11 +6,10 @@ import { createSignal, For, Show, Suspense } from "solid-js";
 
 export const route = {
   preload: (props) => {
-    const user = getAuthenticatedUser();
-    const sessionToken = getSessionToken();
+    getAuthenticatedUser();
+    getSessionToken();
     const params = props.params;
-    const facilityDevices = getFacilityDevicesByWarehouseId(params.whid, params.fcid);
-    return { user, sessionToken, facilityDevices, params: { whid: params.whid, fcid: params.fcid } };
+    getFacilityDevicesByWarehouseId(params.whid, params.fcid);
   },
 } as RouteDefinition;
 

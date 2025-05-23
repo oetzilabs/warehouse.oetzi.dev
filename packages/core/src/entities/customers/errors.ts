@@ -11,3 +11,34 @@ export class CustomerInvalidId extends Schema.TaggedError<CustomerInvalidId>()("
 export class CustomerNotCreated extends Schema.TaggedError<CustomerNotCreated>()("CustomerNotCreated", {
   message: Schema.optional(Schema.String),
 }) {}
+
+export class CustomerNotDeleted extends Schema.TaggedError<CustomerNotDeleted>()("CustomerNotDeleted", {
+  id: Schema.String,
+}) {}
+
+export class CustomerNotUpdated extends Schema.TaggedError<CustomerNotUpdated>()("CustomerNotUpdated", {
+  id: Schema.String,
+}) {}
+
+export class CustomerOrganizationInvalidId extends Schema.TaggedError<CustomerOrganizationInvalidId>()(
+  "CustomerOrganizationInvalidId",
+  {
+    organizationId: Schema.String,
+  },
+) {}
+
+export class CustomerOrganizationLinkFailed extends Schema.TaggedError<CustomerOrganizationLinkFailed>()(
+  "CustomerOrganizationLinkFailed",
+  {
+    organizationId: Schema.String,
+    customerId: Schema.String,
+  },
+) {}
+
+export class CustomerOrganizationUnlinkFailed extends Schema.TaggedError<CustomerOrganizationUnlinkFailed>()(
+  "CustomerOrganizationUnlinkFailed",
+  {
+    organizationId: Schema.String,
+    customerId: Schema.String,
+  },
+) {}

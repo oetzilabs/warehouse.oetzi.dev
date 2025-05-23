@@ -21,12 +21,11 @@ import { createSignal, Show, Suspense } from "solid-js";
 
 export const route = {
   preload: (props) => {
-    const user = getAuthenticatedUser();
-    const sessionToken = getSessionToken();
+    getAuthenticatedUser();
+    getSessionToken();
     const query = props.location.query;
     const cursor = query.cursor ? parseInt(query.cursor as string) : 0;
-    const messages = getMessages({ cursor });
-    return { user, sessionToken, messages };
+    getMessages({ cursor });
   },
 } as RouteDefinition;
 

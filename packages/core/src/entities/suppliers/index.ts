@@ -7,6 +7,7 @@ import {
   SupplierCreateSchema,
   SupplierNoteCreateSchema,
   SupplierUpdateSchema,
+  TB_organization_suppliers,
   TB_supplier_contacts,
   TB_supplier_notes,
   TB_suppliers,
@@ -17,8 +18,10 @@ import {
   SupplierContactNotCreated,
   SupplierInvalidId,
   SupplierNotCreated,
+  SupplierNotDeleted,
   SupplierNoteNotCreated,
   SupplierNotFound,
+  SupplierNotUpdated,
 } from "./errors";
 
 export class SupplierService extends Effect.Service<SupplierService>()("@warehouse/suppliers", {
@@ -47,13 +50,16 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       return defaultRelations;
     };
 
-    const create = (input: InferInput<typeof SupplierCreateSchema>) =>
+    const create = (input: InferInput<typeof SupplierCreateSchema>, orgId: string) =>
       Effect.gen(function* (_) {
         const [supplier] = yield* Effect.promise(() => db.insert(TB_suppliers).values(input).returning());
         if (!supplier) {
           return yield* Effect.fail(new SupplierNotCreated({}));
         }
-        return findById(supplier.id);
+        yield* Effect.promise(() =>
+          db.insert(TB_organization_suppliers).values({ supplier_id: supplier.id, organization_id: orgId }).returning(),
+        );
+        return yield* findById(supplier.id);
       });
 
     const findById = (id: string, relations?: FindManyParams["with"]) =>
@@ -76,6 +82,28 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         }
 
         return supplier;
+      });
+
+    const update = (input: InferInput<typeof SupplierUpdateSchema>) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, input.id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id: input.id }));
+        }
+
+        const [updated] = yield* Effect.promise(() =>
+          db
+            .update(TB_suppliers)
+            .set({ ...input, updatedAt: new Date() })
+            .where(eq(TB_suppliers.id, parsedId.output))
+            .returning(),
+        );
+
+        if (!updated) {
+          return yield* Effect.fail(new SupplierNotUpdated({ id: input.id }));
+        }
+
+        return updated;
       });
 
     const addContact = (supplierId: string, input: InferInput<typeof SupplierContactCreateSchema>) =>
@@ -112,15 +140,15 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return note;
       });
 
-    const findByWarehouseId = (warehouseId: string) =>
+    const findByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
-        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
-        if (!parsedWarehouseId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: organizationId }));
         }
         return yield* Effect.promise(() =>
-          db.query.TB_warehouse_suppliers.findMany({
-            where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
+          db.query.TB_organization_suppliers.findMany({
+            where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
               supplier: {
                 with: {
@@ -142,9 +170,44 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         );
       });
 
-    return { create, findById, addContact, addNote, findByWarehouseId } as const;
+    const remove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id }));
+        }
+        const [deleted] = yield* Effect.promise(() =>
+          db.delete(TB_suppliers).where(eq(TB_suppliers.id, parsedId.output)).returning(),
+        );
+        if (!deleted) {
+          return yield* Effect.fail(new SupplierNotDeleted({ id }));
+        }
+        return deleted;
+      });
+
+    const safeRemove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id }));
+        }
+        const [deleted] = yield* Effect.promise(() =>
+          db
+            .update(TB_suppliers)
+            .set({ deletedAt: new Date() })
+            .where(eq(TB_suppliers.id, parsedId.output))
+            .returning(),
+        );
+        if (!deleted) {
+          return yield* Effect.fail(new SupplierNotDeleted({ id }));
+        }
+        return deleted;
+      });
+
+    return { create, findById, update, addContact, addNote, findByOrganizationId, remove, safeRemove } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}
 
 export const SupplierLive = SupplierService.Default;
+export type SupplierInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findById"]>>>>;

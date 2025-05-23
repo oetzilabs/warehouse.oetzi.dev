@@ -1,12 +1,11 @@
 import { relations } from "drizzle-orm";
 import { text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { object, omit, partial } from "valibot";
+import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
-import { TB_products } from "../products/products";
+import { TB_organization_suppliers } from "../organizations/organization_suppliers";
 import { schema } from "../utils";
-import { TB_warehouse_suppliers } from "../warehouses/warehouse_suppliers";
 import { TB_supplier_contacts } from "./suppliers_contacts";
 import { TB_supplier_notes } from "./suppliers_notes";
 import { TB_supplier_products } from "./suppliers_products";
@@ -33,13 +32,20 @@ export const supplier_relations = relations(TB_suppliers, ({ many }) => ({
   products: many(TB_supplier_products),
   notes: many(TB_supplier_notes),
   contacts: many(TB_supplier_contacts),
-  warehouses: many(TB_warehouse_suppliers),
+  organizations: many(TB_organization_suppliers),
 }));
 
 export type SupplierSelect = typeof TB_suppliers.$inferSelect;
 export type SupplierInsert = typeof TB_suppliers.$inferInsert;
-export const SupplierCreateSchema = createInsertSchema(TB_suppliers);
+export const SupplierCreateSchema = omit(createInsertSchema(TB_suppliers), [
+  "createdAt",
+  "updatedAt",
+  "deletedAt",
+  "id",
+]);
 export const SupplierUpdateSchema = object({
-  ...partial(omit(SupplierCreateSchema, ["createdAt", "updatedAt"])).entries,
+  ...partial(SupplierCreateSchema).entries,
   id: prefixed_cuid2,
 });
+export type SupplierCreate = InferInput<typeof SupplierCreateSchema>;
+export type SupplierUpdate = InferInput<typeof SupplierUpdateSchema>;

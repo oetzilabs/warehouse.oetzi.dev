@@ -9,7 +9,9 @@ import { TB_catalogs } from "../catalogs/catalogs";
 import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
+import { TB_organization_customers } from "./organization_customers";
 import { TB_organization_discounts } from "./organization_discounts";
+import { TB_organization_suppliers } from "./organization_suppliers";
 import { TB_organization_users } from "./organization_users";
 import { TB_organizations_warehouses } from "./organizations_warehouses";
 
@@ -40,8 +42,10 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   }),
   users: many(TB_organization_users),
   whs: many(TB_organizations_warehouses),
-  sessions: many(TB_sessions),
   discounts: many(TB_organization_discounts),
+  suppliers: many(TB_organization_suppliers),
+  customers: many(TB_organization_customers),
+  sessions: many(TB_sessions),
   catalogs: many(TB_catalogs),
 }));
 

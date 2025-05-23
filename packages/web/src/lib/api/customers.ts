@@ -1,15 +1,15 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import {
-  SupplierCreateSchema,
-  SupplierUpdateSchema,
-} from "@warehouseoetzidev/core/src/drizzle/sql/schemas/suppliers/suppliers";
-import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
+  CustomerCreateSchema,
+  CustomerUpdateSchema,
+} from "@warehouseoetzidev/core/src/drizzle/sql/schemas/customers/customers";
+import { CustomerLive, CustomerService } from "@warehouseoetzidev/core/src/entities/customers";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
 
-export const getSuppliers = query(async () => {
+export const getCustomers = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -29,17 +29,17 @@ export const getSuppliers = query(async () => {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
-  const suppliers = await Effect.runPromise(
+  const customers = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const supplierService = yield* _(SupplierService);
-      const suppliers = yield* supplierService.findByOrganizationId(orgId);
-      return suppliers;
-    }).pipe(Effect.provide(SupplierLive)),
+      const customerService = yield* _(CustomerService);
+      const customers = yield* customerService.findByOrganizationId(orgId);
+      return customers;
+    }).pipe(Effect.provide(CustomerLive)),
   );
-  return suppliers;
-}, "suppliers-by-organization");
+  return customers;
+}, "customers-by-organization");
 
-export const createSupplier = action(async (data: InferInput<typeof SupplierCreateSchema>) => {
+export const createCustomer = action(async (data: InferInput<typeof CustomerCreateSchema>) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -50,49 +50,49 @@ export const createSupplier = action(async (data: InferInput<typeof SupplierCrea
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
-  const supplier = await Effect.runPromise(
+  const customer = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(SupplierService);
+      const service = yield* _(CustomerService);
       return yield* service.create(data, session.current_organization_id!);
-    }).pipe(Effect.provide(SupplierLive)),
+    }).pipe(Effect.provide(CustomerLive)),
   );
-  return json(supplier, {
-    revalidate: [getAuthenticatedUser.key, getSuppliers.key],
+  return json(customer, {
+    revalidate: [getAuthenticatedUser.key, getCustomers.key],
     headers: {
-      Location: `/suppliers/${supplier.id}`,
+      Location: `/customers/${customer.id}`,
     },
     status: 303,
   });
 });
 
-export const updateSupplier = action(async (data: InferInput<typeof SupplierUpdateSchema>) => {
+export const updateCustomer = action(async (data: InferInput<typeof CustomerUpdateSchema>) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
-  const supplier = await Effect.runPromise(
+  const customer = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(SupplierService);
+      const service = yield* _(CustomerService);
       return yield* service.update(data);
-    }).pipe(Effect.provide(SupplierLive)),
+    }).pipe(Effect.provide(CustomerLive)),
   );
-  return supplier;
+  return customer;
 });
 
-export const deleteSupplier = action(async (id: string) => {
+export const deleteCustomer = action(async (id: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
-  const supplier = await Effect.runPromise(
+  const customer = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(SupplierService);
+      const service = yield* _(CustomerService);
       return yield* service.safeRemove(id);
-    }).pipe(Effect.provide(SupplierLive)),
+    }).pipe(Effect.provide(CustomerLive)),
   );
-  return supplier;
+  return customer;
 });
