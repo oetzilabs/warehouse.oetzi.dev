@@ -91,3 +91,32 @@ export const getDevicesByWarehouseId = query(async (whid: string) => {
   );
   return device;
 }, "devices-by-warehouse-id");
+
+export const getDevices = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  if(!session.current_organization_id){
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+
+  const devices = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const deviceService = yield* _(DeviceService);
+      const devices = yield* deviceService.findByOrganizationId(session.current_organization_id!);
+      return devices;
+    }).pipe(Effect.provide(WarehouseLive), Effect.provide(DeviceLive)),
+  );
+  return devices;
+}, "get-devices")

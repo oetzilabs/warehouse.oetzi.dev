@@ -6,6 +6,7 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { DeviceCreateSchema, DeviceUpdateSchema, TB_devices } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { WarehouseInvalidId } from "../warehouses/errors";
+import { OrganizationInvalidId, OrganizationNotFound } from "../organizations/errors";
 import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, DeviceNotUpdated } from "./errors";
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/devices", {
@@ -50,7 +51,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
             with: {
               facility: true,
             },
-          }),
+          })
         );
 
         if (!device) {
@@ -78,7 +79,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
                 },
               },
             },
-          }),
+          })
         );
 
         return whDevices.map((whDevice) => whDevice.devices).flat();
@@ -96,7 +97,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
             .update(TB_devices)
             .set({ ...input, updatedAt: new Date() })
             .where(eq(TB_devices.id, parsedId.output))
-            .returning(),
+            .returning()
         );
 
         if (!updated) {
@@ -114,7 +115,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         }
 
         const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning(),
+          db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning()
         );
 
         if (!deleted) {
@@ -138,9 +139,9 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
             object({
               ...DeviceCreateSchema.entries,
               id: prefixed_cuid2,
-            }),
+            })
           ),
-          devices,
+          devices
         );
 
         const existing = dbDevices.map((d) => d.id);
@@ -159,12 +160,46 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
                 .update(TB_devices)
                 .set({ ...device, updatedAt: new Date() })
                 .where(eq(TB_devices.id, device.id))
-                .returning(),
+                .returning()
             );
           }
         }
 
         return devs;
+      });
+
+    const findByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        // look into all the facilites of the warehouse
+        const orgs = yield* Effect.promise(() =>
+          db.query.TB_organizations.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedOrganizationId.output),
+            with: {
+              whs: {
+                with: {
+                  warehouse: {
+                    with:{
+                      fcs: {
+                        with: {
+                          devices: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          })
+        );
+        if (!orgs) {
+          return yield* Effect.fail(new OrganizationNotFound({ id: organizationId }));
+        }
+        const devices = orgs.whs.flatMap((wh) => wh.warehouse.fcs.flatMap((f) => f.devices)).flat();
+        return devices;
       });
 
     return {
@@ -175,6 +210,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       remove,
       all,
       seed,
+      findByOrganizationId,
     } as const;
   }),
   dependencies: [DatabaseLive],

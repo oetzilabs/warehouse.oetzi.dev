@@ -206,6 +206,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                     },
                   },
                 },
+                orderBy: (fields, operations) => operations.asc(fields.createdAt),
               },
             },
           }),

@@ -25,7 +25,7 @@
     "vite-tsconfig-paths": "5.1.4"
   },
   "dependencies": {
-    "@ark-ui/solid": "5.7.0",
+    "@ark-ui/solid": "5.9.1",
     "@corvu/drawer": "0.2.4",
     "@corvu/otp-field": "0.1.4",
     "@corvu/resizable": "0.2.5",

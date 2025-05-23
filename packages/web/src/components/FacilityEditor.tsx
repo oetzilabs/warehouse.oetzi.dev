@@ -19,6 +19,7 @@ import Plus from "lucide-solid/icons/plus";
 import RotateCcw from "lucide-solid/icons/rotate-ccw";
 import SaveIcon from "lucide-solid/icons/save";
 import Trash2 from "lucide-solid/icons/trash-2";
+import X from "lucide-solid/icons/x";
 import { Accessor, createEffect, createSignal, For, mergeProps, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { isServer } from "solid-js/web";
@@ -250,6 +251,18 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
     <div class="flex flex-col w-full grow relative" ref={mapRef!}>
       <div class="absolute top-0 z-50 bg-background border-b flex flex-row items-center gap-2 justify-end select-none w-full h-max">
         <div class="flex flex-row items-center gap-2 p-2">
+          <Show when={editing()}>
+            <Button
+              class="px-3 h-8 bg-background"
+              variant="outline"
+              onClick={() => {
+                setEditing(false);
+              }}
+            >
+                <span>Cancel</span>
+                <X class="size-4" />
+            </Button>
+          </Show>
           <Button
             class="px-3 h-8"
             onClick={() => {
@@ -266,7 +279,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                     loading: "Saving facility...",
                     success: "Facility saved",
                     error: "Failed to save facility",
-                  },
+                  }
                 );
                 setEditing(false);
               } else {
@@ -365,7 +378,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                             {
                               "flex-row": storage.variant === "vertical",
                               "flex-col": storage.variant === "horizontal",
-                            },
+                            }
                           )}
                           style={{
                             top: `${storage.bounding_box.y + padding}px`,
@@ -398,7 +411,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                                       storage.variant === "vertical",
                                     "border-neutral-400 dark:border-neutral-500 border-b last:border-b-0":
                                       storage.variant === "horizontal",
-                                  },
+                                  }
                                 )}
                                 style={
                                   storage.variant === "horizontal"

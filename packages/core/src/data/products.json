@@ -1,6 +1,7 @@
 [
   {
     "id": "prod_uzujt3nrndmn90yyslc61wqv",
+    "deletedAt": null,
     "name": "Tomatensauce Arrabbiata (Gastronomie)",
     "description": "Eine würzige Tomatensauce Arrabbiata in Gastronomiegröße, fertig zum Gebrauch.",
     "sku": "SAUCE-ARRABBIATA-GASTRO-001",
@@ -32,6 +33,7 @@
   },
   {
     "id": "prod_rljvumttoz3f2v122kw7bf4x",
+    "deletedAt": null,
     "name": "Nachhaltige Lebensmittelverpackung (Bio-Kunststoff)",
     "description": "Umweltfreundliche Lebensmittelbehälter aus Bio-Kunststoff für Take-Away und Lieferdienste.",
     "sku": "VERPACKUNG-BIO-002",
@@ -63,6 +65,7 @@
   },
   {
     "id": "prod_qgjolvdci0g8f0g6dq851dtf",
+    "deletedAt": null,
     "name": "Auswahl an Premium-Gewürzen (Gastronomie)",
     "description": "Ein Set hochwertiger Gewürze, ideal für die anspruchsvolle Restaurantküche.",
     "sku": "GEWUERZE-PREMIUM-GASTRO-003",

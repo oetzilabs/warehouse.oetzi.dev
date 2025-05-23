@@ -75,16 +75,7 @@ export default function ProductsPage() {
                   </DropdownMenu>
                 </div>
               </div>
-              <ProductsList
-                data={() =>
-                  productsList().sort((a, b) => {
-                    // if deleted, put it at the end
-                    if (a.deletedAt && !b.deletedAt) return 1;
-                    if (!a.deletedAt && b.deletedAt) return -1;
-                    return 0;
-                  })
-                }
-              />
+              <ProductsList data={productsList} />
             </div>
           </div>
         </div>

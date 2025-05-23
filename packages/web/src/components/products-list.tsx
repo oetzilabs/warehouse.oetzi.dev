@@ -21,8 +21,8 @@ export const ProductsList = (props: ProductsListProps) => {
   const [filterConfig, setFilterConfig] = createStore<FilterConfig<ProductInfo>>({
     disabled: () => props.data().length === 0,
     dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
+      start: props.data().length === 0 ? new Date() : (props.data()[0]?.createdAt ?? new Date()),
+      end: props.data().length === 0 ? new Date() : (props.data()[props.data().length - 1]?.createdAt ?? new Date()),
       preset: "clear",
     },
     search: { term: dsearch() },

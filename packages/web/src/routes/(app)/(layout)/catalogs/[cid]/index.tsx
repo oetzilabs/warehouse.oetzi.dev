@@ -12,26 +12,34 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { deleteCatalog, getCatalogById } from "@/lib/api/catalogs";
+import { deleteCatalog, downloadSheet, getCatalogById, printSheet } from "@/lib/api/catalogs";
+import { getDevices } from "@/lib/api/devices";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import Printer from "lucide-solid/icons/printer";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
-    const sessionToken = getSessionToken();
-    const catalog = getCatalogById(props.params.cid);
-    return { user, sessionToken, catalog };
+  preload: async (props) => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    const catalog = await getCatalogById(props.params.cid);
+    const printers = await getDevices();
+    return { user, sessionToken, catalog, printers };
   },
 } as RouteDefinition;
 
@@ -39,7 +47,15 @@ export default function CatalogPage() {
   const params = useParams();
   const navigate = useNavigate();
   const catalog = createAsync(() => getCatalogById(params.cid), { deferStream: true });
+  const printers = createAsync(() => getDevices(), { deferStream: true });
+
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
+
+  const printCatalogSheetAction = useAction(printSheet);
+  const isPrintingCatalogSheet = useSubmission(printSheet);
+
+  const downloadCatalogSheetAction = useAction(downloadSheet);
+  const isDownloadingCatalogSheet = useSubmission(downloadSheet);
 
   const deleteCatalogAction = useAction(deleteCatalog);
   const isDeletingCatalog = useSubmission(deleteCatalog);
@@ -81,12 +97,64 @@ export default function CatalogPage() {
                       <Edit class="size-4" />
                       Edit
                     </DropdownMenuItem>
+                    <DropdownMenuSub overlap>
+                      <DropdownMenuSubTrigger class="gap-2 cursor-pointer">
+                        <Printer class="size-4" />
+                        Print Sheet
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          <Show when={printers()}>
+                            {(devices) => (
+                              <For
+                                each={devices()}
+                                fallback={<DropdownMenuItem disabled>No printers found</DropdownMenuItem>}
+                              >
+                                {(device) => (
+                                  <DropdownMenuItem
+                                    disabled={
+                                      isPrintingCatalogSheet.pending && isPrintingCatalogSheet.input[1] === device.id
+                                    }
+                                    onClick={() => {
+                                      toast.promise(printCatalogSheetAction(params.whid, device.id, catalogInfo().id), {
+                                        loading: "Printing catalog sheet...",
+                                        success: "Catalog sheet printed",
+                                        error: "Failed to print catalog sheet",
+                                      });
+                                    }}
+                                  >
+                                    <Printer class="size-4" />
+                                    {device.name.length > 0 ? device.name : device.type}
+                                  </DropdownMenuItem>
+                                )}
+                              </For>
+                            )}
+                          </Show>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              toast.promise(downloadCatalogSheetAction(catalogInfo().id), {
+                                loading: "Downloading catalog sheet...",
+                                success: "Product sheet downloaded",
+                                error: "Failed to download product sheet",
+                              });
+                            }}
+                            disabled
+                          >
+                            Download as PDF
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
                     <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
                       <DialogTrigger
                         as={DropdownMenuItem}
                         class="!text-red-500 gap-2 cursor-pointer"
                         closeOnSelect={false}
-                        onSelect={() => setDeleteDialogOpen(true)}
+                        onSelect={() => {
+                          setTimeout(() => setDeleteDialogOpen(true), 10);
+                        }}
                       >
                         <X class="size-4" />
                         Delete

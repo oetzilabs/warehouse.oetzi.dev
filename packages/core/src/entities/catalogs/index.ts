@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { CatalogCreateSchema, CatalogUpdateSchema, TB_catalog_products, TB_catalogs } from "../../drizzle/sql/schema";
@@ -49,6 +49,38 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       return defaultRelations;
     };
 
+    const slugify = (text: string) => {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    };
+
+    const ensureBarcodeIsUnique = (input: string, existingBarcode?: string | undefined) =>
+      Effect.gen(function* (_) {
+        const slugified = slugify(input);
+        if (existingBarcode && existingBarcode !== slugified) {
+          return existingBarcode;
+        }
+        yield* Console.log({ existingBarcode, slugified });
+
+        let barcode = slugified;
+        let counter = 1;
+        let exists;
+
+        do {
+          exists = yield* Effect.promise(() =>
+            db.query.TB_catalogs.findFirst({
+              where: (fields, operations) => operations.eq(fields.barcode, barcode),
+            }),
+          );
+          if (!!exists) {
+            barcode = `${slugify(input)}-${counter++}`;
+          }
+        } while (!!exists);
+        return barcode;
+      });
+
     const create = (input: InferInput<typeof CatalogCreateSchema>, organizationId: string, userId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
@@ -56,10 +88,12 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
           return yield* Effect.fail(new CatalogOrganizationInvalidId({ organizationId: organizationId }));
         }
 
+        let barcode = yield* ensureBarcodeIsUnique(input.name);
+
         const [catalog] = yield* Effect.promise(() =>
           db
             .insert(TB_catalogs)
-            .values({ ...input, ownerId: userId, organizationId: parsedOrgId.output })
+            .values({ ...input, ownerId: userId, organizationId: parsedOrgId.output, barcode })
             .returning(),
         );
 
@@ -104,16 +138,46 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
           return yield* Effect.fail(new CatalogInvalidId({ id: input.id }));
         }
 
+        const existingBarcode = yield* Effect.promise(() =>
+          db.query.TB_catalogs.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          }),
+        );
+        if (!existingBarcode) {
+          return yield* Effect.fail(new CatalogNotFound({ id: input.id }));
+        }
+        yield* Console.log({ existingBarcode });
+
+        let updatedBarcode = yield* ensureBarcodeIsUnique(input.name, existingBarcode.barcode);
+
         const [updated] = yield* Effect.promise(() =>
           db
             .update(TB_catalogs)
-            .set({ ...input, updatedAt: new Date() })
+            .set({ ...input, updatedAt: new Date(), barcode: updatedBarcode })
             .where(eq(TB_catalogs.id, parsedId.output))
             .returning(),
         );
 
         if (!updated) {
           return yield* Effect.fail(new CatalogNotUpdated({ id: input.id }));
+        }
+
+        return updated;
+      });
+
+    const safeRemove = (input: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, input);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CatalogInvalidId({ id: input }));
+        }
+
+        const [updated] = yield* Effect.promise(() =>
+          db.update(TB_catalogs).set({ deletedAt: new Date() }).where(eq(TB_catalogs.id, parsedId.output)).returning(),
+        );
+
+        if (!updated) {
+          return yield* Effect.fail(new CatalogNotUpdated({ id: parsedId.output }));
         }
 
         return updated;
@@ -264,14 +328,89 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         );
       });
 
+    const printSheet = (catalogId: string, deviceId: string, productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedCatalogId = safeParse(prefixed_cuid2, catalogId);
+        if (!parsedCatalogId.success) {
+          return yield* Effect.fail(new CatalogInvalidId({ id: catalogId }));
+        }
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+        const parsedDeviceId = safeParse(prefixed_cuid2, deviceId);
+        if (!parsedDeviceId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: deviceId }));
+        }
+        const catalog = yield* Effect.promise(() =>
+          db.query.TB_catalogs.findFirst({
+            where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!catalog) {
+          return yield* Effect.fail(new CatalogNotFound({ id: catalogId }));
+        }
+        const device = yield* Effect.promise(() =>
+          db.query.TB_devices.findFirst({
+            where: (devices, operations) => operations.eq(devices.id, parsedDeviceId.output),
+          }),
+        );
+        if (!device) {
+          return yield* Effect.fail(new ProductNotFound({ id: deviceId }));
+        }
+        // !TODO: implement the print sheet logic, meaning I gotta connect to the printer and send the generated PDF.
+        // For now, just return true
+        return true;
+      });
+    const downloadSheet = (catalogId: string) =>
+      Effect.gen(function* (_) {
+        const parsedCatalogId = safeParse(prefixed_cuid2, catalogId);
+        if (!parsedCatalogId.success) {
+          return yield* Effect.fail(new CatalogInvalidId({ id: catalogId }));
+        }
+        const catalog = yield* Effect.promise(() =>
+          db.query.TB_catalogs.findFirst({
+            where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!catalog) {
+          return yield* Effect.fail(new CatalogNotFound({ id: catalogId }));
+        }
+        // check if the catalog PDF has already been generated
+
+        return {
+          name: catalog.name,
+          pdf: new Uint8Array(1024),
+        };
+      });
+
     return {
       create,
       findById,
       update,
       remove,
+      safeRemove,
       addProduct,
       removeProduct,
       findByOrganizationId,
+      printSheet,
+      downloadSheet,
     } as const;
   }),
   dependencies: [DatabaseLive],

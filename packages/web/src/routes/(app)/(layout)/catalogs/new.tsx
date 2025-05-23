@@ -50,6 +50,7 @@ export const route = {
 
 export default function NewCatalogPage() {
   const navigate = useNavigate();
+
   const createCatalogAction = useAction(createCatalog);
   const isCreatingCatalog = useSubmission(createCatalog);
 
@@ -61,6 +62,9 @@ export default function NewCatalogPage() {
       endDate: dayjs().isoWeekday(1).endOf("week").toDate(),
       isActive: true,
     } satisfies Required<CatalogCreate>,
+    defaultState: {
+      canSubmit: false,
+    },
   });
 
   const form = createForm(() => ({
@@ -91,34 +95,42 @@ export default function NewCatalogPage() {
           <h1 class="font-semibold leading-none">New Catalog</h1>
         </div>
         <div class="flex items-center gap-4">
-          <Button
-            disabled={form.state.isSubmitting}
-            size="sm"
-            class="h-8"
-            onClick={() => {
-              form
-                .validateAllFields("submit")
-                .then(() => {
-                  form.handleSubmit();
-                })
-                .catch((e) => {
-                  toast.error("Failed to create catalog");
-                });
-            }}
-          >
-            <Show
-              when={isCreatingCatalog.pending}
-              fallback={
-                <>
-                  <Plus class="size-4" />
-                  Create
-                </>
-              }
-            >
-              <Loader2 class="size-4 animate-spin" />
-              Creating
-            </Show>
-          </Button>
+          <form.Subscribe
+            selector={(state) => ({
+              canSubmit: state.canSubmit,
+              isSubmitting: state.isSubmitting,
+            })}
+            children={(state) => (
+              <Button
+                disabled={!state().canSubmit || isCreatingCatalog.pending}
+                size="sm"
+                class="h-8"
+                onClick={() => {
+                  form
+                    .validateAllFields("submit")
+                    .then(() => {
+                      form.handleSubmit();
+                    })
+                    .catch((e) => {
+                      toast.error("Failed to create catalog");
+                    });
+                }}
+              >
+                <Show
+                  when={state().isSubmitting || isCreatingCatalog.pending}
+                  fallback={
+                    <>
+                      <Plus class="size-4" />
+                      Create
+                    </>
+                  }
+                >
+                  <Loader2 class="size-4 animate-spin" />
+                  Creating
+                </Show>
+              </Button>
+            )}
+          />
         </div>
       </div>
       <form
@@ -126,38 +138,46 @@ export default function NewCatalogPage() {
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          form
-            .validateAllFields("submit")
-            .then(() => {
-              form.handleSubmit();
-            })
-            .catch((e) => {
-              toast.error("Failed to create catalog");
-            });
+          form.handleSubmit();
         }}
       >
         <form.Field
           name="name"
           validators={{
             onChange: pipe(string(), minLength(3)),
+            onBlur: pipe(string(), minLength(3)),
           }}
         >
           {(field) => (
-            <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
+            <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">
                 Name <span class="text-red-500">*</span>
               </TextFieldLabel>
-              <TextFieldInput placeholder="Catalog name" />
-              <TextFieldErrorMessage>{field().state.meta.errors.join(", ")}</TextFieldErrorMessage>
+              <TextFieldInput
+                placeholder="Catalog name"
+                value={field().state.value}
+                onInput={(e) => field().handleChange(e.target.value)}
+                onBlur={field().handleBlur}
+              />
+              <Show when={!field().state.meta.isValid}>
+                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
+              </Show>
             </TextField>
           )}
         </form.Field>
-        <form.Field name="description" validators={{ onChange: pipe(string()) }}>
+        <form.Field name="description" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
           {(field) => (
-            <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
+            <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Description</TextFieldLabel>
-              <TextFieldInput placeholder="Description (optional)" />
-              <TextFieldErrorMessage>{field().state.meta.errors.join(", ")}</TextFieldErrorMessage>
+              <TextFieldInput
+                placeholder="Description (optional)"
+                value={field().state.value}
+                onInput={(e) => field().handleChange(e.target.value)}
+                onBlur={field().handleBlur}
+              />
+              <Show when={!field().state.meta.isValid}>
+                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
+              </Show>
             </TextField>
           )}
         </form.Field>
@@ -174,6 +194,16 @@ export default function NewCatalogPage() {
             onChange={(e) => form.setFieldValue("endDate", dayjs(e.target.value).toDate())}
           />
         </div>
+        <form.Subscribe
+          selector={(state) => ({ errors: state.errors })}
+          children={(state) => (
+            <Show when={state().errors.length > 0}>
+              <div>
+                <em>There was an error on the form: {state().errors.join(", ")}</em>
+              </div>
+            </Show>
+          )}
+        />
       </form>
     </div>
   );

@@ -127,15 +127,16 @@ export const deleteProduct = action(async (whid: string, id: string) => {
         return yield* Effect.fail(new ProductNotDeleted({ id }));
       }
       // remove the product from the warehouse
-      yield* warehouseService.removeProduct(wh.id, product.id);
+      // yield* warehouseService.removeProduct(wh.id, product.id);
       return p;
     }).pipe(Effect.provide(ProductLive), Effect.provide(WarehouseLive)),
   );
   return json(product, {
-    revalidate: [getProductById.keyFor(whid, product.id)],
-    headers: {
-      Location: `/warehouse/${whid}/products`,
-    },
+    revalidate: [getProductById.keyFor(whid, product.id), getProductsByWarehouseId.keyFor(whid)],
+    // headers: {
+    //   Location: `/warehouse/${whid}/products`,
+    // },
+    // status: 303,
   });
 });
 

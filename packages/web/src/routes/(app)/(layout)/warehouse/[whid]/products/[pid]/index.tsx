@@ -164,7 +164,9 @@ export default function ProductPage() {
                         as={DropdownMenuItem}
                         class="!text-red-500 gap-2 cursor-pointer"
                         closeOnSelect={false}
-                        onSelect={() => setDeleteDialogOpen(true)}
+                        onSelect={() => {
+                          setTimeout(() => setDeleteDialogOpen(true), 10);
+                        }}
                       >
                         <X class="size-4" />
                         Delete

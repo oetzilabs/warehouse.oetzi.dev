@@ -603,7 +603,15 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         }
 
         const whProduct = yield* Effect.promise(() =>
-          db.delete(TB_warehouse_products).where(eq(TB_warehouse_products.warehouseId, parsedWhId.output)).returning(),
+          db
+            .delete(TB_warehouse_products)
+            .where(
+              and(
+                eq(TB_warehouse_products.warehouseId, parsedWhId.output),
+                eq(TB_warehouse_products.productId, parsedPid.output),
+              ),
+            )
+            .returning(),
         );
 
         if (!whProduct) {
