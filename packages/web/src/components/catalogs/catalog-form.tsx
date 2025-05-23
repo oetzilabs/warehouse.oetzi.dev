@@ -80,7 +80,7 @@ export const CatalogForm: Component<CatalogUpdateFormProps> = (props) => {
             <TextFieldInput
               placeholder="Catalog name"
               value={field().state.value}
-              onInput={(e) => field().handleChange(e.target.value)}
+              onInput={(e) => field().handleChange(e.currentTarget.value)}
               onBlur={field().handleBlur}
               required
             />
@@ -98,7 +98,7 @@ export const CatalogForm: Component<CatalogUpdateFormProps> = (props) => {
             <TextFieldInput
               placeholder="Description (optional)"
               value={field().state.value ?? ""}
-              onInput={(e) => field().handleChange(e.target.value)}
+              onInput={(e) => field().handleChange(e.currentTarget.value)}
               onBlur={field().handleBlur}
             />
             <Show when={!field().state.meta.isValid}>

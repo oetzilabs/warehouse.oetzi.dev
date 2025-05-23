@@ -156,7 +156,7 @@ export default function NewCatalogPage() {
               <TextFieldInput
                 placeholder="Catalog name"
                 value={field().state.value}
-                onInput={(e) => field().handleChange(e.target.value)}
+                onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
               <Show when={!field().state.meta.isValid}>
@@ -172,7 +172,7 @@ export default function NewCatalogPage() {
               <TextFieldInput
                 placeholder="Description (optional)"
                 value={field().state.value}
-                onInput={(e) => field().handleChange(e.target.value)}
+                onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
               <Show when={!field().state.meta.isValid}>
@@ -186,12 +186,12 @@ export default function NewCatalogPage() {
           <input
             type="date"
             value={form.state.values.startDate.toISOString()}
-            onChange={(e) => form.setFieldValue("startDate", dayjs(e.target.value).toDate())}
+            onChange={(e) => form.setFieldValue("startDate", dayjs(e.currentTarget.value).toDate())}
           />
           <input
             type="date"
             value={form.state.values.endDate.toISOString()}
-            onChange={(e) => form.setFieldValue("endDate", dayjs(e.target.value).toDate())}
+            onChange={(e) => form.setFieldValue("endDate", dayjs(e.currentTarget.value).toDate())}
           />
         </div>
         <form.Subscribe
