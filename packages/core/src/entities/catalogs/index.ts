@@ -62,7 +62,6 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         if (existingBarcode && existingBarcode !== slugified) {
           return existingBarcode;
         }
-        yield* Console.log({ existingBarcode, slugified });
 
         let barcode = slugified;
         let counter = 1;
@@ -146,7 +145,6 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         if (!existingBarcode) {
           return yield* Effect.fail(new CatalogNotFound({ id: input.id }));
         }
-        yield* Console.log({ existingBarcode });
 
         let updatedBarcode = yield* ensureBarcodeIsUnique(input.name, existingBarcode.barcode);
 
