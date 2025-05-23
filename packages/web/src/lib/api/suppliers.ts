@@ -39,6 +39,22 @@ export const getSuppliers = query(async () => {
   return suppliers;
 }, "suppliers-by-organization");
 
+export const getSupplierById = query(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const supplier = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const supplierService = yield* _(SupplierService);
+      return yield* supplierService.findById(id);
+    }).pipe(Effect.provide(SupplierLive)),
+  );
+  return supplier;
+}, "supplier-by-id");
+
 export const createSupplier = action(async (data: InferInput<typeof SupplierCreateSchema>) => {
   "use server";
   const auth = await withSession();

@@ -39,6 +39,22 @@ export const getCustomers = query(async () => {
   return customers;
 }, "customers-by-organization");
 
+export const getCustomerById = query(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const customer = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const customerService = yield* _(CustomerService);
+      return yield* customerService.findById(id);
+    }).pipe(Effect.provide(CustomerLive)),
+  );
+  return customer;
+}, "customer-by-id");
+
 export const createCustomer = action(async (data: InferInput<typeof CustomerCreateSchema>) => {
   "use server";
   const auth = await withSession();

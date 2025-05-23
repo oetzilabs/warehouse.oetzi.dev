@@ -31,9 +31,6 @@ export default function NewCustomerPage() {
       email: "",
       phone: "",
       image: "",
-      tax_id: "",
-      payment_terms: "",
-      website: "",
       status: "active",
     } satisfies Required<CustomerCreate>,
     defaultState: {
@@ -157,72 +154,6 @@ export default function NewCustomerPage() {
                 value={field().state.value}
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
-              />
-            </TextField>
-          )}
-        </form.Field>
-        <form.Field name="address" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">Address</TextFieldLabel>
-              <TextFieldInput
-                placeholder="Address"
-                value={field().state.value}
-                onInput={(e) => field().handleChange(e.currentTarget.value)}
-                onBlur={field().handleBlur}
-              />
-            </TextField>
-          )}
-        </form.Field>
-        <form.Field name="tax_id" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">Tax ID</TextFieldLabel>
-              <TextFieldInput
-                placeholder="Tax identification number"
-                value={field().state.value}
-                onInput={(e) => field().handleChange(e.currentTarget.value)}
-                onBlur={field().handleBlur}
-              />
-            </TextField>
-          )}
-        </form.Field>
-        <form.Field name="payment_terms" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">Payment Terms</TextFieldLabel>
-              <TextFieldInput
-                placeholder="Payment terms and conditions"
-                value={field().state.value}
-                onInput={(e) => field().handleChange(e.currentTarget.value)}
-                onBlur={field().handleBlur}
-              />
-            </TextField>
-          )}
-        </form.Field>
-        <form.Field name="website" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">Website</TextFieldLabel>
-              <TextFieldInput
-                type="url"
-                placeholder="Company website URL"
-                value={field().state.value}
-                onInput={(e) => field().handleChange(e.currentTarget.value)}
-                onBlur={field().handleBlur}
-              />
-            </TextField>
-          )}
-        </form.Field>
-        <form.Field name="status">
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">Status</TextFieldLabel>
-              <TextFieldInput
-                value={field().state.value}
-                // onInput={(e) => field().handleChange(e.currentTarget.value)}
-                // onBlur={field().handleBlur}
-                disabled
               />
             </TextField>
           )}

@@ -32,8 +32,6 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        contacts: true,
-        notes: true,
         products: {
           with: {
             product: {
@@ -43,6 +41,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
             },
           },
         },
+        contacts: true,
+        notes: true,
+        organizations: true,
       };
       if (options) {
         return options;
@@ -73,7 +74,20 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         const supplier = yield* Effect.promise(() =>
           db.query.TB_suppliers.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: rels,
+            with: {
+              products: {
+                with: {
+                  product: {
+                    with: {
+                      labels: true,
+                    },
+                  },
+                },
+              },
+              contacts: true,
+              notes: true,
+              organizations: true,
+            },
           }),
         );
 
@@ -146,7 +160,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         if (!parsedOrganizationId.success) {
           return yield* Effect.fail(new WarehouseInvalidId({ id: organizationId }));
         }
-        return yield* Effect.promise(() =>
+        const orgSuppliers = yield* Effect.promise(() =>
           db.query.TB_organization_suppliers.findMany({
             where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
@@ -163,11 +177,13 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                   },
                   contacts: true,
                   notes: true,
+                  organizations: true,
                 },
               },
             },
           }),
         );
+        return orgSuppliers.map((orgSupplier) => orgSupplier.supplier);
       });
 
     const remove = (id: string) =>

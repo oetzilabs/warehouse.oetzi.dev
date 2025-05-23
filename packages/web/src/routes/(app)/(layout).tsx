@@ -286,7 +286,11 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                                 <Forklift class="size-4" />
                                 Suppliers
                                 <SidebarMenuBadge class="mr-1">
-                                  {org().suppliers.filter((c) => c.deletedAt === null).length}
+                                  {
+                                    org()
+                                      .suppliers.map((s) => s.supplier)
+                                      .filter((c) => c.deletedAt === null).length
+                                  }
                                 </SidebarMenuBadge>
                               </Link>
                             </SidebarMenuItem>
@@ -295,7 +299,11 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                                 <UsersRound class="size-4" />
                                 Customers
                                 <SidebarMenuBadge class="mr-1">
-                                  {org().customers.filter((c) => c.deletedAt === null).length}
+                                  {
+                                    org()
+                                      .customers.map((c) => c.customer)
+                                      .filter((c) => c.deletedAt === null).length
+                                  }
                                 </SidebarMenuBadge>
                               </Link>
                             </SidebarMenuItem>

@@ -228,19 +228,6 @@ export default function NewSupplierPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="status" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">Status</TextFieldLabel>
-              <TextFieldInput
-                value={field().state.value}
-                onInput={(e) => field().handleChange(e.currentTarget.value)}
-                onBlur={field().handleBlur}
-                disabled
-              />
-            </TextField>
-          )}
-        </form.Field>
       </form>
     </div>
   );
