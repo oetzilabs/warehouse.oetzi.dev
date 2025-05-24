@@ -9,7 +9,7 @@ import { TB_suppliers } from "../suppliers/suppliers";
 import { schema } from "../utils";
 
 export const TB_organization_suppliers = schema.table(
-  "organization_suppliers",
+  "org_suppliers",
   {
     organization_id: varchar("organization_id")
       .references(() => TB_organizations.id, { onDelete: "cascade" })

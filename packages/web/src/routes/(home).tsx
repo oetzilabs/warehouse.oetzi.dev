@@ -28,17 +28,17 @@ export default function IndexPage() {
                     <span class="font-[Pacifico] font-medium">warehouse.</span> Stay tuned for updates!
                   </div>
                 </div>
-                <div class="w-full flex flex-col gap-8 items-center justify-center">
-                  <div class="flex flex-col gap-4 items-center justify-center w-full">
-                    <div class="flex flex-row gap-0.5 select-none items-baseline">
-                      <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-3xl leading-none tracking-tight">
+                <div class="w-full flex flex-col gap-16 items-center justify-center">
+                  <div class="flex flex-col gap-16 items-center justify-center w-full">
+                    <div class="flex flex-col gap-8 select-none items-center justify-center">
+                      <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-[60px] leading-none tracking-tight">
                         Supercharge your
                       </h1>
-                      <span class="px-2 py-0.5 rounded font-[Pacifico] text-2xl md:text-4xl leading-none text-indigo-600 dark:text-indigo-500">
+                      <span class="px-2 py-0.5 rounded font-[Pacifico] text-2xl md:text-[200px] leading-none text-indigo-600 dark:text-indigo-500">
                         warehouse.
                       </span>
                     </div>
-                    <p class="text-muted-foreground text-base md:text-lg font-medium">
+                    <p class="text-muted-foreground text-base md:text-2xl font-medium">
                       Empower your business with seamless and efficient inventory solutions.
                     </p>
                   </div>
@@ -46,23 +46,23 @@ export default function IndexPage() {
                     <Show
                       when={typeof user() === "undefined"}
                       fallback={
-                        <Button size="sm" class="w-max" as={A} href="/dashboard">
+                        <Button size="lg" class="w-max px-4" as={A} href="/dashboard">
                           Open Warehouse
                         </Button>
                       }
                     >
-                      <Button size="sm" class="w-max" as={A} href="/dashboard">
+                      <Button size="lg" class="w-max px-4" as={A} href="/dashboard">
                         Get Started
                       </Button>
                     </Show>
-                    <Button size="sm" class="w-max" variant="secondary">
+                    <Button size="lg" class="w-max px-4 bg-background" variant="outline">
                       Learn More
                     </Button>
                   </div>
                 </div>
               </div>
               <div class="w-full flex flex-row gap-4 items-center justify-center">
-                <div class="flex w-full md:w-5/6 rounded-lg h-auto aspect-video border border-neutral-200 dark:border-neutral-800 items-center justify-center">
+                <div class="flex w-full md:w-5/6 rounded-xl h-auto aspect-video border border-neutral-200 dark:border-neutral-800 items-center justify-center">
                   <span class="text-neutral-800 dark:text-neutral-200 text-lg font-medium select-none">
                     Hero Image Placeholder
                   </span>

@@ -90,7 +90,7 @@ export const ProductsList = (props: ProductsListProps) => {
           <A
             href={`./${product.id}`}
             class={cn(
-              "flex flex-col gap-4 w-full h-content p-4 border rounded-lg shadow-sm transition-colors h-auto hover:bg-primary-foreground hover:border-primary/50 hover:shadow-primary/10 hover:text-primary dark:hover:bg-primary/50 dark:hover:border-primary/50 dark:hover:shadow-primary/10 dark:hover:text-foreground",
+              "flex flex-col gap-4 w-full h-content p-4 border rounded-lg shadow-sm transition-colors h-auto hover:bg-primary-foreground hover:border-primary/50 hover:shadow-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:border-primary/20 dark:hover:shadow-primary/10 dark:hover:text-foreground",
               {
                 "opacity-70": product.deletedAt,
               },
