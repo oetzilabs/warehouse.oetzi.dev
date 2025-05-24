@@ -36,6 +36,20 @@
       "when": 1748104661707,
       "tag": "0004_left_moira_mactaggert",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1748122497664,
+      "tag": "0005_absurd_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1748122507828,
+      "tag": "0006_magical_molecule_man",
+      "breakpoints": true
     }
   ]
 }

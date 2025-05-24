@@ -24,6 +24,7 @@ export const TB_organizations_customerorders = schema.table(
       .varchar("customer_id")
       .references(() => TB_customers.id, { onDelete: "cascade" })
       .notNull(),
+    createdAt: t.timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   }),
   (table) => [primaryKey({ columns: [table.organization_id, table.order_id, table.customer_id] })],
 );
@@ -43,6 +44,7 @@ export const TB_organizations_supplierorders = schema.table(
       .varchar("supplier_id")
       .references(() => TB_suppliers.id, { onDelete: "cascade" })
       .notNull(),
+    createdAt: t.timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   }),
   (table) => [primaryKey({ columns: [table.organization_id, table.order_id, table.supplier_id] })],
 );

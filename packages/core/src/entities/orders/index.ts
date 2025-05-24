@@ -1,8 +1,17 @@
-import { eq } from "drizzle-orm";
+import dayjs from "dayjs";
+import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { OrderCreateSchema, OrderUpdateSchema, TB_orders } from "../../drizzle/sql/schema";
+import {
+  OrderCreateSchema,
+  OrderUpdateSchema,
+  TB_order_products,
+  TB_orders,
+  TB_organizations_customerorders,
+  TB_organizations_supplierorders,
+  TB_products,
+} from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
@@ -242,6 +251,118 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
         return orgOrders.map((o) => o.order);
       });
 
+    const findMostPopularProductsByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .select({
+              product: {
+                id: TB_products.id,
+                name: TB_products.name,
+                sku: TB_products.sku,
+                description: TB_products.description,
+                sellingPrice: TB_products.sellingPrice,
+                status: TB_products.status,
+              },
+              orderCount: sql<number>`count(distinct ${TB_orders.id})`,
+              totalQuantity: sql<number>`sum(${TB_order_products.quantity})`,
+            })
+            .from(TB_organizations_customerorders)
+            .innerJoin(TB_orders, eq(TB_organizations_customerorders.order_id, TB_orders.id))
+            .innerJoin(TB_order_products, eq(TB_orders.id, TB_order_products.orderId))
+            .innerJoin(TB_products, eq(TB_order_products.productId, TB_products.id))
+            .where(eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output))
+            .groupBy(TB_products.id)
+            .orderBy(sql`count(distinct ${TB_orders.id}) desc, sum(${TB_order_products.quantity}) desc`)
+            .limit(3),
+        );
+      });
+
+    const percentageCustomerOrdersLastWeekByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const twoWeeksAgo = dayjs().subtract(14, "day").toDate();
+        const aWeekAgo = dayjs().subtract(7, "day").toDate();
+        const from2WeeksToAWeekAgoData = yield* Effect.promise(() =>
+          db.$count(
+            TB_organizations_customerorders,
+            and(
+              eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output),
+              gte(TB_organizations_customerorders.createdAt, twoWeeksAgo),
+              lt(TB_organizations_customerorders.createdAt, aWeekAgo),
+            ),
+          ),
+        );
+
+        const fromAWeekToTodayData = yield* Effect.promise(() =>
+          db.$count(
+            TB_organizations_customerorders,
+            and(
+              eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output),
+              gte(TB_organizations_customerorders.createdAt, aWeekAgo),
+            ),
+          ),
+        );
+
+        if (from2WeeksToAWeekAgoData === 0) {
+          return 0;
+        }
+
+        const delta = from2WeeksToAWeekAgoData - fromAWeekToTodayData;
+
+        const percentage = Math.round((delta / from2WeeksToAWeekAgoData) * 100);
+
+        return percentage;
+      });
+
+    const percentageSupplierOrdersLastWeekByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const twoWeeksAgo = dayjs().subtract(14, "day").toDate();
+        const aWeekAgo = dayjs().subtract(7, "day").toDate();
+        const from2WeeksToAWeekAgoData = yield* Effect.promise(() =>
+          db.$count(
+            TB_organizations_customerorders,
+            and(
+              eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output),
+              gte(TB_organizations_customerorders.createdAt, twoWeeksAgo),
+              lt(TB_organizations_customerorders.createdAt, aWeekAgo),
+            ),
+          ),
+        );
+
+        const fromAWeekToTodayData = yield* Effect.promise(() =>
+          db.$count(
+            TB_organizations_supplierorders,
+            and(
+              eq(TB_organizations_supplierorders.organization_id, parsedOrganizationId.output),
+              gte(TB_organizations_supplierorders.createdAt, aWeekAgo),
+            ),
+          ),
+        );
+        if (from2WeeksToAWeekAgoData === 0) {
+          return 0;
+        }
+        const delta = from2WeeksToAWeekAgoData - fromAWeekToTodayData;
+
+        const percentage = Math.round((delta / from2WeeksToAWeekAgoData) * 100);
+
+        return percentage;
+      });
+
     return {
       create,
       findById,
@@ -251,6 +372,9 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
       findByUserId,
       findCustomerOrdersByOrganizationId,
       findSupplierOrdersByOrganizationId,
+      findMostPopularProductsByOrganizationId,
+      percentageCustomerOrdersLastWeekByOrganizationId,
+      percentageSupplierOrdersLastWeekByOrganizationId,
       all,
     } as const;
   }),

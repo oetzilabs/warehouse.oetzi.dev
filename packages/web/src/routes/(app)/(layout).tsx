@@ -18,7 +18,7 @@ import {
 import { changeFacility } from "@/lib/api/facilities";
 import { changeWarehouse } from "@/lib/api/warehouses";
 import { cn } from "@/lib/utils";
-import { A, useAction, useLocation, useResolvedPath, useSubmission } from "@solidjs/router";
+import { A, useAction, useLocation, useNavigate, useResolvedPath, useSubmission } from "@solidjs/router";
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import BookOpenText from "lucide-solid/icons/book-open-text";
 import Cpu from "lucide-solid/icons/cpu";
@@ -72,6 +72,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
 
   const location = useLocation();
   const relativePath = useResolvedPath(() => location.pathname);
+  const navigate = useNavigate();
 
   return (
     <div class="w-full flex flex-col gap-0 h-full">
@@ -104,6 +105,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                                       const cwh = user.currentWarehouse();
                                       if (cwh && cwh.id === wh.id) {
                                         toast.info("You are already on this warehouse");
+                                        navigate(`/dashboard`);
                                         return;
                                       }
                                       if (isChangingWarehouse.pending) return;
@@ -133,6 +135,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                                               const cfc = user.currentFacility();
                                               if (cfc && cfc.id === fc.id) {
                                                 toast.info("You are already on this facility");
+                                                navigate(`/dashboard`);
                                                 return;
                                               }
                                               if (isChangingFacility.pending) return;

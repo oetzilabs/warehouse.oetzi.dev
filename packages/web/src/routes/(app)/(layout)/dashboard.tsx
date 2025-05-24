@@ -1,61 +1,219 @@
-import { useUser } from "@/components/providers/User";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ArrowBadge from "@/components/arrow-badges";
+import { OrderStatusBadge } from "@/components/order-status-badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { A } from "@solidjs/router";
-import ExternalLink from "lucide-solid/icons/external-link";
-import X from "lucide-solid/icons/x";
-import { onCleanup, Show } from "solid-js";
+import { getAuthenticatedUser } from "@/lib/api/auth";
+import { getDashboardData } from "@/lib/api/dashboard";
+import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
+import dayjs from "dayjs";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import Plus from "lucide-solid/icons/plus";
+import RotateCw from "lucide-solid/icons/rotate-cw";
+import { For, Show } from "solid-js";
+import { toast } from "solid-sonner";
+
+export const route = {
+  preload: async () => {
+    getAuthenticatedUser();
+    getDashboardData();
+  },
+} satisfies RouteDefinition;
 
 export default function DashboardPage() {
-  const user = useUser();
+  const data = createAsync(async () => getDashboardData(), { deferStream: true });
 
   return (
     <div class="flex flex-col w-full grow">
-      <div class="flex flex-col gap-4 w-full grow">
-        <Show
-          when={user.currentWarehouse()}
-          fallback={
-            <Alert class="flex flex-col gap-2">
-              <div class="absolute right-0 top-0 pr-3 pt-3">
-                <Button type="button" aria-label="Close" size="icon" variant="ghost">
-                  <X class="size-4 shrink-0" aria-hidden={true} />
-                </Button>
-              </div>
-              <AlertTitle class="text-lg">Welcome to your workspace</AlertTitle>
-              <AlertDescription class="flex flex-col text-muted-foreground text-sm">
-                <span>Start with our step-by-step guide to configure the workspace to your needs.</span>
-                <span>
-                  For further resources, our video tutorials and audience-specific documentations are designed to
-                  provide you with a in-depth understanding of our platform.
-                </span>
-              </AlertDescription>
-              <div class="flex items-center gap-2 pt-2">
-                <Button type="button" size="sm">
-                  Get started
-                </Button>
-                <Button as={A} href="#" size="sm" variant="secondary">
-                  View tutorials
-                  <ExternalLink class="size-4" aria-hidden={true} />
-                </Button>
-              </div>
-            </Alert>
-          }
-        >
-          {(warehouse) => (
-            <div class="flex flex-row gap-4 w-full grow">
-              <div class="flex flex-col gap-4 w-full grow p-4">
-                <div class="flex flex-row gap-4 items-center justify-between">
-                  <div class="flex flex-row items-baseline gap-4">
-                    <span class="text-3xl font-bold leading-none">Overview</span>
+      <div class="flex flex-col gap-4 w-full grow p-4 container">
+        <div class="flex flex-row gap-4 items-center justify-between">
+          <div class="flex flex-row items-baseline gap-4 py-2">
+            <span class="font-semibold leading-none">Overview</span>
+          </div>
+          <div class="w-max">
+            <Button
+              size="sm"
+              onClick={() => {
+                toast.promise(revalidate(getDashboardData.key), {
+                  loading: "Refreshing dashboard...",
+                  success: "Refreshed dashboard",
+                  error: "Failed to refresh dashboard",
+                });
+              }}
+            >
+              <RotateCw class="size-4" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+        <div class="flex flex-col w-full h-content">
+          <div class="w-full h-content">
+            <Show when={data()}>
+              {(d) => (
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-full ">
+                  <div class="flex flex-col w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
+                    <div class="flex flex-row items-center justify-between p-4">
+                      <div class="flex flex-row gap-2">
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Customer Orders</h3>
+                        <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                          <ArrowBadge value={d().orders.customers.deltaPercentageLastWeek} />
+                        </span>
+                      </div>
+                      <div class="flex flex-row gap-2">
+                        <Button size="sm" as={A} href="/orders/customers/new" disabled variant="secondary">
+                          <Plus class="size-4" />
+                          Create
+                        </Button>
+                        <Button size="sm" as={A} href="/orders/customers">
+                          View All
+                          <ArrowUpRight class="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
+                      <For
+                        each={d().orders.customers.values}
+                        fallback={
+                          <div class="flex flex-col gap-4 items-center justify-center p-4 col-span-full bg-muted-foreground/5 grow">
+                            <span class="text-sm select-none text-muted-foreground">No customer orders added</span>
+                          </div>
+                        }
+                      >
+                        {(order) => (
+                          <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
+                            <OrderStatusBadge status={order.status} />
+                            <div class="flex flex-col grow">
+                              <span class="font-medium text-neutral-900 dark:text-neutral-100">{order.title}</span>
+                              <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                                {dayjs(order.createdAt).format("MMM D, YYYY")}
+                              </span>
+                            </div>
+                            <Button size="sm" as={A} href={`/orders/customers/${order.id}`}>
+                              Open
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </For>
+                    </div>
                   </div>
-                  <div class="w-max"></div>
+                  <div class="flex flex-col w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
+                    <div class="flex flex-row items-center justify-between p-4">
+                      <div class="flex flex-row gap-2">
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Supplier Orders</h3>
+                        <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                          <ArrowBadge value={d().orders.suppliers.deltaPercentageLastWeek} />
+                        </span>
+                      </div>
+                      <div class="flex flex-row gap-2">
+                        <Button size="sm" as={A} href="/orders/suppliers/new" disabled variant="secondary">
+                          <Plus class="size-4" />
+                          Create
+                        </Button>
+                        <Button size="sm" as={A} href="/orders/suppliers">
+                          View All
+                          <ArrowUpRight class="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
+                      <For
+                        each={d().orders.suppliers.values}
+                        fallback={
+                          <div class="flex flex-col gap-4 items-center justify-center p-4 col-span-full bg-muted-foreground/5 grow">
+                            <span class="text-sm select-none text-muted-foreground">No supplier orders added</span>
+                          </div>
+                        }
+                      >
+                        {(order) => (
+                          <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
+                            <OrderStatusBadge status={order.status} />
+                            <div class="flex flex-col grow">
+                              <span class="font-medium text-neutral-900 dark:text-neutral-100">{order.title}</span>
+                              <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                                {dayjs(order.createdAt).format("MMM D, YYYY")}
+                              </span>
+                            </div>
+                            <Button size="sm" as={A} href={`/orders/suppliers/${order.id}`}>
+                              Open
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                  <div class="flex flex-col  w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
+                    <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 p-4">Most Popular Products</h3>
+                    <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
+                      <For
+                        each={d().mostPopularProductsFromOrders}
+                        fallback={
+                          <div class="flex flex-col gap-4 items-center justify-center p-4 col-span-full bg-muted-foreground/5 grow">
+                            <span class="text-sm select-none text-muted-foreground">No popular products</span>
+                          </div>
+                        }
+                      >
+                        {(product) => (
+                          <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
+                            <div class="flex flex-col grow">
+                              <span class="font-medium text-neutral-900 dark:text-neutral-100">
+                                {product.product.name}
+                              </span>
+                              <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                                {product.orderCount} orders
+                              </span>
+                            </div>
+                            <Button size="sm" as={A} href={`/orders/suppliers/${product.product.id}`}>
+                              Open
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                  <div class="flex flex-col  w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
+                    <div class="flex flex-row items-center justify-between p-4">
+                      <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Last Sold Products</h3>
+                      <div class="flex flex-row gap-2">
+                        <Button size="sm" as={A} href="/products/new">
+                          <Plus class="size-4" />
+                          Create
+                        </Button>
+                      </div>
+                    </div>
+                    <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
+                      <For
+                        each={d().lastUsedProductsFromCustomers}
+                        fallback={
+                          <div class="flex flex-col gap-4 items-center justify-center p-4 col-span-full bg-muted-foreground/5 grow">
+                            <span class="text-sm select-none text-muted-foreground">No products sold</span>
+                          </div>
+                        }
+                      >
+                        {(product) => (
+                          <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
+                            <div class="flex flex-col grow">
+                              <span class="font-medium text-neutral-900 dark:text-neutral-100">
+                                {product.product.name}
+                              </span>
+                              <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                                {dayjs(product.createdAt).format("MMM D, YYYY")}
+                              </span>
+                            </div>
+                            <Button size="sm" as={A} href={`/orders/suppliers/${product.product.id}`}>
+                              Open
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="hidden md:flex flex-col gap-4 border-l border-neutral-200 dark:border-neutral-800 max-w-md w-full h-full bg-neutral-50 dark:bg-neutral-900/50"></div>
-            </div>
-          )}
-        </Show>
+              )}
+            </Show>
+          </div>
+        </div>
       </div>
     </div>
   );

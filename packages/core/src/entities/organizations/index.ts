@@ -194,12 +194,46 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               },
               customerOrders: {
                 with: {
-                  order: true,
+                  order: {
+                    with: {
+                      prods: {
+                        with: {
+                          product: {
+                            with: {
+                              brands: true,
+                              warehouses: {
+                                with: {
+                                  warehouse: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
               supplierOrders: {
                 with: {
-                  order: true,
+                  order: {
+                    with: {
+                      prods: {
+                        with: {
+                          product: {
+                            with: {
+                              brands: true,
+                              warehouses: {
+                                with: {
+                                  warehouse: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
               sales: {
