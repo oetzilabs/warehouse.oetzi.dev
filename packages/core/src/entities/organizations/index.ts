@@ -63,7 +63,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
             product: true,
           },
         },
-        suppliers: {
+        supps: {
           with: {
             supplier: true,
           },
@@ -207,7 +207,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                   sale: true,
                 },
               },
-              suppliers: {
+              supps: {
                 with: {
                   supplier: true,
                 },
@@ -308,7 +308,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                   product: true,
                 },
               },
-              suppliers: {
+              supps: {
                 with: {
                   supplier: true,
                 },

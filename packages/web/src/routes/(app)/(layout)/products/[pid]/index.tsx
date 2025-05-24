@@ -89,7 +89,12 @@ export default function ProductPage() {
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
-                <h1 class="text-xl font-semibold">{productInfo().name}</h1>
+                <div class="flex flex-row items-baseline gap-2">
+                  <h1 class="text-xl font-semibold">{productInfo().name}</h1>
+                  <Show when={productInfo().deletedAt}>
+                    <span class="text-xs font-semibold text-red-500">Deleted</span>
+                  </Show>
+                </div>
               </div>
               <div class="flex flex-row items-center gap-2">
                 <Button size="sm" as={A} href={`/map?products=${productInfo().id}`}>
@@ -184,7 +189,7 @@ export default function ProductPage() {
                             variant="destructive"
                             onClick={() => {
                               const promise = new Promise(async (resolve, reject) => {
-                                const p = await deleteProductAction(params.whid, productInfo().id).catch(reject);
+                                const p = await deleteProductAction(productInfo().id).catch(reject);
                                 setDeleteDialogOpen(false);
                                 return resolve(p);
                               });

@@ -94,7 +94,7 @@ export const getProductById = query(async (pid: string) => {
   return product;
 }, "product-by-id");
 
-export const deleteProduct = action(async (whid: string, id: string) => {
+export const deleteProduct = action(async (id: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -106,6 +106,10 @@ export const deleteProduct = action(async (whid: string, id: string) => {
   }
   const session = auth[1];
   if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const whid = session.current_warehouse_id;
+  if (!whid) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
   const product = await Effect.runPromise(

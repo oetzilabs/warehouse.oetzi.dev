@@ -62,7 +62,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     product: true,
                   },
                 },
-                suppliers: {
+                supps: {
                   with: {
                     supplier: {
                       with: {
@@ -232,7 +232,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     product: true,
                   },
                 },
-                suppliers: {
+                supps: {
                   with: {
                     supplier: {
                       with: {
@@ -455,7 +455,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           product: true,
                         },
                       },
-                      suppliers: {
+                      supps: {
                         with: {
                           supplier: {
                             with: {
@@ -621,7 +621,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           product: true,
                         },
                       },
-                      suppliers: {
+                      supps: {
                         with: {
                           supplier: {
                             with: {
@@ -838,7 +838,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           product: true,
                         },
                       },
-                      suppliers: {
+                      supps: {
                         with: {
                           supplier: {
                             with: {
@@ -1019,7 +1019,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           product: true,
                         },
                       },
-                      suppliers: {
+                      supps: {
                         with: {
                           supplier: {
                             with: {

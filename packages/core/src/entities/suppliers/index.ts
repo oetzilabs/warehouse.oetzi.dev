@@ -48,7 +48,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
           with: {
             order: {
               with: {
-                products: {
+                prods: {
                   with: {
                     product: true,
                   },
@@ -104,7 +104,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                 with: {
                   order: {
                     with: {
-                      products: {
+                      prods: {
                         with: {
                           product: true,
                         },
@@ -208,7 +208,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                     with: {
                       order: {
                         with: {
-                          products: {
+                          prods: {
                             with: {
                               product: true,
                             },

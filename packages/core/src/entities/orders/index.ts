@@ -34,7 +34,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             },
           },
         },
-        products: {
+        prods: {
           with: {
             product: true,
           },
@@ -76,7 +76,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                   },
                 },
               },
-              products: {
+              prods: {
                 with: {
                   product: true,
                 },
@@ -195,7 +195,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                       },
                     },
                   },
-                  products: {
+                  prods: {
                     with: {
                       product: true,
                     },
@@ -229,7 +229,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                       },
                     },
                   },
-                  products: {
+                  prods: {
                     with: {
                       product: true,
                     },

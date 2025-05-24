@@ -285,7 +285,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                           <SidebarMenuBadge class="mr-1">
                             {
                               org()
-                                .suppliers.map((s) => s.supplier)
+                                .supps.map((s) => s.supplier)
                                 .filter((c) => c.deletedAt === null).length
                             }
                           </SidebarMenuBadge>

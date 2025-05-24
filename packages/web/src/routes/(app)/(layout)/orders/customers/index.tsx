@@ -112,7 +112,7 @@ export default function CustomerOrdersPage() {
                 </Button>
               </div>
               <For
-                each={selectedOrder()?.products}
+                each={selectedOrder()?.items}
                 fallback={
                   <div class="p-4 w-full grow flex flex-col">
                     <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">

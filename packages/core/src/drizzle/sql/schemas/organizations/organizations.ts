@@ -46,7 +46,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   users: many(TB_organization_users),
   whs: many(TB_organizations_warehouses),
   discounts: many(TB_organization_discounts),
-  suppliers: many(TB_organization_suppliers),
+  supps: many(TB_organization_suppliers),
   customers: many(TB_organization_customers),
   products: many(TB_organizations_products),
   sessions: many(TB_sessions),

@@ -43,7 +43,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         with: {
           order: {
             with: {
-              products: {
+              prods: {
                 with: {
                   product: true,
                 },
@@ -98,7 +98,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                 with: {
                   order: {
                     with: {
-                      products: {
+                      prods: {
                         with: {
                           product: true,
                         },
@@ -176,7 +176,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                     with: {
                       order: {
                         with: {
-                          products: {
+                          prods: {
                             with: {
                               product: true,
                             },

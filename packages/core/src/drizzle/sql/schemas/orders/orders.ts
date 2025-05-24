@@ -29,7 +29,7 @@ export const TB_orders = commonTable(
 
 export const order_relations = relations(TB_orders, ({ one, many }) => ({
   users: many(TB_user_orders),
-  products: many(TB_order_products),
+  prods: many(TB_order_products),
   oco: many(TB_organizations_customerorders),
   oso: many(TB_organizations_supplierorders),
 }));
