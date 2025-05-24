@@ -265,12 +265,6 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                           </SidebarMenuBadge>
                         </Link>
                       </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <Link href="/products/new">
-                          <PackagePlus class="size-4" />
-                          New Product
-                        </Link>
-                      </SidebarMenuItem>
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
