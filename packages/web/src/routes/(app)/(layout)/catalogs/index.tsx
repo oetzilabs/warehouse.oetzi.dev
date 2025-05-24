@@ -94,6 +94,18 @@ export default function CatalogsPage() {
     };
   };
 
+  const searchCatalogs = (catalogs: CatalogInfo[], filterConfig: FilterConfig<CatalogInfo>) => {
+    if (filterConfig.disabled()) return catalogs;
+    if (filterConfig.search.term === "") return catalogs;
+    return catalogs.filter((catalog) => {
+      return (
+        filterConfig.search.term &&
+        (catalog.name.toLowerCase().includes(filterConfig.search.term.toLowerCase()) ||
+          catalog.description?.toLowerCase().includes(filterConfig.search.term.toLowerCase()))
+      );
+    });
+  };
+
   return (
     <Show when={catalogs()}>
       {(catalogsList) => (
@@ -143,10 +155,10 @@ export default function CatalogsPage() {
                     <TextFieldInput placeholder="Search catalogs" class="w-full max-w-full rounded-lg px-4" />
                   </TextField>
                   <div class="w-max">
-                    <FilterPopover config={filterConfig} onChange={setFilterConfig} data={catalogsList} />
+                    <FilterPopover config={filterConfig} onChange={(cfg) => setFilterConfig(cfg)} data={catalogsList} />
                   </div>
                 </div>
-                <CatalogsList data={catalogsList} />
+                <CatalogsList data={() => searchCatalogs(catalogsList(), filterConfig)} />
               </div>
             </div>
           </div>

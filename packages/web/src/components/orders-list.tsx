@@ -43,15 +43,15 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
           field: "price",
           label: "Price",
           fn: (a, b) => {
-            const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-            const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const aTotal = a.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const bTotal = b.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
             return aTotal - bTotal;
           },
         },
         {
           field: "products",
           label: "Products",
-          fn: (a, b) => a.products.length - b.products.length,
+          fn: (a, b) => a.prods.length - b.prods.length,
         },
       ],
     },
@@ -105,7 +105,7 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
               </div>
               <div class="flex flex-row items-center gap-2">
                 <div class="flex flex-row items-center gap-2">
-                  <Avatar class="size-6 border border-primary">
+                  {/* <Avatar class="size-6 border border-primary">
                     <AvatarImage
                       src={
                         (order.customer.image?.length ?? 0) > 0
@@ -120,7 +120,7 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
                         .map((w) => w[0])
                         .join("")}
                     </AvatarFallback>
-                  </Avatar>
+                  </Avatar> */}
                 </div>
               </div>
             </div>
@@ -134,7 +134,7 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
               </span>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 w-full h-full">
                 <For
-                  each={order.products}
+                  each={order.prods}
                   fallback={
                     <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground col-span-full bg-background">
                       <span class="text-sm select-none">No products added</span>
@@ -199,15 +199,15 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
           field: "price",
           label: "Price",
           fn: (a, b) => {
-            const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-            const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const aTotal = a.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const bTotal = b.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
             return aTotal - bTotal;
           },
         },
         {
           field: "products",
           label: "Products",
-          fn: (a, b) => a.products.length - b.products.length,
+          fn: (a, b) => a.prods.length - b.prods.length,
         },
       ],
     },
@@ -245,7 +245,12 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         each={filteredData()}
         fallback={
           <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">No orders have been added</span>
+            <span class="text-sm select-none">
+              <Show when={props.data().length === 0}>No orders have been added</Show>
+              <Show when={props.data().length > 0 && filterConfig.search.term.length > 0}>
+                No orders have been found
+              </Show>
+            </span>
           </div>
         }
       >
@@ -261,7 +266,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
               </div>
               <div class="flex flex-row items-center gap-2">
                 <div class="flex flex-row items-center gap-2">
-                  <Avatar class="size-6 border border-primary">
+                  {/* <Avatar class="size-6 border border-primary">
                     <AvatarImage
                       src={
                         (order.customer.image?.length ?? 0) > 0
@@ -276,7 +281,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
                         .map((w) => w[0])
                         .join("")}
                     </AvatarFallback>
-                  </Avatar>
+                  </Avatar> */}
                 </div>
               </div>
             </div>
@@ -290,7 +295,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
               </span>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 w-full h-full">
                 <For
-                  each={order.products}
+                  each={order.prods}
                   fallback={
                     <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground col-span-full bg-background">
                       <span class="text-sm select-none">No products added</span>

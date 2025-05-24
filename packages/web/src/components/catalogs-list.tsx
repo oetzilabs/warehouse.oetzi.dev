@@ -16,7 +16,10 @@ export const CatalogsList = (props: CatalogsListProps) => {
         each={props.data()}
         fallback={
           <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">No catalogs have been added</span>
+            <span class="text-sm select-none">
+              <Show when={props.data().length === 0}>No catalogs have been added</Show>
+              <Show when={props.data().length > 0}>No catalogs have been found</Show>
+            </span>
           </div>
         }
       >
