@@ -44,6 +44,19 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         contacts: true,
         notes: true,
         organizations: true,
+        orgOrders: {
+          with: {
+            order: {
+              with: {
+                products: {
+                  with: {
+                    product: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       };
       if (options) {
         return options;
@@ -87,6 +100,19 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
               contacts: true,
               notes: true,
               organizations: true,
+              orgOrders: {
+                with: {
+                  order: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
           }),
         );
@@ -178,6 +204,19 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                   contacts: true,
                   notes: true,
                   organizations: true,
+                  orgOrders: {
+                    with: {
+                      order: {
+                        with: {
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
