@@ -110,114 +110,115 @@ export const CatalogForm: Component<CatalogUpdateFormProps> = (props) => {
 
       <div class="flex flex-col gap-4">
         <span class="text-sm font-medium pl-1">Date Range</span>
-        <div class="flex flex-row gap-2 w-full">
-          <Calendar
-            mode="range"
-            numberOfMonths={2}
-            initialValue={{
-              from: form.state.values.startDate ?? new Date(),
-              to: form.state.values.endDate ?? new Date(),
-            }}
-            onValueChange={(date) => {
-              if (!date.from || !date.to) return;
-              toast.info(
-                "Date range updated successfully:" + date.from.toDateString() + " to " + date.to.toDateString(),
-              );
-              form.setFieldValue("startDate", date.from);
-              form.setFieldValue("endDate", date.to);
-            }}
-          >
-            {(props) => (
-              <div class="relative w-full">
-                <Calendar.Nav
-                  action="prev-month"
-                  aria-label="Go to previous month"
-                  as={Button}
-                  size="icon"
-                  class="absolute left-0"
-                  variant="secondary"
-                  type="button"
-                >
-                  <ArrowLeft class="size-4" />
-                </Calendar.Nav>
-                <Calendar.Nav
-                  action="next-month"
-                  aria-label="Go to next month"
-                  as={Button}
-                  size="icon"
-                  class="absolute right-0"
-                  variant="secondary"
-                  type="button"
-                >
-                  <ArrowRight class="size-4" />
-                </Calendar.Nav>
-                <div class="w-full h-content flex flex-row gap-4">
-                  <Index each={props.months}>
-                    {(month, index) => (
-                      <div class="w-full flex flex-col gap-4">
-                        <div class="flex h-8 items-center justify-center">
-                          <Calendar.Label index={index} class="text-sm">
-                            {formatMonth(month().month)} {month().month.getFullYear()}
-                          </Calendar.Label>
-                        </div>
-                        <Calendar.Table index={index} class="w-full">
-                          <thead>
-                            <tr>
-                              <Index each={props.weekdays}>
-                                {(weekday) => (
-                                  <Calendar.HeadCell
-                                    abbr={formatWeekdayLong(weekday())}
-                                    class="w-8 flex-1 pb-1 text-sm font-normal text-muted-foreground"
-                                  >
-                                    {formatWeekdayShort(weekday())}
-                                  </Calendar.HeadCell>
-                                )}
-                              </Index>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <Index each={month().weeks}>
-                              {(week) => (
+        <form.Subscribe selector={(state) => ({ startDate: state.values.startDate, endDate: state.values.endDate })}>
+          {(state) => (
+            <div class="flex flex-row gap-2 w-full">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                initialValue={{
+                  from: state().startDate ?? new Date(),
+                  to: state().endDate ?? new Date(),
+                }}
+                onValueChange={(date) => {
+                  if (!date.from || !date.to) return;
+                  form.setFieldValue("startDate", date.from);
+                  form.setFieldValue("endDate", date.to);
+                }}
+              >
+                {(props) => (
+                  <div class="relative w-full">
+                    <Calendar.Nav
+                      action="prev-month"
+                      aria-label="Go to previous month"
+                      as={Button}
+                      size="icon"
+                      class="absolute left-0"
+                      variant="secondary"
+                      type="button"
+                    >
+                      <ArrowLeft class="size-4" />
+                    </Calendar.Nav>
+                    <Calendar.Nav
+                      action="next-month"
+                      aria-label="Go to next month"
+                      as={Button}
+                      size="icon"
+                      class="absolute right-0"
+                      variant="secondary"
+                      type="button"
+                    >
+                      <ArrowRight class="size-4" />
+                    </Calendar.Nav>
+                    <div class="w-full h-content flex flex-row gap-4">
+                      <Index each={props.months}>
+                        {(month, index) => (
+                          <div class="w-full flex flex-col gap-4">
+                            <div class="flex h-8 items-center justify-center">
+                              <Calendar.Label index={index} class="text-sm">
+                                {formatMonth(month().month)} {month().month.getFullYear()}
+                              </Calendar.Label>
+                            </div>
+                            <Calendar.Table index={index} class="w-full">
+                              <thead>
                                 <tr>
-                                  <Index each={week()}>
-                                    {(day) => (
-                                      <Calendar.Cell class="p-1 has-data-range-end:rounded-r-md has-data-range-start:rounded-l-md has-data-in-range:bg-muted/70">
-                                        <Calendar.CellTrigger
-                                          type="button"
-                                          day={day()}
-                                          month={month().month}
-                                          as={Button}
-                                          size="sm"
-                                          variant="outline"
-                                          class={cn("inline-flex w-full bg-background", {
-                                            "bg-primary/10 text-primary/70": dayjs(day()).isBetween(
-                                              form.state.values.startDate,
-                                              form.state.values.endDate,
-                                            ),
-                                            "bg-primary text-white": dayjs().isSame(day(), "day"),
-                                            "!bg-primary/50 !text-primary":
-                                              dayjs(day()).isSame(form.state.values.startDate, "day") ||
-                                              dayjs(day()).isSame(form.state.values.endDate, "day"),
-                                          })}
-                                        >
-                                          {day().getDate()}
-                                        </Calendar.CellTrigger>
-                                      </Calendar.Cell>
+                                  <Index each={props.weekdays}>
+                                    {(weekday) => (
+                                      <Calendar.HeadCell
+                                        abbr={formatWeekdayLong(weekday())}
+                                        class="w-8 flex-1 pb-1 text-sm font-normal text-muted-foreground"
+                                      >
+                                        {formatWeekdayShort(weekday())}
+                                      </Calendar.HeadCell>
                                     )}
                                   </Index>
                                 </tr>
-                              )}
-                            </Index>
-                          </tbody>
-                        </Calendar.Table>
-                      </div>
-                    )}
-                  </Index>
-                </div>
-              </div>
-            )}
-          </Calendar>
-        </div>
+                              </thead>
+                              <tbody>
+                                <Index each={month().weeks}>
+                                  {(week) => (
+                                    <tr>
+                                      <Index each={week()}>
+                                        {(day) => (
+                                          <Calendar.Cell class="p-1 has-data-range-end:rounded-r-md has-data-range-start:rounded-l-md has-data-in-range:bg-muted/70">
+                                            <Calendar.CellTrigger
+                                              type="button"
+                                              day={day()}
+                                              month={month().month}
+                                              as={Button}
+                                              size="sm"
+                                              variant="outline"
+                                              class={cn("inline-flex w-full bg-background", {
+                                                "bg-primary/10 text-primary/70": dayjs(day()).isBetween(
+                                                  state().startDate,
+                                                  state().endDate,
+                                                ),
+                                                "bg-primary text-white": dayjs().isSame(day(), "day"),
+                                                "!bg-primary/50 !text-primary":
+                                                  dayjs(day()).isSame(state().startDate, "day") ||
+                                                  dayjs(day()).isSame(state().endDate, "day"),
+                                              })}
+                                            >
+                                              {day().getDate()}
+                                            </Calendar.CellTrigger>
+                                          </Calendar.Cell>
+                                        )}
+                                      </Index>
+                                    </tr>
+                                  )}
+                                </Index>
+                              </tbody>
+                            </Calendar.Table>
+                          </div>
+                        )}
+                      </Index>
+                    </div>
+                  </div>
+                )}
+              </Calendar>
+            </div>
+          )}
+        </form.Subscribe>
       </div>
 
       <form.Subscribe
