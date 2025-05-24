@@ -39,7 +39,7 @@ export default function DocumentsPage() {
                     <Button
                       size="icon"
                       variant="outline"
-                      class="w-9 h-8 rounded-r-none bg-background"
+                      class="w-9 rounded-r-none bg-background"
                       onClick={() => {
                         toast.promise(revalidate(getDocuments.key), {
                           loading: "Refreshing documents...",
@@ -50,7 +50,7 @@ export default function DocumentsPage() {
                     >
                       <RotateCw class="size-4" />
                     </Button>
-                    <Button size="sm" class="h-8 pl-2.5 rounded-l-none">
+                    <Button size="sm" class="pl-2.5 rounded-l-none">
                       <Upload class="size-4" />
                       Upload
                     </Button>
@@ -171,7 +171,7 @@ const DocumentList = (props: {
                   <Button
                     size="sm"
                     variant="ghost"
-                    class="h-8 pl-3 pr-2 text-sm font-medium"
+                    class="pl-3 pr-2 text-sm font-medium"
                     onClick={() => {
                       if (tags().includes(type)) {
                         setTags(tags().filter((t) => t !== type));

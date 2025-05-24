@@ -148,7 +148,7 @@ export const Organizations = () => {
                               class="w-max"
                               aria-label="Connect to Organization"
                               disabled={
-                                isSettingCurrentOrganization.pending || organization.id === u().currenOrganizationId
+                                isSettingCurrentOrganization.pending || organization.id === u().current_organization_id
                               }
                               onClick={() => {
                                 toast.promise(

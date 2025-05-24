@@ -69,7 +69,7 @@ export default function SuppliersOrderPage() {
                   <Button
                     size="icon"
                     variant="outline"
-                    class="w-9 h-8 rounded-r-none bg-background"
+                    class="w-9 rounded-r-none bg-background"
                     onClick={() => {
                       toast.promise(revalidate(getSupplyOrdersByWarehouseId.keyFor(params.whid)), {
                         loading: "Refreshing orders...",
@@ -80,7 +80,7 @@ export default function SuppliersOrderPage() {
                   >
                     <RotateCw class="size-4" />
                   </Button>
-                  <Button size="sm" class="h-8 pl-2.5 rounded-l-none">
+                  <Button size="sm" class="pl-2.5 rounded-l-none">
                     <Plus class="size-4" />
                     Create
                   </Button>

@@ -12,7 +12,7 @@ export default function ToggleFullscreenOnElement(props: {
   return (
     <Button
       size="icon"
-      class="size-8 rounded border bg-background"
+      class="rounded border bg-background"
       variant="secondary"
       onClick={async () => {
         if (!props.element) {

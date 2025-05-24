@@ -99,7 +99,7 @@ export default function NewProductPage() {
         <div class="flex px-4 items-center gap-4 justify-between w-full">
           <h1 class="font-semibold leading-none">New Product</h1>
           <div class="flex items-center gap-4">
-            <Button size="sm" class="h-8" onClick={() => {}}>
+            <Button size="sm" onClick={() => {}}>
               <Plus class="size-4" />
               Add
             </Button>
@@ -256,7 +256,7 @@ export default function NewProductPage() {
                                 <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8 bg-background"
+                                    class="bg-background"
                                     variant="outline"
                                     onClick={() => {
                                       toast.promise(revalidate(getProductLabels.key), {
@@ -325,7 +325,7 @@ export default function NewProductPage() {
                     </Suspense>
                     <Button
                       size="sm"
-                      class="h-8 w-max"
+                      class="w-max"
                       onClick={() => {
                         toast.promise(revalidate(getProductLabels.key), {
                           loading: "Refreshing labels...",
@@ -356,7 +356,7 @@ export default function NewProductPage() {
                                 <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8 bg-background"
+                                    class="bg-background"
                                     variant="outline"
                                     onClick={() => {
                                       toast.promise(revalidate(getStorageConditions.key), {
@@ -414,7 +414,7 @@ export default function NewProductPage() {
                     </Suspense>
                     <Button
                       size="sm"
-                      class="h-8 w-max"
+                      class="w-max"
                       onClick={() => {
                         toast.promise(revalidate(getProductLabels.key), {
                           loading: "Refreshing labels...",
@@ -445,7 +445,7 @@ export default function NewProductPage() {
                                 <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8 bg-background"
+                                    class="bg-background"
                                     variant="outline"
                                     onClick={() => {
                                       toast.promise(revalidate(getCertificates.key), {
@@ -458,7 +458,7 @@ export default function NewProductPage() {
                                     <RotateCw class="size-4" />
                                     Refresh
                                   </Button>
-                                  <Button size="sm" class="h-8" as={A} href="/certificates/new">
+                                  <Button size="sm" as={A} href="/certificates/new">
                                     <Plus class="size-4" />
                                     Add Certificate
                                   </Button>
@@ -499,7 +499,7 @@ export default function NewProductPage() {
                     </Suspense>
                     <Button
                       size="sm"
-                      class="h-8 w-max"
+                      class="w-max"
                       onClick={() => {
                         toast.promise(revalidate(getProductLabels.key), {
                           loading: "Refreshing certificates...",
@@ -528,10 +528,10 @@ export default function NewProductPage() {
                                 <div class="flex flex-row gap-4 items-center justify-center">
                                   <Button
                                     size="sm"
-                                    class="h-8 bg-background"
+                                    class="bg-background"
                                     variant="outline"
                                     onClick={() => {
-                                      toast.promise(revalidate(getSuppliersByWarehouseId.keyFor(params.whid)), {
+                                      toast.promise(revalidate(getSuppliers.key), {
                                         loading: "Refreshing suppliers...",
                                         success: "Suppliers refreshed",
                                         error: "Failed to refresh suppliers",
@@ -541,7 +541,7 @@ export default function NewProductPage() {
                                     <RotateCw class="size-4" />
                                     Refresh
                                   </Button>
-                                  <Button size="sm" class="h-8" as={A} href="/suppliers/new">
+                                  <Button size="sm" as={A} href="/suppliers/new">
                                     <Plus class="size-4" />
                                     Add Supplier
                                   </Button>
@@ -552,35 +552,33 @@ export default function NewProductPage() {
                             {(s) => (
                               <div
                                 class={cn("bg-muted-foreground/5 rounded-lg p-4", {
-                                  "text-white bg-indigo-600 hover:bg-indigo-600": chosenSuppliers().includes(
-                                    s.supplier.id,
-                                  ),
+                                  "text-white bg-indigo-600 hover:bg-indigo-600": chosenSuppliers().includes(s.id),
                                 })}
                                 onClick={() => {
-                                  if (chosenSuppliers().includes(s.supplier.id)) {
-                                    setChosenSuppliers((c) => c.filter((l) => l !== s.supplier.id));
+                                  if (chosenSuppliers().includes(s.id)) {
+                                    setChosenSuppliers((c) => c.filter((l) => l !== s.id));
                                   } else {
-                                    setChosenSuppliers((c) => [...c, s.supplier.id]);
+                                    setChosenSuppliers((c) => [...c, s.id]);
                                   }
                                 }}
                               >
-                                <span class="text-sm font-medium">{s.supplier.name}</span>
-                                <For each={s.supplier.notes}>
+                                <span class="text-sm font-medium">{s.name}</span>
+                                <For each={s.notes}>
                                   {(note) => (
                                     <span
                                       class={cn("text-xs text-muted-foreground text-center", {
-                                        "text-white/70": chosenSuppliers().includes(s.supplier.id),
+                                        "text-white/70": chosenSuppliers().includes(s.id),
                                       })}
                                     >
                                       {note.content}
                                     </span>
                                   )}
                                 </For>
-                                <For each={s.supplier.contacts}>
+                                <For each={s.contacts}>
                                   {(contact) => (
                                     <span
                                       class={cn("text-xs text-muted-foreground text-center", {
-                                        "text-white/70": chosenSuppliers().includes(s.supplier.id),
+                                        "text-white/70": chosenSuppliers().includes(s.id),
                                       })}
                                     >
                                       {contact.email}
@@ -589,10 +587,10 @@ export default function NewProductPage() {
                                 </For>
                                 <span
                                   class={cn("text-xs text-muted-foreground text-center", {
-                                    "text-white/70": chosenSuppliers().includes(s.supplier.id),
+                                    "text-white/70": chosenSuppliers().includes(s.id),
                                   })}
                                 >
-                                  {dayjs(s.supplier.updatedAt ?? s.supplier.createdAt).format("MMM DD, YYYY - h:mm A")}
+                                  {dayjs(s.updatedAt ?? s.createdAt).format("MMM DD, YYYY - h:mm A")}
                                 </span>
                               </div>
                             )}

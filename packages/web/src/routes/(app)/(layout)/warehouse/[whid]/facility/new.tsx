@@ -49,7 +49,6 @@ export default function NewFacilityPage() {
           <div class="flex items-center gap-4">
             <Button
               size="sm"
-              class="h-8"
               onClick={() => {
                 toast.promise(createFacilityAction(form.state.values), {
                   loading: "Creating facility...",

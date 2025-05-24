@@ -230,7 +230,7 @@ export default function WarehouseMap(props: WarehouseMapProps) {
         <Button
           variant="secondary"
           size="icon"
-          class="size-8 p-1"
+          class="p-1"
           onClick={() => setViewState({ isMapView: !viewState.isMapView })}
         >
           <Show when={viewState.isMapView} fallback={<Map class="size-4" />}>
@@ -240,7 +240,7 @@ export default function WarehouseMap(props: WarehouseMapProps) {
         <Button
           variant="secondary"
           size="icon"
-          class="size-8 p-1"
+          class="p-1"
           onClick={() => {
             setZoom((z) => Math.min(z + 0.1, 3));
             const canvas = canvasRef;
@@ -263,7 +263,7 @@ export default function WarehouseMap(props: WarehouseMapProps) {
         <Button
           variant="secondary"
           size="icon"
-          class="size-8 p-1"
+          class="p-1"
           onClick={() => {
             setZoom((z) => Math.max(z - 0.1, 0.5));
             const canvas = canvasRef;
@@ -286,7 +286,7 @@ export default function WarehouseMap(props: WarehouseMapProps) {
         <Button
           variant="secondary"
           size="icon"
-          class="size-8 p-1"
+          class="p-1"
           onClick={() => {
             // reset zoom to 1
             setZoom(1);

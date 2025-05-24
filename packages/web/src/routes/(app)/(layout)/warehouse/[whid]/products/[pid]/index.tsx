@@ -83,7 +83,6 @@ export default function ProductPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  class="h-8"
                   onClick={() => {
                     navigate(-1);
                   }}
@@ -94,17 +93,12 @@ export default function ProductPage() {
                 <h1 class="text-xl font-semibold">{productInfo().name}</h1>
               </div>
               <div class="flex flex-row items-center gap-2">
-                <Button
-                  size="sm"
-                  class="h-8"
-                  as={A}
-                  href={`/warehouse/${params.whid}/map?products=${productInfo().id}`}
-                >
+                <Button size="sm" as={A} href={`/warehouse/${params.whid}/map?products=${productInfo().id}`}>
                   <Map class="size-4" />
                   Show on Map
                 </Button>
                 <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="size-8">
+                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
                     <MoreHorizontal class="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
@@ -217,7 +211,7 @@ export default function ProductPage() {
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Details</h2>
                     <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon" class="size-8">
+                      <Button variant="ghost" size="icon">
                         <Edit class="size-4" />
                       </Button>
                     </div>
@@ -244,7 +238,6 @@ export default function ProductPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        class="size-8"
                         onClick={() => {
                           toast.promise(navigator.clipboard.writeText(productInfo().sku ?? ""), {
                             loading: "Copying Barcode...",
@@ -280,7 +273,7 @@ export default function ProductPage() {
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Brand</h2>
                     <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon" class="size-8">
+                      <Button variant="ghost" size="icon">
                         <Plus class="size-4" />
                       </Button>
                     </div>
@@ -300,7 +293,7 @@ export default function ProductPage() {
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Condition</h2>
                     <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon" class="size-8">
+                      <Button variant="ghost" size="icon">
                         <Plus class="size-4" />
                       </Button>
                     </div>
@@ -324,7 +317,7 @@ export default function ProductPage() {
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Suppliers</h2>
                     <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon" class="size-8">
+                      <Button variant="ghost" size="icon">
                         <Plus class="size-4" />
                       </Button>
                     </div>

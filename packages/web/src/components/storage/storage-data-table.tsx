@@ -29,6 +29,7 @@ import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages"
 import IconChevronDown from "lucide-solid/icons/chevron-down";
 import IconDots from "lucide-solid/icons/ellipsis";
 import { createSignal, For } from "solid-js";
+import { fuzzyFilter } from "../fuzzyFilter";
 
 const columns: ColumnDef<StorageInfo>[] = [
   {

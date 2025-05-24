@@ -57,7 +57,7 @@ export default function SupplierPage() {
           <div class="container flex flex-col gap-4 py-4">
             <div class="flex flex-row items-center justify-between gap-4">
               <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" class="h-8" onClick={() => navigate(-1)}>
+                <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
@@ -65,7 +65,7 @@ export default function SupplierPage() {
               </div>
               <div class="flex flex-row items-center gap-2">
                 <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="size-8">
+                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
                     <MoreHorizontal class="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>

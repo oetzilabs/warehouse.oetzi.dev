@@ -28,14 +28,14 @@ export function MailDisplay(props: { mail: Accessor<MessageInfo | null> }) {
       <div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
         <div class="flex items-center gap-2">
           <Tooltip openDelay={0} closeDelay={0}>
-            <TooltipTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+            <TooltipTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
               <Archive />
               <span class="sr-only">Archive</span>
             </TooltipTrigger>
             <TooltipContent>Archive</TooltipContent>
           </Tooltip>
           <Tooltip openDelay={0} closeDelay={0}>
-            <TooltipTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+            <TooltipTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
               <Trash />
               <span class="sr-only">Move to trash</span>
             </TooltipTrigger>
@@ -43,7 +43,7 @@ export function MailDisplay(props: { mail: Accessor<MessageInfo | null> }) {
           </Tooltip>
           <Separator orientation="vertical" class="mx-2 h-4" />
           <Tooltip openDelay={0} closeDelay={0}>
-            <TooltipTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+            <TooltipTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
               <Clock />
               <span class="sr-only">Snooze</span>
             </TooltipTrigger>
@@ -53,21 +53,21 @@ export function MailDisplay(props: { mail: Accessor<MessageInfo | null> }) {
         <div class="flex flex-row items-center gap-2">
           <div class="flex items-center gap-2">
             <Tooltip openDelay={0} closeDelay={0}>
-              <TooltipTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+              <TooltipTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
                 <Reply class="size-4" />
                 <span class="sr-only">Reply</span>
               </TooltipTrigger>
               <TooltipContent>Reply</TooltipContent>
             </Tooltip>
             <Tooltip openDelay={0} closeDelay={0}>
-              <TooltipTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+              <TooltipTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
                 <ReplyAll class="size-4" />
                 <span class="sr-only">Reply all</span>
               </TooltipTrigger>
               <TooltipContent>Reply all</TooltipContent>
             </Tooltip>
             <Tooltip openDelay={0} closeDelay={0}>
-              <TooltipTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+              <TooltipTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
                 <Forward class="size-4" />
                 <span class="sr-only">Forward</span>
               </TooltipTrigger>
@@ -76,7 +76,7 @@ export function MailDisplay(props: { mail: Accessor<MessageInfo | null> }) {
           </div>
           <Separator orientation="vertical" class="mx-2 h-4" />
           <DropdownMenu placement="bottom-end">
-            <DropdownMenuTrigger as={Button} variant="ghost" size="icon" class="size-8" disabled={!props.mail()}>
+            <DropdownMenuTrigger as={Button} variant="ghost" size="icon" disabled={!props.mail()}>
               <DotsVertical class="size-4" />
               <span class="sr-only">More</span>
             </DropdownMenuTrigger>

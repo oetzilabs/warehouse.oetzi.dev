@@ -73,7 +73,7 @@ export default function OrganizationStepPage() {
                         as={A}
                         size="sm"
                         href="/onboarding/step/warehouse"
-                        class="w-max text-xs px-2 py-1 h-max"
+                        class="w-max text-xs h-max"
                         variant="secondary"
                       >
                         Choose

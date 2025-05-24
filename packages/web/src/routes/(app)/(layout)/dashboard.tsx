@@ -18,7 +18,7 @@ export default function DashboardPage() {
           fallback={
             <Alert class="flex flex-col gap-2">
               <div class="absolute right-0 top-0 pr-3 pt-3">
-                <Button type="button" aria-label="Close" size="icon" class="size-8" variant="ghost">
+                <Button type="button" aria-label="Close" size="icon" variant="ghost">
                   <X class="size-4 shrink-0" aria-hidden={true} />
                 </Button>
               </div>

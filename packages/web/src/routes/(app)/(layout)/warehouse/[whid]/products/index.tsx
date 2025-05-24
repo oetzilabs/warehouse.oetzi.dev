@@ -46,7 +46,7 @@ export default function ProductsPage() {
                   <Button
                     size="icon"
                     variant="outline"
-                    class="w-9 h-8 rounded-r-none bg-background"
+                    class="w-9 rounded-r-none bg-background"
                     onClick={() => {
                       toast.promise(revalidate(getProductsByWarehouseId.keyFor(params.whid)), {
                         loading: "Refreshing products...",
@@ -58,7 +58,7 @@ export default function ProductsPage() {
                     <RotateCw class="size-4" />
                   </Button>
                   <DropdownMenu placement="bottom-end">
-                    <DropdownMenuTrigger as={Button} size="sm" class="h-8 pl-2.5 rounded-l-none">
+                    <DropdownMenuTrigger as={Button} size="sm" class="pl-2.5 rounded-l-none">
                       <Plus class="size-4" />
                       Add Product
                     </DropdownMenuTrigger>

@@ -230,7 +230,6 @@ export default function CreateWarehouseForm(props: CreateWarehouseFormProps) {
                             props.showMap(Number(result.lat), Number(result.lon));
                           }
                         }}
-                        class="w-10"
                       >
                         <Show
                           when={latLon()[0] === Number(result.lat) && latLon()[1] === Number(result.lon)}

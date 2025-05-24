@@ -28,6 +28,9 @@ export const CatalogsList = (props: CatalogsListProps) => {
             <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
               <div class="flex flex-row gap-4 items-center justify-start">
                 <span class="text-sm font-medium leading-none">{catalog.name}</span>
+                <Show when={catalog.deletedAt}>
+                  <span class="text-xs text-red-500">Deleted</span>
+                </Show>
               </div>
             </div>
             <div class="flex flex-col gap-2 w-full h-full">

@@ -189,7 +189,7 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
                 }}
                 ref={parentRef!}
               >
-                <For each={facility().areas}>
+                <For each={facility().ars}>
                   {(area) => (
                     <div
                       class="absolute outline-1 outline-neutral-500/50 outline-dashed "
@@ -223,11 +223,11 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
                         </div>
                         <div class="absolute top-0 -right-10 w-content h-content z-10">
                           <div class="flex flex-col gap-2 items-center">
-                            <Button size="icon" class="size-8 border bg-background" variant="outline">
+                            <Button size="icon" class="border bg-background" variant="outline">
                               <Plus class="size-4" />
                             </Button>
-                            <Show when={area.storages.length > 0}>
-                              <Button size="icon" class="size-8 border bg-background" variant="outline">
+                            <Show when={area.strs.length > 0}>
+                              <Button size="icon" class="border bg-background" variant="outline">
                                 <Settings class="size-4" />
                               </Button>
                             </Show>
@@ -270,7 +270,7 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
           <div class="flex flex-row items-center justify-end shadow-sm rounded-md">
             <Button
               size="icon"
-              class="size-8 rounded-r-none border border-r-0 bg-background"
+              class="rounded-r-none border border-r-0 bg-background"
               variant="secondary"
               onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 2))}
             >
@@ -278,7 +278,7 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
             </Button>
             <Button
               size="icon"
-              class="size-8 rounded-none border border-r-0 bg-background"
+              class="rounded-none border border-r-0 bg-background"
               variant="secondary"
               onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.6))}
             >
@@ -286,7 +286,7 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
             </Button>
             <Button
               size="icon"
-              class="size-8 rounded-l-none border bg-background"
+              class="rounded-l-none border bg-background"
               variant="secondary"
               onClick={() => {
                 const bbox = overallBoundingBox();

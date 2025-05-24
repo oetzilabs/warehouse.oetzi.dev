@@ -76,7 +76,6 @@ export default function CatalogPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  class="h-8"
                   onClick={() => {
                     navigate(-1);
                   }}
@@ -84,11 +83,16 @@ export default function CatalogPage() {
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
-                <h1 class="text-xl font-semibold">{catalogInfo().name}</h1>
+                <div class="flex flex-row items-baseline gap-2">
+                  <h1 class="text-xl font-semibold">{catalogInfo().name}</h1>
+                  <Show when={catalogInfo().deletedAt}>
+                    <span class="text-sm font-semibold text-red-500">Deleted</span>
+                  </Show>
+                </div>
               </div>
               <div class="flex flex-row items-center gap-2">
                 <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="size-8">
+                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
                     <MoreHorizontal class="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
@@ -205,7 +209,7 @@ export default function CatalogPage() {
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Details</h2>
                     <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon" class="size-8">
+                      <Button variant="ghost" size="icon">
                         <Edit class="size-4" />
                       </Button>
                     </div>
@@ -222,7 +226,7 @@ export default function CatalogPage() {
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Products</h2>
                     <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon" class="size-8">
+                      <Button variant="ghost" size="icon">
                         <Edit class="size-4" />
                       </Button>
                     </div>

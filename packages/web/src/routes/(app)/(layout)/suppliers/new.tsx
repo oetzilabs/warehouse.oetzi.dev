@@ -57,7 +57,7 @@ export default function NewSupplierPage() {
     <div class="container flex flex-col grow py-4 gap-4">
       <div class="flex items-center gap-4 justify-between w-full">
         <div class="flex items-center gap-4">
-          <Button size="sm" variant="outline" onClick={() => navigate(-1)} class="h-8">
+          <Button size="sm" variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft class="size-4" />
             Back
           </Button>
@@ -73,7 +73,6 @@ export default function NewSupplierPage() {
               <Button
                 disabled={!state().canSubmit || isCreatingSupplier.pending}
                 size="sm"
-                class="h-8"
                 onClick={() => form.handleSubmit()}
               >
                 <Show

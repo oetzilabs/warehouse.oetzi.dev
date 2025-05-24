@@ -106,7 +106,7 @@ export default function CatalogsPage() {
                   <Button
                     size="icon"
                     variant="outline"
-                    class="w-9 h-8 rounded-r-none bg-background"
+                    class="w-9 rounded-r-none bg-background"
                     onClick={() => {
                       toast.promise(revalidate(getCatalogs.keyFor()), {
                         loading: "Refreshing catalogs...",
@@ -117,7 +117,7 @@ export default function CatalogsPage() {
                   >
                     <RotateCw class="size-4" />
                   </Button>
-                  <Button size="sm" class="h-8 pl-2.5 rounded-l-none" as={A} href="./new">
+                  <Button size="sm" class="pl-2.5 rounded-l-none" as={A} href="./new">
                     <Plus class="size-4" />
                     Create
                   </Button>

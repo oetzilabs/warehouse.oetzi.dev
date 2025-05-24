@@ -133,8 +133,8 @@ export const CatalogForm: Component<CatalogUpdateFormProps> = (props) => {
                   action="prev-month"
                   aria-label="Go to previous month"
                   as={Button}
-                  size="sm"
-                  class="size-8 absolute left-0"
+                  size="icon"
+                  class="absolute left-0"
                   variant="secondary"
                   type="button"
                 >
@@ -144,8 +144,8 @@ export const CatalogForm: Component<CatalogUpdateFormProps> = (props) => {
                   action="next-month"
                   aria-label="Go to next month"
                   as={Button}
-                  size="sm"
-                  class="size-8 absolute right-0"
+                  size="icon"
+                  class="absolute right-0"
                   variant="secondary"
                   type="button"
                 >
@@ -189,7 +189,7 @@ export const CatalogForm: Component<CatalogUpdateFormProps> = (props) => {
                                           as={Button}
                                           size="sm"
                                           variant="outline"
-                                          class={cn("inline-flex h-8 w-full bg-background", {
+                                          class={cn("inline-flex w-full bg-background", {
                                             "bg-primary/10 text-primary/70": dayjs(day()).isBetween(
                                               form.state.values.startDate,
                                               form.state.values.endDate,

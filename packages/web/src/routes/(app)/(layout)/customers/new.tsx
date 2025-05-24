@@ -53,7 +53,7 @@ export default function NewCustomerPage() {
     <div class="container flex flex-col grow py-4 gap-4">
       <div class="flex items-center gap-4 justify-between w-full">
         <div class="flex items-center gap-4">
-          <Button size="sm" variant="outline" onClick={() => navigate(-1)} class="h-8">
+          <Button size="sm" variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft class="size-4" />
             Back
           </Button>
@@ -69,7 +69,6 @@ export default function NewCustomerPage() {
               <Button
                 disabled={!state().canSubmit || isCreatingCustomer.pending}
                 size="sm"
-                class="h-8"
                 onClick={() => form.handleSubmit()}
               >
                 <Show
