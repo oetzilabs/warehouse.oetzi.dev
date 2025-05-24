@@ -5,7 +5,7 @@ import { schema } from "../utils";
 import { TB_organizations } from "./organizations";
 
 export const TB_organization_discounts = schema.table(
-  "organization_discounts",
+  "org_discounts",
   (t) => ({
     organization_id: t
       .varchar("organization_id")

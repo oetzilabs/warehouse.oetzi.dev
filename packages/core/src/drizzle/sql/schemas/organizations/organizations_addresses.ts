@@ -8,7 +8,7 @@ import { commonTable } from "../entity";
 import { TB_organizations } from "./organizations";
 
 export const TB_organization_addresses = commonTable(
-  "organization_addresses",
+  "org_addresses",
   {
     organization_id: varchar("organization_id")
       .references(() => TB_organizations.id, { onDelete: "cascade" })
