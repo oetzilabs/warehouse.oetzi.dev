@@ -46,7 +46,7 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
       return facility.bounding_box;
     }
 
-    const areas = facility?.areas ?? [];
+    const areas = facility?.ars ?? [];
     if (areas.length === 0) {
       return { x: 0, y: 0, width: 0, height: 0 };
     }
@@ -209,7 +209,7 @@ export const NewWarehouseMap = (props: { warehouse: Accessor<WarehouseInfo> }) =
                             "flex-row": area.bounding_box.width < area.bounding_box.height,
                           })}
                         >
-                          <For each={area.storages}>
+                          <For each={area.strs}>
                             {(storage) => (
                               <A
                                 class={cn(" border bg-background rounded drop-shadow-sm", {

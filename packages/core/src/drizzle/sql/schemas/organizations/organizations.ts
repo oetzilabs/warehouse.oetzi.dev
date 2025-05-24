@@ -13,6 +13,7 @@ import { TB_organization_customers } from "./organization_customers";
 import { TB_organization_discounts } from "./organization_discounts";
 import { TB_organization_suppliers } from "./organization_suppliers";
 import { TB_organization_users } from "./organization_users";
+import { TB_organizations_products } from "./organizations_products";
 import { TB_organizations_warehouses } from "./organizations_warehouses";
 
 export const TB_organizations = commonTable(
@@ -45,6 +46,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   discounts: many(TB_organization_discounts),
   suppliers: many(TB_organization_suppliers),
   customers: many(TB_organization_customers),
+  products: many(TB_organizations_products),
   sessions: many(TB_sessions),
   catalogs: many(TB_catalogs),
 }));

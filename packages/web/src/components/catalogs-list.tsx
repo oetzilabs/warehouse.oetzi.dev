@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { A } from "@solidjs/router";
 import { type CatalogInfo } from "@warehouseoetzidev/core/src/entities/catalogs";
 import dayjs from "dayjs";
-import { Accessor, For } from "solid-js";
+import { Accessor, For, Show } from "solid-js";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 type CatalogsListProps = {

@@ -9,9 +9,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getProductsByWarehouseId } from "@/lib/api/products";
+import { getProducts } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
-import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
+import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
@@ -25,14 +25,13 @@ export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser({ skipOnboarding: true });
     const sessionToken = getSessionToken();
-    const products = getProductsByWarehouseId(props.params.whid);
+    const products = getProducts();
     return { user, sessionToken, sales: products };
   },
 } as RouteDefinition;
 
 export default function ProductsPage() {
-  const params = useParams();
-  const data = createAsync(() => getProductsByWarehouseId(params.whid), { deferStream: true });
+  const data = createAsync(() => getProducts(), { deferStream: true });
 
   return (
     <Show when={data()}>
@@ -48,7 +47,7 @@ export default function ProductsPage() {
                     variant="outline"
                     class="w-9 rounded-r-none bg-background"
                     onClick={() => {
-                      toast.promise(revalidate(getProductsByWarehouseId.keyFor(params.whid)), {
+                      toast.promise(revalidate(getProducts.key), {
                         loading: "Refreshing products...",
                         success: "Products refreshed",
                         error: "Failed to refresh products",
@@ -63,7 +62,7 @@ export default function ProductsPage() {
                       Add Product
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem as={A} href={`/warehouse/${params.whid}/products/new`} class="cursor-pointer">
+                      <DropdownMenuItem as={A} href={`/products/new`} class="cursor-pointer">
                         <Plus class="size-4" />
                         Create New
                       </DropdownMenuItem>

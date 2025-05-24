@@ -43,6 +43,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                       },
                     },
                     catalogs: true,
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
                   },
                 },
                 wh: {
@@ -88,6 +93,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
             customers: {
               with: {
                 customer: true,
+              },
+            },
+            products: {
+              with: {
+                product: true,
               },
             },
           },
@@ -168,6 +178,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               customer: true,
                             },
                           },
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
                         },
                       },
                       wh: {
@@ -213,6 +228,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   customers: {
                     with: {
                       customer: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
                     },
                   },
                 },
@@ -293,6 +313,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               customer: true,
                             },
                           },
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
                         },
                       },
                       wh: {
@@ -338,6 +363,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   customers: {
                     with: {
                       customer: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
                     },
                   },
                 },
@@ -401,6 +431,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               customer: true,
                             },
                           },
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
                         },
                       },
                       wh: {
@@ -446,6 +481,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   customers: {
                     with: {
                       customer: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
                     },
                   },
                 },

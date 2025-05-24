@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, InferInput, object, parse, safeParse } from "valibot";
@@ -13,6 +14,7 @@ import {
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
+import { OrganizationInvalidId } from "../organizations/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
@@ -57,6 +59,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       stco: {
         with: {
           condition: true,
+        },
+      },
+      suppliers: {
+        with: {
+          supplier: true,
         },
       },
     });
@@ -105,6 +112,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
               stco: {
                 with: {
                   condition: true,
+                },
+              },
+              suppliers: {
+                with: {
+                  supplier: true,
                 },
               },
             },
@@ -168,13 +180,63 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return deleted;
       });
 
+    const findByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        const orgProds = yield* Effect.promise(() =>
+          db.query.TB_organizations_products.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrganizationId.output),
+            with: {
+              product: {
+                with: {
+                  brands: true,
+                  saleItems: {
+                    with: {
+                      sale: {
+                        with: {
+                          customer: true,
+                        },
+                      },
+                    },
+                  },
+                  orders: {
+                    with: {
+                      order: true,
+                    },
+                  },
+                  labels: {
+                    with: {
+                      label: true,
+                    },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
+                    },
+                  },
+                  suppliers: {
+                    with: {
+                      supplier: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        return orgProds.map((p) => p.product).sort((a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix());
+      });
+
     const findByWarehouseId = (warehouseId: string) =>
       Effect.gen(function* (_) {
         const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
         if (!parsedWarehouseId.success) {
           return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
         }
-        const whProds = yield* Effect.promise(() =>
+        const orgProds = yield* Effect.promise(() =>
           db.query.TB_warehouse_products.findMany({
             where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
             with: {
@@ -205,13 +267,17 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                       condition: true,
                     },
                   },
+                  suppliers: {
+                    with: {
+                      supplier: true,
+                    },
+                  },
                 },
-                orderBy: (fields, operations) => operations.asc(fields.createdAt),
               },
             },
           }),
         );
-        return whProds.map((p) => p.product);
+        return orgProds.map((p) => p.product).sort((a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix());
       });
 
     const addLabel = (productId: string, labelId: string) =>
@@ -417,6 +483,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       update,
       remove,
       safeRemove,
+      findByOrganizationId,
       findByWarehouseId,
       addLabel,
       removeLabel,

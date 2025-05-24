@@ -70,6 +70,7 @@ export * from "./schemas/organizations/organization_discounts";
 export * from "./schemas/organizations/organizations_addresses";
 export * from "./schemas/organizations/organization_users";
 export * from "./schemas/organizations/organizations_warehouses";
+export * from "./schemas/organizations/organizations_products";
 export * from "./schemas/organizations/organizations_storages";
 export * from "./schemas/organizations/organizations_documents";
 export * from "./schemas/organizations/organization_suppliers";

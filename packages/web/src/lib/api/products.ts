@@ -7,7 +7,7 @@ import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehous
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
 
-export const getProductsByWarehouseId = query(async (whid: string) => {
+export const getProducts = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -17,17 +17,20 @@ export const getProductsByWarehouseId = query(async (whid: string) => {
   if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const products = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const whService = yield* _(WarehouseService);
       const productsService = yield* _(ProductService);
-      const wh = yield* whService.findById(whid);
-      if (!wh) {
-        return yield* Effect.fail(new WarehouseNotFound({ id: whid }));
-      }
-      const products = yield* productsService.findByWarehouseId(wh.id);
+      const products = yield* productsService.findByOrganizationId(orgId);
       return products;
-    }).pipe(Effect.provide(WarehouseLive), Effect.provide(ProductLive)),
+    }).pipe(Effect.provide(ProductLive)),
   );
   return Exit.match(products, {
     onSuccess: (prods) => {
@@ -64,7 +67,7 @@ export const getProductLabels = query(async () => {
   return labels;
 }, "labels");
 
-export const getProductById = query(async (whid: string, pid: string) => {
+export const getProductById = query(async (pid: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -80,13 +83,8 @@ export const getProductById = query(async (whid: string, pid: string) => {
   }
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const whService = yield* _(WarehouseService);
-      const wh = yield* whService.findById(whid);
-      if (!wh) {
-        return yield* Effect.fail(new WarehouseNotFound({ id: whid }));
-      }
-
-      const product = yield* whService.findProductById(wh.id, pid);
+      const productService = yield* _(ProductService);
+      const product = yield* productService.findById(pid);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id: pid }));
       }
@@ -132,7 +130,7 @@ export const deleteProduct = action(async (whid: string, id: string) => {
     }).pipe(Effect.provide(ProductLive), Effect.provide(WarehouseLive)),
   );
   return json(product, {
-    revalidate: [getProductById.keyFor(whid, product.id), getProductsByWarehouseId.keyFor(whid)],
+    revalidate: [getProductById.keyFor(product.id), getProducts.key],
     // headers: {
     //   Location: `/warehouse/${whid}/products`,
     // },

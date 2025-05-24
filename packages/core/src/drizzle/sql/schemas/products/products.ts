@@ -8,6 +8,7 @@ import { TB_order_products, TB_supplier_products } from "../../schema";
 import { TB_brands } from "../brands/brands";
 import { TB_catalog_products } from "../catalogs/catalog_products";
 import { commonTable } from "../entity";
+import { TB_organizations_products } from "../organizations/organizations_products";
 import { TB_sale_items } from "../sales/sales_items";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
@@ -88,6 +89,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
   saleItems: many(TB_sale_items),
   orders: many(TB_order_products),
   warehouses: many(TB_warehouse_products),
+  organizations: many(TB_organizations_products),
   labels: many(TB_products_to_labels),
   suppliers: many(TB_supplier_products),
   brands: one(TB_brands, {

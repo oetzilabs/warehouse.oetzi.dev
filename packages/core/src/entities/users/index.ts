@@ -57,6 +57,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           with: {
             org: {
               with: {
+                products: {
+                  with: {
+                    product: true,
+                  },
+                },
                 suppliers: {
                   with: {
                     supplier: {
@@ -236,6 +241,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
             org: {
               with: {
+                products: {
+                  with: {
+                    product: true,
+                  },
+                },
                 suppliers: {
                   with: {
                     supplier: {
@@ -483,6 +493,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   org: {
                     with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
                       suppliers: {
                         with: {
                           supplier: {
@@ -673,6 +688,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
                       suppliers: {
                         with: {
                           supplier: {
@@ -899,6 +919,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 with: {
                   org: {
                     with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
                       suppliers: {
                         with: {
                           supplier: {
@@ -1089,6 +1114,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
                       suppliers: {
                         with: {
                           supplier: {

@@ -106,10 +106,9 @@ export const getDevices = query(async () => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  if(!session.current_organization_id){
+  if (!session.current_organization_id) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
 
   const devices = await Effect.runPromise(
     Effect.gen(function* (_) {
@@ -119,4 +118,4 @@ export const getDevices = query(async () => {
     }).pipe(Effect.provide(WarehouseLive), Effect.provide(DeviceLive)),
   );
   return devices;
-}, "get-devices")
+}, "get-devices");

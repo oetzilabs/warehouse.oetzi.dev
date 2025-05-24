@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCertificates } from "@/lib/api/certificates";
-import { getProductLabels, getProductsByWarehouseId } from "@/lib/api/products";
+import { getProductLabels } from "@/lib/api/products";
 import { getStorageConditions } from "@/lib/api/storage_conditions";
 import { getSuppliers } from "@/lib/api/suppliers";
 import { cn } from "@/lib/utils";
@@ -33,8 +33,7 @@ export const route = {
   preload: (props) => {
     getAuthenticatedUser();
     getSessionToken();
-    getProductsByWarehouseId(props.params.whid);
-    getSuppliers(props.params.whid);
+    getSuppliers();
     getProductLabels();
     getCertificates();
     getStorageConditions();

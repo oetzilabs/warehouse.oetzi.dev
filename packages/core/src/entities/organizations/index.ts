@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, string, type InferInput } from "valibot";
+import org_products from "../../data/organization_products.json";
 import organizations from "../../data/organizations.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
@@ -8,6 +9,7 @@ import {
   OrganizationUpdateSchema,
   TB_organization_users,
   TB_organizations,
+  TB_organizations_products,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
@@ -51,6 +53,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
+        products: {
+          with: {
+            product: true,
+          },
+        },
         suppliers: {
           with: {
             supplier: true,
@@ -160,6 +167,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.id, parsedId.output),
             with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
               suppliers: {
                 with: {
                   supplier: true,
@@ -241,6 +253,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
           db.query.TB_organizations.findFirst({
             where: (organizations, operations) => operations.eq(organizations.slug, slug),
             with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
               suppliers: {
                 with: {
                   supplier: true,
@@ -531,6 +548,25 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                 .returning(),
             );
           }
+        }
+
+        // products relations
+        const orgProducts = yield* Effect.promise(() => db.query.TB_organizations_products.findMany());
+
+        const existingOrgProductsIds = orgProducts.map((p) => p.organizationId);
+
+        const productsFromJson = parse(
+          array(
+            object({
+              organizationId: prefixed_cuid2,
+              productId: prefixed_cuid2,
+            }),
+          ),
+          org_products,
+        );
+        const toCreateOrgProducts = productsFromJson.filter((t) => !existingOrgProductsIds.includes(t.organizationId));
+        if (toCreateOrgProducts.length > 0) {
+          yield* Effect.promise(() => db.insert(TB_organizations_products).values(toCreateOrgProducts).returning());
         }
 
         return os;

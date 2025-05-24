@@ -20,11 +20,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getDevicesByWarehouseId, printProductSheet } from "@/lib/api/devices";
+import { getDevices, printProductSheet } from "@/lib/api/devices";
 import { deleteProduct, downloadProductSheet, getProductById } from "@/lib/api/products";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
-import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Copy from "lucide-solid/icons/copy";
@@ -45,7 +44,7 @@ export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser({ skipOnboarding: true });
     const sessionToken = getSessionToken();
-    const product = getProductById(props.params.whid, props.params.pid);
+    const product = getProductById(props.params.pid);
     return { user, sessionToken, product };
   },
 } as RouteDefinition;
@@ -53,8 +52,8 @@ export const route = {
 export default function ProductPage() {
   const params = useParams();
   const navigate = useNavigate();
-  const product = createAsync(() => getProductById(params.whid, params.pid), { deferStream: true });
-  const printers = createAsync(() => getDevicesByWarehouseId(params.whid), { deferStream: true });
+  const product = createAsync(() => getProductById(params.pid), { deferStream: true });
+  const printers = createAsync(() => getDevices(), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
 
   const deleteProductAction = useAction(deleteProduct);
@@ -93,7 +92,7 @@ export default function ProductPage() {
                 <h1 class="text-xl font-semibold">{productInfo().name}</h1>
               </div>
               <div class="flex flex-row items-center gap-2">
-                <Button size="sm" as={A} href={`/warehouse/${params.whid}/map?products=${productInfo().id}`}>
+                <Button size="sm" as={A} href={`/map?products=${productInfo().id}`}>
                   <Map class="size-4" />
                   Show on Map
                 </Button>
