@@ -20,6 +20,9 @@ export class SaleNotDeleted extends Schema.TaggedError<SaleNotDeleted>()("SaleNo
   id: Schema.String,
 }) {}
 
-export class SaleWarehouseNotFound extends Schema.TaggedError<SaleWarehouseNotFound>()("SaleWarehouseNotFound", {
-  warehouseId: Schema.String,
-}) {}
+export class SaleOrganizationNotFound extends Schema.TaggedError<SaleOrganizationNotFound>()(
+  "SaleOrganizationNotFound",
+  {
+    orgId: Schema.String,
+  },
+) {}

@@ -6,7 +6,7 @@ import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehous
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
 
-export const getCustomerOrdersByWarehouseId = query(async (whid: string) => {
+export const getCustomerOrders = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -16,17 +16,20 @@ export const getCustomerOrdersByWarehouseId = query(async (whid: string) => {
   if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const whService = yield* _(WarehouseService);
       const orderService = yield* _(OrderService);
-      const wh = yield* whService.findById(whid);
-      if (!wh) {
-        return yield* Effect.fail(new WarehouseNotFound({ id: whid }));
-      }
-      const orders = yield* orderService.findByWarehouseId(wh.id);
+      const orders = yield* orderService.findCustomerOrdersByOrganizationId(orgId);
       return orders;
-    }).pipe(Effect.provide(WarehouseLive), Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(OrderLive)),
   );
   return Exit.match(orders, {
     onSuccess: (ords) => {
@@ -43,7 +46,7 @@ export const getCustomerOrdersByWarehouseId = query(async (whid: string) => {
   });
 }, "customer-order-by-warehouse-id");
 
-export const getSupplyOrdersByWarehouseId = query(async (whid: string) => {
+export const getSupplyOrders = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -57,24 +60,16 @@ export const getSupplyOrdersByWarehouseId = query(async (whid: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const whId = session.current_warehouse_id;
-  if (!whId) {
-    if (!user.has_finished_onboarding) {
-      return redirect("/onboarding");
-    }
-    throw new Error("You have to be part of an organization to perform this action.");
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const whService = yield* _(WarehouseService);
       const ordersService = yield* _(OrderService);
-      const wh = yield* whService.findById(whId);
-      if (!wh) {
-        return yield* Effect.fail(new WarehouseNotFound({ id: whId }));
-      }
-      const orders = yield* ordersService.findByWarehouseId(wh.id);
+      const orders = yield* ordersService.findSupplierOrdersByOrganizationId(orgId);
       return orders;
-    }).pipe(Effect.provide(WarehouseLive), Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(OrderLive)),
   );
   return Exit.match(orders, {
     onSuccess: (ords) => {
@@ -106,7 +101,10 @@ export const getOrdersByUserId = query(async (uid: string) => {
       const userService = yield* _(UserService);
       const orderService = yield* _(OrderService);
       const user = yield* userService.findById(uid);
-      const orders = yield* orderService.findByWarehouseId(user.id);
+      if (!user) {
+        return yield* Effect.fail(new Error("User not found"));
+      }
+      const orders = yield* orderService.findByUserId(user.id);
       return orders;
     }).pipe(Effect.provide(UserLive), Effect.provide(OrderLive)),
   );

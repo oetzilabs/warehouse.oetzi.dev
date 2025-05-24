@@ -5,29 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1747944751914,
-      "tag": "0000_workable_dazzler",
+      "when": 1748086060826,
+      "tag": "0000_mature_cloak",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1747989525614,
-      "tag": "0001_odd_nomad",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1748031748599,
-      "tag": "0002_bouncy_spirit",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1748080839840,
-      "tag": "0003_lowly_pretty_boy",
+      "when": 1748086659176,
+      "tag": "0001_lucky_raider",
       "breakpoints": true
     }
   ]

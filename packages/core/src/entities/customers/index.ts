@@ -32,7 +32,6 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
               product: true,
             },
           },
-          warehouse: true,
         },
       },
       organizations: {
@@ -40,21 +39,15 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           organization: true,
         },
       },
-      orders: {
+      orgOrders: {
         with: {
-          products: {
+          order: {
             with: {
-              product: true,
-            },
-          },
-          sale: {
-            with: {
-              items: {
+              products: {
                 with: {
                   product: true,
                 },
               },
-              warehouse: true,
             },
           },
         },
@@ -94,7 +87,6 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                       product: true,
                     },
                   },
-                  warehouse: true,
                 },
               },
               organizations: {
@@ -102,21 +94,15 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                   organization: true,
                 },
               },
-              orders: {
+              orgOrders: {
                 with: {
-                  products: {
+                  order: {
                     with: {
-                      product: true,
-                    },
-                  },
-                  sale: {
-                    with: {
-                      items: {
+                      products: {
                         with: {
                           product: true,
                         },
                       },
-                      warehouse: true,
                     },
                   },
                 },
@@ -179,7 +165,6 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                           product: true,
                         },
                       },
-                      warehouse: true,
                     },
                   },
                   organizations: {
@@ -187,21 +172,15 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                       organization: true,
                     },
                   },
-                  orders: {
+                  orgOrders: {
                     with: {
-                      products: {
+                      order: {
                         with: {
-                          product: true,
-                        },
-                      },
-                      sale: {
-                        with: {
-                          items: {
+                          products: {
                             with: {
                               product: true,
                             },
                           },
-                          warehouse: true,
                         },
                       },
                     },

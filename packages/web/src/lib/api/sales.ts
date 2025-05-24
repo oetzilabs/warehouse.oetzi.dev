@@ -19,8 +19,8 @@ export const getSalesLastFewMonths = query(async () => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const whId = session.current_warehouse_id;
-  if (!whId) {
+  const orgId = session.current_organization_id;
+  if (!orgId) {
     if (!user.has_finished_onboarding) {
       return redirect("/onboarding");
     }
@@ -36,7 +36,7 @@ export const getSalesLastFewMonths = query(async () => {
   const sales = await Effect.runPromise(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
-      const sales = yield* salesService.findWithinRange(whId, range[0], range[5]);
+      const sales = yield* salesService.findWithinRange(orgId, range[0], range[5]);
       if (!sales) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
@@ -49,7 +49,7 @@ export const getSalesLastFewMonths = query(async () => {
     datasets: [
       {
         label: "Sales",
-        data: sales.map((s) => s.total),
+        data: [0],
         fill: false,
         pointStyle: false,
       },
@@ -58,7 +58,7 @@ export const getSalesLastFewMonths = query(async () => {
   return obj;
 }, "sales-last-few-months");
 
-export const getSalesByWarehouseId = query(async (whid: string) => {
+export const getSales = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -72,17 +72,17 @@ export const getSalesByWarehouseId = query(async (whid: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const whId = session.current_warehouse_id;
-  if (!whId) {
+  const orgId = session.current_organization_id;
+  if (!orgId) {
     if (!user.has_finished_onboarding) {
       return redirect("/onboarding");
     }
-    throw new Error("You have to be part of an organization to perform this action.");
+    throw new Error("You have to be part of an organization to perform this action");
   }
   const sales = await Effect.runPromise(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
-      const sales = yield* salesService.findByWarehouseId(whId);
+      const sales = yield* salesService.findByOrganizationId(orgId);
       if (!sales) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
@@ -90,9 +90,9 @@ export const getSalesByWarehouseId = query(async (whid: string) => {
     }).pipe(Effect.provide(SalesLive)),
   );
   return sales;
-}, "sales-by-warehouse-id");
+}, "sales-by-organization-id");
 
-export const getWarehouseSaleById = query(async (whid, sid: string) => {
+export const getSaleById = query(async (sid: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -110,20 +110,12 @@ export const getWarehouseSaleById = query(async (whid, sid: string) => {
   const sale = await Effect.runPromise(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
-      const warehouseService = yield* _(WarehouseService);
-      const warehouse = yield* warehouseService.findById(whid);
-      if (!warehouse) {
-        return yield* Effect.fail(new Error("Warehouse not found"));
-      }
       const sale = yield* salesService.findById(sid);
       if (!sale) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
-      if (sale.warehouseId !== warehouse.id) {
-        return yield* Effect.fail(new Error("This sale is not associated with this warehouse"));
-      }
       return sale;
-    }).pipe(Effect.provide(SalesLive), Effect.provide(WarehouseLive)),
+    }).pipe(Effect.provide(SalesLive)),
   );
   return sale;
 }, "sale-by-id");

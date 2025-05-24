@@ -3,7 +3,7 @@ import { OrdersDataTable } from "@/components/orders/orders-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getSupplyOrdersByWarehouseId } from "@/lib/api/orders";
+import { getSupplyOrders } from "@/lib/api/orders";
 import { cn } from "@/lib/utils";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
@@ -17,45 +17,45 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
-    const orders = getSupplyOrdersByWarehouseId(props.params.whid);
+    const orders = getSupplyOrders();
     return { user, sessionToken, orders };
   },
 } as RouteDefinition;
 
 export default function SuppliersOrderPage() {
   const params = useParams();
-  const orders = createAsync(() => getSupplyOrdersByWarehouseId(params.whid), { deferStream: true, initialValue: [] });
+  const orders = createAsync(() => getSupplyOrders(), { deferStream: true, initialValue: [] });
 
-  const calculateOrders = (orders: OrderInfo[]) => {
-    // Calculate total sales for each day
-    const totalSales = orders.reduce(
-      (acc, order) => {
-        const date = dayjs(order.createdAt).format("YYYY-MM-DD");
-        if (!order.sale) return acc;
-        if (acc[date]) {
-          acc[date] += order.sale.total;
-        } else {
-          acc[date] = order.sale.total;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+  // const calculateOrders = (orders: OrderInfo[]) => {
+  //   // Calculate total sales for each day
+  //   const totalSales = orders.reduce(
+  //     (acc, order) => {
+  //       const date = dayjs(order.createdAt).format("YYYY-MM-DD");
+  //       if (!order.sale) return acc;
+  //       if (acc[date]) {
+  //         acc[date] += order.sale.total;
+  //       } else {
+  //         acc[date] = order.sale.total;
+  //       }
+  //       return acc;
+  //     },
+  //     {} as Record<string, number>,
+  //   );
 
-    return {
-      labels: Object.keys(totalSales),
-      datasets: [
-        {
-          label: "Daily Orders Total",
-          data: Object.values(totalSales),
-          fill: true,
-          pointStyle: false,
-        },
-      ],
-    };
-  };
+  //   return {
+  //     labels: Object.keys(totalSales),
+  //     datasets: [
+  //       {
+  //         label: "Daily Orders Total",
+  //         data: Object.values(totalSales),
+  //         fill: true,
+  //         pointStyle: false,
+  //       },
+  //     ],
+  //   };
+  // };
 
   return (
     <Show when={orders()}>
@@ -71,7 +71,7 @@ export default function SuppliersOrderPage() {
                     variant="outline"
                     class="w-9 rounded-r-none bg-background"
                     onClick={() => {
-                      toast.promise(revalidate(getSupplyOrdersByWarehouseId.keyFor(params.whid)), {
+                      toast.promise(revalidate(getSupplyOrders.key), {
                         loading: "Refreshing orders...",
                         success: "Orders refreshed",
                         error: "Failed to refresh orders",
@@ -88,9 +88,9 @@ export default function SuppliersOrderPage() {
               </div>
               <div class="flex flex-col gap-4 w-full grow ">
                 <div class="flex flex-col gap-4 w-full rounded-lg border h-60">
-                  <div class="flex flex-col gap-2 w-full h-full p-4">
+                  {/* <div class="flex flex-col gap-2 w-full h-full p-4">
                     <LineChart data={calculateOrders(os())} />
-                  </div>
+                  </div> */}
                 </div>
                 <SuppliersOrdersList data={os} />
               </div>

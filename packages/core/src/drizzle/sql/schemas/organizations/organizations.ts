@@ -13,7 +13,9 @@ import { TB_organization_customers } from "./organization_customers";
 import { TB_organization_discounts } from "./organization_discounts";
 import { TB_organization_suppliers } from "./organization_suppliers";
 import { TB_organization_users } from "./organization_users";
+import { TB_organizations_customerorders, TB_organizations_supplierorders } from "./organizations_orders";
 import { TB_organizations_products } from "./organizations_products";
+import { TB_organizations_sales } from "./organizations_sales";
 import { TB_organizations_warehouses } from "./organizations_warehouses";
 
 export const TB_organizations = commonTable(
@@ -49,6 +51,9 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   products: many(TB_organizations_products),
   sessions: many(TB_sessions),
   catalogs: many(TB_catalogs),
+  customerOrders: many(TB_organizations_customerorders),
+  supplierOrders: many(TB_organizations_supplierorders),
+  sales: many(TB_organizations_sales),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

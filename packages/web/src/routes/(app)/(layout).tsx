@@ -225,132 +225,126 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     </SidebarGroup>
                   )}
                 </Show>
-                <Show when={user.currentWarehouse()}>
-                  {(warehouse) => (
-                    <>
-                      <SidebarGroup>
-                        <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                          <SidebarMenu>
-                            <SidebarMenuItem>
-                              <Link href={`/warehouse/${user.currentWarehouse()?.id}/orders/customers`}>
-                                <Tags class="size-4" />
-                                Customer Orders
-                                <SidebarMenuBadge class="mr-1">
-                                  {warehouse().orders.length > 99 ? "99+" : warehouse().orders.length}
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href={`/orders/suppliers`}>
-                                <Tags class="size-4" />
-                                Supply Orders
-                                <SidebarMenuBadge class="mr-1">
-                                  {warehouse().orders.length > 99 ? "99+" : warehouse().orders.length}
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href="/sales">
-                                <BadgeEuro class="size-4" />
-                                Sales
-                                <SidebarMenuBadge class="mr-1">
-                                  {warehouse().sales.length > 99 ? "99+" : warehouse().sales.length}
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href="/products">
-                                <PackageSearch class="size-4" />
-                                Products
-                                <SidebarMenuBadge class="mr-1">
-                                  {org().products.filter((p) => p.product.deletedAt === null).length}
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href={`/warehouse/${warehouse().id}/products/new`}>
-                                <PackagePlus class="size-4" />
-                                New Product
-                              </Link>
-                            </SidebarMenuItem>
-                          </SidebarMenu>
-                        </SidebarGroupContent>
-                      </SidebarGroup>
-                      <SidebarGroup>
-                        <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                          <SidebarMenu>
-                            <SidebarMenuItem>
-                              <Link href={`/suppliers`}>
-                                <Forklift class="size-4" />
-                                Suppliers
-                                <SidebarMenuBadge class="mr-1">
-                                  {
-                                    org()
-                                      .suppliers.map((s) => s.supplier)
-                                      .filter((c) => c.deletedAt === null).length
-                                  }
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href={`/customers`}>
-                                <UsersRound class="size-4" />
-                                Customers
-                                <SidebarMenuBadge class="mr-1">
-                                  {
-                                    org()
-                                      .customers.map((c) => c.customer)
-                                      .filter((c) => c.deletedAt === null).length
-                                  }
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href={`/catalogs`}>
-                                <BookOpenText class="size-4" />
-                                Catalogs
-                                <SidebarMenuBadge class="mr-1">
-                                  {org().catalogs.filter((c) => c.deletedAt === null).length}
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href={`/documents`}>
-                                <Notebook class="size-4" />
-                                Documents
-                                <SidebarMenuBadge class="mr-1">
-                                  {/* {org().documents.filter((c) => c.deletedAt === null).length} */}0
-                                </SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                          </SidebarMenu>
-                        </SidebarGroupContent>
-                      </SidebarGroup>
-                      <SidebarGroup>
-                        <SidebarGroupLabel>Communication</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                          <SidebarMenu>
-                            <SidebarMenuItem>
-                              <Link href={`/messages`}>
-                                <MessageSquare class="size-4" />
-                                Messages
-                                <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
-                              </Link>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                              <Link href={`/support`} disabled>
-                                <Support class="size-4" />
-                                Support
-                              </Link>
-                            </SidebarMenuItem>
-                          </SidebarMenu>
-                        </SidebarGroupContent>
-                      </SidebarGroup>
-                    </>
-                  )}
-                </Show>
+                <SidebarGroup>
+                  <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <Link href="/orders/customers">
+                          <Tags class="size-4" />
+                          Customer Orders
+                          <SidebarMenuBadge class="mr-1">
+                            {org().customerOrders.length > 99 ? "99+" : org().customerOrders.length}
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/orders/suppliers">
+                          <Tags class="size-4" />
+                          Supply Orders
+                          <SidebarMenuBadge class="mr-1">
+                            {org().supplierOrders.length > 99 ? "99+" : org().supplierOrders.length}
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/sales">
+                          <BadgeEuro class="size-4" />
+                          Sales
+                          <SidebarMenuBadge class="mr-1">
+                            {org().sales.length > 99 ? "99+" : org().sales.length}
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/products">
+                          <PackageSearch class="size-4" />
+                          Products
+                          <SidebarMenuBadge class="mr-1">
+                            {org().products.filter((p) => p.product.deletedAt === null).length}
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/products/new">
+                          <PackagePlus class="size-4" />
+                          New Product
+                        </Link>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+                <SidebarGroup>
+                  <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <Link href={`/suppliers`}>
+                          <Forklift class="size-4" />
+                          Suppliers
+                          <SidebarMenuBadge class="mr-1">
+                            {
+                              org()
+                                .suppliers.map((s) => s.supplier)
+                                .filter((c) => c.deletedAt === null).length
+                            }
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href={`/customers`}>
+                          <UsersRound class="size-4" />
+                          Customers
+                          <SidebarMenuBadge class="mr-1">
+                            {
+                              org()
+                                .customers.map((c) => c.customer)
+                                .filter((c) => c.deletedAt === null).length
+                            }
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/catalogs">
+                          <BookOpenText class="size-4" />
+                          Catalogs
+                          <SidebarMenuBadge class="mr-1">
+                            {org().catalogs.filter((c) => c.deletedAt === null).length}
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/documents">
+                          <Notebook class="size-4" />
+                          Documents
+                          <SidebarMenuBadge class="mr-1">
+                            {/* {org().documents.filter((c) => c.deletedAt === null).length} */}0
+                          </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+                <SidebarGroup>
+                  <SidebarGroupLabel>Communication</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <Link href="/messages">
+                          <MessageSquare class="size-4" />
+                          Messages
+                          <SidebarMenuBadge class="mr-1">0</SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/support" disabled>
+                          <Support class="size-4" />
+                          Support
+                        </Link>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
               </SidebarContent>
             )}
           </Show>

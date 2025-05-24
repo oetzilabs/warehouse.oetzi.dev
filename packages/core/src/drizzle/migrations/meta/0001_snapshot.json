@@ -1,6 +1,6 @@
 {
-  "id": "7ccb536e-1a13-4d7d-83fe-5deb3cc1ad74",
-  "prevId": "8e91a60f-2320-4c35-a337-415744dfb3a5",
+  "id": "229ecf8f-bcc0-487e-a883-363bc90fdcd0",
+  "prevId": "42393bb0-cce5-4b67-8546-e02be5b0cb48",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -710,18 +710,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "customer_id": {
-          "name": "customer_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sale_id": {
-          "name": "sale_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "id": {
           "name": "id",
           "type": "varchar",
@@ -749,36 +737,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "orders_customer_id_customers_id_fk": {
-          "name": "orders_customer_id_customers_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "customers",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "orders_sale_id_sales_id_fk": {
-          "name": "orders_sale_id_sales_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "sales",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "sale_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1607,8 +1566,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "warehouse_id": {
-          "name": "warehouse_id",
+        "organization_id": {
+          "name": "organization_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -1619,20 +1578,13 @@
           "typeSchema": "warehouse",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pending'"
+          "default": "'draft'"
         },
         "note": {
           "name": "note",
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "total": {
-          "name": "total",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "id": {
           "name": "id",
@@ -1676,13 +1628,13 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "sales_warehouse_id_warehouses_id_fk": {
-          "name": "sales_warehouse_id_warehouses_id_fk",
+        "sales_organization_id_organizations_id_fk": {
+          "name": "sales_organization_id_organizations_id_fk",
           "tableFrom": "sales",
-          "tableTo": "warehouses",
+          "tableTo": "organizations",
           "schemaTo": "warehouse",
           "columnsFrom": [
-            "warehouse_id"
+            "organization_id"
           ],
           "columnsTo": [
             "id"
@@ -3588,85 +3540,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.warehouse_orders": {
-      "name": "warehouse_orders",
-      "schema": "warehouse",
-      "columns": {
-        "warehouse_id": {
-          "name": "warehouse_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "order_id": {
-          "name": "order_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "warehouse_orders_warehouse_id_warehouses_id_fk": {
-          "name": "warehouse_orders_warehouse_id_warehouses_id_fk",
-          "tableFrom": "warehouse_orders",
-          "tableTo": "warehouses",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "warehouse_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "warehouse_orders_order_id_orders_id_fk": {
-          "name": "warehouse_orders_order_id_orders_id_fk",
-          "tableFrom": "warehouse_orders",
-          "tableTo": "orders",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "order_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "warehouse.warehouse_products": {
       "name": "warehouse_products",
       "schema": "warehouse",
@@ -3741,68 +3614,6 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "warehouse.warehouse_suppliers": {
-      "name": "warehouse_suppliers",
-      "schema": "warehouse",
-      "columns": {
-        "warehouse_id": {
-          "name": "warehouse_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "supplier_id": {
-          "name": "supplier_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "warehouse_suppliers_warehouse_id_warehouses_id_fk": {
-          "name": "warehouse_suppliers_warehouse_id_warehouses_id_fk",
-          "tableFrom": "warehouse_suppliers",
-          "tableTo": "warehouses",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "warehouse_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "warehouse_suppliers_supplier_id_suppliers_id_fk": {
-          "name": "warehouse_suppliers_supplier_id_suppliers_id_fk",
-          "tableFrom": "warehouse_suppliers",
-          "tableTo": "suppliers",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "supplier_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "warehouse_suppliers_warehouse_id_supplier_id_pk": {
-          "name": "warehouse_suppliers_warehouse_id_supplier_id_pk",
-          "columns": [
-            "warehouse_id",
-            "supplier_id"
-          ]
-        }
-      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -4855,6 +4666,68 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "warehouse.organizations_products": {
+      "name": "organizations_products",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organizations_products_organization_id_organizations_id_fk": {
+          "name": "organizations_products_organization_id_organizations_id_fk",
+          "tableFrom": "organizations_products",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_products_product_id_products_id_fk": {
+          "name": "organizations_products_product_id_products_id_fk",
+          "tableFrom": "organizations_products",
+          "tableTo": "products",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organizations_products_organization_id_product_id_pk": {
+          "name": "organizations_products_organization_id_product_id_pk",
+          "columns": [
+            "organization_id",
+            "product_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "warehouse.organizations_storages": {
       "name": "organizations_storages",
       "schema": "warehouse",
@@ -4971,6 +4844,358 @@
           "columns": [
             "organization_id",
             "document_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organization_suppliers": {
+      "name": "organization_suppliers",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supplier_id": {
+          "name": "supplier_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organization_suppliers_organization_id_organizations_id_fk": {
+          "name": "organization_suppliers_organization_id_organizations_id_fk",
+          "tableFrom": "organization_suppliers",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organization_suppliers_supplier_id_suppliers_id_fk": {
+          "name": "organization_suppliers_supplier_id_suppliers_id_fk",
+          "tableFrom": "organization_suppliers",
+          "tableTo": "suppliers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "supplier_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organization_suppliers_organization_id_supplier_id_pk": {
+          "name": "organization_suppliers_organization_id_supplier_id_pk",
+          "columns": [
+            "organization_id",
+            "supplier_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organization_customers": {
+      "name": "organization_customers",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organization_customers_organization_id_organizations_id_fk": {
+          "name": "organization_customers_organization_id_organizations_id_fk",
+          "tableFrom": "organization_customers",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organization_customers_customer_id_customers_id_fk": {
+          "name": "organization_customers_customer_id_customers_id_fk",
+          "tableFrom": "organization_customers",
+          "tableTo": "customers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "customer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organization_customers_organization_id_customer_id_pk": {
+          "name": "organization_customers_organization_id_customer_id_pk",
+          "columns": [
+            "organization_id",
+            "customer_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organizations_customerorders": {
+      "name": "organizations_customerorders",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organizations_customerorders_organization_id_organizations_id_fk": {
+          "name": "organizations_customerorders_organization_id_organizations_id_fk",
+          "tableFrom": "organizations_customerorders",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_customerorders_order_id_orders_id_fk": {
+          "name": "organizations_customerorders_order_id_orders_id_fk",
+          "tableFrom": "organizations_customerorders",
+          "tableTo": "orders",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "order_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_customerorders_customer_id_customers_id_fk": {
+          "name": "organizations_customerorders_customer_id_customers_id_fk",
+          "tableFrom": "organizations_customerorders",
+          "tableTo": "customers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "customer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organizations_customerorders_organization_id_order_id_customer_id_pk": {
+          "name": "organizations_customerorders_organization_id_order_id_customer_id_pk",
+          "columns": [
+            "organization_id",
+            "order_id",
+            "customer_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organizations_supplierorders": {
+      "name": "organizations_supplierorders",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supplier_id": {
+          "name": "supplier_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organizations_supplierorders_organization_id_organizations_id_fk": {
+          "name": "organizations_supplierorders_organization_id_organizations_id_fk",
+          "tableFrom": "organizations_supplierorders",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_supplierorders_order_id_orders_id_fk": {
+          "name": "organizations_supplierorders_order_id_orders_id_fk",
+          "tableFrom": "organizations_supplierorders",
+          "tableTo": "orders",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "order_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_supplierorders_supplier_id_suppliers_id_fk": {
+          "name": "organizations_supplierorders_supplier_id_suppliers_id_fk",
+          "tableFrom": "organizations_supplierorders",
+          "tableTo": "suppliers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "supplier_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organizations_supplierorders_organization_id_order_id_supplier_id_pk": {
+          "name": "organizations_supplierorders_organization_id_order_id_supplier_id_pk",
+          "columns": [
+            "organization_id",
+            "order_id",
+            "supplier_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organizations_sales": {
+      "name": "organizations_sales",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sale_id": {
+          "name": "sale_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organizations_sales_organization_id_organizations_id_fk": {
+          "name": "organizations_sales_organization_id_organizations_id_fk",
+          "tableFrom": "organizations_sales",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_sales_sale_id_sales_id_fk": {
+          "name": "organizations_sales_sale_id_sales_id_fk",
+          "tableFrom": "organizations_sales",
+          "tableTo": "sales",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "sale_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organizations_sales_organization_id_sale_id_pk": {
+          "name": "organizations_sales_organization_id_sale_id_pk",
+          "columns": [
+            "organization_id",
+            "sale_id"
           ]
         }
       },
@@ -5147,6 +5372,8 @@
       "name": "sale_status",
       "schema": "warehouse",
       "values": [
+        "created",
+        "draft",
         "pending",
         "confirmed",
         "processing",

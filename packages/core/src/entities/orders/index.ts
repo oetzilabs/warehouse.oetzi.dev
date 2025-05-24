@@ -4,6 +4,7 @@ import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { OrderCreateSchema, OrderUpdateSchema, TB_orders } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationInvalidId } from "../organizations/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   OrderInvalidId,
@@ -24,11 +25,6 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        whs: {
-          with: {
-            warehouse: true,
-          },
-        },
         users: {
           with: {
             user: {
@@ -43,8 +39,6 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             product: true,
           },
         },
-        customer: true,
-        sale: true,
       };
 
       if (options) {
@@ -73,11 +67,6 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
           db.query.TB_orders.findFirst({
             where: (orders, operations) => operations.eq(orders.id, parsedId.output),
             with: {
-              whs: {
-                with: {
-                  warehouse: true,
-                },
-              },
               users: {
                 with: {
                   user: {
@@ -92,8 +81,6 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                   product: true,
                 },
               },
-              customer: true,
-              sale: true,
             },
           }),
         );
@@ -187,24 +174,18 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
         return yield* Effect.promise(() => db.query.TB_orders.findMany({ with: relations }));
       });
 
-    const findByWarehouseId = (warehouseId: string) =>
+    const findCustomerOrdersByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
-        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
-        if (!parsedWarehouseId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
-
-        const whOrders = yield* Effect.promise(() =>
-          db.query.TB_warehouse_orders.findMany({
-            where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
+        const orgOrders = yield* Effect.promise(() =>
+          db.query.TB_organizations_customerorders.findMany({
+            where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
               order: {
                 with: {
-                  whs: {
-                    with: {
-                      warehouse: true,
-                    },
-                  },
                   users: {
                     with: {
                       user: {
@@ -219,16 +200,46 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                       product: true,
                     },
                   },
-                  customer: true,
-                  sale: true,
                 },
               },
-              warehouse: true,
             },
           }),
         );
+        return orgOrders.map((o) => o.order);
+      });
 
-        return whOrders.map((o) => o.order);
+    const findSupplierOrdersByOrganizationId = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        const orgOrders = yield* Effect.promise(() =>
+          db.query.TB_organizations_supplierorders.findMany({
+            where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+            with: {
+              order: {
+                with: {
+                  users: {
+                    with: {
+                      user: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        return orgOrders.map((o) => o.order);
       });
 
     return {
@@ -238,7 +249,8 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
       remove,
       safeRemove,
       findByUserId,
-      findByWarehouseId,
+      findCustomerOrdersByOrganizationId,
+      findSupplierOrdersByOrganizationId,
       all,
     } as const;
   }),

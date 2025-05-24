@@ -1,63 +1,60 @@
 import { CustomersOrdersList } from "@/components/orders-list";
-import { OrdersDataTable } from "@/components/orders/orders-data-table";
 import { Button } from "@/components/ui/button";
-import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getCustomerOrdersByWarehouseId } from "@/lib/api/orders";
+import { getCustomerOrders } from "@/lib/api/orders";
 import { cn } from "@/lib/utils";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
-import dayjs from "dayjs";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import X from "lucide-solid/icons/x";
-import { createSignal, For, Show, Suspense } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser({ skipOnboarding: true });
     const sessionToken = getSessionToken();
-    const orders = getCustomerOrdersByWarehouseId(props.params.whid);
+    const orders = getCustomerOrders();
     return { user, sessionToken, orders };
   },
 } as RouteDefinition;
 
 export default function CustomerOrdersPage() {
   const params = useParams();
-  const data = createAsync(() => getCustomerOrdersByWarehouseId(params.whid), { deferStream: true });
+  const data = createAsync(() => getCustomerOrders(), { deferStream: true });
   const [selectedOrder, setSelectedOrder] = createSignal<OrderInfo | null>(null);
   const [previewVisible, setPreviewVisible] = createSignal(false);
 
-  const calculateOrders = (orders: OrderInfo[]) => {
-    // Calculate total sales for each day
-    const totalSales = orders.reduce(
-      (acc, order) => {
-        const date = dayjs(order.createdAt).format("YYYY-MM-DD");
-        if (!order.sale) return acc;
-        if (acc[date]) {
-          acc[date] += order.sale.total;
-        } else {
-          acc[date] = order.sale.total;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+  // const calculateOrders = (orders: OrderInfo[]) => {
+  //   // Calculate total sales for each day
+  //   const totalSales = orders.reduce(
+  //     (acc, order) => {
+  //       const date = dayjs(order.createdAt).format("YYYY-MM-DD");
+  //       if (!order.sale) return acc;
+  //       if (acc[date]) {
+  //         acc[date] += order.sale.total;
+  //       } else {
+  //         acc[date] = order.sale.total;
+  //       }
+  //       return acc;
+  //     },
+  //     {} as Record<string, number>,
+  //   );
 
-    return {
-      labels: Object.keys(totalSales),
-      datasets: [
-        {
-          label: "Daily Orders Total",
-          data: Object.values(totalSales),
-          fill: true,
-          pointStyle: false,
-        },
-      ],
-    };
-  };
+  //   return {
+  //     labels: Object.keys(totalSales),
+  //     datasets: [
+  //       {
+  //         label: "Daily Orders Total",
+  //         data: Object.values(totalSales),
+  //         fill: true,
+  //         pointStyle: false,
+  //       },
+  //     ],
+  //   };
+  // };
 
   return (
     <Show when={data()}>
@@ -73,7 +70,7 @@ export default function CustomerOrdersPage() {
                     variant="outline"
                     class="w-9 rounded-r-none bg-background"
                     onClick={() => {
-                      toast.promise(revalidate(getCustomerOrdersByWarehouseId.keyFor(params.whid)), {
+                      toast.promise(revalidate(getCustomerOrders.key), {
                         loading: "Refreshing orders...",
                         success: "Orders refreshed",
                         error: "Failed to refresh orders",
@@ -90,9 +87,9 @@ export default function CustomerOrdersPage() {
               </div>
               <div class="flex flex-col gap-4 w-full grow">
                 <div class="flex flex-col gap-4 w-full rounded-lg border h-60">
-                  <div class="flex flex-col gap-4 w-full h-full p-4">
+                  {/* <div class="flex flex-col gap-4 w-full h-full p-4">
                     <LineChart data={calculateOrders(os())} />
-                  </div>
+                  </div> */}
                 </div>
                 <CustomersOrdersList data={os} />
               </div>

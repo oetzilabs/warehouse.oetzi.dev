@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getSalesByWarehouseId } from "@/lib/api/sales";
+import { getSales } from "@/lib/api/sales";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
@@ -24,14 +24,14 @@ export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser({ skipOnboarding: true });
     const sessionToken = getSessionToken();
-    const sales = getSalesByWarehouseId(props.params.whid);
+    const sales = getSales();
     return { user, sessionToken, sales };
   },
 } as RouteDefinition;
 
 export default function SalesPage() {
   const params = useParams();
-  const sales = createAsync(() => getSalesByWarehouseId(params.whid), { deferStream: true });
+  const sales = createAsync(() => getSales(), { deferStream: true });
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
@@ -53,11 +53,11 @@ export default function SalesPage() {
           label: "Date",
           fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
         },
-        {
-          field: "total",
-          label: "Total",
-          fn: (a, b) => a.total - b.total,
-        },
+        // {
+        //   field: "total",
+        //   label: "Total",
+        //   fn: (a, b) => a.total - b.total,
+        // },
         {
           field: "items",
           label: "Items",
@@ -76,34 +76,34 @@ export default function SalesPage() {
     500,
   );
 
-  const calculateSales = (sales: SaleInfo[]) => {
-    // Calculate total sales for each day
-    const totalSales = sales.reduce(
-      (acc, sale) => {
-        const date = dayjs(sale.createdAt).format("YYYY-MM-DD");
-        if (acc[date]) {
-          acc[date] += sale.total;
-        } else {
-          acc[date] = sale.total;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+  // const calculateSales = (sales: SaleInfo[]) => {
+  //   // Calculate total sales for each day
+  //   const totalSales = sales.reduce(
+  //     (acc, sale) => {
+  //       const date = dayjs(sale.createdAt).format("YYYY-MM-DD");
+  //       if (acc[date]) {
+  //         acc[date] += sale.total;
+  //       } else {
+  //         acc[date] = sale.total;
+  //       }
+  //       return acc;
+  //     },
+  //     {} as Record<string, number>,
+  //   );
 
-    // Convert to the required format
-    return {
-      labels: Object.keys(totalSales),
-      datasets: [
-        {
-          label: "Daily Sales Total",
-          data: Object.values(totalSales),
-          fill: true,
-          pointStyle: false,
-        },
-      ],
-    };
-  };
+  //   // Convert to the required format
+  //   return {
+  //     labels: Object.keys(totalSales),
+  //     datasets: [
+  //       {
+  //         label: "Daily Sales Total",
+  //         data: Object.values(totalSales),
+  //         fill: true,
+  //         pointStyle: false,
+  //       },
+  //     ],
+  //   };
+  // };
 
   return (
     <Show when={sales()}>
@@ -119,7 +119,7 @@ export default function SalesPage() {
                     variant="outline"
                     class="w-9 rounded-r-none bg-background"
                     onClick={() => {
-                      toast.promise(revalidate(getSalesByWarehouseId.keyFor(params.whid)), {
+                      toast.promise(revalidate(getSales.key), {
                         loading: "Refreshing sales...",
                         success: "Sales refreshed",
                         error: "Failed to refresh sales",
@@ -137,9 +137,9 @@ export default function SalesPage() {
               <div class="flex flex-col gap-4 w-full grow">
                 <div class="flex flex-col gap-2 w-full">
                   <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
-                    <div class="flex flex-col gap-2 w-full h-full p-4">
+                    {/* <div class="flex flex-col gap-2 w-full h-full p-4">
                       <LineChart data={calculateSales(salesList())} />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
                 <div class="flex flex-row items-center justify-between gap-4">

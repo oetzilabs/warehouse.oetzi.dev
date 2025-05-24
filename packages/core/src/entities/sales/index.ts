@@ -1,24 +1,28 @@
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, number, object, parse, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import { WarehouseLive, WarehouseService } from "../warehouses";
-import { WarehouseInvalidId } from "../warehouses/errors";
+import { OrganizationLive, OrganizationService } from "../organizations";
+import { OrganizationInvalidId } from "../organizations/errors";
 import {
   SaleInvalidId,
   SaleNotCreated,
   SaleNotDeleted,
   SaleNotFound,
   SaleNotUpdated,
-  SaleWarehouseNotFound,
+  SaleOrganizationNotFound,
 } from "./errors";
+
+dayjs.extend(isBetween);
 
 export class SalesService extends Effect.Service<SalesService>()("@warehouse/sales", {
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
-    const warehousesService = yield* _(WarehouseService);
+    const organizationsService = yield* _(OrganizationService);
     const db = yield* database.instance;
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_sales.findMany>[0]>;
 
@@ -30,15 +34,6 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           },
         },
         customer: true,
-        warehouse: {
-          with: {
-            addresses: {
-              with: {
-                address: true,
-              },
-            },
-          },
-        },
       };
 
       if (options) {
@@ -73,15 +68,6 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
                 },
               },
               customer: true,
-              warehouse: {
-                with: {
-                  addresses: {
-                    with: {
-                      address: true,
-                    },
-                  },
-                },
-              },
             },
           }),
         );
@@ -136,54 +122,79 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return sale.items.reduce((total, item) => total + item.quantity * item.price, 0);
       });
 
-    const findWithinRange = (warehouseId: string, start: Date, end: Date) =>
+    const findWithinRange = (orgId: string, start: Date, end: Date) =>
       Effect.gen(function* (_) {
-        const warehouse = yield* warehousesService.findById(warehouseId);
-        if (!warehouse) {
-          return yield* Effect.fail(new SaleWarehouseNotFound({ warehouseId }));
+        const org = yield* organizationsService.findById(orgId);
+        if (!org) {
+          return yield* Effect.fail(new SaleOrganizationNotFound({ orgId }));
         }
         const sales = yield* Effect.promise(() =>
-          db.query.TB_sales.findMany({
-            where: (fields, operations) =>
-              operations.and(
-                operations.eq(fields.warehouseId, warehouse.id),
-                operations.and(operations.gte(fields.createdAt, start), operations.lte(fields.createdAt, end)),
-              ),
-          }),
-        );
-        return sales;
-      });
-
-    const findByWarehouseId = (warehouseId: string) =>
-      Effect.gen(function* (_) {
-        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
-        if (!parsedWarehouseId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
-        }
-        const sales = yield* Effect.promise(() =>
-          db.query.TB_sales.findMany({
-            where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
+          db.query.TB_organizations_sales.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, org.id),
             with: {
-              items: {
+              sale: {
                 with: {
-                  product: true,
-                },
-              },
-              customer: true,
-              warehouse: {
-                with: {
-                  addresses: {
+                  items: {
                     with: {
-                      address: true,
+                      product: true,
                     },
                   },
+                  customer: true,
                 },
               },
             },
           }),
         );
-        return sales;
+        return sales.filter((s) => dayjs(s.sale.createdAt).isBetween(start, end));
       });
+
+    const findByOrganizationId = (orgId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
+        const sales = yield* Effect.promise(() =>
+          db.query.TB_organizations_sales.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+            with: {
+              sale: {
+                with: {
+                  items: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                  customer: true,
+                },
+              },
+            },
+          }),
+        );
+        return sales.map((s) => s.sale);
+      });
+
+    // const findByWarehouseId = (warehouseId: string) =>
+    //   Effect.gen(function* (_) {
+    //     const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
+    //     if (!parsedWarehouseId.success) {
+    //       return yield* Effect.fail(new OrganizationInvalidId({ id: warehouseId }));
+    //     }
+    //     const sales = yield* Effect.promise(() =>
+    //       db.query.TB_sales.findMany({
+    //         where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
+    //         with: {
+    //           items: {
+    //             with: {
+    //               product: true,
+    //             },
+    //           },
+    //           customer: true,
+    //         },
+    //       }),
+    //     );
+    //     return sales;
+    //   });
 
     return {
       create,
@@ -192,10 +203,10 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       remove,
       calculateTotal,
       findWithinRange,
-      findByWarehouseId,
+      findByOrganizationId,
     } as const;
   }),
-  dependencies: [DatabaseLive, WarehouseLive],
+  dependencies: [DatabaseLive, OrganizationLive],
 }) {}
 
 export const SalesLive = SalesService.Default;

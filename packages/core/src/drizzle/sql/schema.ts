@@ -52,7 +52,6 @@ export * from "./schemas/warehouses/warehouse_facility";
 export * from "./schemas/warehouses/warehouses_addresses";
 export * from "./schemas/warehouses/warehouse_types";
 export * from "./schemas/warehouses/warehouse_areas";
-export * from "./schemas/warehouses/warehouse_orders";
 export * from "./schemas/warehouses/warehouse_products";
 
 export * from "./schemas/storages/storages";
@@ -75,6 +74,8 @@ export * from "./schemas/organizations/organizations_storages";
 export * from "./schemas/organizations/organizations_documents";
 export * from "./schemas/organizations/organization_suppliers";
 export * from "./schemas/organizations/organization_customers";
+export * from "./schemas/organizations/organizations_orders";
+export * from "./schemas/organizations/organizations_sales";
 
 export * from "./schemas/websocket";
 

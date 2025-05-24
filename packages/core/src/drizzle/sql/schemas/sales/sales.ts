@@ -6,12 +6,14 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_customers } from "../customers/customers";
 import { commonTable } from "../entity";
 import { TB_orders } from "../orders/orders";
+import { TB_organizations } from "../organizations/organizations";
 import { TB_sale_items } from "../sales/sales_items";
 import { TB_users } from "../users/users";
 import { schema } from "../utils";
-import { TB_warehouses } from "../warehouses/warehouses";
 
 export const sale_status = schema.enum("sale_status", [
+  "created",
+  "draft",
   "pending",
   "confirmed",
   "processing",
@@ -26,12 +28,11 @@ export const TB_sales = commonTable(
     customerId: text("customer_id")
       .references(() => TB_customers.id)
       .notNull(),
-    warehouseId: text("warehouse_id")
-      .references(() => TB_warehouses.id)
+    organizationId: text("organization_id")
+      .references(() => TB_organizations.id)
       .notNull(),
-    status: sale_status("status").default("pending").notNull(),
+    status: sale_status("status").default("draft").notNull(),
     note: text("note"),
-    total: decimal("total", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
   },
   "sale",
 );
@@ -41,9 +42,9 @@ export const sales_relations = relations(TB_sales, ({ one, many }) => ({
     fields: [TB_sales.customerId],
     references: [TB_customers.id],
   }),
-  warehouse: one(TB_warehouses, {
-    fields: [TB_sales.warehouseId],
-    references: [TB_warehouses.id],
+  organization: one(TB_organizations, {
+    fields: [TB_sales.organizationId],
+    references: [TB_organizations.id],
   }),
   items: many(TB_sale_items),
   orders: many(TB_orders),

@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_orders } from "../orders/orders";
 import { TB_organization_customers } from "../organizations/organization_customers";
+import { TB_organizations_customerorders } from "../organizations/organizations_orders";
 import { TB_sales } from "../sales/sales";
 import { schema } from "../utils";
 
@@ -29,8 +30,8 @@ export const TB_customers = commonTable(
 
 export const customer_relations = relations(TB_customers, ({ many, one }) => ({
   sales: many(TB_sales),
-  orders: many(TB_orders),
   organizations: many(TB_organization_customers),
+  orgOrders: many(TB_organizations_customerorders),
 }));
 
 export type CustomerSelect = typeof TB_customers.$inferSelect;

@@ -75,6 +75,21 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     },
                   },
                 },
+                customerOrders: {
+                  with: {
+                    order: true,
+                  },
+                },
+                supplierOrders: {
+                  with: {
+                    order: true,
+                  },
+                },
+                sales: {
+                  with: {
+                    sale: true,
+                  },
+                },
                 customers: {
                   with: {
                     customer: {
@@ -86,7 +101,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                 product: true,
                               },
                             },
-                            warehouse: true,
                           },
                         },
                       },
@@ -130,23 +144,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             hashed_password: false,
                           },
                         },
-                        orders: {
-                          with: {
-                            order: true,
-                          },
-                        },
                         products: {
                           with: {
                             product: true,
-                          },
-                        },
-                        sales: {
-                          with: {
-                            items: {
-                              with: {
-                                product: true,
-                              },
-                            },
                           },
                         },
                         fcs: {
@@ -190,23 +190,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     hashed_password: false,
                   },
                 },
-                orders: {
-                  with: {
-                    order: true,
-                  },
-                },
                 products: {
                   with: {
                     product: true,
-                  },
-                },
-                sales: {
-                  with: {
-                    items: {
-                      with: {
-                        product: true,
-                      },
-                    },
                   },
                 },
                 fcs: {
@@ -270,7 +256,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                 product: true,
                               },
                             },
-                            warehouse: true,
                           },
                         },
                       },
@@ -314,23 +299,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             hashed_password: false,
                           },
                         },
-                        orders: {
-                          with: {
-                            order: true,
-                          },
-                        },
                         products: {
                           with: {
                             product: true,
-                          },
-                        },
-                        sales: {
-                          with: {
-                            items: {
-                              with: {
-                                product: true,
-                              },
-                            },
                           },
                         },
                         fcs: {
@@ -370,23 +341,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     hashed_password: false,
                   },
                 },
-                orders: {
-                  with: {
-                    order: true,
-                  },
-                },
                 products: {
                   with: {
                     product: true,
-                  },
-                },
-                sales: {
-                  with: {
-                    items: {
-                      with: {
-                        product: true,
-                      },
-                    },
                   },
                 },
                 fcs: {
@@ -522,7 +479,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                       product: true,
                                     },
                                   },
-                                  warehouse: true,
                                 },
                               },
                             },
@@ -566,23 +522,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   hashed_password: false,
                                 },
                               },
-                              orders: {
-                                with: {
-                                  order: true,
-                                },
-                              },
                               products: {
                                 with: {
                                   product: true,
-                                },
-                              },
-                              sales: {
-                                with: {
-                                  items: {
-                                    with: {
-                                      product: true,
-                                    },
-                                  },
                                 },
                               },
                               fcs: {
@@ -626,23 +568,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           hashed_password: false,
                         },
                       },
-                      orders: {
-                        with: {
-                          order: true,
-                        },
-                      },
                       products: {
                         with: {
                           product: true,
-                        },
-                      },
-                      sales: {
-                        with: {
-                          items: {
-                            with: {
-                              product: true,
-                            },
-                          },
                         },
                       },
                       fcs: {
@@ -706,6 +634,21 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           },
                         },
                       },
+                      customerOrders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      supplierOrders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      sales: {
+                        with: {
+                          sale: true,
+                        },
+                      },
                       customers: {
                         with: {
                           customer: {
@@ -717,7 +660,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                       product: true,
                                     },
                                   },
-                                  warehouse: true,
                                 },
                               },
                             },
@@ -761,23 +703,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   hashed_password: false,
                                 },
                               },
-                              orders: {
-                                with: {
-                                  order: true,
-                                },
-                              },
                               products: {
                                 with: {
                                   product: true,
-                                },
-                              },
-                              sales: {
-                                with: {
-                                  items: {
-                                    with: {
-                                      product: true,
-                                    },
-                                  },
                                 },
                               },
                               fcs: {
@@ -817,23 +745,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           hashed_password: false,
                         },
                       },
-                      orders: {
-                        with: {
-                          order: true,
-                        },
-                      },
                       products: {
                         with: {
                           product: true,
-                        },
-                      },
-                      sales: {
-                        with: {
-                          items: {
-                            with: {
-                              product: true,
-                            },
-                          },
                         },
                       },
                       fcs: {
@@ -937,6 +851,21 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           },
                         },
                       },
+                      customerOrders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      supplierOrders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      sales: {
+                        with: {
+                          sale: true,
+                        },
+                      },
                       customers: {
                         with: {
                           customer: {
@@ -948,7 +877,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                       product: true,
                                     },
                                   },
-                                  warehouse: true,
                                 },
                               },
                             },
@@ -992,23 +920,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   hashed_password: false,
                                 },
                               },
-                              orders: {
-                                with: {
-                                  order: true,
-                                },
-                              },
                               products: {
                                 with: {
                                   product: true,
-                                },
-                              },
-                              sales: {
-                                with: {
-                                  items: {
-                                    with: {
-                                      product: true,
-                                    },
-                                  },
                                 },
                               },
                               fcs: {
@@ -1052,23 +966,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           hashed_password: false,
                         },
                       },
-                      orders: {
-                        with: {
-                          order: true,
-                        },
-                      },
                       products: {
                         with: {
                           product: true,
-                        },
-                      },
-                      sales: {
-                        with: {
-                          items: {
-                            with: {
-                              product: true,
-                            },
-                          },
                         },
                       },
                       fcs: {
@@ -1132,6 +1032,21 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           },
                         },
                       },
+                      customerOrders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      supplierOrders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      sales: {
+                        with: {
+                          sale: true,
+                        },
+                      },
                       customers: {
                         with: {
                           customer: {
@@ -1143,7 +1058,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                       product: true,
                                     },
                                   },
-                                  warehouse: true,
                                 },
                               },
                             },
@@ -1187,23 +1101,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   hashed_password: false,
                                 },
                               },
-                              orders: {
-                                with: {
-                                  order: true,
-                                },
-                              },
                               products: {
                                 with: {
                                   product: true,
-                                },
-                              },
-                              sales: {
-                                with: {
-                                  items: {
-                                    with: {
-                                      product: true,
-                                    },
-                                  },
                                 },
                               },
                               fcs: {
@@ -1243,23 +1143,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           hashed_password: false,
                         },
                       },
-                      orders: {
-                        with: {
-                          order: true,
-                        },
-                      },
                       products: {
                         with: {
                           product: true,
-                        },
-                      },
-                      sales: {
-                        with: {
-                          items: {
-                            with: {
-                              product: true,
-                            },
-                          },
                         },
                       },
                       fcs: {

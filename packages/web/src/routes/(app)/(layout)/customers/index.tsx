@@ -17,9 +17,8 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: () => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
-    const customers = getCustomers();
-    return { user, customers };
+    getAuthenticatedUser();
+    getCustomers();
   },
 } as RouteDefinition;
 
