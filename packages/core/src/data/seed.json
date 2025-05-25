@@ -148,6 +148,8 @@
       "code": "LOCKER-01"
     }
   ],
+  "customers": [],
+  "suppliers": [],
   "users": [
     {
       "id": "user_fqvfli9fqv5u9s14l1zcec0h",
@@ -320,6 +322,8 @@
               ]
             }
           ],
+          "suppliers": [],
+          "customers": [],
           "products": [
             "prod_uzujt3nrndmn90yyslc61wqv",
             "prod_rljvumttoz3f2v122kw7bf4x",

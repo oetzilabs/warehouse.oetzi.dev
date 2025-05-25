@@ -6,6 +6,7 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   ProductCreateWithDateTransformSchema,
   TB_brands,
+  TB_customers,
   TB_devices,
   TB_document_storage_offers,
   TB_organization_users,
@@ -17,6 +18,7 @@ import {
   TB_storage_spaces,
   TB_storage_types,
   TB_storages,
+  TB_suppliers,
   TB_users,
   TB_users_warehouses,
   TB_warehouse_areas,
@@ -139,6 +141,45 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .onConflictDoUpdate({
                 target: TB_products.id,
                 set: pData.output,
+              })
+              .returning(),
+          );
+        }
+
+        for (const brand of seedData.output.brands) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_brands)
+              .values(brand)
+              .onConflictDoUpdate({
+                target: TB_brands.id,
+                set: brand,
+              })
+              .returning(),
+          );
+        }
+
+        for (const supplier of seedData.output.suppliers) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_suppliers)
+              .values(supplier)
+              .onConflictDoUpdate({
+                target: TB_suppliers.id,
+                set: supplier,
+              })
+              .returning(),
+          );
+        }
+
+        for (const customer of seedData.output.customers) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_customers)
+              .values(customer)
+              .onConflictDoUpdate({
+                target: TB_customers.id,
+                set: customer,
               })
               .returning(),
           );

@@ -1,5 +1,11 @@
 import { array, boolean, date, literal, nullable, number, object, omit, string, union } from "valibot";
-import { FacilityCreateSchema, WarehouseAreaCreateSchema, WarehouseTypeCreateSchema } from "../../drizzle/sql/schema";
+import {
+  CustomerCreateSchema,
+  FacilityCreateSchema,
+  SupplierCreateSchema,
+  WarehouseAreaCreateSchema,
+  WarehouseTypeCreateSchema,
+} from "../../drizzle/sql/schema";
 import { BrandCreateSchema } from "../../drizzle/sql/schemas/brands/brands";
 import { DeviceCreateSchema } from "../../drizzle/sql/schemas/devices/devices";
 import { DocumentStorageOfferCreateSchema } from "../../drizzle/sql/schemas/documents/storage_offers";
@@ -87,6 +93,8 @@ export const OrganizationSchema = object({
   slug: string(),
   warehouses: array(WarehouseSchema),
   products: array(string()), // references to product IDs
+  suppliers: array(string()), // references to supplier IDs
+  customers: array(string()), // references to customer IDs
 });
 
 export const UserSchema = object({
@@ -121,6 +129,18 @@ export const BrandSchema = object({
   id: prefixed_cuid2,
 });
 
+export const SupplierSchema = object({
+  ...SupplierCreateSchema.entries,
+  id: prefixed_cuid2,
+  products: array(string()), // references to product IDs
+});
+
+export const CustomerSchema = object({
+  ...CustomerCreateSchema.entries,
+  id: prefixed_cuid2,
+  products: array(string()), // references to product IDs
+});
+
 export const SeedDataSchema = object({
   users: array(UserSchema),
   products: array(ProductSchema),
@@ -130,4 +150,6 @@ export const SeedDataSchema = object({
   document_storage_offers: array(DocumentStorageOfferSchema),
   storage_types: array(StorageTypeSchema),
   brands: array(BrandSchema),
+  suppliers: array(SupplierSchema),
+  customers: array(CustomerSchema),
 });
