@@ -21,6 +21,7 @@ import {
   TB_users_warehouses,
   TB_warehouse_areas,
   TB_warehouse_facilities,
+  TB_warehouse_products,
   TB_warehouse_types,
   TB_warehouses,
 } from "../../drizzle/sql/schema";
@@ -61,6 +62,19 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               message: seedData.issues.map((i) => `[${i.path?.map((x) => x.key).join(".")}] ${i.message}`).join(", "),
               service: "parsing",
             }),
+          );
+        }
+
+        for (const storageType of seedData.output.storage_types) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_storage_types)
+              .values(storageType)
+              .onConflictDoUpdate({
+                target: TB_storage_types.id,
+                set: storageType,
+              })
+              .returning(),
           );
         }
 
@@ -269,6 +283,17 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                     }
                   }
                 }
+              }
+
+              for (const productId of products) {
+                // TODO: Add product to warehouse
+                yield* Effect.promise(() =>
+                  db
+                    .insert(TB_warehouse_products)
+                    .values({ warehouseId: warehouse.id, productId: productId })
+                    .onConflictDoNothing()
+                    .returning(),
+                );
               }
             }
 

@@ -8,6 +8,7 @@ import { PaymentMethodCreateSchema } from "../../drizzle/sql/schemas/payments/pa
 import { ProductLabelCreateSchema } from "../../drizzle/sql/schemas/products/product_labels";
 import { ProductCreateWithDateTransformSchema } from "../../drizzle/sql/schemas/products/products";
 import { StorageInventoryCreateSchema } from "../../drizzle/sql/schemas/storages/storage_space";
+import { StorageTypeCreateSchema } from "../../drizzle/sql/schemas/storages/storage_types";
 import { StorageCreateSchema } from "../../drizzle/sql/schemas/storages/storages";
 import { UserCreateSchema } from "../../drizzle/sql/schemas/users/users";
 import { WarehouseCreateSchema } from "../../drizzle/sql/schemas/warehouses/warehouses";
@@ -110,6 +111,16 @@ export const WarehouseTypeSchema = object({
   id: prefixed_cuid2,
 });
 
+export const StorageTypeSchema = object({
+  ...StorageTypeCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const BrandSchema = object({
+  ...BrandCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
 export const SeedDataSchema = object({
   users: array(UserSchema),
   products: array(ProductSchema),
@@ -117,4 +128,6 @@ export const SeedDataSchema = object({
   payment_methods: array(PaymentMethodSchema),
   warehouse_types: array(WarehouseTypeSchema),
   document_storage_offers: array(DocumentStorageOfferSchema),
+  storage_types: array(StorageTypeSchema),
+  brands: array(BrandSchema),
 });
