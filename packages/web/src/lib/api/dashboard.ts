@@ -68,6 +68,8 @@ export const getDashboardData = query(async () => {
       const popularProductsChartData = yield* orderService.getPopularProductsChartData(organization.id);
       const lastSoldProductsChartData = yield* orderService.getLastSoldProductsChartData(organization.id);
 
+      const notifications = [] as { message: string }[];
+
       return {
         orders: {
           customers: {
@@ -85,6 +87,7 @@ export const getDashboardData = query(async () => {
         lastSoldProductsChartData,
         mostPopularProductsFromOrders,
         popularProductsChartData,
+        notifications,
       };
     }).pipe(Effect.provide(OrganizationLive), Effect.provide(OrderLive)),
   );

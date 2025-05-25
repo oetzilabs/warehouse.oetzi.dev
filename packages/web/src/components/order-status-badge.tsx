@@ -1,10 +1,11 @@
-import { Component, ParentProps } from "solid-js";
+import { Component, ParentProps, splitProps } from "solid-js";
 import { cn } from "../lib/utils";
 
 type OrderStatusType = "pending" | "processing" | "completed" | "cancelled";
 
 type OrderStatusBadgeProps = {
   status: OrderStatusType;
+  class?: string;
 };
 
 const statusColorMap: Record<OrderStatusType, { text: string; bg: string; bg2: string; ring: string }> = {
@@ -35,12 +36,14 @@ const statusColorMap: Record<OrderStatusType, { text: string; bg: string; bg2: s
 };
 
 export const OrderStatusBadge = (props: ParentProps<OrderStatusBadgeProps>) => {
+  const [local, others] = splitProps(props, ["class"]);
   return (
     <span
       class={cn(
         "flex items-center justify-center rounded-full p-1 ring-1 ring-inset",
         statusColorMap[props.status].bg,
         statusColorMap[props.status].ring,
+        local.class,
       )}
     >
       <div class={cn("size-[6px] rounded-full", statusColorMap[props.status].bg2)}></div>
