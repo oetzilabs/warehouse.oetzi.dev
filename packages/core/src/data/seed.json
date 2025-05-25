@@ -359,6 +359,7 @@
                               "name": "asdf",
                               "barcode": "asdf",
                               "dimensions": null,
+                              "labels": [],
                               "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
                             },
                             {
@@ -366,6 +367,7 @@
                               "name": "qwerty",
                               "barcode": "qwerty",
                               "dimensions": null,
+                              "labels": [],
                               "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
                             },
                             {
@@ -373,6 +375,7 @@
                               "name": "hjkl",
                               "barcode": "hjkl",
                               "dimensions": null,
+                              "labels": [],
                               "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
                             },
                             {
@@ -380,6 +383,7 @@
                               "name": "uiop",
                               "barcode": "uiop",
                               "dimensions": null,
+                              "labels": [],
                               "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
                             },
                             {
@@ -387,19 +391,24 @@
                               "name": "zxcv",
                               "barcode": "zxcv",
                               "dimensions": null,
+                              "labels": [],
                               "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
                             },
                             {
                               "id": "storagespace_azxh00m2eq13nc62mipgpah2",
                               "name": "dfgh",
                               "barcode": "dfgh",
-                              "dimensions": null
+                              "dimensions": null,
+                              "labels": [],
+                              "products": []
                             },
                             {
                               "id": "storagespace_zwz1gmr4neb3pqusfwbt02oa",
                               "name": "tyui",
                               "barcode": "tyui",
-                              "dimensions": null
+                              "dimensions": null,
+                              "labels": [],
+                              "products": []
                             }
                           ]
                         },
@@ -423,19 +432,25 @@
                               "id": "storagespace_udlsmd605kn8rw6l411m9lyq",
                               "name": "123123",
                               "barcode": "123123",
-                              "dimensions": null
+                              "dimensions": null,
+                              "labels": [],
+                              "products": []
                             },
                             {
                               "id": "storagespace_i2f47adado0smzbl3qd27ald",
                               "name": "a123a",
                               "barcode": "a123a",
-                              "dimensions": null
+                              "dimensions": null,
+                              "labels": [],
+                              "products": []
                             },
                             {
                               "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
                               "name": "testtest",
                               "barcode": "testtest",
-                              "dimensions": null
+                              "dimensions": null,
+                              "labels": [],
+                              "products": []
                             }
                           ]
                         }

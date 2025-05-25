@@ -16,7 +16,9 @@ import {
   TB_product_labels,
   TB_products,
   TB_products_to_labels,
+  TB_storage_products,
   TB_storage_spaces,
+  TB_storage_spaces_to_labels,
   TB_storage_types,
   TB_storages,
   TB_suppliers,
@@ -331,6 +333,26 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                           })
                           .returning(),
                       );
+
+                      for (const labelId of space.labels) {
+                        yield* Effect.promise(() =>
+                          db
+                            .insert(TB_storage_spaces_to_labels)
+                            .values({ labelId: labelId, storageSpaceId: space.id })
+                            .onConflictDoNothing()
+                            .returning(),
+                        );
+                      }
+
+                      for (const productId of space.products) {
+                        yield* Effect.promise(() =>
+                          db
+                            .insert(TB_storage_products)
+                            .values({ productId: productId, storageId: storage.id })
+                            .onConflictDoNothing()
+                            .returning(),
+                        );
+                      }
                     }
                   }
                 }

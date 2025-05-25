@@ -53,6 +53,8 @@ export const WeightSchema = object({
 export const StorageSpaceSchema = object({
   ...omit(StorageInventoryCreateSchema, ["storageId"]).entries,
   id: prefixed_cuid2,
+  labels: array(string()), // references to label IDs
+  products: array(string()), // references to product IDs
 });
 
 export const StorageSchema = object({
