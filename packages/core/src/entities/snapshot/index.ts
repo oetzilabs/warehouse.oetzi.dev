@@ -145,10 +145,10 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                                           with: {
                                             strs: {
                                               with: {
+                                                products: true,
                                                 invs: {
                                                   with: {
                                                     labels: true,
-                                                    storage: true,
                                                   },
                                                 },
                                               },
@@ -186,7 +186,11 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                             ...ar,
                             storages: ar.strs.map((str) => ({
                               ...str,
-                              spaces: str.invs,
+                              spaces: str.invs.map((i) => ({
+                                ...i,
+                                labels: i.labels.map((l) => l.labelId),
+                                products: str.products.map((p) => p.productId),
+                              })),
                             })),
                           })),
                         })),
