@@ -10,6 +10,7 @@ import { TB_catalog_products } from "../catalogs/catalog_products";
 import { commonTable } from "../entity";
 import { TB_organizations_products } from "../organizations/organizations_products";
 import { TB_sale_items } from "../sales/sales_items";
+import { TB_storage_products } from "../storages/storage_products";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
 import { TB_products_to_labels } from "./product_labels";
@@ -99,6 +100,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
   certs: many(TB_products_to_certifications),
   stco: many(TB_products_to_storage_conditions),
   catalogs: many(TB_catalog_products),
+  storage: many(TB_storage_products),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

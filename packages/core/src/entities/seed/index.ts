@@ -15,6 +15,7 @@ import {
   TB_payment_methods,
   TB_product_labels,
   TB_products,
+  TB_products_to_labels,
   TB_storage_spaces,
   TB_storage_types,
   TB_storages,
@@ -144,6 +145,15 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               })
               .returning(),
           );
+          for (const labelId of labels) {
+            yield* Effect.promise(() =>
+              db
+                .insert(TB_products_to_labels)
+                .values({ labelId: labelId, productId: pData.output.id })
+                .onConflictDoNothing()
+                .returning(),
+            );
+          }
         }
 
         for (const brand of seedData.output.brands) {

@@ -60,6 +60,7 @@ export * from "./schemas/storages/storage_space";
 export * from "./schemas/storages/storage_inventory_to_labels";
 export * from "./schemas/storages/storage_labels";
 export * from "./schemas/storages/storage_conditions";
+export * from "./schemas/storages/storage_products";
 
 export * from "./schemas/payments/payment_methods";
 export * from "./schemas/payments/payment_history";
