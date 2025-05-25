@@ -63,13 +63,28 @@ export const getDashboardData = query(async () => {
         organization.id,
       );
 
+      const customerOrdersChartData = yield* orderService.getCustomerOrdersChartData(organization.id);
+      const supplierOrdersChartData = yield* orderService.getSupplierOrdersChartData(organization.id);
+      const popularProductsChartData = yield* orderService.getPopularProductsChartData(organization.id);
+      const lastSoldProductsChartData = yield* orderService.getLastSoldProductsChartData(organization.id);
+
       return {
         orders: {
-          customers: { values: customerOrders, deltaPercentageLastWeek: customerOrdersPercentageLastWeek },
-          suppliers: { values: supplierOrders, deltaPercentageLastWeek: supplierOrdersPercentageLastWeek },
+          customers: {
+            values: customerOrders,
+            deltaPercentageLastWeek: customerOrdersPercentageLastWeek,
+            chartData: customerOrdersChartData,
+          },
+          suppliers: {
+            values: supplierOrders,
+            deltaPercentageLastWeek: supplierOrdersPercentageLastWeek,
+            chartData: supplierOrdersChartData,
+          },
         },
         lastUsedProductsFromCustomers,
+        lastSoldProductsChartData,
         mostPopularProductsFromOrders,
+        popularProductsChartData,
       };
     }).pipe(Effect.provide(OrganizationLive), Effect.provide(OrderLive)),
   );

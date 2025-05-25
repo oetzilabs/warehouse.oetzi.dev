@@ -1,16 +1,9 @@
 import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { array, InferInput, object, parse, safeParse } from "valibot";
-import products from "../../data/products.json";
+import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import {
-  ProductCreateSchema,
-  ProductCreateWithDateTransformSchema,
-  ProductUpdateSchema,
-  TB_products,
-  TB_products_to_labels,
-} from "../../drizzle/sql/schema";
+import { ProductCreateSchema, ProductUpdateSchema, TB_products, TB_products_to_labels } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
@@ -18,7 +11,6 @@ import { OrganizationInvalidId } from "../organizations/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
-  ProductInvalidJson,
   ProductLabelAlreadyExists,
   ProductLabelInvalidId,
   ProductLabelNotAdded,
@@ -404,42 +396,6 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return removed;
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbProducts = yield* Effect.promise(() => db.query.TB_products.findMany());
-
-        const productsToSeedValid = safeParse(array(ProductCreateWithDateTransformSchema), products);
-        if (!productsToSeedValid.success) {
-          return yield* Effect.fail(new ProductInvalidJson({ json: products, issues: productsToSeedValid.issues }));
-        }
-
-        const productsToSeed = productsToSeedValid.output;
-
-        const existing = dbProducts.map((v) => v.id);
-        const toCreate = productsToSeed.filter((t) => !existing.includes(t.id));
-
-        if (toCreate.length > 0) {
-          const created = yield* Effect.promise(() => db.insert(TB_products).values(toCreate).returning());
-          yield* Effect.log("Created products", created);
-        }
-
-        const toUpdate = productsToSeed.filter((t) => existing.includes(t.id));
-        if (toUpdate.length > 0) {
-          for (const product of toUpdate) {
-            const updated = yield* Effect.promise(() =>
-              db
-                .update(TB_products)
-                .set({ ...product, updatedAt: new Date() })
-                .where(eq(TB_products.id, product.id))
-                .returning(),
-            );
-            yield* Effect.log("Updated product", updated);
-          }
-        }
-
-        return productsToSeed;
-      });
-
     const printProductSheet = (
       printer: DeviceInfo,
       product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
@@ -487,7 +443,6 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       findByWarehouseId,
       addLabel,
       removeLabel,
-      seed,
       printProductSheet,
       generatePDF,
     } as const;

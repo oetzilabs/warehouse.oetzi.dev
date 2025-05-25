@@ -1,9 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { array, object, parse, safeParse, type InferInput } from "valibot";
-import labels from "../../data/product_labels.json";
+import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { ProductLabelCreateSchema, ProductLabelUpdateSchema, TB_product_labels } from "../../drizzle/sql/schema";
+import { ProductLabelUpdateSchema, TB_product_labels } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
   ProductLabelInvalidId,
@@ -111,50 +110,12 @@ export class ProductLabelsService extends Effect.Service<ProductLabelsService>()
         );
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbLabels = yield* findAllWithoutProducts();
-
-        const lbs = parse(
-          array(
-            object({
-              ...ProductLabelCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          labels,
-        );
-        const existing = dbLabels.map((u) => u.id);
-
-        const toCreate = lbs.filter((t) => !existing.includes(t.id));
-
-        if (toCreate.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_product_labels).values(toCreate).returning());
-          yield* Effect.log("Created product labels", toCreate);
-        }
-
-        const toUpdate = lbs.filter((t) => existing.includes(t.id));
-        if (toUpdate.length > 0) {
-          for (const label of toUpdate) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_product_labels)
-                .set({ ...label, updatedAt: new Date() })
-                .where(eq(TB_product_labels.id, label.id))
-                .returning(),
-            );
-          }
-        }
-
-        return lbs;
-      });
-
     const findAllWithoutProducts = () =>
       Effect.gen(function* (_) {
         return yield* Effect.promise(() => db.query.TB_product_labels.findMany());
       });
 
-    return { create, findById, update, remove, findAll, findAllWithoutProducts, seed } as const;
+    return { create, findById, update, remove, findAll, findAllWithoutProducts } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

@@ -1,8 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { array, object, parse, safeParse, string, type InferInput } from "valibot";
-import org_products from "../../data/organization_products.json";
-import organizations from "../../data/organizations.json";
+import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   OrganizationCreateSchema,
@@ -10,7 +8,6 @@ import {
   TB_organization_users,
   TB_organizations,
   TB_organizations_customerorders,
-  TB_organizations_products,
   TB_organizations_supplierorders,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
@@ -595,67 +592,6 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbOrgs = yield* Effect.promise(() => db.query.TB_organizations.findMany());
-
-        const os = parse(
-          array(
-            object({
-              ...OrganizationCreateSchema.entries,
-              owner_id: prefixed_cuid2,
-              id: prefixed_cuid2,
-              name: string(),
-              slug: string(),
-            }),
-          ),
-          organizations,
-        );
-
-        const existing = dbOrgs.map((u) => u.id);
-
-        const toCreate = os.filter((t) => !existing.includes(t.id));
-
-        if (toCreate.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_organizations).values(toCreate).returning());
-          yield* Effect.log("Created organizations", toCreate);
-        }
-
-        const toUpdate = os.filter((t) => existing.includes(t.id));
-        if (toUpdate.length > 0) {
-          for (const organization of toUpdate) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_organizations)
-                .set({ ...organization, updatedAt: new Date() })
-                .where(eq(TB_organizations.id, organization.id))
-                .returning(),
-            );
-          }
-        }
-
-        // products relations
-        const orgProducts = yield* Effect.promise(() => db.query.TB_organizations_products.findMany());
-
-        const existingOrgProductsIds = orgProducts.map((p) => p.organizationId);
-
-        const productsFromJson = parse(
-          array(
-            object({
-              organizationId: prefixed_cuid2,
-              productId: prefixed_cuid2,
-            }),
-          ),
-          org_products,
-        );
-        const toCreateOrgProducts = productsFromJson.filter((t) => !existingOrgProductsIds.includes(t.organizationId));
-        if (toCreateOrgProducts.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_organizations_products).values(toCreateOrgProducts).returning());
-        }
-
-        return os;
-      });
-
     const addCustomerOrder = (organizationId: string, orderId: string, customerId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
@@ -783,7 +719,6 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       addUser,
       removeUser,
       users,
-      seed,
       addCustomerOrder,
       removeCustomerOrder,
       addSupplierOrder,

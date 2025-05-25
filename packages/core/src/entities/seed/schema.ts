@@ -1,0 +1,120 @@
+import { array, boolean, date, literal, nullable, number, object, omit, string, union } from "valibot";
+import { FacilityCreateSchema, WarehouseAreaCreateSchema, WarehouseTypeCreateSchema } from "../../drizzle/sql/schema";
+import { BrandCreateSchema } from "../../drizzle/sql/schemas/brands/brands";
+import { DeviceCreateSchema } from "../../drizzle/sql/schemas/devices/devices";
+import { DocumentStorageOfferCreateSchema } from "../../drizzle/sql/schemas/documents/storage_offers";
+import { OrganizationCreateSchema } from "../../drizzle/sql/schemas/organizations/organizations";
+import { PaymentMethodCreateSchema } from "../../drizzle/sql/schemas/payments/payment_methods";
+import { ProductLabelCreateSchema } from "../../drizzle/sql/schemas/products/product_labels";
+import { ProductCreateWithDateTransformSchema } from "../../drizzle/sql/schemas/products/products";
+import { StorageInventoryCreateSchema } from "../../drizzle/sql/schemas/storages/storage_space";
+import { StorageCreateSchema } from "../../drizzle/sql/schemas/storages/storages";
+import { UserCreateSchema } from "../../drizzle/sql/schemas/users/users";
+import { WarehouseCreateSchema } from "../../drizzle/sql/schemas/warehouses/warehouses";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+
+export const DimensionsSchema = object({
+  width: number(),
+  height: number(),
+  length: number(),
+});
+
+export const BoundingBoxSchema = object({
+  x: number(),
+  y: number(),
+  width: number(),
+  height: number(),
+});
+
+export const StorageBoundingBoxSchema = object({
+  x: number(),
+  y: number(),
+  width: number(),
+  length: number(),
+  height: number(),
+});
+
+export const WeightSchema = object({
+  value: number(),
+  unit: string(),
+});
+
+export const StorageSpaceSchema = object({
+  ...omit(StorageInventoryCreateSchema, ["storageId"]).entries,
+  id: prefixed_cuid2,
+});
+
+export const StorageSchema = object({
+  ...omit(StorageCreateSchema, ["warehouseAreaId"]).entries,
+  id: prefixed_cuid2,
+  spaces: array(StorageSpaceSchema),
+});
+
+export const WarehouseAreaSchema = object({
+  ...omit(WarehouseAreaCreateSchema, ["warehouse_facility_id"]).entries,
+  id: prefixed_cuid2,
+  storages: array(StorageSchema),
+});
+
+export const FacilitySchema = object({
+  ...omit(FacilityCreateSchema, ["warehouse_id", "ownerId"]).entries,
+  id: prefixed_cuid2,
+  areas: array(WarehouseAreaSchema),
+});
+
+export const ProductLabelSchema = object({
+  ...ProductLabelCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const ProductSchema = object({
+  ...ProductCreateWithDateTransformSchema.entries,
+  id: prefixed_cuid2,
+  labels: array(string()), // references to label IDs
+});
+
+export const WarehouseSchema = object({
+  ...WarehouseCreateSchema.entries,
+  id: prefixed_cuid2,
+  facilities: array(FacilitySchema),
+  products: array(string()), // references to product IDs
+});
+
+export const OrganizationSchema = object({
+  ...OrganizationCreateSchema.entries,
+  id: prefixed_cuid2,
+  slug: string(),
+  warehouses: array(WarehouseSchema),
+  products: array(string()), // references to product IDs
+});
+
+export const UserSchema = object({
+  ...omit(UserCreateSchema, ["password"]).entries,
+  id: prefixed_cuid2,
+  hashed_password: string(),
+  organizations: array(OrganizationSchema),
+});
+
+export const PaymentMethodSchema = object({
+  ...PaymentMethodCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const DocumentStorageOfferSchema = object({
+  ...DocumentStorageOfferCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const WarehouseTypeSchema = object({
+  ...WarehouseTypeCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const SeedDataSchema = object({
+  users: array(UserSchema),
+  products: array(ProductSchema),
+  labels: array(ProductLabelSchema),
+  payment_methods: array(PaymentMethodSchema),
+  warehouse_types: array(WarehouseTypeSchema),
+  document_storage_offers: array(DocumentStorageOfferSchema),
+});

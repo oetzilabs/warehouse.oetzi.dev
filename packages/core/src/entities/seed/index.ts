@@ -1,0 +1,298 @@
+import { eq } from "drizzle-orm";
+import { Effect } from "effect";
+import { safeParse } from "valibot";
+import data from "../../data/seed.json";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
+import {
+  ProductCreateWithDateTransformSchema,
+  TB_brands,
+  TB_devices,
+  TB_document_storage_offers,
+  TB_organization_users,
+  TB_organizations,
+  TB_organizations_products,
+  TB_payment_methods,
+  TB_product_labels,
+  TB_products,
+  TB_storage_spaces,
+  TB_storage_types,
+  TB_storages,
+  TB_users,
+  TB_users_warehouses,
+  TB_warehouse_areas,
+  TB_warehouse_facilities,
+  TB_warehouse_types,
+  TB_warehouses,
+} from "../../drizzle/sql/schema";
+import { SeedingFailed } from "./errors";
+import { SeedDataSchema } from "./schema";
+
+export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed", {
+  effect: Effect.gen(function* (_) {
+    const database = yield* _(DatabaseService);
+    const db = yield* database.instance;
+
+    // const generateRandomLetters = (length: number): string => {
+    //   let result = "";
+    //   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    //   const charactersLength = characters.length;
+    //   for (let i = 0; i < length; i++) {
+    //     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    //   }
+    //   return result;
+    // };
+
+    // const generateSlug = (name: string) => {
+    //   const slug = name
+    //     .toLowerCase()
+    //     .replace(/\s+/g, "-")
+    //     .replace(/[^\w-]+/g, "")
+    //     .replace(/-+/g, "-");
+
+    //   return `${slug}-${generateRandomLetters(6)}`;
+    // };
+
+    const seed = () =>
+      Effect.gen(function* (_) {
+        const seedData = safeParse(SeedDataSchema, data);
+        if (!seedData.success) {
+          return yield* Effect.fail(
+            new SeedingFailed({
+              message: seedData.issues.map((i) => `[${i.path?.map((x) => x.key).join(".")}] ${i.message}`).join(", "),
+              service: "parsing",
+            }),
+          );
+        }
+
+        // Seed warehouse types first since warehouses depend on them
+        for (const warehouseType of seedData.output.warehouse_types) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_warehouse_types)
+              .values(warehouseType)
+              .onConflictDoUpdate({
+                target: TB_warehouse_types.id,
+                set: warehouseType,
+              })
+              .returning(),
+          );
+        }
+
+        // Seed payment methods first since products depend on them
+        for (const paymentMethod of seedData.output.payment_methods) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_payment_methods)
+              .values(paymentMethod)
+              .onConflictDoUpdate({
+                target: TB_payment_methods.id,
+                set: paymentMethod,
+              })
+              .returning(),
+          );
+        }
+
+        // Seed labels first since products depend on them
+        for (const label of seedData.output.labels) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_product_labels)
+              .values(label)
+              .onConflictDoUpdate({
+                target: TB_product_labels.id,
+                set: label,
+              })
+              .returning(),
+          );
+        }
+
+        // Seed products
+        for (const product of seedData.output.products) {
+          const { labels, ...productData } = product;
+          const pData = safeParse(ProductCreateWithDateTransformSchema, productData);
+          if (!pData.success) {
+            return yield* Effect.fail(
+              new SeedingFailed({
+                message: pData.issues.map((i) => i.message).join(", "),
+                service: "products",
+              }),
+            );
+          }
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_products)
+              .values(pData.output)
+              .onConflictDoUpdate({
+                target: TB_products.id,
+                set: pData.output,
+              })
+              .returning(),
+          );
+        }
+
+        // Seed storage offers
+        for (const documentStorageOffer of seedData.output.document_storage_offers) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_document_storage_offers)
+              .values(documentStorageOffer)
+              .onConflictDoUpdate({
+                target: TB_document_storage_offers.id,
+                set: documentStorageOffer,
+              })
+              .returning(),
+          );
+        }
+
+        // Seed users and their nested data
+        for (const user of seedData.output.users) {
+          const { organizations, ...userData } = user;
+
+          // Insert user
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_users)
+              .values(userData)
+              .onConflictDoUpdate({
+                target: TB_users.id,
+                set: userData,
+              })
+              .returning(),
+          );
+
+          // Process organizations
+          for (const org of organizations) {
+            const { warehouses, products, ...orgData } = org;
+
+            // Insert organization
+            const [orgCreated] = yield* Effect.promise(() =>
+              db
+                .insert(TB_organizations)
+                .values({ ...orgData, owner_id: user.id })
+                .onConflictDoUpdate({
+                  target: TB_organizations.id,
+                  set: orgData,
+                })
+                .returning(),
+            );
+            yield* Effect.promise(() =>
+              db
+                .insert(TB_organization_users)
+                .values({ organization_id: org.id, user_id: user.id })
+                .onConflictDoNothing()
+                .returning(),
+            );
+
+            // Process warehouses
+            for (const warehouse of warehouses) {
+              const { facilities, products, ...warehouseData } = warehouse;
+
+              // Insert warehouse
+              const [created] = yield* Effect.promise(() =>
+                db
+                  .insert(TB_warehouses)
+                  .values({ ...warehouseData, ownerId: user.id })
+                  .onConflictDoUpdate({
+                    target: TB_warehouses.id,
+                    set: warehouseData,
+                  })
+                  .returning(),
+              );
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_users_warehouses)
+                  .values({ userId: user.id, warehouseId: warehouse.id })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+
+              // Process facilities
+              for (const facility of facilities) {
+                const { areas, ...facilityData } = facility;
+
+                // Insert facility
+                yield* Effect.promise(() =>
+                  db
+                    .insert(TB_warehouse_facilities)
+                    .values({ ...facilityData, ownerId: user.id, warehouse_id: warehouse.id })
+                    .onConflictDoUpdate({
+                      target: TB_warehouse_facilities.id,
+                      set: facilityData,
+                    })
+                    .returning(),
+                );
+
+                // Process areas
+                for (const area of areas) {
+                  const { storages, ...areaData } = area;
+
+                  // Insert area
+                  yield* Effect.promise(() =>
+                    db
+                      .insert(TB_warehouse_areas)
+                      .values({ ...areaData, warehouse_facility_id: facility.id })
+                      .onConflictDoUpdate({
+                        target: TB_warehouse_areas.id,
+                        set: areaData,
+                      })
+                      .returning(),
+                  );
+
+                  // Process storages
+                  for (const storage of storages) {
+                    const { spaces, ...storageData } = storage;
+
+                    // Insert storage
+                    yield* Effect.promise(() =>
+                      db
+                        .insert(TB_storages)
+                        .values({ ...storageData, warehouseAreaId: area.id })
+                        .onConflictDoUpdate({
+                          target: TB_storages.id,
+                          set: storageData,
+                        })
+                        .returning(),
+                    );
+
+                    // Insert storage spaces
+                    for (const space of spaces) {
+                      yield* Effect.promise(() =>
+                        db
+                          .insert(TB_storage_spaces)
+                          .values({ ...space, storageId: storage.id })
+                          .onConflictDoUpdate({
+                            target: TB_storage_spaces.id,
+                            set: space,
+                          })
+                          .returning(),
+                      );
+                    }
+                  }
+                }
+              }
+            }
+
+            for (const productId of org.products) {
+              // TODO: Add product to organization
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organizations_products)
+                  .values({ organizationId: org.id, productId: productId })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
+          }
+        }
+
+        return true;
+      });
+
+    return {
+      seed,
+    } as const;
+  }),
+  dependencies: [DatabaseLive],
+}) {}
+
+export const SeedLive = SeedService.Default;

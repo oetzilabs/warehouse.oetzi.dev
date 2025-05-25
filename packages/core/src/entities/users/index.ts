@@ -1,24 +1,10 @@
 import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-valibot";
 import { Effect } from "effect";
-import { array, email, InferInput, object, omit, parse, pipe, safeParse, string } from "valibot";
-import org_wh from "../../data/org_wh.json";
-import user_orgs from "../../data/user_orgs.json";
-import user_wh from "../../data/user_wh.json";
-import users from "../../data/users.json";
+import { email, InferInput, object, omit, pipe, safeParse, string } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import {
-  TB_organization_users,
-  TB_organizations_warehouses,
-  TB_users,
-  TB_users_warehouses,
-  UserCreateSchema,
-  UserUpdateSchema,
-} from "../../drizzle/sql/schema";
+import { TB_users, UserCreateSchema, UserUpdateSchema } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import { OrganizationLive, OrganizationService } from "../organizations";
-import { WarehouseLive, WarehouseService } from "../warehouses";
 import {
   UserAuthenticationFailed,
   UserDisableFailed,
@@ -1352,97 +1338,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return facility;
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbUsers = yield* Effect.promise(() => db.query.TB_users.findMany());
-
-        const originalSchema = object({
-          ...omit(createInsertSchema(TB_users), ["createdAt", "updatedAt"]).entries,
-          id: prefixed_cuid2,
-        });
-
-        const us = parse(array(originalSchema), users);
-
-        const existing = dbUsers.map((u) => u.id);
-
-        const toCreate = us.filter((t) => !existing.includes(t.id));
-
-        if (toCreate.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_users).values(toCreate).returning());
-          yield* Effect.log("Created users", toCreate);
-        }
-
-        const toUpdate = us.filter((t) => existing.includes(t.id));
-        if (toUpdate.length > 0) {
-          for (const user of toUpdate) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_users)
-                .set({ ...user, updatedAt: new Date() })
-                .where(eq(TB_users.id, user.id))
-                .returning(),
-            );
-          }
-        }
-
-        // TODO: Add users to organizations
-        const orgsService = yield* _(OrganizationService);
-        const orgs = yield* orgsService.seed();
-
-        const userOrgs = parse(
-          array(
-            object({
-              organization_id: prefixed_cuid2,
-              user_id: prefixed_cuid2,
-            }),
-          ),
-          user_orgs,
-        );
-        const existingUserOrgs = yield* Effect.promise(() => db.query.TB_organization_users.findMany());
-        const existingUserOrgsIds = existingUserOrgs.map((u) => u.user_id);
-        const toCreateUserOrgs = userOrgs.filter((t) => !existingUserOrgsIds.includes(t.user_id));
-        if (toCreateUserOrgs.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_organization_users).values(toCreateUserOrgs).returning());
-        }
-
-        // TODO: Add users to warehouses
-        const whsService = yield* _(WarehouseService);
-        const whs = yield* whsService.seed();
-
-        const userWhs = parse(
-          array(
-            object({
-              userId: prefixed_cuid2,
-              warehouseId: prefixed_cuid2,
-            }),
-          ),
-          user_wh,
-        );
-        const existingUserWhs = yield* Effect.promise(() => db.query.TB_users_warehouses.findMany());
-        const existingUserWhsIds = existingUserWhs.map((u) => u.userId);
-        const toCreateUserWhs = userWhs.filter((t) => !existingUserWhsIds.includes(t.userId));
-        if (toCreateUserWhs.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_users_warehouses).values(toCreateUserWhs).returning());
-        }
-
-        const orgWhs = parse(
-          array(
-            object({
-              organizationId: prefixed_cuid2,
-              warehouseId: prefixed_cuid2,
-            }),
-          ),
-          org_wh,
-        );
-        const existingOrgWhs = yield* Effect.promise(() => db.query.TB_organizations_warehouses.findMany());
-        const existingOrgWhsIds = existingOrgWhs.map((u) => u.organizationId);
-        const toCreateOrgWhs = orgWhs.filter((t) => !existingOrgWhsIds.includes(t.organizationId));
-        if (toCreateOrgWhs.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_organizations_warehouses).values(toCreateOrgWhs).returning());
-        }
-        return us;
-      });
-
     return {
       create,
       disable,
@@ -1456,10 +1351,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       findLastOrganization,
       findLastWarehouse,
       findLastFacility,
-      seed,
     } as const;
   }),
-  dependencies: [DatabaseLive, OrganizationLive, WarehouseLive],
+  dependencies: [DatabaseLive],
 }) {}
 
 export const UserLive = UserService.Default;

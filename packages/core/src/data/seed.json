@@ -1,0 +1,281 @@
+{
+  "products": [
+    {
+      "id": "prod_uzujt3nrndmn90yyslc61wqv",
+      "name": "Tomatensauce Arrabbiata (Gastronomie)",
+      "description": "Eine würzige Tomatensauce Arrabbiata in Gastronomiegröße, fertig zum Gebrauch.",
+      "sku": "SAUCE-ARRABBIATA-GASTRO-001",
+      "barcode": "1122334455667",
+      "minimumStock": 20,
+      "maximumStock": 100,
+      "reorderPoint": 30,
+      "serialNumber": null,
+      "lotNumber": "LOT2025A",
+      "batchNumber": "BATCH-2025-001",
+      "manufacturingDate": "2025-01-10T10:00:00.000Z",
+      "expirationDate": "2026-07-10T10:00:00.000Z",
+      "shelfLife": 545,
+      "status": "active",
+      "condition": "new",
+      "purchasePrice": 3.5,
+      "sellingPrice": 6.99,
+      "msrp": null,
+      "currency": "EUR",
+      "weight": {
+        "value": 5.0,
+        "unit": "kg"
+      },
+      "dimensions": null,
+      "safetyStock": 10,
+      "customsTariffNumber": "210390",
+      "countryOfOrigin": "Italy",
+      "labels": ["labl_ejocn9366uhc0v2r94nc6tsv"]
+    }
+  ],
+  "labels": [
+    {
+      "id": "labl_ejocn9366uhc0v2r94nc6tsv",
+      "name": "Pantry Staples",
+      "description": "Everyday ingredients often kept in a pantry, such as rice, pasta, and canned goods.",
+      "image": "https://images.unsplash.com/photo-1651975045327-d9e7c1b910c7?q=80&w=160&h=160&auto=format&fit=crop&ixlib=rb-4.1.0"
+    }
+  ],
+  "payment_methods": [
+    {
+      "id": "pm_w20kjt4rox50stdhawltfizy",
+      "type": "cash",
+      "provider": "none",
+      "disabled": false
+    },
+    {
+      "id": "pm_k9vi6b678lirle2iiaxzgvs0",
+      "type": "card",
+      "provider": "Polar",
+      "disabled": false
+    },
+    {
+      "id": "pm_fy1xh1544oixzznlsnnqhpq2",
+      "type": "bank_account",
+      "provider": "Polar",
+      "disabled": false
+    }
+  ],
+  "warehouse_types": [
+    {
+      "id": "wht_x8ocjjtose3s6fzgu42wlw8v",
+      "name": "Retail",
+      "code": "RETAIL",
+      "description": "Retail warehouses are used for storing goods and products."
+    },
+    {
+      "id": "wht_ul6fl08era8zwp4eytmumg26",
+      "name": "Warehouse",
+      "code": "WAREHOUSE",
+      "description": "Warehouses are used for storing goods and products."
+    }
+  ],
+  "document_storage_offers": [
+    {
+      "id": "dso_kfpl4k5nrei8b7tmnhw66o99",
+      "name": "basic",
+      "description": "Basic storage offering (1GB)",
+      "price": 0.0,
+      "maxSize": 1048576,
+      "maxQueueSize": 10,
+      "shareable": false,
+      "requiresPaymentMethod": false
+    },
+    {
+      "id": "dso_h47ql2wuzp7lp7c7m1xok37f",
+      "name": "pro",
+      "description": "Pro storage offering (10GB)",
+      "price": 10.0,
+      "maxSize": 10485760,
+      "maxQueueSize": 100,
+      "shareable": false,
+      "disabled": true,
+      "requiresPaymentMethod": true
+    }
+  ],
+  "users": [
+    {
+      "id": "user_fqvfli9fqv5u9s14l1zcec0h",
+      "name": "Test User",
+      "email": "test@example.com",
+      "image": null,
+      "phone": null,
+      "verifiedAt": null,
+      "status": "active",
+      "has_finished_onboarding": true,
+      "hashed_password": "dd270ca1589c7df4a8a6554398d7af3f54df099e0b740c6aeb9bcb8f8502ac27",
+      "organizations": [
+        {
+          "id": "org_zet3syhuqvmx5gtqc57hu9kv",
+          "name": "TestCompany",
+          "slug": "testcompany-LFfQEb",
+          "image": null,
+          "location": null,
+          "email": null,
+          "phone": null,
+          "website": null,
+          "description": null,
+          "address": null,
+          "warehouses": [
+            {
+              "id": "wh_fbl19yvmsq44uuodg8n4kvv2",
+              "name": "Test Warehouse",
+              "description": "Test Warehouse",
+              "dimensions": null,
+              "facilities": [
+                {
+                  "id": "whfc_bx0og3lksiey55n025ghhujp",
+                  "name": "Facility 1",
+                  "description": "this is Facility 1",
+                  "bounding_box": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1200,
+                    "height": 500
+                  },
+                  "areas": [
+                    {
+                      "id": "wha_p0px872ogyol9cb8fqsmxyva",
+                      "name": "area 1",
+                      "description": "this is area 1",
+                      "bounding_box": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 500,
+                        "height": 500
+                      },
+                      "storages": [
+                        {
+                          "id": "storage_cpdcggmd0amupzy8iaqcobzj",
+                          "typeId": "storagetype_js2e1ykdt9738djzm7v9v3k8",
+                          "name": "storage 1",
+                          "description": "this is storage 1",
+                          "capacity": 0,
+                          "currentOccupancy": 0,
+                          "bounding_box": {
+                            "x": 0,
+                            "y": 0,
+                            "width": 100,
+                            "length": 500,
+                            "height": 300
+                          },
+                          "spaces": [
+                            {
+                              "id": "storagespace_neui9x4uhdc3ov5zbog3z4xx",
+                              "name": "asdf",
+                              "barcode": "asdf",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_jvfl0b6lpn360rwotw5r9mjv",
+                              "name": "qwerty",
+                              "barcode": "qwerty",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_pz51twfrepl2afomq4s0e0nh",
+                              "name": "hjkl",
+                              "barcode": "hjkl",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_nd9jl7eo0419cz2smyx3n23g",
+                              "name": "uiop",
+                              "barcode": "uiop",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_clx2zp2x5akbr078kkitibvp",
+                              "name": "zxcv",
+                              "barcode": "zxcv",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_azxh00m2eq13nc62mipgpah2",
+                              "name": "dfgh",
+                              "barcode": "dfgh",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_zwz1gmr4neb3pqusfwbt02oa",
+                              "name": "tyui",
+                              "barcode": "tyui",
+                              "dimensions": null
+                            }
+                          ]
+                        },
+                        {
+                          "id": "storage_s2ryhzlo7tm52thrrku9bai4",
+                          "typeId": "storagetype_js2e1ykdt9738djzm7v9v3k8",
+                          "variant": "vertical",
+                          "name": "storage 2",
+                          "description": "this is storage 2",
+                          "capacity": 0,
+                          "currentOccupancy": 0,
+                          "bounding_box": {
+                            "x": 200,
+                            "y": 0,
+                            "width": 300,
+                            "length": 80,
+                            "height": 300
+                          },
+                          "spaces": [
+                            {
+                              "id": "storagespace_udlsmd605kn8rw6l411m9lyq",
+                              "name": "123123",
+                              "barcode": "123123",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_i2f47adado0smzbl3qd27ald",
+                              "name": "a123a",
+                              "barcode": "a123a",
+                              "dimensions": null
+                            },
+                            {
+                              "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
+                              "name": "testtest",
+                              "barcode": "testtest",
+                              "dimensions": null
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "whfc_ldf703ov4orvnwadnq1oqpgk",
+                  "name": "Facility 2",
+                  "description": "this is Facility 2",
+                  "dimensions": null,
+                  "bounding_box": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1200,
+                    "height": 500
+                  },
+                  "areas": []
+                }
+              ],
+              "products": [
+                "prod_uzujt3nrndmn90yyslc61wqv",
+                "prod_rljvumttoz3f2v122kw7bf4x",
+                "prod_qgjolvdci0g8f0g6dq851dtf"
+              ]
+            }
+          ],
+          "products": [
+            "prod_uzujt3nrndmn90yyslc61wqv",
+            "prod_rljvumttoz3f2v122kw7bf4x",
+            "prod_qgjolvdci0g8f0g6dq851dtf"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,21 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { array, InferInput, object, parse, safeParse } from "valibot";
-import storage_spaces from "../../data/storage_spaces.json";
-import storage_types from "../../data/storage_types.json";
-import storages from "../../data/storages.json";
+import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import {
-  StorageCreateSchema,
-  StorageInventoryCreateSchema,
-  StorageInventoryUpdateSchema,
-  StorageTypeCreateSchema,
-  StorageTypeUpdateSchema,
-  StorageUpdateSchema,
-  TB_storage_spaces,
-  TB_storage_types,
-  TB_storages,
-} from "../../drizzle/sql/schema";
+import { StorageCreateSchema, StorageUpdateSchema, TB_storages } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { StorageInvalidId, StorageNotCreated, StorageNotDeleted, StorageNotFound, StorageNotUpdated } from "./errors";
 
@@ -126,112 +113,7 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return storages;
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbStorageTypes = yield* Effect.promise(() => db.query.TB_storage_types.findMany());
-
-        const storageTypes = parse(
-          array(
-            object({
-              ...StorageTypeCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          storage_types,
-        );
-
-        const existingStorageTypes = dbStorageTypes.map((u) => u.id);
-
-        const toCreateStorageTypes = storageTypes.filter((t) => !existingStorageTypes.includes(t.id));
-
-        if (toCreateStorageTypes.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_storage_types).values(toCreateStorageTypes).returning());
-          yield* Effect.log("Created storage types", toCreateStorageTypes);
-        }
-
-        const toUpdateStorageTypes = storageTypes.filter((t) => existingStorageTypes.includes(t.id));
-        if (toUpdateStorageTypes.length > 0) {
-          for (const storageType of toUpdateStorageTypes) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_storage_types)
-                .set({ ...storageType, updatedAt: new Date() })
-                .where(eq(TB_storage_types.id, storageType.id))
-                .returning(),
-            );
-          }
-        }
-
-        const dbStorages = yield* Effect.promise(() => db.query.TB_storages.findMany());
-        const existingStorages = dbStorages.map((u) => u.id);
-
-        const storage_list = parse(
-          array(
-            object({
-              ...StorageCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          storages,
-        );
-
-        const toCreateStorages = storage_list.filter((t) => !existingStorages.includes(t.id));
-
-        if (toCreateStorages.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_storages).values(toCreateStorages).returning());
-          yield* Effect.log("Created storages", toCreateStorages);
-        }
-
-        const toUpdateStorages = storage_list.filter((t) => existingStorages.includes(t.id));
-        if (toUpdateStorages.length > 0) {
-          for (const storage of toUpdateStorages) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_storages)
-                .set({ ...storage, updatedAt: new Date() })
-                .where(eq(TB_storages.id, storage.id))
-                .returning(),
-            );
-          }
-        }
-
-        const dbStorageSpaces = yield* Effect.promise(() => db.query.TB_storage_spaces.findMany());
-        const existingStorageInventories = dbStorageSpaces.map((u) => u.id);
-
-        const storageInventories = parse(
-          array(
-            object({
-              ...StorageInventoryCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          storage_spaces,
-        );
-
-        const toCreateStorageInventories = storageInventories.filter((t) => !existingStorageInventories.includes(t.id));
-
-        if (toCreateStorageInventories.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_storage_spaces).values(toCreateStorageInventories).returning());
-          yield* Effect.log("Created storage spaces", toCreateStorageInventories);
-        }
-
-        const toUpdateStorageInventories = storageInventories.filter((t) => existingStorageInventories.includes(t.id));
-        if (toUpdateStorageInventories.length > 0) {
-          for (const storageInventory of toUpdateStorageInventories) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_storage_spaces)
-                .set({ ...storageInventory, updatedAt: new Date() })
-                .where(eq(TB_storage_spaces.id, storageInventory.id))
-                .returning(),
-            );
-          }
-        }
-
-        return storage_list;
-      });
-
-    return { create, findById, update, remove, safeRemove, findByAreaId, seed } as const;
+    return { create, findById, update, remove, safeRemove, findByAreaId } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

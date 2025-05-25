@@ -1,29 +1,13 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { array, object, parse, safeParse, type InferInput } from "valibot";
-import storages from "../../data/storages.json";
-import warehouseAreas from "../../data/warehouse_areas.json";
-import facilites from "../../data/warehouse_facilities.json";
-import warehouseProducts from "../../data/warehouse_products.json";
-import warehouses from "../../data/warehouses.json";
+import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
-  FacilityCreateSchema,
-  FacilityUpdateSchema,
-  StorageCreateSchema,
-  StorageUpdateSchema,
   TB_organizations_warehouses,
   TB_users_warehouses,
-  TB_warehouse_areas,
-  TB_warehouse_facilities,
   TB_warehouse_products,
-  TB_warehouse_types,
   TB_warehouses,
-  WarehouseAreaCreateSchema,
-  WarehouseAreaUpdateSchema,
   WarehouseCreateSchema,
-  WarehouseTypeCreateSchema,
-  WarehouseTypeUpdateSchema,
   WarehouseUpdateSchema,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
@@ -38,7 +22,6 @@ import {
   WarehouseNotUpdated,
   WarehouseOrganizationInvalidId,
   WarehouseOrganizationLinkFailed,
-  WarehouseOrganizationUnlinkFailed,
   WarehouseUserInvalidId,
   WarehouseUserLinkFailed,
 } from "./errors";
@@ -347,137 +330,6 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return area;
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbWarehouses = yield* Effect.promise(() => db.query.TB_warehouses.findMany());
-
-        const whs = parse(
-          array(
-            object({
-              ...WarehouseCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          warehouses,
-        );
-
-        const existing = dbWarehouses.map((u) => u.id);
-
-        const toCreate = whs.filter((t) => !existing.includes(t.id));
-
-        if (toCreate.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_warehouses).values(toCreate).returning());
-          yield* Effect.log("Created warehouses", toCreate);
-        }
-
-        const toUpdate = whs.filter((t) => existing.includes(t.id));
-        if (toUpdate.length > 0) {
-          for (const area of toUpdate) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_warehouses)
-                .set({ ...area, updatedAt: new Date() })
-                .where(eq(TB_warehouses.id, area.id))
-                .returning(),
-            );
-          }
-        }
-
-        // facilities
-
-        const dbFacilities = yield* Effect.promise(() => db.query.TB_warehouse_facilities.findMany());
-        const existingFacilities = dbFacilities.map((u) => u.id);
-
-        const facilities = parse(
-          array(
-            object({
-              ...FacilityCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          facilites,
-        );
-
-        const toCreateFacilities = facilities.filter((t) => !existingFacilities.includes(t.id));
-
-        if (toCreateFacilities.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_warehouse_facilities).values(toCreateFacilities).returning());
-          yield* Effect.log("Created warehouse facilities", toCreateFacilities);
-        }
-
-        const toUpdateFacilities = facilities.filter((t) => existingFacilities.includes(t.id));
-        if (toUpdateFacilities.length > 0) {
-          for (const facility of toUpdateFacilities) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_warehouse_facilities)
-                .set({ ...facility, updatedAt: new Date() })
-                .where(eq(TB_warehouse_facilities.id, facility.id))
-                .returning(),
-            );
-          }
-        }
-
-        const dbAreas = yield* Effect.promise(() => db.query.TB_warehouse_areas.findMany());
-        const existingAreas = dbAreas.map((u) => u.id);
-
-        const areas = parse(
-          array(
-            object({
-              ...WarehouseAreaCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          warehouseAreas,
-        );
-
-        const toCreateAreas = areas.filter((t) => !existingAreas.includes(t.id));
-
-        if (toCreateAreas.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_warehouse_areas).values(toCreateAreas).returning());
-          yield* Effect.log("Created warehouse areas", toCreateAreas);
-        }
-
-        const toUpdateAreas = areas.filter((t) => existingAreas.includes(t.id));
-        if (toUpdateAreas.length > 0) {
-          for (const area of toUpdateAreas) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_warehouse_areas)
-                .set({ ...area, updatedAt: new Date() })
-                .where(eq(TB_warehouse_areas.id, area.id))
-                .returning(),
-            );
-          }
-        }
-
-        // Seed warehouse products
-        const dbWarehouseProducts = yield* Effect.promise(() => db.query.TB_warehouse_products.findMany());
-
-        const whProducts = parse(
-          array(
-            object({
-              warehouseId: prefixed_cuid2,
-              productId: prefixed_cuid2,
-            }),
-          ),
-          warehouseProducts,
-        );
-
-        const existingWhProducts = dbWarehouseProducts.map((wp) => `${wp.warehouseId}-${wp.productId}`);
-
-        const toCreateWhProducts = whProducts.filter(
-          (wp) => !existingWhProducts.includes(`${wp.warehouseId}-${wp.productId}`),
-        );
-
-        if (toCreateWhProducts.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_warehouse_products).values(toCreateWhProducts).returning());
-          yield* Effect.log("Created warehouse-product relationships", toCreateWhProducts);
-        }
-
-        return whs;
-      });
-
     const findLastCreatedFacility = (warehouseId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, warehouseId);
@@ -603,7 +455,6 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       all,
       findByUserId,
       findAreaById,
-      seed,
       findLastCreatedFacility,
       findProductById,
       removeProduct,

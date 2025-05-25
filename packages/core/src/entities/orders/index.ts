@@ -363,6 +363,174 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
         return percentage;
       });
 
+    const getCustomerOrdersChartData = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const sixMonthsAgo = dayjs().subtract(6, "month").startOf("month");
+        const orders = yield* Effect.promise(() =>
+          db
+            .select({
+              // Get month from createdAt using PostgreSQL's date_trunc
+              month: sql<string>`date_trunc('month', ${TB_organizations_customerorders.createdAt})`,
+              // Count total orders per month
+              count: sql<number>`count(*)`,
+            })
+            .from(TB_organizations_customerorders)
+            .where(
+              and(
+                eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output),
+                // Only get orders from last 6 months
+                gte(TB_organizations_customerorders.createdAt, sixMonthsAgo.toDate()),
+              ),
+            )
+            // Group by month to get monthly totals
+            .groupBy(sql`date_trunc('month', ${TB_organizations_customerorders.createdAt})`)
+            // Order by month ascending
+            .orderBy(sql`date_trunc('month', ${TB_organizations_customerorders.createdAt})`),
+        );
+
+        const monthLabels = Array.from({ length: 6 }, (_, i) =>
+          dayjs()
+            .subtract(5 - i, "month")
+            .format("MMM"),
+        );
+        const data = monthLabels.map((month) => {
+          const foundMonth = orders.find((o) => dayjs(o.month).format("MMM") === month);
+          return foundMonth?.count || 0;
+        });
+
+        return data;
+      });
+
+    const getSupplierOrdersChartData = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const sixMonthsAgo = dayjs().subtract(6, "month").startOf("month");
+        const orders = yield* Effect.promise(() =>
+          db
+            .select({
+              // Get month from createdAt using PostgreSQL's date_trunc
+              month: sql<string>`date_trunc('month', ${TB_organizations_supplierorders.createdAt})`,
+              // Count total orders per month
+              count: sql<number>`count(*)`,
+            })
+            .from(TB_organizations_supplierorders)
+            .where(
+              and(
+                eq(TB_organizations_supplierorders.organization_id, parsedOrganizationId.output),
+                // Only get orders from last 6 months
+                gte(TB_organizations_supplierorders.createdAt, sixMonthsAgo.toDate()),
+              ),
+            )
+            // Group by month to get monthly totals
+            .groupBy(sql`date_trunc('month', ${TB_organizations_supplierorders.createdAt})`)
+            // Order by month ascending
+            .orderBy(sql`date_trunc('month', ${TB_organizations_supplierorders.createdAt})`),
+        );
+
+        const monthLabels = Array.from({ length: 6 }, (_, i) =>
+          dayjs()
+            .subtract(5 - i, "month")
+            .format("MMM"),
+        );
+        const data = monthLabels.map((month) => {
+          const foundMonth = orders.find((o) => dayjs(o.month).format("MMM") === month);
+          return foundMonth?.count || 0;
+        });
+
+        return data;
+      });
+
+    const getPopularProductsChartData = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const products = yield* Effect.promise(() =>
+          db
+            .select({
+              name: TB_products.name,
+              // Count distinct orders to get total orders per product
+              count: sql<number>`count(distinct ${TB_orders.id})`,
+            })
+            .from(TB_organizations_customerorders)
+            // Join orders and products through order_products junction table
+            .innerJoin(TB_orders, eq(TB_organizations_customerorders.order_id, TB_orders.id))
+            .innerJoin(TB_order_products, eq(TB_orders.id, TB_order_products.orderId))
+            .innerJoin(TB_products, eq(TB_order_products.productId, TB_products.id))
+            .where(eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output))
+            .groupBy(TB_products.id)
+            // Order by order count descending to get most popular first
+            .orderBy(sql`count(distinct ${TB_orders.id}) desc`)
+            // Limit to top 5 products
+            .limit(5),
+        );
+
+        return {
+          labels: products.map((p) => p.name),
+          data: products.map((p) => p.count),
+        };
+      });
+
+    const getLastSoldProductsChartData = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const thirtyDaysAgo = dayjs().subtract(30, "days").startOf("day");
+        const sales = yield* Effect.promise(() =>
+          db
+            .select({
+              // Get day from createdAt using PostgreSQL's date_trunc
+              date: sql<string>`date_trunc('day', ${TB_organizations_customerorders.createdAt})`,
+              // Sum quantities sold per day
+              count: sql<number>`sum(${TB_order_products.quantity})`,
+            })
+            .from(TB_organizations_customerorders)
+            // Join orders and products through order_products junction table
+            .innerJoin(TB_orders, eq(TB_organizations_customerorders.order_id, TB_orders.id))
+            .innerJoin(TB_order_products, eq(TB_orders.id, TB_order_products.orderId))
+            .where(
+              and(
+                eq(TB_organizations_customerorders.organization_id, parsedOrganizationId.output),
+                // Only get sales from last 30 days
+                gte(TB_organizations_customerorders.createdAt, thirtyDaysAgo.toDate()),
+              ),
+            )
+            // Group by day to get daily totals
+            .groupBy(sql`date_trunc('day', ${TB_organizations_customerorders.createdAt})`)
+            // Order by day ascending
+            .orderBy(sql`date_trunc('day', ${TB_organizations_customerorders.createdAt})`),
+        );
+
+        const dayLabels = Array.from({ length: 7 }, (_, i) =>
+          dayjs()
+            .subtract(6 - i, "days")
+            .format("DD MMM"),
+        );
+        const data = dayLabels.map((day) => {
+          const foundDay = sales.find((s) => dayjs(s.date).format("DD MMM") === day);
+          return foundDay?.count || 0;
+        });
+
+        return {
+          labels: dayLabels,
+          data,
+        };
+      });
+
     return {
       create,
       findById,
@@ -376,6 +544,10 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
       percentageCustomerOrdersLastWeekByOrganizationId,
       percentageSupplierOrdersLastWeekByOrganizationId,
       all,
+      getCustomerOrdersChartData,
+      getSupplierOrdersChartData,
+      getPopularProductsChartData,
+      getLastSoldProductsChartData,
     } as const;
   }),
   dependencies: [DatabaseLive],
