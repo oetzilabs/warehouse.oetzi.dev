@@ -19,3 +19,4 @@ uploads/
 packages/imagemagick-layer
 packages/ghostscript-layer
 out
+snapshots

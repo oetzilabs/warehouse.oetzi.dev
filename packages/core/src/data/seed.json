@@ -148,6 +148,7 @@
       "code": "LOCKER-01"
     }
   ],
+  "sales": [],
   "customers": [],
   "suppliers": [],
   "users": [
@@ -173,6 +174,10 @@
           "website": null,
           "description": null,
           "address": null,
+          "orders": {
+            "customers": [],
+            "suppliers": []
+          },
           "warehouses": [
             {
               "id": "wh_fbl19yvmsq44uuodg8n4kvv2",

@@ -2,6 +2,8 @@ import { array, boolean, date, literal, nullable, number, object, omit, string, 
 import {
   CustomerCreateSchema,
   FacilityCreateSchema,
+  OrganizationCustomerOrderCreateSchema,
+  OrganizationSupplierOrderCreateSchema,
   SupplierCreateSchema,
   WarehouseAreaCreateSchema,
   WarehouseTypeCreateSchema,
@@ -13,6 +15,8 @@ import { OrganizationCreateSchema } from "../../drizzle/sql/schemas/organization
 import { PaymentMethodCreateSchema } from "../../drizzle/sql/schemas/payments/payment_methods";
 import { ProductLabelCreateSchema } from "../../drizzle/sql/schemas/products/product_labels";
 import { ProductCreateWithDateTransformSchema } from "../../drizzle/sql/schemas/products/products";
+import { SaleCreateSchema } from "../../drizzle/sql/schemas/sales/sales";
+import { SaleItemCreateSchema } from "../../drizzle/sql/schemas/sales/sales_items";
 import { StorageInventoryCreateSchema } from "../../drizzle/sql/schemas/storages/storage_space";
 import { StorageTypeCreateSchema } from "../../drizzle/sql/schemas/storages/storage_types";
 import { StorageCreateSchema } from "../../drizzle/sql/schemas/storages/storages";
@@ -87,6 +91,19 @@ export const WarehouseSchema = object({
   products: array(string()), // references to product IDs
 });
 
+export const CustomerOrderSchema = object({
+  ...OrganizationCustomerOrderCreateSchema.entries,
+});
+
+export const SupplierOrderSchema = object({
+  ...OrganizationSupplierOrderCreateSchema.entries,
+});
+
+export const OrderSchema = object({
+  customers: array(CustomerOrderSchema),
+  suppliers: array(SupplierOrderSchema),
+});
+
 export const OrganizationSchema = object({
   ...OrganizationCreateSchema.entries,
   id: prefixed_cuid2,
@@ -95,6 +112,7 @@ export const OrganizationSchema = object({
   products: array(string()), // references to product IDs
   suppliers: array(string()), // references to supplier IDs
   customers: array(string()), // references to customer IDs
+  orders: OrderSchema,
 });
 
 export const UserSchema = object({
@@ -135,9 +153,20 @@ export const SupplierSchema = object({
   products: array(string()), // references to product IDs
 });
 
+export const SalesItemSchema = object({
+  ...SaleItemCreateSchema.entries,
+});
+
+export const SaleSchema = object({
+  ...SaleCreateSchema.entries,
+  id: prefixed_cuid2,
+  items: array(SalesItemSchema), // references to product IDs
+});
+
 export const CustomerSchema = object({
   ...CustomerCreateSchema.entries,
   id: prefixed_cuid2,
+  sales: array(string()), // references to sales IDs
 });
 
 export const SeedDataSchema = object({
@@ -151,4 +180,5 @@ export const SeedDataSchema = object({
   brands: array(BrandSchema),
   suppliers: array(SupplierSchema),
   customers: array(CustomerSchema),
+  sales: array(SaleSchema),
 });

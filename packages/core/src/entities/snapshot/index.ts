@@ -74,14 +74,39 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                 })),
               ),
             );
+            const sales = yield* Effect.promise(() =>
+              db.query.TB_sales.findMany({
+                with: {
+                  items: true,
+                  orders: true,
+                },
+              }),
+            ).pipe(
+              Effect.map((sales) =>
+                sales.map((s) => ({
+                  ...s,
+                  items: s.items,
+                  orders: s.orders.map((o) => o.id),
+                })),
+              ),
+            );
             const customers = yield* Effect.promise(() =>
               db.query.TB_customers.findMany({
-                // with: {
-                //   products: {
-                //     with: {}
-                //   }
-                // },
+                with: {
+                  sales: {
+                    with: {
+                      items: true,
+                    },
+                  },
+                },
               }),
+            ).pipe(
+              Effect.map((customers) =>
+                customers.map((c) => ({
+                  ...c,
+                  sales: c.sales.map((s) => s.id),
+                })),
+              ),
             );
             const users = yield* Effect.gen(function* (_) {
               const users = yield* Effect.promise(() =>
@@ -108,6 +133,8 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                             },
                             supps: true,
                             customers: true,
+                            customerOrders: true,
+                            supplierOrders: true,
                             whs: {
                               with: {
                                 warehouse: {
@@ -164,6 +191,10 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                           })),
                         })),
                       })),
+                      orders: {
+                        customers: org.org.customerOrders,
+                        suppliers: org.org.supplierOrders,
+                      },
                     })),
                   })),
                 ),
@@ -184,6 +215,7 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                 storage_types,
                 brands,
                 suppliers,
+                sales,
                 customers,
               },
             } satisfies SnapshotDataOutput;
