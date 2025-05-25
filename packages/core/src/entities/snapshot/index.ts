@@ -21,28 +21,172 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
     const fs = yield* _(FileSystem.FileSystem);
     const path = yield* _(Path.Path);
 
+    const listSnapshots = () =>
+      Effect.gen(function* (_) {
+        const files = yield* fs.readDirectory(path.join(SNAPSHOT_DIR));
+        return files.filter((f) => f.endsWith(".json")).map((f) => f.replace(".json", ""));
+      });
+
     const createSnapshot = (type: SnapshotDataInput["type"]) =>
       Effect.gen(function* (_) {
         let snap: SnapshotDataOutput;
         switch (type) {
           case "json":
+            const products = yield* Effect.promise(() =>
+              db.query.TB_products.findMany({
+                with: {
+                  labels: true,
+                  brands: true,
+                },
+              }),
+            ).pipe(
+              Effect.map((products) =>
+                products.map((p) => ({
+                  ...p,
+                  manufacturingDate: p.manufacturingDate ? dayjs(p.manufacturingDate).unix().toString() : "",
+                  expirationDate: p.expirationDate ? dayjs(p.expirationDate).unix().toString() : "",
+                  labels: p.labels.map((l) => l.labelId),
+                  brands: p.brands?.id ?? null,
+                })),
+              ),
+            );
+            const labels = yield* Effect.promise(() => db.query.TB_product_labels.findMany());
+            const payment_methods = yield* Effect.promise(() => db.query.TB_payment_methods.findMany());
+            const warehouse_types = yield* Effect.promise(() => db.query.TB_warehouse_types.findMany());
+            const document_storage_offers = yield* Effect.promise(() => db.query.TB_document_storage_offers.findMany());
+            const storage_types = yield* Effect.promise(() => db.query.TB_storage_types.findMany());
+            const brands = yield* Effect.promise(() => db.query.TB_brands.findMany());
+            const suppliers = yield* Effect.promise(() =>
+              db.query.TB_suppliers.findMany({
+                with: {
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
+              }),
+            ).pipe(
+              Effect.map((suppliers) =>
+                suppliers.map((s) => ({
+                  ...s,
+                  products: s.products.map((p) => p.productId),
+                })),
+              ),
+            );
+            const customers = yield* Effect.promise(() =>
+              db.query.TB_customers.findMany({
+                // with: {
+                //   products: {
+                //     with: {}
+                //   }
+                // },
+              }),
+            );
+            const users = yield* Effect.gen(function* (_) {
+              const users = yield* Effect.promise(() =>
+                db.query.TB_users.findMany({
+                  with: {
+                    payment_methods: {
+                      with: {
+                        payment_method: true,
+                      },
+                    },
+                    payment_history: {
+                      with: {
+                        paymentMethod: true,
+                      },
+                    },
+                    orgs: {
+                      with: {
+                        org: {
+                          with: {
+                            products: {
+                              with: {
+                                product: true,
+                              },
+                            },
+                            supps: true,
+                            customers: true,
+                            whs: {
+                              with: {
+                                warehouse: {
+                                  with: {
+                                    fcs: {
+                                      with: {
+                                        ars: {
+                                          with: {
+                                            strs: {
+                                              with: {
+                                                invs: {
+                                                  with: {
+                                                    labels: true,
+                                                    storage: true,
+                                                  },
+                                                },
+                                              },
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                    products: true,
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                }),
+              ).pipe(
+                Effect.map((users) =>
+                  users.map((user) => ({
+                    ...user,
+                    organizations: user.orgs.map((org) => ({
+                      ...org.org,
+                      products: org.org.products.map((prod) => prod.productId),
+                      suppliers: org.org.supps.map((supp) => supp.supplier_id),
+                      customers: org.org.customers.map((cust) => cust.customer_id),
+                      warehouses: org.org.whs.map((wh) => ({
+                        ...wh.warehouse,
+                        products: wh.warehouse.products.map((prod) => prod.productId),
+                        facilities: wh.warehouse.fcs.map((fc) => ({
+                          ...fc,
+                          areas: fc.ars.map((ar) => ({
+                            ...ar,
+                            storages: ar.strs.map((str) => ({
+                              ...str,
+                              spaces: str.invs,
+                            })),
+                          })),
+                        })),
+                      })),
+                    })),
+                  })),
+                ),
+              );
+              return users;
+            });
             snap = {
               id: `snap_${createId()}`,
               createdAt: dayjs().unix().toString(),
               type,
               data: {
-                users: [], // Query users
-                products: [], // Query products
-                labels: [], // Query labels
-                payment_methods: [], // Query payment methods
-                warehouse_types: [], // Query warehouse types
-                document_storage_offers: [], // Query document storage offers
-                storage_types: [], // Query storage types
-                brands: [], // Query brands
-                suppliers: [], // Query suppliers
-                customers: [], // Query customers
+                users, // Query users
+                products,
+                labels,
+                payment_methods,
+                warehouse_types,
+                document_storage_offers,
+                storage_types,
+                brands,
+                suppliers,
+                customers,
               },
-            };
+            } satisfies SnapshotDataOutput;
             break;
           case "sql":
             snap = {
@@ -50,7 +194,8 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
               createdAt: dayjs().unix().toString(),
               type,
               data: "",
-            };
+            } satisfies SnapshotDataOutput;
+            break;
           default:
             throw new Error("Invalid snapshot type");
             break;
@@ -76,9 +221,20 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
         if (!file) {
           return yield* Effect.fail(new SnapshotNotFound({ id }));
         }
-        const content = yield* fs.readFileString(filename);
-        const data = JSON.parse(content);
-        const snapshot = yield* validateSnapshot(data);
+        let parsed;
+        try {
+          const content = yield* fs.readFileString(filename);
+          parsed = JSON.parse(content);
+        } catch (e) {
+          return yield* Effect.fail(
+            new SnapshotValidationFailed({
+              message: "Invalid snapshot format",
+              errors: ["Parsing the snapshot failed"],
+            }),
+          );
+        }
+
+        const snapshot = yield* validateSnapshot(parsed);
         return snapshot;
       });
 
@@ -124,12 +280,6 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
           default:
             return yield* Effect.fail(new SnapshotInvalidType({ id: snapshotId, type }));
         }
-      });
-
-    const listSnapshots = () =>
-      Effect.gen(function* (_) {
-        const files = yield* fs.readDirectory(path.join(SNAPSHOT_DIR));
-        return files;
       });
 
     return {

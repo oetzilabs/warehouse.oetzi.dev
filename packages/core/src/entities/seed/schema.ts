@@ -138,7 +138,6 @@ export const SupplierSchema = object({
 export const CustomerSchema = object({
   ...CustomerCreateSchema.entries,
   id: prefixed_cuid2,
-  products: array(string()), // references to product IDs
 });
 
 export const SeedDataSchema = object({
