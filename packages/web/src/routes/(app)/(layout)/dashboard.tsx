@@ -1,14 +1,16 @@
 import ArrowBadge from "@/components/arrow-badges";
 import { OrderStatusBadge } from "@/components/order-status-badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertClose, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { BarChart, LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
-import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
+import { acceptNotification, getNotifications } from "@/lib/api/notifications";
+import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import ChartSpline from "lucide-solid/icons/chart-spline";
+import Check from "lucide-solid/icons/check";
 import Info from "lucide-solid/icons/info";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
@@ -24,6 +26,9 @@ export const route = {
 
 export default function DashboardPage() {
   const data = createAsync(async () => getDashboardData(), { deferStream: true });
+  const notifications = createAsync(async () => getNotifications(), { deferStream: true });
+  const acceptNotificationAction = useAction(acceptNotification);
+  const isAcceptingNotification = useSubmission(acceptNotification);
 
   return (
     <div class="flex flex-col w-full grow">
@@ -36,7 +41,7 @@ export default function DashboardPage() {
             <Button
               size="sm"
               onClick={() => {
-                toast.promise(revalidate(getDashboardData.key), {
+                toast.promise(revalidate([getNotifications.key, getDashboardData.key]), {
                   loading: "Refreshing dashboard...",
                   success: "Refreshed dashboard",
                   error: "Failed to refresh dashboard",
@@ -50,26 +55,48 @@ export default function DashboardPage() {
         </div>
         <div class="flex flex-col w-full h-content">
           <div class="w-full h-content">
-            <Show when={data()}>
-              {(d) => (
-                <div class="flex flex-col w-full h-content gap-4">
-                  <Show when={d().notifications.length > 0}>
-                    <div class="flex flex-col w-full h-content gap-4">
-                      <For each={d().notifications}>
-                        {(notification) => (
-                          <Alert>
-                            <Info class="size-4" />
-                            <AlertTitle>Notification!</AlertTitle>
-                            <AlertDescription>{notification.message}</AlertDescription>
-                          </Alert>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
+            <div class="flex flex-col w-full h-content gap-4">
+              <Show when={notifications()}>
+                {(notifs) => (
+                  <div class="flex flex-col w-full h-content gap-4">
+                    <For
+                      each={notifs()}
+                      fallback={
+                        <Alert>
+                          <Check class="size-4" />
+                          <AlertTitle>No notifications!</AlertTitle>
+                          <AlertDescription>
+                            <span>Seems like you haven't gotten any notifications yet, great!</span>
+                          </AlertDescription>
+                        </Alert>
+                      }
+                    >
+                      {(notification) => (
+                        <Alert>
+                          <Info class="size-4" />
+                          <AlertTitle>{notification.title}</AlertTitle>
+                          <AlertDescription>{notification.content}</AlertDescription>
+                          <AlertClose
+                            onClick={() => {
+                              toast.promise(acceptNotificationAction(notification.id), {
+                                loading: "Closing notification...",
+                                success: "Closed notification",
+                                error: "Failed to close notification",
+                              });
+                            }}
+                          />
+                        </Alert>
+                      )}
+                    </For>
+                  </div>
+                )}
+              </Show>
+              <Show when={data()}>
+                {(d) => (
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full grow ">
                     <div class="flex flex-col w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
                       <div class="flex flex-row items-center justify-between p-4">
-                        <div class="flex flex-row gap-2">
+                        <div class="flex flex-row gap-4">
                           <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Customer Orders</h3>
                           <span class="text-sm text-neutral-500 dark:text-neutral-400">
                             <ArrowBadge value={d().orders.customers.deltaPercentageLastWeek} class="hidden md:block" />
@@ -88,7 +115,7 @@ export default function DashboardPage() {
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
                         <Show
-                          when={d().orders.customers.chartData?.some((v) => v > 0)}
+                          when={d().orders.customers.chartData.some((v) => v > 0)}
                           fallback={
                             <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
                               <ChartSpline class="size-4 text-muted-foreground" />
@@ -195,7 +222,7 @@ export default function DashboardPage() {
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
                         <Show
-                          when={d().orders.suppliers.chartData?.some((v) => v > 0)}
+                          when={d().orders.suppliers.chartData.some((v) => v > 0)}
                           fallback={
                             <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
                               <ChartSpline class="size-4 text-muted-foreground" />
@@ -277,7 +304,7 @@ export default function DashboardPage() {
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
                         <Show
-                          when={d().popularProductsChartData?.data?.some((v) => v > 0)}
+                          when={d().popularProductsChartData.data.some((v) => v > 0)}
                           fallback={
                             <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
                               <ChartSpline class="size-4 text-muted-foreground" />
@@ -288,7 +315,7 @@ export default function DashboardPage() {
                           <BarChart
                             height={200}
                             data={{
-                              labels: d().popularProductsChartData?.labels || [],
+                              labels: d().popularProductsChartData.labels || [],
                               datasets: [
                                 {
                                   label: "Orders",
@@ -358,7 +385,7 @@ export default function DashboardPage() {
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
                         <Show
-                          when={d().lastSoldProductsChartData?.data?.some((v) => v > 0)}
+                          when={d().lastSoldProductsChartData.data.some((v) => v > 0)}
                           fallback={
                             <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
                               <ChartSpline class="size-4 text-muted-foreground" />
@@ -369,11 +396,11 @@ export default function DashboardPage() {
                           <LineChart
                             height={200}
                             data={{
-                              labels: d().lastSoldProductsChartData?.labels || [],
+                              labels: d().lastSoldProductsChartData.labels || [],
                               datasets: [
                                 {
                                   label: "Sales",
-                                  data: d().lastSoldProductsChartData?.data || [],
+                                  data: d().lastSoldProductsChartData.data || [],
                                   fill: true,
                                   backgroundColor: "rgba(168, 85, 247, 0.1)",
                                   borderColor: "rgb(168, 85, 247)",
@@ -430,9 +457,9 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </Show>
+                )}
+              </Show>
+            </div>
           </div>
         </div>
       </div>

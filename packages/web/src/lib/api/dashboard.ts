@@ -1,6 +1,16 @@
 import { action, json, query, redirect } from "@solidjs/router";
+import {
+  NotificationInfo,
+  NotificationLive,
+  NotificationService,
+} from "@warehouseoetzidev/core/src/entities/notifications";
 import { OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
-import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import {
+  OrganizationInfo,
+  OrganizationLive,
+  OrganizationService,
+} from "@warehouseoetzidev/core/src/entities/organizations";
+import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
@@ -29,6 +39,7 @@ export const getDashboardData = query(async () => {
     Effect.gen(function* (_) {
       const organizationService = yield* _(OrganizationService);
       const orderService = yield* _(OrderService);
+      const notificationService = yield* _(NotificationService);
 
       const organization = yield* organizationService.findById(orgId);
       if (!organization) {
@@ -68,7 +79,9 @@ export const getDashboardData = query(async () => {
       const popularProductsChartData = yield* orderService.getPopularProductsChartData(organization.id);
       const lastSoldProductsChartData = yield* orderService.getLastSoldProductsChartData(organization.id);
 
-      const notifications = [] as { message: string }[];
+      // const syncNotifications = yield* notificationService.sync();
+
+      const notifications = yield* notificationService.findByOrganizationId(organization.id);
 
       return {
         orders: {
@@ -89,7 +102,7 @@ export const getDashboardData = query(async () => {
         popularProductsChartData,
         notifications,
       };
-    }).pipe(Effect.provide(OrganizationLive), Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(OrganizationLive), Effect.provide(OrderLive), Effect.provide(NotificationLive)),
   );
   return Exit.match(dashboardDataExit, {
     onSuccess: (data) => {
@@ -101,7 +114,34 @@ export const getDashboardData = query(async () => {
         return c.message;
       });
       console.log(errors);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      return json({
+        orders: {
+          customers: {
+            values: [] as OrganizationInfo["customerOrders"][number]["order"][],
+            deltaPercentageLastWeek: 0,
+            chartData: [],
+          },
+          suppliers: {
+            values: [] as OrganizationInfo["supplierOrders"][number]["order"][],
+            deltaPercentageLastWeek: 0,
+            chartData: [],
+          },
+        },
+        lastUsedProductsFromCustomers: [] as OrganizationInfo["customerOrders"][number]["order"]["prods"],
+        lastSoldProductsChartData: {
+          labels: [],
+          data: [],
+        },
+        mostPopularProductsFromOrders: [] as Effect.Effect.Success<
+          ReturnType<OrderService["findMostPopularProductsByOrganizationId"]>
+        >,
+        popularProductsChartData: {
+          labels: [],
+          data: [],
+        },
+        notifications: [] as NotificationInfo[],
+      });
+      // throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
     },
   });
 }, "dashboard-data");

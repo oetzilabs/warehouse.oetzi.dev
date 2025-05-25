@@ -280,6 +280,18 @@
       "code": "LOCKER-01"
     }
   ],
+  "notifications": [
+    {
+      "id": "nt_t8exxhdmnr643hxqbxmnplin",
+      "title": "Test Notification",
+      "content": "This is a test notification"
+    },
+    {
+      "id": "nt_i3iuu8nbcnh4skr9qlv97v53",
+      "title": "Test Notification 2",
+      "content": "This is a test notification 2"
+    }
+  ],
   "sales": [],
   "customers": [],
   "suppliers": [],

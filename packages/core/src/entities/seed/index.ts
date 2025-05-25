@@ -9,8 +9,10 @@ import {
   TB_customers,
   TB_devices,
   TB_document_storage_offers,
+  TB_notifications,
   TB_organization_users,
   TB_organizations,
+  TB_organizations_notifications,
   TB_organizations_products,
   TB_payment_methods,
   TB_product_labels,
@@ -156,6 +158,19 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                 .returning(),
             );
           }
+        }
+
+        for (const notification of seedData.output.notifications) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_notifications)
+              .values(notification)
+              .onConflictDoUpdate({
+                target: TB_notifications.id,
+                set: notification,
+              })
+              .returning(),
+          );
         }
 
         for (const brand of seedData.output.brands) {

@@ -2,6 +2,7 @@ import { array, boolean, date, literal, nullable, number, object, omit, string, 
 import {
   CustomerCreateSchema,
   FacilityCreateSchema,
+  NotificationCreateSchema,
   OrganizationCustomerOrderCreateSchema,
   OrganizationSupplierOrderCreateSchema,
   SupplierCreateSchema,
@@ -171,6 +172,11 @@ export const CustomerSchema = object({
   sales: array(string()), // references to sales IDs
 });
 
+export const NotificationSchema = object({
+  ...NotificationCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
 export const SeedDataSchema = object({
   users: array(UserSchema),
   products: array(ProductSchema),
@@ -183,4 +189,5 @@ export const SeedDataSchema = object({
   suppliers: array(SupplierSchema),
   customers: array(CustomerSchema),
   sales: array(SaleSchema),
+  notifications: array(NotificationSchema),
 });

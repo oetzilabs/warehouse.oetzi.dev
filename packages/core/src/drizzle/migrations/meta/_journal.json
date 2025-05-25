@@ -57,6 +57,13 @@
       "when": 1748186011271,
       "tag": "0007_broken_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1748204277460,
+      "tag": "0008_salty_junta",
+      "breakpoints": true
     }
   ]
 }

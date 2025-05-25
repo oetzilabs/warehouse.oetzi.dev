@@ -17,6 +17,8 @@ export * from "./schemas/brands/brands";
 
 export * from "./schemas/certificates/certificates";
 
+export * from "./schemas/notifications/notifications";
+
 export * from "./schemas/discounts";
 export * from "./schemas/products/products";
 export * from "./schemas/products/product_labels";
@@ -77,6 +79,7 @@ export * from "./schemas/organizations/organization_suppliers";
 export * from "./schemas/organizations/organization_customers";
 export * from "./schemas/organizations/organizations_orders";
 export * from "./schemas/organizations/organizations_sales";
+export * from "./schemas/organizations/organization_notifications";
 
 export * from "./schemas/websocket";
 
