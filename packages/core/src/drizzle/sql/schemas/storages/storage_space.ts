@@ -1,10 +1,11 @@
 import { relations } from "drizzle-orm";
-import { json, text, varchar } from "drizzle-orm/pg-core";
+import { integer, json, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_storage_spaces_to_labels } from "./storage_inventory_to_labels";
+import { TB_storage_spaces_to_products } from "./storage_spaces_to_products";
 import { TB_storages } from "./storages";
 
 export const TB_storage_spaces = commonTable(
@@ -21,6 +22,7 @@ export const TB_storage_spaces = commonTable(
       height: number;
       length: number;
     }>(),
+    productCapacity: integer("product_capacity").notNull().default(0),
   },
   "storagespace",
 );
@@ -31,6 +33,7 @@ export const storage_inventory_relations = relations(TB_storage_spaces, ({ one, 
     references: [TB_storages.id],
   }),
   labels: many(TB_storage_spaces_to_labels),
+  products: many(TB_storage_spaces_to_products),
 }));
 
 export type StorageInventorySelect = typeof TB_storage_spaces.$inferSelect;

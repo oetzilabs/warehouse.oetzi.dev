@@ -57,7 +57,7 @@ export default function CustomerPage() {
           <div class="container flex flex-col gap-4 py-4">
             <div class="flex flex-row items-center justify-between gap-4">
               <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+                <Button variant="outline" size="sm" as={A} href="/customers">
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>

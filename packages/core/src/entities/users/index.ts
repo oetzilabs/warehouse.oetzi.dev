@@ -146,6 +146,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                     invs: {
                                       with: {
                                         labels: true,
+                                        products: {
+                                          with: {
+                                            product: true,
+                                          },
+                                        },
                                       },
                                     },
                                   },
@@ -192,6 +197,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             invs: {
                               with: {
                                 labels: true,
+                                products: {
+                                  with: {
+                                    product: true,
+                                  },
+                                },
                               },
                             },
                           },
@@ -301,6 +311,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                     invs: {
                                       with: {
                                         labels: true,
+                                        products: {
+                                          with: {
+                                            product: true,
+                                          },
+                                        },
                                       },
                                     },
                                   },
@@ -343,6 +358,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             invs: {
                               with: {
                                 labels: true,
+                                products: {
+                                  with: {
+                                    product: true,
+                                  },
+                                },
                               },
                             },
                           },
@@ -364,6 +384,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                         invs: {
                           with: {
                             labels: true,
+                            products: {
+                              with: {
+                                product: true,
+                              },
+                            },
                           },
                         },
                       },
@@ -524,6 +549,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                           invs: {
                                             with: {
                                               labels: true,
+                                              products: {
+                                                with: {
+                                                  product: true,
+                                                },
+                                              },
                                             },
                                           },
                                         },
@@ -570,6 +600,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   invs: {
                                     with: {
                                       labels: true,
+                                      products: {
+                                        with: {
+                                          product: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -705,6 +740,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                           invs: {
                                             with: {
                                               labels: true,
+                                              products: {
+                                                with: {
+                                                  product: true,
+                                                },
+                                              },
                                             },
                                           },
                                         },
@@ -747,6 +787,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   invs: {
                                     with: {
                                       labels: true,
+                                      products: {
+                                        with: {
+                                          product: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -768,6 +813,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                               invs: {
                                 with: {
                                   labels: true,
+                                  products: {
+                                    with: {
+                                      product: true,
+                                    },
+                                  },
                                 },
                               },
                             },
@@ -922,6 +972,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                           invs: {
                                             with: {
                                               labels: true,
+                                              products: {
+                                                with: {
+                                                  product: true,
+                                                },
+                                              },
                                             },
                                           },
                                         },
@@ -968,6 +1023,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   invs: {
                                     with: {
                                       labels: true,
+                                      products: {
+                                        with: {
+                                          product: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -1103,6 +1163,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                           invs: {
                                             with: {
                                               labels: true,
+                                              products: {
+                                                with: {
+                                                  product: true,
+                                                },
+                                              },
                                             },
                                           },
                                         },
@@ -1145,6 +1210,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                                   invs: {
                                     with: {
                                       labels: true,
+                                      products: {
+                                        with: {
+                                          product: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -1166,6 +1236,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                               invs: {
                                 with: {
                                   labels: true,
+                                  products: {
+                                    with: {
+                                      product: true,
+                                    },
+                                  },
                                 },
                               },
                             },

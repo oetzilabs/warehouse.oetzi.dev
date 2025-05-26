@@ -64,6 +64,20 @@
       "when": 1748204277460,
       "tag": "0008_salty_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1748261182089,
+      "tag": "0009_tiny_living_tribunal",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1748261355421,
+      "tag": "0010_great_wonder_man",
+      "breakpoints": true
     }
   ]
 }

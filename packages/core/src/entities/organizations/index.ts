@@ -119,6 +119,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                             invs: {
                               with: {
                                 labels: true,
+                                products: {
+                                  with: {
+                                    product: true,
+                                  },
+                                },
                               },
                             },
                           },
@@ -290,6 +295,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                                   invs: {
                                     with: {
                                       labels: true,
+                                      products: {
+                                        with: {
+                                          product: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },
@@ -391,6 +401,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                                   invs: {
                                     with: {
                                       labels: true,
+                                      products: {
+                                        with: {
+                                          product: true,
+                                        },
+                                      },
                                     },
                                   },
                                 },

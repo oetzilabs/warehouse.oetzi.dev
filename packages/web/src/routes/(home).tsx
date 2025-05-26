@@ -36,11 +36,11 @@ export default function IndexPage() {
                       <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-[60px] leading-none tracking-tight">
                         Supercharge your
                       </h1>
-                      <span class="px-2 py-0.5 rounded font-[Pacifico] text-6xl md:text-[200px] leading-none text-indigo-600 dark:text-indigo-500">
+                      <span class="px-2 py-0.5 rounded font-[Pacifico] text-6xl md:text-[180px] leading-none text-indigo-600 dark:text-indigo-500">
                         warehouse.
                       </span>
                     </div>
-                    <p class="text-muted-foreground text-base md:text-2xl font-medium">
+                    <p class="text-muted-foreground text-base md:text-xl font-medium">
                       Empower your business with seamless and efficient inventory solutions.
                     </p>
                   </div>
@@ -64,7 +64,7 @@ export default function IndexPage() {
                 </div>
               </div>
               <div class="w-full flex flex-row gap-4 items-center justify-center">
-                <div class="flex w-full md:w-5/6 rounded-xl h-auto aspect-video border border-neutral-200 dark:border-neutral-800 items-center justify-center">
+                <div class="flex w-full rounded-xl h-auto aspect-video border border-neutral-200 dark:border-neutral-800 items-center justify-center">
                   <span class="text-neutral-800 dark:text-neutral-200 text-lg font-medium select-none">
                     Hero Image Placeholder
                   </span>

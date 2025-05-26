@@ -4,13 +4,12 @@ import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, nullable, object, omit, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_order_products, TB_supplier_products } from "../../schema";
+import { TB_order_products, TB_storage_spaces_to_products, TB_supplier_products } from "../../schema";
 import { TB_brands } from "../brands/brands";
 import { TB_catalog_products } from "../catalogs/catalog_products";
 import { commonTable } from "../entity";
 import { TB_organizations_products } from "../organizations/organizations_products";
 import { TB_sale_items } from "../sales/sales_items";
-import { TB_storage_products } from "../storages/storage_products";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
 import { TB_products_to_labels } from "./product_labels";
@@ -100,7 +99,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
   certs: many(TB_products_to_certifications),
   stco: many(TB_products_to_storage_conditions),
   catalogs: many(TB_catalog_products),
-  storage: many(TB_storage_products),
+  space: many(TB_storage_spaces_to_products),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

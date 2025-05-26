@@ -6,7 +6,6 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_warehouse_areas } from "../../schema";
 import { commonTable } from "../entity";
 import { schema } from "../utils";
-import { TB_storage_products } from "./storage_products";
 import { TB_storage_spaces } from "./storage_space";
 import { TB_storage_types } from "./storage_types";
 
@@ -50,7 +49,6 @@ export const storage_relations = relations(TB_storages, ({ one, many }) => ({
     fields: [TB_storages.typeId],
     references: [TB_storage_types.id],
   }),
-  products: many(TB_storage_products),
   invs: many(TB_storage_spaces),
 }));
 

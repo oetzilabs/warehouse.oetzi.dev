@@ -14,13 +14,14 @@ import {
   TB_organizations,
   TB_organizations_notifications,
   TB_organizations_products,
+  TB_organizations_warehouses,
   TB_payment_methods,
   TB_product_labels,
   TB_products,
   TB_products_to_labels,
-  TB_storage_products,
   TB_storage_spaces,
   TB_storage_spaces_to_labels,
+  TB_storage_spaces_to_products,
   TB_storage_types,
   TB_storages,
   TB_suppliers,
@@ -287,6 +288,13 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .onConflictDoNothing()
                   .returning(),
               );
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organizations_warehouses)
+                  .values({ organizationId: org.id, warehouseId: warehouse.id })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
 
               // Process facilities
               for (const facility of facilities) {
@@ -359,14 +367,24 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                         );
                       }
 
-                      for (const productId of space.products) {
+                      for (const inventory of space.inventories) {
                         yield* Effect.promise(() =>
                           db
-                            .insert(TB_storage_products)
-                            .values({ productId: productId, storageId: storage.id })
+                            .insert(TB_storage_spaces)
+                            .values({ ...inventory, storageId: storage.id })
                             .onConflictDoNothing()
                             .returning(),
                         );
+
+                        for (const productId of inventory.products) {
+                          yield* Effect.promise(() =>
+                            db
+                              .insert(TB_storage_spaces_to_products)
+                              .values({ productId: productId, storageSpaceId: inventory.id })
+                              .onConflictDoNothing()
+                              .returning(),
+                          );
+                        }
                       }
                     }
                   }

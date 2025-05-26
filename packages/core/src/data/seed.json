@@ -372,7 +372,14 @@
                               "barcode": "asdf",
                               "dimensions": null,
                               "labels": [],
-                              "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                              "inventories": [
+                                {
+                                  "id": "inv_m21cs2a1ia2ebvdovsag66jy",
+                                  "name": "inventory test 1",
+                                  "barcode": "inv-test-1",
+                                  "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                                }
+                              ]
                             },
                             {
                               "id": "storagespace_jvfl0b6lpn360rwotw5r9mjv",
@@ -380,7 +387,14 @@
                               "barcode": "qwerty",
                               "dimensions": null,
                               "labels": [],
-                              "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                              "inventories": [
+                                {
+                                  "id": "inv_zsv150vhw66k0mrk2ui6zzl9",
+                                  "barcode": "inv-test-2",
+                                  "name": "inventory test 2",
+                                  "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                                }
+                              ]
                             },
                             {
                               "id": "storagespace_pz51twfrepl2afomq4s0e0nh",
@@ -388,7 +402,7 @@
                               "barcode": "hjkl",
                               "dimensions": null,
                               "labels": [],
-                              "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                              "inventories": []
                             },
                             {
                               "id": "storagespace_nd9jl7eo0419cz2smyx3n23g",
@@ -396,7 +410,7 @@
                               "barcode": "uiop",
                               "dimensions": null,
                               "labels": [],
-                              "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                              "inventories": []
                             },
                             {
                               "id": "storagespace_clx2zp2x5akbr078kkitibvp",
@@ -404,7 +418,7 @@
                               "barcode": "zxcv",
                               "dimensions": null,
                               "labels": [],
-                              "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                              "inventories": []
                             },
                             {
                               "id": "storagespace_azxh00m2eq13nc62mipgpah2",
@@ -412,7 +426,7 @@
                               "barcode": "dfgh",
                               "dimensions": null,
                               "labels": [],
-                              "products": []
+                              "inventories": []
                             },
                             {
                               "id": "storagespace_zwz1gmr4neb3pqusfwbt02oa",
@@ -420,7 +434,7 @@
                               "barcode": "tyui",
                               "dimensions": null,
                               "labels": [],
-                              "products": []
+                              "inventories": []
                             }
                           ]
                         },
@@ -446,7 +460,7 @@
                               "barcode": "123123",
                               "dimensions": null,
                               "labels": [],
-                              "products": []
+                              "inventories": []
                             },
                             {
                               "id": "storagespace_i2f47adado0smzbl3qd27ald",
@@ -454,7 +468,7 @@
                               "barcode": "a123a",
                               "dimensions": null,
                               "labels": [],
-                              "products": []
+                              "inventories": []
                             },
                             {
                               "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
@@ -462,7 +476,7 @@
                               "barcode": "testtest",
                               "dimensions": null,
                               "labels": [],
-                              "products": []
+                              "inventories": []
                             }
                           ]
                         }

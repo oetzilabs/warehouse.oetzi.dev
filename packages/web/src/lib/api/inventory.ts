@@ -37,10 +37,15 @@ export const getInventory = query(async () => {
 
       return yield* Effect.succeed({
         amountOfFacilities: facilites.length,
-        amounOfAreas: areas.length,
         amounOfStorages: storages.length,
-        totalCapacity: storages.map((s) => s.capacity).reduce((a, b) => a + b, 0),
-        totalCurrentOccupancy: storages.map((s) => s.currentOccupancy ?? 0).reduce((a, b) => a + b, 0),
+        totalCurrentOccupancy: storages
+          .map((s) => s.invs.map((i) => i.products.length))
+          .flat()
+          .reduce((a, b) => a + b, 0),
+        totalCapacity: storages
+          .map((s) => s.invs.map((i) => i.productCapacity))
+          .flat()
+          .reduce((a, b) => a + b, 0),
       });
     }).pipe(Effect.provide(WarehouseLive)),
   );

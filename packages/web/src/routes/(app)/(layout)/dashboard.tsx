@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { BarChart, LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
+import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import Building from "lucide-solid/icons/building";
 import ChartSpline from "lucide-solid/icons/chart-spline";
 import Check from "lucide-solid/icons/check";
 import Info from "lucide-solid/icons/info";
+import Map from "lucide-solid/icons/map";
+import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
+import Warehouse from "lucide-solid/icons/warehouse";
 import { For, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -27,6 +32,8 @@ export const route = {
 export default function DashboardPage() {
   const data = createAsync(async () => getDashboardData(), { deferStream: true });
   const notifications = createAsync(async () => getNotifications(), { deferStream: true });
+  const inventory = createAsync(async () => getInventory(), { deferStream: true });
+
   const acceptNotificationAction = useAction(acceptNotification);
   const isAcceptingNotification = useSubmission(acceptNotification);
 
@@ -41,7 +48,7 @@ export default function DashboardPage() {
             <Button
               size="sm"
               onClick={() => {
-                toast.promise(revalidate([getNotifications.key, getDashboardData.key]), {
+                toast.promise(revalidate([getNotifications.key, getDashboardData.key, getInventory.key]), {
                   loading: "Refreshing dashboard...",
                   success: "Refreshed dashboard",
                   error: "Failed to refresh dashboard",
@@ -66,7 +73,7 @@ export default function DashboardPage() {
                           <Check class="size-4" />
                           <AlertTitle>No notifications!</AlertTitle>
                           <AlertDescription>
-                            <span>Seems like you haven't gotten any notifications yet, great!</span>
+                            <span>You're all caught up! No new notifications.</span>
                           </AlertDescription>
                         </Alert>
                       }
@@ -88,6 +95,53 @@ export default function DashboardPage() {
                         </Alert>
                       )}
                     </For>
+                  </div>
+                )}
+              </Show>
+              <Show when={inventory()}>
+                {(inv) => (
+                  <div class="grid grid-cols-2 md:grid-cols-4 w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 items-center">
+                    <A
+                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 border-r hover:bg-muted-foreground/5"
+                      href="/inventory"
+                    >
+                      <div class="flex items-center gap-4 justify-between w-full">
+                        <span class="text-sm font-semibold">Stock</span>
+                        <Package class="size-4" />
+                      </div>
+                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400 ">
+                        {inv().totalCurrentOccupancy}/{inv().totalCapacity}
+                      </span>
+                    </A>
+                    <A
+                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5"
+                      href="/inventory"
+                    >
+                      <div class="flex items-center gap-4 justify-between w-full">
+                        <span class="text-sm font-semibold">Storages</span>
+                        <Warehouse class="size-4" />
+                      </div>
+                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">
+                        {inv().amounOfStorages}
+                      </span>
+                    </A>
+                    <A
+                      class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5"
+                      href="/orders/suppliers"
+                    >
+                      <div class="flex items-center gap-4 justify-between w-full">
+                        <span class="text-sm font-semibold">Soon to be ordered</span>
+                        <Map class="size-4" />
+                      </div>
+                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
+                    </A>
+                    <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5" href="/async">
+                      <div class="flex items-center gap-4 justify-between w-full">
+                        <span class="text-sm font-semibold">Async Work</span>
+                        <Building class="size-4" />
+                      </div>
+                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
+                    </A>
                   </div>
                 )}
               </Show>

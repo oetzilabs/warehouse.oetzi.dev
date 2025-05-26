@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { TextField, TextFieldErrorMessage, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { createSupplier } from "@/lib/api/suppliers";
-import { RouteDefinition, useAction, useNavigate, useSubmission } from "@solidjs/router";
+import { A, RouteDefinition, useAction, useNavigate, useSubmission } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import { type SupplierCreate } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/suppliers/suppliers";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
@@ -57,7 +57,7 @@ export default function NewSupplierPage() {
     <div class="container flex flex-col grow py-4 gap-4">
       <div class="flex items-center gap-4 justify-between w-full">
         <div class="flex items-center gap-4">
-          <Button size="sm" variant="outline" onClick={() => navigate(-1)}>
+          <Button size="sm" variant="outline" as={A} href="/suppliers">
             <ArrowLeft class="size-4" />
             Back
           </Button>
