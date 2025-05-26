@@ -13,6 +13,7 @@ import {
   TB_suppliers,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationInvalidId } from "../organizations/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   SupplierContactNotCreated,
@@ -98,7 +99,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                 },
               },
               contacts: true,
-              notes: true,
+              notes: {
+                orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
+              },
               organizations: true,
               orgOrders: {
                 with: {
@@ -225,6 +228,42 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return orgSuppliers.map((orgSupplier) => orgSupplier.supplier);
       });
 
+    const getOrdersBySupplierIdAndOrganizationId = (supplierId: string, organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedSupplierId = safeParse(prefixed_cuid2, supplierId);
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedSupplierId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id: supplierId }));
+        }
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_organizations_supplierorders.findMany({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.supplier_id, parsedSupplierId.output),
+                operations.eq(fields.organization_id, parsedOrganizationId.output),
+              ),
+            with: {
+              order: {
+                with: {
+                  prods: {
+                    with: {
+                      product: {
+                        with: {
+                          labels: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+      });
+
     const remove = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
@@ -259,7 +298,17 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return deleted;
       });
 
-    return { create, findById, update, addContact, addNote, findByOrganizationId, remove, safeRemove } as const;
+    return {
+      create,
+      findById,
+      update,
+      addContact,
+      addNote,
+      findByOrganizationId,
+      remove,
+      safeRemove,
+      getOrdersBySupplierIdAndOrganizationId,
+    } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

@@ -16,15 +16,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { deleteSupplier, getSupplierById } from "@/lib/api/suppliers";
-import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
+import {
+  A,
+  createAsync,
+  revalidate,
+  RouteDefinition,
+  useAction,
+  useNavigate,
+  useParams,
+  useSubmission,
+} from "@solidjs/router";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Database from "lucide-solid/icons/database";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import PackagePlus from "lucide-solid/icons/package-plus";
+import Plus from "lucide-solid/icons/plus";
+import RotateCw from "lucide-solid/icons/rotate-cw";
+import ScanBarcode from "lucide-solid/icons/scan-barcode";
 import X from "lucide-solid/icons/x";
-import { createSignal, Show, Suspense } from "solid-js";
+import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
+
+dayjs.extend(relativeTime);
 
 export const route = {
   preload: (props) => {
@@ -61,9 +78,23 @@ export default function SupplierPage() {
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
-                <h1 class="text-xl font-semibold">{supplierInfo().name}</h1>
+                <h1 class="text-xl font-semibold">{supplierInfo().supplier.name}</h1>
               </div>
               <div class="flex flex-row items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    toast.promise(revalidate(getSupplierById.keyFor(supplierInfo().supplier.id)), {
+                      loading: "Refreshing supplier...",
+                      success: "Refreshed supplier",
+                      error: "Failed to refresh supplier",
+                    });
+                  }}
+                >
+                  <RotateCw class="size-4" />
+                  Refresh
+                </Button>
                 <DropdownMenu placement="bottom-end">
                   <DropdownMenuTrigger as={Button} variant="outline" size="icon">
                     <MoreHorizontal class="size-4" />
@@ -93,7 +124,7 @@ export default function SupplierPage() {
                             variant="destructive"
                             onClick={() => {
                               const promise = new Promise(async (resolve, reject) => {
-                                const p = await deleteSupplierAction(supplierInfo().id).catch(reject);
+                                const p = await deleteSupplierAction(supplierInfo().supplier.id).catch(reject);
                                 setDeleteDialogOpen(false);
                                 navigate("/suppliers");
                                 return resolve(p);
@@ -120,23 +151,180 @@ export default function SupplierPage() {
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <h2 class="font-medium">Contact Information</h2>
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Email: {supplierInfo().email ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">Phone: {supplierInfo().phone ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">Website: {supplierInfo().website ?? "N/A"}</span>
+                    <span class="text-sm text-muted-foreground">Email: {supplierInfo().supplier.email ?? "N/A"}</span>
+                    <span class="text-sm text-muted-foreground">Phone: {supplierInfo().supplier.phone ?? "N/A"}</span>
+                    <span class="text-sm text-muted-foreground">
+                      Website: {supplierInfo().supplier.website ?? "N/A"}
+                    </span>
                   </div>
                 </div>
 
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <h2 class="font-medium">Business Details</h2>
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Tax ID: {supplierInfo().tax_id ?? "N/A"}</span>
+                    <span class="text-sm text-muted-foreground">Tax ID: {supplierInfo().supplier.tax_id ?? "N/A"}</span>
                     <span class="text-sm text-muted-foreground">
-                      Bank Details: {supplierInfo().bank_details ?? "N/A"}
+                      Bank Details: {supplierInfo().supplier.bank_details ?? "N/A"}
                     </span>
                     <span class="text-sm text-muted-foreground">
-                      Payment Terms: {supplierInfo().payment_terms ?? "N/A"}
+                      Payment Terms: {supplierInfo().supplier.payment_terms ?? "N/A"}
                     </span>
-                    <span class="text-sm text-muted-foreground">Supplier Code: {supplierInfo().code ?? "N/A"}</span>
+                    <span class="text-sm text-muted-foreground">
+                      Supplier Code: {supplierInfo().supplier.code ?? "N/A"}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-2 justify-between border-b p-4 py-2 pr-2">
+                    <h2 class="font-medium">Products</h2>
+                    <div class="flex flex-row items-center gap-2">
+                      <Button size="sm" variant="outline" class="bg-background">
+                        <PackagePlus class="size-4" />
+                        Import
+                      </Button>
+                      <Button size="sm">
+                        <PackagePlus class="size-4" />
+                        Assign Product
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="flex flex-col">
+                    <Show when={supplierInfo().supplier.products.length === 0}>
+                      <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5 rounded-md">
+                        <span class="text-sm text-muted-foreground">No products added</span>
+                        <div class="flex flex-row gap-2 items-center justify-center">
+                          <Button size="sm">
+                            <PackagePlus class="size-4" />
+                            Assign Product
+                          </Button>
+                          <Button size="sm" variant="outline" class="bg-background">
+                            <ScanBarcode class="size-4" />
+                            Import
+                          </Button>
+                        </div>
+                      </div>
+                    </Show>
+                    <Show when={supplierInfo().supplier.products.length > 0}>
+                      <div class="flex flex-col gap-1 p-4">
+                        <For each={supplierInfo().supplier.products}>
+                          {(product) => (
+                            <div class="flex flex-row gap-2 items-center justify-between">
+                              <span class="text-sm text-muted-foreground">{product.product.name}</span>
+                              <span class="text-sm text-muted-foreground">{product.product.sku}</span>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </div>
+                </div>
+
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                    <h2 class="font-medium">Orders</h2>
+                    <div class="flex flex-row items-center">
+                      <Button size="sm">
+                        <Plus class="size-4" />
+                        Place Order
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="flex flex-col w-full">
+                    <Show when={supplierInfo().orders.length === 0}>
+                      <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
+                        <span class="text-sm text-muted-foreground">No orders have been made</span>
+                        <div class="flex flex-row gap-2 items-center justify-center">
+                          <Button size="sm">
+                            <Plus class="size-4" />
+                            Place Order
+                          </Button>
+                          <Button size="sm" variant="outline" class="bg-background">
+                            <Database class="size-4" />
+                            Import
+                          </Button>
+                        </div>
+                      </div>
+                    </Show>
+                    <Show when={supplierInfo().orders.length > 0}>
+                      <div class="flex flex-col gap-1 p-4">
+                        <For each={supplierInfo().orders}>
+                          {(o) => (
+                            <div class="flex flex-row gap-2 items-center justify-between">
+                              {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
+                              <span class="text-sm text-muted-foreground">
+                                {o.order.prods.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
+                              </span>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </div>
+                </div>
+
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                    <h2 class="font-medium">Notes</h2>
+                    <div class="flex flex-row items-center">
+                      <Button size="sm">
+                        <Plus class="size-4" />
+                        Add Note
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="flex flex-col w-full">
+                    <Show when={supplierInfo().supplier.notes.length === 0}>
+                      <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
+                        <span class="text-sm text-muted-foreground">No notes have been made</span>
+                        <div class="flex flex-row gap-2 items-center justify-center">
+                          <Button size="sm">
+                            <Plus class="size-4" />
+                            Add Note
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            class="bg-background"
+                            onClick={() => {
+                              toast.promise(revalidate(getSupplierById.keyFor(supplierInfo().supplier.id)), {
+                                loading: "Refreshing supplier...",
+                                success: "Refreshed supplier",
+                                error: "Failed to refresh supplier",
+                              });
+                            }}
+                          >
+                            <RotateCw class="size-4" />
+                            Refresh
+                          </Button>
+                        </div>
+                      </div>
+                    </Show>
+                    <Show when={supplierInfo().supplier.notes.length > 0}>
+                      <div class="flex flex-col gap-0">
+                        <For each={supplierInfo().supplier.notes}>
+                          {(note) => (
+                            <div class="flex flex-col gap-2 p-4 border-b last:border-b-0 hover:bg-muted-foreground/5">
+                              <div class="flex flex-col gap-3">
+                                <div class="flex flex-row items-center gap-1 justify-between">
+                                  <span class="font-semibold">{note.title}</span>
+                                  <div class="flex flex-row items-center gap-2 w-max">
+                                    <Button size="icon" variant="outline" class="bg-background size-6">
+                                      <Edit class="size-3" />
+                                    </Button>
+                                    <Button size="icon" variant="outline" class="bg-background size-6">
+                                      <X class="size-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <span class="text-sm text-muted-foreground">{note.content}</span>
+                              </div>
+                              <span class="text-sm text-muted-foreground">{dayjs(note.createdAt).fromNow()}</span>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
                   </div>
                 </div>
               </div>
@@ -145,12 +333,12 @@ export default function SupplierPage() {
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <h2 class="font-medium">Status</h2>
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Status: {supplierInfo().status}</span>
+                    <span class="text-sm text-muted-foreground">Status: {supplierInfo().supplier.status}</span>
                     <span class="text-sm text-muted-foreground">
-                      Created: {dayjs(supplierInfo().createdAt).format("MMM DD, YYYY")}
+                      Created: {dayjs(supplierInfo().supplier.createdAt).format("MMM DD, YYYY")}
                     </span>
                     <span class="text-sm text-muted-foreground">
-                      Last Updated: {dayjs(supplierInfo().updatedAt).format("MMM DD, YYYY")}
+                      Last Updated: {dayjs(supplierInfo().supplier.updatedAt).format("MMM DD, YYYY")}
                     </span>
                   </div>
                 </div>

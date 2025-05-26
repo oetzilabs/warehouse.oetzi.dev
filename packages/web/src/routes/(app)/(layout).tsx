@@ -44,6 +44,7 @@ const Link = (
   props: ParentProps<{
     href: string;
     disabled?: boolean;
+    exact?: boolean;
   }>,
 ) => {
   const location = useLocation();
@@ -51,7 +52,8 @@ const Link = (
   return (
     <SidebarMenuButton
       class={cn("hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 select-none", {
-        "text-white bg-indigo-600 font-medium hover:bg-indigo-600": relativePath() === props.href,
+        "text-white bg-indigo-600 font-medium hover:bg-indigo-600":
+          (relativePath() === props.href && props.exact) || (relativePath().startsWith(props.href) && !props.exact),
         "opacity-50 hover:bg-transparent": props.disabled,
       })}
       as={props.disabled ? "div" : A}

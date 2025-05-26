@@ -45,11 +45,28 @@ export const getSupplierById = query(async (id: string) => {
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
 
   const supplier = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
-      return yield* supplierService.findById(id);
+      const supplier = yield* supplierService.findById(id);
+      if (!supplier) {
+        throw redirect(`/suppliers/${id}`, { status: 404, statusText: "Not Found" });
+      }
+      const orders = yield* supplierService.getOrdersBySupplierIdAndOrganizationId(supplier.id, orgId);
+      return { supplier, orders };
     }).pipe(Effect.provide(SupplierLive)),
   );
   return supplier;
