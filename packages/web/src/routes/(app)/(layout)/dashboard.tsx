@@ -10,15 +10,15 @@ import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import Building from "lucide-solid/icons/building";
 import ChartSpline from "lucide-solid/icons/chart-spline";
 import Check from "lucide-solid/icons/check";
+import ClockFading from "lucide-solid/icons/clock-fading";
 import Info from "lucide-solid/icons/info";
-import Map from "lucide-solid/icons/map";
+import Layers from "lucide-solid/icons/layers";
 import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import Warehouse from "lucide-solid/icons/warehouse";
+import Workflow from "lucide-solid/icons/workflow";
 import { For, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
                         <span class="text-sm font-semibold">Storages</span>
-                        <Warehouse class="size-4" />
+                        <Layers class="size-4" />
                       </div>
                       <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">
                         {inv().amounOfStorages}
@@ -131,14 +131,14 @@ export default function DashboardPage() {
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
                         <span class="text-sm font-semibold">Soon to be ordered</span>
-                        <Map class="size-4" />
+                        <ClockFading class="size-4" />
                       </div>
                       <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
                     </A>
                     <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5" href="/async">
                       <div class="flex items-center gap-4 justify-between w-full">
                         <span class="text-sm font-semibold">Async Work</span>
-                        <Building class="size-4" />
+                        <Workflow class="size-4" />
                       </div>
                       <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
                     </A>
