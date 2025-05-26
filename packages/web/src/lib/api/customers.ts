@@ -45,11 +45,33 @@ export const getCustomerById = query(async (id: string) => {
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
 
   const customer = await Effect.runPromise(
     Effect.gen(function* (_) {
       const customerService = yield* _(CustomerService);
-      return yield* customerService.findById(id);
+      const customer = yield* customerService.findById(id);
+      if (!customer) {
+        throw redirect(`/customers/${id}`, { status: 404, statusText: "Not Found" });
+      }
+
+      const orders = yield* customerService.getOrdersByCustomerIdAndOrganizationId(customer.id, orgId);
+
+      return {
+        customer,
+        orders,
+      };
     }).pipe(Effect.provide(CustomerLive)),
   );
   return customer;

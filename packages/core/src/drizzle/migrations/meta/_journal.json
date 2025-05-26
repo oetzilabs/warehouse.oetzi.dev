@@ -78,6 +78,13 @@
       "when": 1748261355421,
       "tag": "0010_great_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1748267955053,
+      "tag": "0011_true_star_brand",
+      "breakpoints": true
     }
   ]
 }

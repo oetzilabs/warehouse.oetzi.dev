@@ -52,6 +52,9 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           },
         },
       },
+      notes: {
+        orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
+      },
     });
 
     const create = (input: InferInput<typeof CustomerCreateSchema>, orgId: string) =>
@@ -106,6 +109,9 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                     },
                   },
                 },
+              },
+              notes: {
+                orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
               },
             },
           }),
@@ -185,12 +191,65 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                       },
                     },
                   },
+                  notes: {
+                    orderBy: (fields, operations) => [
+                      operations.desc(fields.updatedAt),
+                      operations.desc(fields.createdAt),
+                    ],
+                  },
                 },
               },
             },
           }),
         );
         return orgCustomers.map((orgCustomer) => orgCustomer.customer);
+      });
+
+    const getOrdersByCustomerIdAndOrganizationId = (customerId: string, organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedCustomerId = safeParse(prefixed_cuid2, customerId);
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedCustomerId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id: customerId }));
+        }
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_organizations_customerorders.findMany({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.customer_id, parsedCustomerId.output),
+                operations.eq(fields.organization_id, parsedOrganizationId.output),
+              ),
+            with: {
+              order: {
+                with: {
+                  prods: {
+                    with: {
+                      product: {
+                        with: {
+                          labels: true,
+                          brands: true,
+                          certs: {
+                            with: {
+                              cert: true,
+                            },
+                          },
+                          stco: {
+                            with: {
+                              condition: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
       });
 
     const remove = (id: string) =>
@@ -227,7 +286,16 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         return deleted;
       });
 
-    return { create, findById, update, getSalesHistory, findByOrganizationId, remove, safeRemove } as const;
+    return {
+      create,
+      findById,
+      update,
+      getSalesHistory,
+      findByOrganizationId,
+      remove,
+      safeRemove,
+      getOrdersByCustomerIdAndOrganizationId,
+    } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

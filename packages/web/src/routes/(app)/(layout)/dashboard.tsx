@@ -130,12 +130,12 @@ export default function DashboardPage() {
                       href="/orders/suppliers"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
-                        <span class="text-sm font-semibold">Soon to be ordered</span>
+                        <span class="text-sm font-semibold">Pending Supply Orders</span>
                         <ClockFading class="size-4" />
                       </div>
                       <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
                     </A>
-                    <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5" href="/async">
+                    <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5" href="#">
                       <div class="flex items-center gap-4 justify-between w-full">
                         <span class="text-sm font-semibold">Async Work</span>
                         <Workflow class="size-4" />

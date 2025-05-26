@@ -28,7 +28,9 @@ export * from "./schemas/products/products_to_storage_conditions";
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";
 export * from "./schemas/sales/sales_discounts";
+
 export * from "./schemas/customers/customers";
+export * from "./schemas/customers/customer_notes";
 
 export * from "./schemas/catalogs/catalogs";
 export * from "./schemas/catalogs/catalog_products";
