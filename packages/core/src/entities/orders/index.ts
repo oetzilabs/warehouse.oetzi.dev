@@ -43,6 +43,11 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             },
           },
         },
+        custSched: {
+          with: {
+            schedule: true,
+          },
+        },
         prods: {
           with: {
             product: true,
@@ -83,6 +88,11 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                       hashed_password: false,
                     },
                   },
+                },
+              },
+              custSched: {
+                with: {
+                  schedule: true,
                 },
               },
               prods: {
@@ -153,7 +163,18 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             where: (fields, operations) => operations.eq(fields.userId, parsedUserId.output),
             with: {
               order: {
-                with: relations,
+                with: {
+                  custSched: {
+                    with: {
+                      schedule: true,
+                    },
+                  },
+                  prods: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
               },
             },
           }),
@@ -195,6 +216,11 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             with: {
               order: {
                 with: {
+                  custSched: {
+                    with: {
+                      schedule: true,
+                    },
+                  },
                   users: {
                     with: {
                       user: {
@@ -229,6 +255,11 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             with: {
               order: {
                 with: {
+                  custSched: {
+                    with: {
+                      schedule: true,
+                    },
+                  },
                   users: {
                     with: {
                       user: {

@@ -25,6 +25,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_customers.findMany>[0]>;
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
+      schedules: {
+        with: {
+          schedule: true,
+        },
+      },
       sales: {
         with: {
           items: {
@@ -43,6 +48,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         with: {
           order: {
             with: {
+              custSched: {
+                with: {
+                  schedule: true,
+                },
+              },
               prods: {
                 with: {
                   product: true,
@@ -101,6 +111,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                 with: {
                   order: {
                     with: {
+                      custSched: {
+                        with: {
+                          schedule: true,
+                        },
+                      },
                       prods: {
                         with: {
                           product: true,
@@ -164,6 +179,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             with: {
               customer: {
                 with: {
+                  schedules: {
+                    with: {
+                      schedule: true,
+                    },
+                  },
                   sales: {
                     with: {
                       items: {
@@ -182,6 +202,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                     with: {
                       order: {
                         with: {
+                          custSched: {
+                            with: {
+                              schedule: true,
+                            },
+                          },
                           prods: {
                             with: {
                               product: true,
@@ -225,6 +250,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             with: {
               order: {
                 with: {
+                  custSched: {
+                    with: {
+                      schedule: true,
+                    },
+                  },
                   prods: {
                     with: {
                       product: {

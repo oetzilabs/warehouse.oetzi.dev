@@ -19,6 +19,8 @@ export * from "./schemas/certificates/certificates";
 
 export * from "./schemas/notifications/notifications";
 
+export * from "./schemas/schedules/schedules";
+
 export * from "./schemas/discounts";
 export * from "./schemas/products/products";
 export * from "./schemas/products/product_labels";
@@ -31,6 +33,7 @@ export * from "./schemas/sales/sales_discounts";
 
 export * from "./schemas/customers/customers";
 export * from "./schemas/customers/customer_notes";
+export * from "./schemas/customers/customer_schedules";
 
 export * from "./schemas/catalogs/catalogs";
 export * from "./schemas/catalogs/catalog_products";

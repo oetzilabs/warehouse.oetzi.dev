@@ -7,9 +7,11 @@ import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
 import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
+import { getSchedules } from "@/lib/api/schedules";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import CalendarClock from "lucide-solid/icons/calendar-clock";
 import ChartSpline from "lucide-solid/icons/chart-spline";
 import Check from "lucide-solid/icons/check";
 import ClockFading from "lucide-solid/icons/clock-fading";
@@ -33,6 +35,7 @@ export default function DashboardPage() {
   const data = createAsync(async () => getDashboardData(), { deferStream: true });
   const notifications = createAsync(async () => getNotifications(), { deferStream: true });
   const inventory = createAsync(async () => getInventory(), { deferStream: true });
+  const schedules = createAsync(async () => getSchedules(), { deferStream: true });
 
   const acceptNotificationAction = useAction(acceptNotification);
   const isAcceptingNotification = useSubmission(acceptNotification);
@@ -113,18 +116,20 @@ export default function DashboardPage() {
                         {inv().totalCurrentOccupancy}/{inv().totalCapacity}
                       </span>
                     </A>
-                    <A
-                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5"
-                      href="/inventory"
-                    >
-                      <div class="flex items-center gap-4 justify-between w-full">
-                        <span class="text-sm font-semibold">Storages</span>
-                        <Layers class="size-4" />
-                      </div>
-                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">
-                        {inv().amounOfStorages}
-                      </span>
-                    </A>
+                    <Show when={schedules()}>
+                      {(s) => (
+                        <A
+                          class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5"
+                          href="/inventory"
+                        >
+                          <div class="flex items-center gap-4 justify-between w-full">
+                            <span class="text-sm font-semibold">Schedules</span>
+                            <CalendarClock class="size-4" />
+                          </div>
+                          <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">{s().length}</span>
+                        </A>
+                      )}
+                    </Show>
                     <A
                       class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5"
                       href="/orders/suppliers"

@@ -63,7 +63,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                 },
                 customerOrders: {
                   with: {
-                    order: true,
+                    order: {
+                      with: {
+                        custSched: {
+                          with: {
+                            schedule: true,
+                            customer: true,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
                 supplierOrders: {
@@ -657,7 +666,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                       },
                       customerOrders: {
                         with: {
-                          order: true,
+                          order: {
+                            with: {
+                              custSched: {
+                                with: {
+                                  schedule: true,
+                                  customer: true,
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                       supplierOrders: {
@@ -889,7 +907,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                       },
                       customerOrders: {
                         with: {
-                          order: true,
+                          order: {
+                            with: {
+                              custSched: {
+                                with: {
+                                  schedule: true,
+                                  customer: true,
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                       supplierOrders: {
@@ -1080,7 +1107,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                       },
                       customerOrders: {
                         with: {
-                          order: true,
+                          order: {
+                            with: {
+                              custSched: {
+                                with: {
+                                  schedule: true,
+                                  customer: true,
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                       supplierOrders: {

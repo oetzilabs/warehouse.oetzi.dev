@@ -10,6 +10,7 @@ import { TB_organizations_customerorders } from "../organizations/organizations_
 import { TB_sales } from "../sales/sales";
 import { schema } from "../utils";
 import { TB_customer_notes } from "./customer_notes";
+import { TB_customer_schedules } from "./customer_schedules";
 
 export const customer_status = schema.enum("customer_status", ["active", "inactive", "blocked"]);
 
@@ -34,6 +35,7 @@ export const customer_relations = relations(TB_customers, ({ many, one }) => ({
   organizations: many(TB_organization_customers),
   orgOrders: many(TB_organizations_customerorders),
   notes: many(TB_customer_notes),
+  schedules: many(TB_customer_schedules),
 }));
 
 export type CustomerSelect = typeof TB_customers.$inferSelect;

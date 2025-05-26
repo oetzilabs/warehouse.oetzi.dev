@@ -3,6 +3,7 @@ import { json, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { TB_customer_schedules } from "../customers/customer_schedules";
 import { TB_customers } from "../customers/customers";
 import { commonTable } from "../entity";
 import {
@@ -32,6 +33,7 @@ export const order_relations = relations(TB_orders, ({ one, many }) => ({
   prods: many(TB_order_products),
   oco: many(TB_organizations_customerorders),
   oso: many(TB_organizations_supplierorders),
+  custSched: many(TB_customer_schedules),
 }));
 
 export type OrderSelect = typeof TB_orders.$inferSelect;

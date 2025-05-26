@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import Fuse, { IFuseOptions } from "fuse.js"; // Import Fuse
 import { Accessor, createMemo } from "solid-js";
 
 dayjs.extend(isBetween);
@@ -30,6 +31,8 @@ export type FilterConfig<T> = {
   search: {
     term: string;
     fields?: (keyof T)[];
+    // Add Fuse.js options here
+    fuseOptions?: IFuseOptions<T>;
   };
   sort: {
     default: string;
@@ -46,6 +49,25 @@ export type WithDates = object & {
 };
 
 export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: FilterConfig<T>) {
+  // Create a memoized Fuse instance
+  const fuse = createMemo(() => {
+    const list = data(); // Fuse works on the list itself
+    const options: IFuseOptions<T> = {
+      // Basic options - adjust as needed
+      isCaseSensitive: false,
+      // includeScore: true, // Uncomment to get a score for each match
+      // includeMatches: true, // Uncomment to see which parts matched
+      threshold: 0.4, // Adjust this threshold (0 is exact, 1 is anything)
+      // location: 0, // Start location
+      // distance: 100, // Max distance from location
+      // maxPatternLength: 32,
+      minMatchCharLength: 1,
+      keys: config.search.fields ? config.search.fields.map(String) : Object.keys(list[0] || {}), // Use specified fields or all keys
+      ...config.search.fuseOptions, // Allow overriding options
+    };
+    return new Fuse(list, options);
+  });
+
   return createMemo(() => {
     let filtered = data();
     if (config.disabled()) return filtered;
@@ -89,12 +111,14 @@ export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: Filt
     }
 
     const term = config.search.term.toLowerCase();
-    filtered = filtered.filter((item) => {
-      if (config.search?.fields) {
-        return config.search.fields.some((field) => String(item[field]).toLowerCase().includes(term));
-      }
-      return JSON.stringify(item).toLowerCase().includes(term);
-    });
+    // Use Fuse.js for searching
+    if (term) {
+      // Fuse.js search returns an array of result objects
+      // We map these back to your original data objects
+      filtered = fuse()
+        .search(term)
+        .map((result) => result.item);
+    }
 
     const currentVariant = config.sort.variants.find((v) => v.field === (config.sort.current || config.sort.default));
     if (currentVariant) {
@@ -107,3 +131,6 @@ export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: Filt
     return filtered;
   });
 }
+
+// You can remove the custom levenshteinDistance, doesValueMatch, and doesObjectMatch functions now
+// since Fuse.js handles the fuzzy matching.

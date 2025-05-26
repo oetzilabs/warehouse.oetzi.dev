@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."customer_schedules" ADD COLUMN "order_id" varchar;--> statement-breakpoint
+ALTER TABLE "warehouse"."customer_schedules" ADD CONSTRAINT "customer_schedules_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "warehouse"."orders"("id") ON DELETE no action ON UPDATE no action;
