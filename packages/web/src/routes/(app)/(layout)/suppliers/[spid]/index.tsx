@@ -78,7 +78,7 @@ export default function SupplierPage() {
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
-                <h1 class="text-xl font-semibold">{supplierInfo().supplier.name}</h1>
+                <h1 class="text-xl font-semibold">Supplier</h1>
               </div>
               <div class="flex flex-row items-center gap-2">
                 <Button
@@ -95,103 +95,102 @@ export default function SupplierPage() {
                   <RotateCw class="size-4" />
                   Refresh
                 </Button>
-                <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
-                    <MoreHorizontal class="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href="./edit">
-                      <Edit class="size-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
-                      <DialogTrigger as={DropdownMenuItem} class="!text-red-500 gap-2 cursor-pointer">
-                        <X class="size-4" />
-                        Delete
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Are you sure you want to delete this supplier?</DialogTitle>
-                          <DialogDescription>
-                            This action cannot be undone. This will permanently delete the supplier and all its data.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => {
-                              const promise = new Promise(async (resolve, reject) => {
-                                const p = await deleteSupplierAction(supplierInfo().supplier.id).catch(reject);
-                                setDeleteDialogOpen(false);
-                                navigate("/suppliers");
-                                return resolve(p);
-                              });
-                              toast.promise(promise, {
-                                loading: "Deleting supplier...",
-                                success: "Supplier deleted",
-                                error: "Failed to delete supplier",
-                              });
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-col gap-4 w-full h-content">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Contact Information</h2>
+                <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+                  <div class="flex flex-row items-center gap-2 justify-between">
+                    <h2 class="text-2xl font-bold tracking-wide uppercase">{supplierInfo().supplier.name}</h2>
+                    <div class="flex flex-row items-center">
+                      <DropdownMenu placement="bottom-end">
+                        <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">
+                          <MoreHorizontal class="size-3" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href="./edit">
+                            <Edit class="size-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
+                            <DialogTrigger
+                              as={DropdownMenuItem}
+                              closeOnSelect={false}
+                              onSelect={() => {
+                                setTimeout(() => setDeleteDialogOpen(true), 10);
+                              }}
+                              class="!text-red-500 gap-2 cursor-pointer"
+                            >
+                              <X class="size-4" />
+                              Delete
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Are you sure you want to delete this supplier?</DialogTitle>
+                                <DialogDescription>
+                                  This action cannot be undone. This will permanently delete the supplier and all its
+                                  data.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => {
+                                    const promise = new Promise(async (resolve, reject) => {
+                                      const p = await deleteSupplierAction(supplierInfo().supplier.id).catch(reject);
+                                      setDeleteDialogOpen(false);
+                                      navigate("/suppliers");
+                                      return resolve(p);
+                                    });
+                                    toast.promise(promise, {
+                                      loading: "Deleting supplier...",
+                                      success: "Supplier deleted",
+                                      error: "Failed to delete supplier",
+                                    });
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Email: {supplierInfo().supplier.email ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">Phone: {supplierInfo().supplier.phone ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Email: {supplierInfo().supplier.email ?? "N/A"}
+                    </span>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Phone: {supplierInfo().supplier.phone ?? "N/A"}
+                    </span>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
                       Website: {supplierInfo().supplier.website ?? "N/A"}
                     </span>
-                  </div>
-                </div>
-
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Business Details</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Tax ID: {supplierInfo().supplier.tax_id ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">
-                      Bank Details: {supplierInfo().supplier.bank_details ?? "N/A"}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Payment Terms: {supplierInfo().supplier.payment_terms ?? "N/A"}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Supplier Code: {supplierInfo().supplier.code ?? "N/A"}
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Code: {supplierInfo().supplier.code ?? "N/A"}
                     </span>
                   </div>
                 </div>
 
                 <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between border-b p-4 py-2 pr-2">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
                     <h2 class="font-medium">Products</h2>
-                    <div class="flex flex-row items-center gap-2">
-                      <Button size="sm" variant="outline" class="bg-background">
-                        <PackagePlus class="size-4" />
-                        Import
-                      </Button>
+                    <div class="flex flex-row items-center">
                       <Button size="sm">
-                        <PackagePlus class="size-4" />
-                        Assign Product
+                        <Plus class="size-4" />
+                        Place Order
                       </Button>
                     </div>
                   </div>
-                  <div class="flex flex-col">
+                  <div class="flex flex-col w-full">
                     <Show when={supplierInfo().supplier.products.length === 0}>
-                      <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5 rounded-md">
+                      <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
                         <span class="text-sm text-muted-foreground">No products added</span>
                         <div class="flex flex-row gap-2 items-center justify-center">
                           <Button size="sm">
@@ -325,21 +324,6 @@ export default function SupplierPage() {
                         </For>
                       </div>
                     </Show>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Status</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Status: {supplierInfo().supplier.status}</span>
-                    <span class="text-sm text-muted-foreground">
-                      Created: {dayjs(supplierInfo().supplier.createdAt).format("MMM DD, YYYY")}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Last Updated: {dayjs(supplierInfo().supplier.updatedAt).format("MMM DD, YYYY")}
-                    </span>
                   </div>
                 </div>
               </div>

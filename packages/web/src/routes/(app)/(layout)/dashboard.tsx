@@ -23,6 +23,7 @@ import RotateCw from "lucide-solid/icons/rotate-cw";
 import Workflow from "lucide-solid/icons/workflow";
 import { For, Show } from "solid-js";
 import { toast } from "solid-sonner";
+import "@fontsource-variable/geist-mono";
 
 export const route = {
   preload: async () => {
@@ -105,47 +106,68 @@ export default function DashboardPage() {
                 {(inv) => (
                   <div class="grid grid-cols-2 md:grid-cols-4 w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 items-center">
                     <A
-                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 border-r hover:bg-muted-foreground/5"
+                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 border-r hover:bg-muted-foreground/5 h-full min-h-36"
                       href="/inventory"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
-                        <span class="text-sm font-semibold">Stock</span>
+                        <span class="font-semibold">Stock</span>
                         <Package class="size-4" />
                       </div>
-                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400 ">
-                        {inv().totalCurrentOccupancy}/{inv().totalCapacity}
-                      </span>
+                      <div class="flex grow"></div>
+                      <div class="flex flex-row gap-2 items-center justify-between">
+                        <span class="text-2xl text-neutral-500 dark:text-neutral-400 font-['Geist_Mono_Variable']">
+                          {inv().totalCurrentOccupancy}/{inv().totalCapacity}
+                        </span>
+                        <div
+                          class="flex flex-row items-center gap-2 bg-muted-foreground/10 dark:bg-neutral-900 rounded-full px-2 py-0.5 border"
+                          title={`${inv().amounOfStorages} Storages`}
+                        >
+                          <span class="text-xs text-muted-foreground font-['Geist_Mono_Variable']">
+                            {inv().amounOfStorages}
+                          </span>
+                          <div class="size-2 bg-muted-foreground rounded-full" />
+                        </div>
+                      </div>
                     </A>
                     <Show when={schedules()}>
                       {(s) => (
                         <A
-                          class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5"
-                          href="/inventory"
+                          class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5 h-full min-h-36"
+                          href="/schedule"
                         >
                           <div class="flex items-center gap-4 justify-between w-full">
-                            <span class="text-sm font-semibold">Schedules</span>
+                            <span class="font-semibold">Schedules</span>
                             <CalendarClock class="size-4" />
                           </div>
-                          <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">{s().length}</span>
+                          <div class="flex grow"></div>
+                          <span class="text-2xl text-neutral-500 dark:text-neutral-400 font-['Geist_Mono_Variable']">
+                            {s().length}
+                          </span>
                         </A>
                       )}
                     </Show>
                     <A
-                      class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5"
+                      class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5 h-full min-h-36"
                       href="/orders/suppliers"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
-                        <span class="text-sm font-semibold">Pending Supply Orders</span>
+                        <span class="font-semibold">Pending Supply Orders</span>
                         <ClockFading class="size-4" />
                       </div>
-                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
+                      <div class="flex grow"></div>
+                      <span class="text-2xl text-neutral-500 dark:text-neutral-400 font-['Geist_Mono_Variable']">
+                        0
+                      </span>
                     </A>
-                    <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5" href="#">
+                    <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5 h-full min-h-36" href="#">
                       <div class="flex items-center gap-4 justify-between w-full">
-                        <span class="text-sm font-semibold">Async Work</span>
+                        <span class="font-semibold">Async Work</span>
                         <Workflow class="size-4" />
                       </div>
-                      <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400">0</span>
+                      <div class="flex grow"></div>
+                      <span class="text-2xl text-neutral-500 dark:text-neutral-400 font-['Geist_Mono_Variable']">
+                        0
+                      </span>
                     </A>
                   </div>
                 )}
