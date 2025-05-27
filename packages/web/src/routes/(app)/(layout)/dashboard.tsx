@@ -98,6 +98,7 @@ export default function DashboardPage() {
                           <AlertTitle>{notification.title}</AlertTitle>
                           <AlertDescription>{notification.content}</AlertDescription>
                           <AlertClose
+                            disabled={isAcceptingNotification.pending}
                             onClick={() => {
                               toast.promise(acceptNotificationAction(notification.id), {
                                 loading: "Closing notification...",
@@ -116,7 +117,7 @@ export default function DashboardPage() {
                 <Show when={inventory()}>
                   {(inv) => (
                     <A
-                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 border-r hover:bg-muted-foreground/5 h-full min-h-36"
+                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 border-r hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
                       href="/inventory"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
@@ -144,7 +145,7 @@ export default function DashboardPage() {
                 <Show when={schedules()}>
                   {(s) => (
                     <A
-                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5 h-full min-h-36"
+                      class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
                       href="/schedule"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
@@ -161,7 +162,7 @@ export default function DashboardPage() {
                 <Show when={pendingSupplyOrders()}>
                   {(pso) => (
                     <A
-                      class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5 h-full min-h-36"
+                      class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
                       href="/orders/suppliers"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
@@ -175,7 +176,10 @@ export default function DashboardPage() {
                     </A>
                   )}
                 </Show>
-                <A class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5 h-full min-h-36" href="#">
+                <A
+                  class="flex flex-col gap-4 p-4 w-full hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
+                  href="#"
+                >
                   <div class="flex items-center gap-4 justify-between w-full">
                     <span class="font-semibold">Async Work</span>
                     <Workflow class="size-4" />

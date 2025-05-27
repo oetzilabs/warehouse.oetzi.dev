@@ -134,3 +134,73 @@ export const deleteCustomer = action(async (id: string) => {
   );
   return customer;
 });
+
+export const addPreferredPickupTime = action(
+  async (input: { customerId: string; startTime: Date; endTime?: Date; notes?: string }) => {
+    "use server";
+    const auth = await withSession();
+    if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+    return await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const service = yield* _(CustomerService);
+        return yield* service.addPreferredPickupDateTime(
+          {
+            startTime: input.startTime,
+            endTime: input.endTime,
+            notes: input.notes,
+          },
+          input.customerId,
+        );
+      }).pipe(Effect.provide(CustomerLive)),
+    );
+  },
+);
+
+export const addPreferredDeliveryTime = action(
+  async (input: { customerId: string; startTime: Date; endTime?: Date; notes?: string }) => {
+    "use server";
+    const auth = await withSession();
+    if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+    return await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const service = yield* _(CustomerService);
+        return yield* service.addPreferredDeliveryDateTime(
+          {
+            startTime: input.startTime,
+            endTime: input.endTime,
+            notes: input.notes,
+          },
+          input.customerId,
+        );
+      }).pipe(Effect.provide(CustomerLive)),
+    );
+  },
+);
+
+export const removePreferredPickupTime = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+  return await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(CustomerService);
+      return yield* service.removePreferredPickupDateTime(id);
+    }).pipe(Effect.provide(CustomerLive)),
+  );
+});
+
+export const removePreferredDeliveryTime = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+  return await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(CustomerService);
+      return yield* service.removePreferredDeliveryDateTime(id);
+    }).pipe(Effect.provide(CustomerLive)),
+  );
+});

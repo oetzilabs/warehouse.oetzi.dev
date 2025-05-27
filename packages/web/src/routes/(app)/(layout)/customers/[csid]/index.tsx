@@ -1,3 +1,4 @@
+import { PreferredTimeDialog } from "@/components/customers/preferred-time-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,7 +16,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { deleteCustomer, getCustomerById } from "@/lib/api/customers";
+import {
+  addPreferredDeliveryTime,
+  addPreferredPickupTime,
+  deleteCustomer,
+  getCustomerById,
+  removePreferredDeliveryTime,
+  removePreferredPickupTime,
+} from "@/lib/api/customers";
 import {
   A,
   createAsync,
@@ -53,9 +61,20 @@ export default function CustomerPage() {
   const navigate = useNavigate();
   const customer = createAsync(() => getCustomerById(params.csid), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
+  const [pickupDialogOpen, setPickupDialogOpen] = createSignal(false);
+  const [deliveryDialogOpen, setDeliveryDialogOpen] = createSignal(false);
 
   const deleteCustomerAction = useAction(deleteCustomer);
   const isDeletingCustomer = useSubmission(deleteCustomer);
+
+  const addPickupTimeAction = useAction(addPreferredPickupTime);
+  const isAddingPickupTime = useSubmission(addPreferredPickupTime);
+  const addDeliveryTimeAction = useAction(addPreferredDeliveryTime);
+  const isAddingDeliveryTime = useSubmission(addPreferredDeliveryTime);
+  const removePreferredPickupTimeAction = useAction(removePreferredPickupTime);
+  const isRemovingPreferredPickupTime = useSubmission(removePreferredPickupTime);
+  const removePreferredDeliveryTimeAction = useAction(removePreferredDeliveryTime);
+  const isRemovingPreferredDeliveryTime = useSubmission(removePreferredDeliveryTime);
 
   return (
     <Suspense
@@ -215,33 +234,76 @@ export default function CustomerPage() {
                   </div>
                 </div>
 
-                <div class="flex flex-row items-center justify-between gap-4">
-                  <div class="flex flex-col border rounded-lg w-full">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                  <div class="flex flex-col border rounded-lg w-full grow">
                     <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
                       <h2 class="font-medium">Preferred Pickup Times</h2>
                       <div class="flex flex-row items-center">
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => setPickupDialogOpen(true)}>
                           <Plus class="size-4" />
                           Add Time
                         </Button>
+                        <PreferredTimeDialog
+                          open={pickupDialogOpen()}
+                          onOpenChange={setPickupDialogOpen}
+                          title="Add Preferred Pickup Time"
+                          description="Set the preferred time for pickup"
+                          onSubmit={async (data) => {
+                            const promise = addPickupTimeAction({ ...data, customerId: customerInfo().customer.id });
+                            toast.promise(promise, {
+                              loading: "Adding pickup time...",
+                              success: "Pickup time added",
+                              error: "Failed to add pickup time",
+                            });
+                          }}
+                        />
                       </div>
                     </div>
-                    <div class="flex flex-col w-full">
+                    <div class="flex flex-col w-full grow">
                       <Show when={customerInfo().customer.ppt.length === 0}>
-                        <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
+                        <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5 grow">
                           <span class="text-sm text-muted-foreground">No pickup times have been added</span>
                         </div>
                       </Show>
                       <Show when={customerInfo().customer.ppt.length > 0}>
-                        <div class="flex flex-col gap-1 p-4">
+                        <div class="flex flex-col gap-0 grow">
                           <For each={customerInfo().customer.ppt}>
                             {(t) => (
-                              <div class="flex flex-row gap-2 items-center justify-between">
+                              <div class="flex flex-row gap-2 items-center justify-between border-b last:border-b-0 p-4">
                                 {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
-                                <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
-                                <span class="text-sm text-muted-foreground">
-                                  {dayjs(t.startTime).format("HH:mm")} - {dayjs(t.endTime).format("HH:mm")}
-                                </span>
+                                <div class="flex flex-col gap-2">
+                                  <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
+                                  <Show when={t.notes}>
+                                    {(note) => <span class="text-sm text-muted-foreground">{note()}</span>}
+                                  </Show>
+                                </div>
+                                <div class="flex flex-row items-center gap-2 place-self-start">
+                                  <span class="text-sm text-muted-foreground">
+                                    {dayjs(t.startTime).format("HH:mm")} - {dayjs(t.endTime).format("HH:mm")}
+                                  </span>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    class="bg-background size-6"
+                                    onClick={() => {
+                                      toast.promise(removePreferredPickupTimeAction(t.id), {
+                                        loading: "Removing pickup time...",
+                                        success: "Pickup time removed",
+                                        error: "Failed to remove pickup time",
+                                      });
+                                    }}
+                                  >
+                                    <Show
+                                      when={
+                                        isRemovingPreferredPickupTime.pending &&
+                                        isRemovingPreferredPickupTime.input[0] === t.id
+                                      }
+                                      fallback={<X class="size-3" />}
+                                    >
+                                      <Loader2 class="size-3 animate-spin" />
+                                    </Show>
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </For>
@@ -250,32 +312,75 @@ export default function CustomerPage() {
                     </div>
                   </div>
 
-                  <div class="flex flex-col border rounded-lg w-full">
+                  <div class="flex flex-col border rounded-lg w-full grow">
                     <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
                       <h2 class="font-medium">Preferred Delivery Times</h2>
                       <div class="flex flex-row items-center">
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => setDeliveryDialogOpen(true)}>
                           <Plus class="size-4" />
                           Add Time
                         </Button>
+                        <PreferredTimeDialog
+                          open={deliveryDialogOpen()}
+                          onOpenChange={setDeliveryDialogOpen}
+                          title="Add Preferred Delivery Time"
+                          description="Set the preferred time for delivery"
+                          onSubmit={async (data) => {
+                            const promise = addDeliveryTimeAction({ ...data, customerId: customerInfo().customer.id });
+                            toast.promise(promise, {
+                              loading: "Adding delivery time...",
+                              success: "Delivery time added",
+                              error: "Failed to add delivery time",
+                            });
+                          }}
+                        />
                       </div>
                     </div>
-                    <div class="flex flex-col w-full">
+                    <div class="flex flex-col w-full grow">
                       <Show when={customerInfo().customer.pdt.length === 0}>
-                        <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
-                          <span class="text-sm text-muted-foreground">No pickup times have been added</span>
+                        <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5 grow">
+                          <span class="text-sm text-muted-foreground">No delivery times have been added</span>
                         </div>
                       </Show>
                       <Show when={customerInfo().customer.pdt.length > 0}>
-                        <div class="flex flex-col gap-1 p-4">
+                        <div class="flex flex-col gap-0 grow">
                           <For each={customerInfo().customer.pdt}>
                             {(t) => (
-                              <div class="flex flex-row gap-2 items-center justify-between">
+                              <div class="flex flex-row gap-2 items-center justify-between border-b last:border-b-0 p-4">
                                 {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
-                                <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
-                                <span class="text-sm text-muted-foreground">
-                                  {dayjs(t.startTime).format("HH:mm")} - {dayjs(t.endTime).format("HH:mm")}
-                                </span>
+                                <div class="flex flex-col gap-2">
+                                  <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
+                                  <Show when={t.notes}>
+                                    {(note) => <span class="text-sm text-muted-foreground">{note()}</span>}
+                                  </Show>
+                                </div>
+                                <div class="flex flex-row items-center gap-2 place-self-start">
+                                  <span class="text-sm text-muted-foreground">
+                                    {dayjs(t.startTime).format("HH:mm")} - {dayjs(t.endTime).format("HH:mm")}
+                                  </span>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    class="bg-background size-6"
+                                    onClick={() => {
+                                      toast.promise(removePreferredDeliveryTimeAction(t.id), {
+                                        loading: "Removing delivery time...",
+                                        success: "Delivery time removed",
+                                        error: "Failed to remove delivery time",
+                                      });
+                                    }}
+                                  >
+                                    <Show
+                                      when={
+                                        isRemovingPreferredDeliveryTime.pending &&
+                                        isRemovingPreferredDeliveryTime.input[0] === t.id
+                                      }
+                                      fallback={<X class="size-3" />}
+                                    >
+                                      <Loader2 class="size-3 animate-spin" />
+                                    </Show>
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </For>
