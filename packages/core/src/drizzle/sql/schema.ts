@@ -34,6 +34,8 @@ export * from "./schemas/sales/sales_discounts";
 export * from "./schemas/customers/customers";
 export * from "./schemas/customers/customer_notes";
 export * from "./schemas/customers/customer_schedules";
+export * from "./schemas/customers/customer_preferred_pickuptimes";
+export * from "./schemas/customers/customer_preferred_deliverytimes";
 
 export * from "./schemas/catalogs/catalogs";
 export * from "./schemas/catalogs/catalog_products";

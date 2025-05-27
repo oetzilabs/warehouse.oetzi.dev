@@ -5,6 +5,8 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   CustomerCreateSchema,
   CustomerUpdateSchema,
+  TB_customer_preferred_deliverytimes,
+  TB_customer_preferred_pickuptimes,
   TB_customers,
   TB_organization_customers,
 } from "../../drizzle/sql/schema";
@@ -25,6 +27,8 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_customers.findMany>[0]>;
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
+      pdt: true,
+      ppt: true,
       schedules: {
         with: {
           schedule: true,
@@ -93,6 +97,8 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           db.query.TB_customers.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: {
+              pdt: true,
+              ppt: true,
               sales: {
                 with: {
                   items: {
@@ -179,6 +185,8 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             with: {
               customer: {
                 with: {
+                  pdt: true,
+                  ppt: true,
                   schedules: {
                     with: {
                       schedule: true,
@@ -316,6 +324,72 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         return deleted;
       });
 
+    const addPreferredDeliveryDateTime = (
+      input: { startTime: Date; endTime?: Date; notes?: string },
+      customerId: string,
+    ) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, customerId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id: customerId }));
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .insert(TB_customer_preferred_deliverytimes)
+            .values({ ...input, customerId: parsedId.output })
+            .returning(),
+        );
+      });
+
+    const removePreferredDeliveryDateTime = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id }));
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .delete(TB_customer_preferred_deliverytimes)
+            .where(eq(TB_customer_preferred_deliverytimes.id, parsedId.output))
+            .returning(),
+        );
+      });
+
+    const addPreferredPickupDateTime = (
+      input: { startTime: Date; endTime?: Date; notes?: string },
+      customerId: string,
+    ) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, customerId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id: customerId }));
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .insert(TB_customer_preferred_pickuptimes)
+            .values({ ...input, customerId: parsedId.output })
+            .returning(),
+        );
+      });
+
+    const removePreferredPickupDateTime = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id }));
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .delete(TB_customer_preferred_pickuptimes)
+            .where(eq(TB_customer_preferred_pickuptimes.id, parsedId.output))
+            .returning(),
+        );
+      });
+
     return {
       create,
       findById,
@@ -325,6 +399,10 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       remove,
       safeRemove,
       getOrdersByCustomerIdAndOrganizationId,
+      addPreferredDeliveryDateTime,
+      removePreferredDeliveryDateTime,
+      addPreferredPickupDateTime,
+      removePreferredPickupDateTime,
     } as const;
   }),
   dependencies: [DatabaseLive],

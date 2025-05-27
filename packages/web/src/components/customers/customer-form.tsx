@@ -3,9 +3,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TextField, TextFieldErrorMessage, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import { type CustomerUpdate } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/customers/customers";
+import dayjs from "dayjs";
 import Loader2 from "lucide-solid/icons/loader-2";
 import { Component, Show } from "solid-js";
-import { minLength, pipe, string } from "valibot";
+import { date, minLength, pipe, string, transform } from "valibot";
 
 interface CustomerFormProps {
   defaultValues: CustomerUpdate;

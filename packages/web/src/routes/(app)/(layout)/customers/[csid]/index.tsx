@@ -215,6 +215,76 @@ export default function CustomerPage() {
                   </div>
                 </div>
 
+                <div class="flex flex-row items-center justify-between gap-4">
+                  <div class="flex flex-col border rounded-lg w-full">
+                    <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                      <h2 class="font-medium">Preferred Pickup Times</h2>
+                      <div class="flex flex-row items-center">
+                        <Button size="sm">
+                          <Plus class="size-4" />
+                          Add Time
+                        </Button>
+                      </div>
+                    </div>
+                    <div class="flex flex-col w-full">
+                      <Show when={customerInfo().customer.ppt.length === 0}>
+                        <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
+                          <span class="text-sm text-muted-foreground">No pickup times have been added</span>
+                        </div>
+                      </Show>
+                      <Show when={customerInfo().customer.ppt.length > 0}>
+                        <div class="flex flex-col gap-1 p-4">
+                          <For each={customerInfo().customer.ppt}>
+                            {(t) => (
+                              <div class="flex flex-row gap-2 items-center justify-between">
+                                {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
+                                <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
+                                <span class="text-sm text-muted-foreground">
+                                  {dayjs(t.startTime).format("HH:mm")} - {dayjs(t.endTime).format("HH:mm")}
+                                </span>
+                              </div>
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col border rounded-lg w-full">
+                    <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                      <h2 class="font-medium">Preferred Delivery Times</h2>
+                      <div class="flex flex-row items-center">
+                        <Button size="sm">
+                          <Plus class="size-4" />
+                          Add Time
+                        </Button>
+                      </div>
+                    </div>
+                    <div class="flex flex-col w-full">
+                      <Show when={customerInfo().customer.pdt.length === 0}>
+                        <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
+                          <span class="text-sm text-muted-foreground">No pickup times have been added</span>
+                        </div>
+                      </Show>
+                      <Show when={customerInfo().customer.pdt.length > 0}>
+                        <div class="flex flex-col gap-1 p-4">
+                          <For each={customerInfo().customer.pdt}>
+                            {(t) => (
+                              <div class="flex flex-row gap-2 items-center justify-between">
+                                {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
+                                <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
+                                <span class="text-sm text-muted-foreground">
+                                  {dayjs(t.startTime).format("HH:mm")} - {dayjs(t.endTime).format("HH:mm")}
+                                </span>
+                              </div>
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="flex flex-col border rounded-lg">
                   <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
                     <h2 class="font-medium">Notes</h2>

@@ -86,6 +86,46 @@ export const getSupplyOrders = query(async () => {
   });
 }, "sales-order-by-warehouse-id");
 
+export const getPendingSupplyOrders = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orders = await Effect.runPromiseExit(
+    Effect.gen(function* (_) {
+      const ordersService = yield* _(OrderService);
+      const orders = yield* ordersService.findSupplierOrdersByOrganizationId(orgId);
+      return orders.filter((o) => o.status === "pending" || o.status === "processing");
+    }).pipe(Effect.provide(OrderLive)),
+  );
+  return Exit.match(orders, {
+    onSuccess: (ords) => {
+      return json(ords);
+    },
+    onFailure: (cause) => {
+      console.log(cause);
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return c.message;
+      });
+      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+    },
+  });
+}, "sales-order-by-warehouse-id");
+
 export const getOrdersByUserId = query(async (uid: string) => {
   "use server";
   const auth = await withSession();
