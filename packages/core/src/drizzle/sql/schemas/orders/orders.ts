@@ -38,7 +38,7 @@ export const order_relations = relations(TB_orders, ({ one, many }) => ({
 
 export type OrderSelect = typeof TB_orders.$inferSelect;
 export type OrderInsert = typeof TB_orders.$inferInsert;
-export const OrderCreateSchema = omit(createInsertSchema(TB_orders), ["createdAt", "updatedAt"]);
+export const OrderCreateSchema = omit(createInsertSchema(TB_orders), ["createdAt", "updatedAt", "deletedAt"]);
 export type OrderCreate = InferInput<typeof OrderCreateSchema>;
 export const OrderUpdateSchema = object({
   ...partial(omit(createInsertSchema(TB_orders), ["createdAt", "updatedAt"])).entries,

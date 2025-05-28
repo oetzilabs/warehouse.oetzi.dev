@@ -30,6 +30,7 @@
       "safetyStock": 10,
       "customsTariffNumber": "210390",
       "countryOfOrigin": "Italy",
+      "brand_id": null,
       "labels": ["labl_ejocn9366uhc0v2r94nc6tsv"]
     },
     {
@@ -296,6 +297,7 @@
       "id": "sale_yvqvzoet0tmx8fuq1r33m7df",
       "note": "This is a test sale",
       "status": "created",
+      "createdAt": "2025-03-01T10:00:00.000Z",
       "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
       "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
       "items": [
@@ -327,7 +329,35 @@
       "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df"]
     }
   ],
-  "suppliers": [],
+  "suppliers": [
+    {
+      "id": "sup_xdyn2y5k86zn3gxvss7rym0w",
+      "bank_details": null,
+      "email": "test@example.com",
+      "name": "Test Supplier",
+      "phone": null,
+      "tax_id": null,
+      "website": null,
+      "status": "active",
+      "code": "",
+      "payment_terms": null,
+      "products": ["prod_uzujt3nrndmn90yyslc61wqv", "prod_rljvumttoz3f2v122kw7bf4x", "prod_qgjolvdci0g8f0g6dq851dtf"]
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_mluhzjoc0ofr6xh53au78w3d",
+      "status": "completed",
+      "title": "Test Order",
+      "description": "This is a test order"
+    },
+    {
+      "id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
+      "status": "pending",
+      "title": "Test Order 2",
+      "description": "This is a test order"
+    }
+  ],
   "users": [
     {
       "id": "user_fqvfli9fqv5u9s14l1zcec0h",
@@ -355,7 +385,16 @@
           "uid": null,
           "orders": {
             "customers": [],
-            "suppliers": []
+            "suppliers": [
+              {
+                "order_id": "ord_mluhzjoc0ofr6xh53au78w3d",
+                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
+              },
+              {
+                "order_id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
+                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
+              }
+            ]
           },
           "warehouses": [
             {
@@ -539,7 +578,7 @@
               ]
             }
           ],
-          "suppliers": [],
+          "suppliers": ["sup_xdyn2y5k86zn3gxvss7rym0w"],
           "customers": ["cust_gfy165rp4mmpzrq5muc838qn"],
           "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df"],
           "products": [

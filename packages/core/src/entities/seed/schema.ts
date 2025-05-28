@@ -1,8 +1,24 @@
-import { array, boolean, date, literal, nullable, number, object, omit, string, union } from "valibot";
+import dayjs from "dayjs";
+import {
+  array,
+  boolean,
+  date,
+  literal,
+  nullable,
+  number,
+  object,
+  omit,
+  optional,
+  pipe,
+  string,
+  transform,
+  union,
+} from "valibot";
 import {
   CustomerCreateSchema,
   FacilityCreateSchema,
   NotificationCreateSchema,
+  OrderCreateSchema,
   OrganizationCustomerOrderCreateSchema,
   OrganizationSupplierOrderCreateSchema,
   SupplierCreateSchema,
@@ -101,11 +117,23 @@ export const WarehouseSchema = object({
 });
 
 export const CustomerOrderSchema = object({
-  ...OrganizationCustomerOrderCreateSchema.entries,
+  ...omit(OrganizationCustomerOrderCreateSchema, ["organization_id"]).entries,
+  createdAt: optional(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ), // used for date
 });
 
 export const SupplierOrderSchema = object({
-  ...OrganizationSupplierOrderCreateSchema.entries,
+  ...omit(OrganizationSupplierOrderCreateSchema, ["organization_id"]).entries,
+  createdAt: optional(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ), // used for date
 });
 
 export const OrderSchema = object({
@@ -170,6 +198,14 @@ export const SalesItemSchema = object({
 export const SaleSchema = object({
   ...SaleCreateSchema.entries,
   id: prefixed_cuid2,
+  createdAt: optional(
+    nullable(
+      pipe(
+        string(),
+        transform((v) => dayjs(v).toDate()),
+      ),
+    ),
+  ),
   items: array(SalesItemSchema), // references to product IDs
 });
 
@@ -184,6 +220,11 @@ export const NotificationSchema = object({
   id: prefixed_cuid2,
 });
 
+export const NormalOrderSchema = object({
+  ...OrderCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
 export const SeedDataSchema = object({
   users: array(UserSchema),
   products: array(ProductSchema),
@@ -195,6 +236,7 @@ export const SeedDataSchema = object({
   brands: array(BrandSchema),
   suppliers: array(SupplierSchema),
   customers: array(CustomerSchema),
-  sales: array(SaleSchema),
   notifications: array(NotificationSchema),
+  sales: array(SaleSchema),
+  orders: array(NormalOrderSchema),
 });

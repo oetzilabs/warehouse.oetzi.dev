@@ -738,9 +738,6 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "organization_id": {
-                            "type": "string"
-                          },
                           "order_id": {
                             "type": "string"
                           },
@@ -748,13 +745,11 @@
                             "type": "string"
                           },
                           "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
+                            "type": "string"
                           }
                         },
                         "additionalProperties": false,
                         "required": [
-                          "organization_id",
                           "order_id",
                           "supplier_id"
                         ]
@@ -1561,6 +1556,38 @@
         ]
       }
     },
+    "notifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "id": {},
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "content",
+          "id"
+        ]
+      }
+    },
     "sales": {
       "type": "array",
       "items": {
@@ -1595,6 +1622,16 @@
             ]
           },
           "id": {},
+          "createdAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
           "items": {
             "type": "array",
             "items": {
@@ -1640,34 +1677,37 @@
         ]
       }
     },
-    "notifications": {
+    "orders": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
+          "status": {
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "cancelled"
+            ]
+          },
           "title": {
             "type": "string"
           },
-          "content": {
-            "type": "string"
-          },
-          "id": {},
-          "deletedAt": {
+          "description": {
             "anyOf": [
               {
                 "const": null
               },
               {
-                "type": "string",
-                "format": "date-time"
+                "type": "string"
               }
             ]
-          }
+          },
+          "id": {}
         },
         "additionalProperties": false,
         "required": [
           "title",
-          "content",
           "id"
         ]
       }
@@ -1688,8 +1728,9 @@
     "brands",
     "suppliers",
     "customers",
-    "sales",
     "notifications",
+    "sales",
+    "orders",
     "$schema"
   ]
 }

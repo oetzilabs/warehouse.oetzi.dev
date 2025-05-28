@@ -210,11 +210,11 @@ export default function DashboardPage() {
                           </Button>
                         </div>
                       </div>
-                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
+                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                         <Show
                           when={d().orders.customers.chartData.some((v) => v > 0)}
                           fallback={
-                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
+                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5 grow">
                               <span class="text-sm select-none text-muted-foreground">No customer orders added</span>
                             </div>
                           }
@@ -323,39 +323,41 @@ export default function DashboardPage() {
                           }
                         >
                           <>
-                            <LineChart
-                              height={200}
-                              data={{
-                                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                                datasets: [
-                                  {
-                                    label: "Supplier Orders",
-                                    data: d().orders.suppliers.chartData || [],
-                                    fill: true,
-                                    backgroundColor: "rgba(236, 72, 153, 0.1)",
-                                    borderColor: "rgb(236, 72, 153)",
-                                    tension: 0.4,
+                            <div class="h-[200px]">
+                              <LineChart
+                                height={200}
+                                data={{
+                                  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                                  datasets: [
+                                    {
+                                      label: "Supplier Orders",
+                                      data: d().orders.suppliers.chartData || [],
+                                      fill: true,
+                                      backgroundColor: "rgba(236, 72, 153, 0.1)",
+                                      borderColor: "rgb(236, 72, 153)",
+                                      tension: 0.4,
+                                    },
+                                  ],
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  scales: {
+                                    x: {
+                                      grid: { display: false },
+                                      border: { display: false },
+                                      ticks: { color: "rgb(163, 163, 163)" },
+                                    },
+                                    y: {
+                                      border: { dash: [4, 4] },
+                                      grid: { color: "rgba(163, 163, 163, 0.2)" },
+                                      ticks: { color: "rgb(163, 163, 163)" },
+                                    },
                                   },
-                                ],
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                  x: {
-                                    grid: { display: false },
-                                    border: { display: false },
-                                    ticks: { color: "rgb(163, 163, 163)" },
-                                  },
-                                  y: {
-                                    border: { dash: [4, 4] },
-                                    grid: { color: "rgba(163, 163, 163, 0.2)" },
-                                    ticks: { color: "rgb(163, 163, 163)" },
-                                  },
-                                },
-                                plugins: { legend: { display: false } },
-                              }}
-                            />
+                                  plugins: { legend: { display: false } },
+                                }}
+                              />
+                            </div>
                             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                               <For each={d().orders.suppliers.values}>
                                 {(order) => (
@@ -391,11 +393,11 @@ export default function DashboardPage() {
                           </Button>
                         </div>
                       </div>
-                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
+                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                         <Show
                           when={d().popularProductsChartData.data.some((v) => v > 0)}
                           fallback={
-                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
+                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5 grow">
                               <span class="text-sm select-none text-muted-foreground">No popular products</span>
                             </div>
                           }
@@ -466,11 +468,11 @@ export default function DashboardPage() {
                           </Button>
                         </div>
                       </div>
-                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
+                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                         <Show
                           when={d().lastSoldProductsChartData.data.some((v) => v > 0)}
                           fallback={
-                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
+                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5 grow">
                               <span class="text-sm select-none text-muted-foreground">No products sold</span>
                             </div>
                           }

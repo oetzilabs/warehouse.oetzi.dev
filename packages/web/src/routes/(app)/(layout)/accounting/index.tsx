@@ -1,6 +1,7 @@
 import { AccountingList } from "@/components/accounting-list";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAccountingList } from "@/lib/api/accounting";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
@@ -132,24 +133,35 @@ export default function AccountingPage() {
                   </div>
                 </div>
                 <AccountingList data={() => accountingList().transactions} />
-                <div class="flex flex-col items-start justify-start gap-4 border-t py-4">
-                  <span class="font-bold">Totals</span>
-                  <div class="flex flex-col w-full">
-                    <For each={Object.entries(accountingList().totalsByCurrency)}>
-                      {([currency, values]) => (
-                        <div class="flex flex-row items-center gap-2 w-full justify-between py-4">
-                          <span class="font-semibold text-muted-foreground">{currency} </span>
-                          <span class="font-semibold">
-                            {Intl.NumberFormat(zoneInfo(), {
-                              style: "currency",
-                              currency: currency,
-                              minimumFractionDigits: 2,
-                            }).format(values.netIncome)}
-                          </span>
-                        </div>
-                      )}
-                    </For>
-                  </div>
+                <div class="flex flex-col items-start justify-start gap-4 border rounded-lg overflow-clip">
+                  <Table class="table-auto">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead class="w-full p-4 h-auto">Currency</TableHead>
+                        <TableHead class="text-right p-4 h-auto">Sold</TableHead>
+                        <TableHead class="text-right p-4 h-auto">Purchased</TableHead>
+                        <TableHead class="text-right w-content p-4 h-auto">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <For each={Object.entries(accountingList().totalsByCurrency)}>
+                        {([currency, values]) => (
+                          <TableRow class="border-b-0">
+                            <TableCell class="font-semibold p-4 h-auto">{currency}</TableCell>
+                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsIncome}</TableCell>
+                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsExpenses}</TableCell>
+                            <TableCell class="text-right font-semibold p-4 h-auto">
+                              {Intl.NumberFormat(zoneInfo(), {
+                                style: "currency",
+                                currency: currency,
+                                minimumFractionDigits: 2,
+                              }).format(values.netIncome)}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </For>
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             </div>

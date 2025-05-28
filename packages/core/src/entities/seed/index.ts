@@ -11,13 +11,16 @@ import {
   TB_devices,
   TB_document_storage_offers,
   TB_notifications,
+  TB_orders,
   TB_organization_customers,
+  TB_organization_suppliers,
   TB_organization_users,
   TB_organizations,
   TB_organizations_customerorders,
   TB_organizations_notifications,
   TB_organizations_products,
   TB_organizations_sales,
+  TB_organizations_supplierorders,
   TB_organizations_warehouses,
   TB_payment_methods,
   TB_product_labels,
@@ -30,6 +33,7 @@ import {
   TB_storage_spaces_to_products,
   TB_storage_types,
   TB_storages,
+  TB_supplier_products,
   TB_suppliers,
   TB_users,
   TB_users_warehouses,
@@ -193,6 +197,19 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
           );
         }
 
+        for (const order of seedData.output.orders) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_orders)
+              .values(order)
+              .onConflictDoUpdate({
+                target: TB_orders.id,
+                set: order,
+              })
+              .returning(),
+          );
+        }
+
         for (const supplier of seedData.output.suppliers) {
           yield* Effect.promise(() =>
             db
@@ -204,6 +221,15 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               })
               .returning(),
           );
+          for (const productId of supplier.products) {
+            yield* Effect.promise(() =>
+              db
+                .insert(TB_supplier_products)
+                .values({ supplierId: supplier.id, productId: productId })
+                .onConflictDoNothing()
+                .returning(),
+            );
+          }
         }
 
         for (const customer of seedData.output.customers) {
@@ -440,23 +466,54 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+
+            for (const supplierId of org.suppliers) {
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organization_suppliers)
+                  .values({ organization_id: org.id, supplier_id: supplierId })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
+
+            for (const order of org.orders.suppliers) {
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organizations_supplierorders)
+                  .values({ organization_id: org.id, order_id: order.order_id, supplier_id: order.supplier_id })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
+
+            for (const order of org.orders.customers) {
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organizations_customerorders)
+                  .values({ organization_id: org.id, order_id: order.order_id, customer_id: order.customer_id })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
           }
         }
 
         // seed sales
         for (const sale of seedData.output.sales) {
+          const { items, ...saleData } = sale;
           yield* Effect.promise(() =>
             db
               .insert(TB_sales)
-              .values(sale)
+              .values({ ...saleData, createdAt: saleData.createdAt ?? new Date() })
               .onConflictDoUpdate({
                 target: TB_sales.id,
-                set: sale,
+                set: { ...saleData, createdAt: saleData.createdAt ?? new Date() },
               })
               .returning(),
           );
 
-          for (const item of sale.items) {
+          for (const item of items) {
             yield* Effect.promise(() =>
               db
                 .insert(TB_sale_items)

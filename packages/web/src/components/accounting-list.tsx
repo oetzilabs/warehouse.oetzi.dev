@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter, useSimpleDateFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
@@ -48,12 +49,12 @@ export const AccountingList = (props: AccountingListProps) => {
         {
           field: "income",
           label: "Income",
-          fn: (a, b) => a.amounts[0].amount - b.amounts[0].amount,
+          fn: (a, b) => (a.type === "income" ? 1 : -1),
         },
         {
           field: "expense",
           label: "Expenses",
-          fn: (a, b) => a.amounts[0].amount - b.amounts[0].amount,
+          fn: (a, b) => (a.type === "expense" ? 1 : -1),
         },
       ],
     },
@@ -92,58 +93,82 @@ export const AccountingList = (props: AccountingListProps) => {
           <AccountingFilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
         </div>
       </div>
-      <div class="overflow-clip border rounded-lg">
-        <For
-          each={filteredData()}
-          fallback={
-            <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-              <span class="text-sm select-none">No sales/orders have been made</span>
-            </div>
-          }
-        >
-          {(acc) => (
-            <div class={cn("flex flex-col gap-4 w-full h-content p-4 border-b last:border-b-0 h-auto cursor-default")}>
-              <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
-                <div class="flex flex-row items-center gap-4">
-                  <div class="flex flex-row gap-4 items-center justify-start">
+      <div class="border rounded-lg overflow-clip">
+        <Table class="table-auto">
+          <TableHeader class="py-4 !h-auto">
+            <TableRow>
+              <TableHead class="w-[120px] p-4 h-content">Date</TableHead>
+              <TableHead class="w-[50px] h-content p-4 ">Type</TableHead>
+              <TableHead class="p-4 h-content">Description</TableHead>
+              <TableHead class="text-right p-4 h-content">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For
+              each={filteredData()}
+              fallback={
+                <TableRow>
+                  <TableCell colspan="4" class="text-center text-muted-foreground py-8">
+                    No sales/orders have been made
+                  </TableCell>
+                </TableRow>
+              }
+            >
+              {(acc) => (
+                <TableRow>
+                  <TableCell class="font-medium px-4">
+                    <div class="w-max">{dayjs(acc.date).format("MMM DD, YYYY")}</div>
+                  </TableCell>
+                  <TableCell>
                     <div
-                      class={cn(
-                        "text-xs font-medium leading-none size-6 rounded-full flex flex-row items-center gap-1 justify-center border",
-                        {
-                          "text-emerald-500 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-800 border-emerald-300 dark:border-emerald-700":
-                            acc.type === "income",
-                          "text-rose-500 bg-rose-100 dark:text-rose-400 dark:bg-rose-800 border-rose-300 dark:border-rose-700":
-                            acc.type === "expense",
-                        },
-                      )}
+                      class={cn("text-xs font-medium leading-none", {
+                        "text-emerald-500 dark:text-emerald-400": acc.type === "income",
+                        "text-rose-500 dark:text-rose-400": acc.type === "expense",
+                      })}
                     >
-                      <Show when={acc.type === "income"} fallback={<Minus class="size-4" />}>
-                        <Plus class="size-4" />
-                      </Show>
-                      {/* <span>{acc.type}</span> */}
+                      {acc.type}
                     </div>
-                  </div>
-                  <div class="flex flex-col gap-2 w-full">
-                    <span class="text-xs font-medium leading-none">{dayjs(acc.date).format("MMM DD, YYYY")}</span>
-                  </div>
-                </div>
-                <div class="flex flex-row gap-2 items-center justify-start">
-                  <For each={acc.amounts}>
-                    {(amount) => (
-                      <span class="text-sm text-current font-medium">
-                        {Intl.NumberFormat(zoneInfo(), {
-                          style: "currency",
-                          currency: amount.currency,
-                          minimumFractionDigits: 2,
-                        }).format(amount.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <div class="flex flex-col gap-1">
+                      <span>{acc.description}</span>
+                      <span class="text-xs text-muted-foreground">
+                        {acc.type === "income" ? "Sold" : "Purchased"}{" "}
+                        {acc.description.startsWith("Sale:")
+                          ? acc.description
+                              .split(":")[1]
+                              .trim()
+                              .split("-")
+                              .filter((p) => p.length > 0).length
+                          : acc.description
+                              .split(":")[1]
+                              .trim()
+                              .split("-")
+                              .filter((p) => p.length > 0).length}{" "}
+                        products
                       </span>
-                    )}
-                  </For>
-                </div>
-              </div>
-            </div>
-          )}
-        </For>
+                    </div>
+                  </TableCell>
+                  <TableCell class="text-right px-4">
+                    <div class="flex flex-row gap-2 items-center justify-end">
+                      <For each={acc.amounts}>
+                        {(amount) => (
+                          <span class="text-sm font-medium">
+                            {Intl.NumberFormat(zoneInfo(), {
+                              style: "currency",
+                              currency: amount.currency,
+                              minimumFractionDigits: 2,
+                            }).format(amount.amount)}
+                          </span>
+                        )}
+                      </For>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
