@@ -220,55 +220,57 @@ export default function DashboardPage() {
                           }
                         >
                           <>
-                            <LineChart
-                              height={200}
-                              data={{
-                                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                                datasets: [
-                                  {
-                                    label: "Orders",
-                                    data: d().orders.customers.chartData || [],
-                                    fill: true,
-                                    backgroundColor: "rgba(59, 130, 246, 0.1)",
-                                    borderColor: "rgb(59, 130, 246)",
-                                    tension: 0.4,
+                            <div class="h-[200px]">
+                              <LineChart
+                                height={200}
+                                data={{
+                                  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                                  datasets: [
+                                    {
+                                      label: "Orders",
+                                      data: d().orders.customers.chartData || [],
+                                      fill: true,
+                                      backgroundColor: "rgba(59, 130, 246, 0.1)",
+                                      borderColor: "rgb(59, 130, 246)",
+                                      tension: 0.4,
+                                    },
+                                  ],
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  scales: {
+                                    x: {
+                                      grid: {
+                                        display: false,
+                                      },
+                                      border: {
+                                        display: false,
+                                      },
+                                      ticks: {
+                                        color: "rgb(163, 163, 163)", // neutral-400
+                                      },
+                                    },
+                                    y: {
+                                      border: {
+                                        dash: [4, 4],
+                                      },
+                                      grid: {
+                                        color: "rgba(163, 163, 163, 0.2)", // neutral-400 with opacity
+                                      },
+                                      ticks: {
+                                        color: "rgb(163, 163, 163)", // neutral-400
+                                      },
+                                    },
                                   },
-                                ],
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                  x: {
-                                    grid: {
+                                  plugins: {
+                                    legend: {
                                       display: false,
                                     },
-                                    border: {
-                                      display: false,
-                                    },
-                                    ticks: {
-                                      color: "rgb(163, 163, 163)", // neutral-400
-                                    },
                                   },
-                                  y: {
-                                    border: {
-                                      dash: [4, 4],
-                                    },
-                                    grid: {
-                                      color: "rgba(163, 163, 163, 0.2)", // neutral-400 with opacity
-                                    },
-                                    ticks: {
-                                      color: "rgb(163, 163, 163)", // neutral-400
-                                    },
-                                  },
-                                },
-                                plugins: {
-                                  legend: {
-                                    display: false,
-                                  },
-                                },
-                              }}
-                            />
+                                }}
+                              />
+                            </div>
                             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                               <For each={d().orders.customers.values}>
                                 {(order) => (
@@ -403,37 +405,39 @@ export default function DashboardPage() {
                           }
                         >
                           <>
-                            <BarChart
-                              height={200}
-                              data={{
-                                labels: d().popularProductsChartData.labels || [],
-                                datasets: [
-                                  {
-                                    label: "Orders",
-                                    data: d().popularProductsChartData?.data || [],
-                                    backgroundColor: "rgba(34, 197, 94, 0.1)",
-                                    borderColor: "rgb(34, 197, 94)",
+                            <div class="h-[200px]">
+                              <BarChart
+                                height={200}
+                                data={{
+                                  labels: d().popularProductsChartData.labels || [],
+                                  datasets: [
+                                    {
+                                      label: "Orders",
+                                      data: d().popularProductsChartData?.data || [],
+                                      backgroundColor: "rgba(34, 197, 94, 0.1)",
+                                      borderColor: "rgb(34, 197, 94)",
+                                    },
+                                  ],
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  scales: {
+                                    x: {
+                                      grid: { display: false },
+                                      border: { display: false },
+                                      ticks: { color: "rgb(163, 163, 163)" },
+                                    },
+                                    y: {
+                                      border: { dash: [4, 4] },
+                                      grid: { color: "rgba(163, 163, 163, 0.2)" },
+                                      ticks: { color: "rgb(163, 163, 163)" },
+                                    },
                                   },
-                                ],
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                  x: {
-                                    grid: { display: false },
-                                    border: { display: false },
-                                    ticks: { color: "rgb(163, 163, 163)" },
-                                  },
-                                  y: {
-                                    border: { dash: [4, 4] },
-                                    grid: { color: "rgba(163, 163, 163, 0.2)" },
-                                    ticks: { color: "rgb(163, 163, 163)" },
-                                  },
-                                },
-                                plugins: { legend: { display: false } },
-                              }}
-                            />
+                                  plugins: { legend: { display: false } },
+                                }}
+                              />
+                            </div>
                             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                               <For each={d().mostPopularProductsFromOrders}>
                                 {(product) => (
@@ -478,39 +482,41 @@ export default function DashboardPage() {
                           }
                         >
                           <>
-                            <LineChart
-                              height={200}
-                              data={{
-                                labels: d().lastSoldProductsChartData.labels || [],
-                                datasets: [
-                                  {
-                                    label: "Sales",
-                                    data: d().lastSoldProductsChartData.data || [],
-                                    fill: true,
-                                    backgroundColor: "rgba(168, 85, 247, 0.1)",
-                                    borderColor: "rgb(168, 85, 247)",
-                                    tension: 0.4,
+                            <div class="h-[200px]">
+                              <LineChart
+                                height={200}
+                                data={{
+                                  labels: d().lastSoldProductsChartData.labels || [],
+                                  datasets: [
+                                    {
+                                      label: "Sales",
+                                      data: d().lastSoldProductsChartData.data || [],
+                                      fill: true,
+                                      backgroundColor: "rgba(168, 85, 247, 0.1)",
+                                      borderColor: "rgb(168, 85, 247)",
+                                      tension: 0.4,
+                                    },
+                                  ],
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  scales: {
+                                    x: {
+                                      grid: { display: false },
+                                      border: { display: false },
+                                      ticks: { color: "rgb(163, 163, 163)" },
+                                    },
+                                    y: {
+                                      border: { dash: [4, 4] },
+                                      grid: { color: "rgba(163, 163, 163, 0.2)" },
+                                      ticks: { color: "rgb(163, 163, 163)" },
+                                    },
                                   },
-                                ],
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                  x: {
-                                    grid: { display: false },
-                                    border: { display: false },
-                                    ticks: { color: "rgb(163, 163, 163)" },
-                                  },
-                                  y: {
-                                    border: { dash: [4, 4] },
-                                    grid: { color: "rgba(163, 163, 163, 0.2)" },
-                                    ticks: { color: "rgb(163, 163, 163)" },
-                                  },
-                                },
-                                plugins: { legend: { display: false } },
-                              }}
-                            />
+                                  plugins: { legend: { display: false } },
+                                }}
+                              />
+                            </div>
                             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                               <For each={d().lastUsedProductsFromCustomers}>
                                 {(product) => (
