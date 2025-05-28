@@ -48,7 +48,6 @@ export const CustomerCreateSchema = omit(createInsertSchema(TB_customers), [
   "createdAt",
   "updatedAt",
   "deletedAt",
-  "id",
   "verifiedAt",
 ]);
 export const CustomerUpdateSchema = object({

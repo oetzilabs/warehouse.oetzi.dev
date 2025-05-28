@@ -5,7 +5,8 @@
   "scripts": {
     "test": "vitest",
     "test:paths": "vitest src/entities/paths.test.ts",
-    "typecheck": "tsc -noEmit"
+    "typecheck": "tsc -noEmit",
+    "gen:jsonschema": "bun run ./src/jsonschema-gen.ts"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9",
@@ -24,10 +25,12 @@
     "@aws-sdk/client-s3": "3.808.0",
     "@aws-sdk/client-sns": "3.808.0",
     "@aws-sdk/s3-request-presigner": "3.808.0",
+    "@gcornut/valibot-json-schema": "^0.42.0",
     "@napi-rs/canvas": "0.1.70",
     "@neondatabase/serverless": "1.0.0",
     "@openauthjs/openauth": "0.4.3",
     "@paralleldrive/cuid2": "2.2.2",
+    "@valibot/to-json-schema": "^1.2.0",
     "drizzle-orm": "0.43.1",
     "drizzle-valibot": "0.4.2",
     "jsonwebtoken": "^9.0.2",

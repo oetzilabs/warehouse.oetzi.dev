@@ -1,0 +1,1695 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "users": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "verifiedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "enum": [
+                  "active",
+                  "disabled",
+                  "suspended"
+                ]
+              }
+            ]
+          },
+          "has_finished_onboarding": {
+            "type": "boolean"
+          },
+          "id": {},
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          },
+          "hashed_password": {
+            "type": "string"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "image": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "location": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "description": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "phone": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "email": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "website": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "uid": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "address_id": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "id": {},
+                "deletedAt": {
+                  "anyOf": [
+                    {
+                      "const": null
+                    },
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  ]
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "warehouses": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "address_id": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "warehouse_type_id": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "dimensions": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "const": null
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "array",
+                                "items": {}
+                              },
+                              {
+                                "type": "object",
+                                "additionalProperties": {}
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "ownerId": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "id": {},
+                      "deletedAt": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        ]
+                      },
+                      "facilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "anyOf": [
+                                {
+                                  "const": null
+                                },
+                                {
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "bounding_box": {
+                              "anyOf": [
+                                {
+                                  "const": null
+                                },
+                                {
+                                  "anyOf": [
+                                    {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "const": null
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {}
+                                    },
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "id": {},
+                            "areas": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "const": null
+                                      },
+                                      {
+                                        "type": "string"
+                                      }
+                                    ]
+                                  },
+                                  "bounding_box": {
+                                    "anyOf": [
+                                      {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "number"
+                                          },
+                                          {
+                                            "type": "boolean"
+                                          },
+                                          {
+                                            "const": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "array",
+                                        "items": {}
+                                      },
+                                      {
+                                        "type": "object",
+                                        "additionalProperties": {}
+                                      }
+                                    ]
+                                  },
+                                  "id": {},
+                                  "deletedAt": {
+                                    "anyOf": [
+                                      {
+                                        "const": null
+                                      },
+                                      {
+                                        "type": "string",
+                                        "format": "date-time"
+                                      }
+                                    ]
+                                  },
+                                  "storages": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "typeId": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        },
+                                        "description": {
+                                          "anyOf": [
+                                            {
+                                              "const": null
+                                            },
+                                            {
+                                              "type": "string"
+                                            }
+                                          ]
+                                        },
+                                        "capacity": {
+                                          "type": "integer",
+                                          "minimum": -2147483648,
+                                          "maximum": 2147483647
+                                        },
+                                        "variant": {
+                                          "enum": [
+                                            "horizontal",
+                                            "vertical"
+                                          ]
+                                        },
+                                        "currentOccupancy": {
+                                          "anyOf": [
+                                            {
+                                              "const": null
+                                            },
+                                            {
+                                              "type": "integer",
+                                              "minimum": -2147483648,
+                                              "maximum": 2147483647
+                                            }
+                                          ]
+                                        },
+                                        "bounding_box": {
+                                          "anyOf": [
+                                            {
+                                              "anyOf": [
+                                                {
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "type": "number"
+                                                },
+                                                {
+                                                  "type": "boolean"
+                                                },
+                                                {
+                                                  "const": null
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {}
+                                            },
+                                            {
+                                              "type": "object",
+                                              "additionalProperties": {}
+                                            }
+                                          ]
+                                        },
+                                        "id": {},
+                                        "deletedAt": {
+                                          "anyOf": [
+                                            {
+                                              "const": null
+                                            },
+                                            {
+                                              "type": "string",
+                                              "format": "date-time"
+                                            }
+                                          ]
+                                        },
+                                        "spaces": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "name": {
+                                                "type": "string"
+                                              },
+                                              "barcode": {
+                                                "type": "string",
+                                                "maxLength": 128
+                                              },
+                                              "dimensions": {
+                                                "anyOf": [
+                                                  {
+                                                    "const": null
+                                                  },
+                                                  {
+                                                    "anyOf": [
+                                                      {
+                                                        "anyOf": [
+                                                          {
+                                                            "type": "string"
+                                                          },
+                                                          {
+                                                            "type": "number"
+                                                          },
+                                                          {
+                                                            "type": "boolean"
+                                                          },
+                                                          {
+                                                            "const": null
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "type": "array",
+                                                        "items": {}
+                                                      },
+                                                      {
+                                                        "type": "object",
+                                                        "additionalProperties": {}
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              "productCapacity": {
+                                                "type": "integer",
+                                                "minimum": -2147483648,
+                                                "maximum": 2147483647
+                                              },
+                                              "id": {},
+                                              "deletedAt": {
+                                                "anyOf": [
+                                                  {
+                                                    "const": null
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                  }
+                                                ]
+                                              },
+                                              "labels": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "inventories": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "name": {
+                                                      "type": "string"
+                                                    },
+                                                    "barcode": {
+                                                      "type": "string",
+                                                      "maxLength": 128
+                                                    },
+                                                    "dimensions": {
+                                                      "anyOf": [
+                                                        {
+                                                          "const": null
+                                                        },
+                                                        {
+                                                          "anyOf": [
+                                                            {
+                                                              "anyOf": [
+                                                                {
+                                                                  "type": "string"
+                                                                },
+                                                                {
+                                                                  "type": "number"
+                                                                },
+                                                                {
+                                                                  "type": "boolean"
+                                                                },
+                                                                {
+                                                                  "const": null
+                                                                }
+                                                              ]
+                                                            },
+                                                            {
+                                                              "type": "array",
+                                                              "items": {}
+                                                            },
+                                                            {
+                                                              "type": "object",
+                                                              "additionalProperties": {}
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    "productCapacity": {
+                                                      "type": "integer",
+                                                      "minimum": -2147483648,
+                                                      "maximum": 2147483647
+                                                    },
+                                                    "id": {},
+                                                    "deletedAt": {
+                                                      "anyOf": [
+                                                        {
+                                                          "const": null
+                                                        },
+                                                        {
+                                                          "type": "string",
+                                                          "format": "date-time"
+                                                        }
+                                                      ]
+                                                    },
+                                                    "products": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "string"
+                                                      }
+                                                    }
+                                                  },
+                                                  "additionalProperties": false,
+                                                  "required": [
+                                                    "name",
+                                                    "barcode",
+                                                    "id",
+                                                    "products"
+                                                  ]
+                                                }
+                                              }
+                                            },
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "name",
+                                              "barcode",
+                                              "id",
+                                              "labels",
+                                              "inventories"
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "typeId",
+                                        "name",
+                                        "capacity",
+                                        "bounding_box",
+                                        "id",
+                                        "spaces"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "required": [
+                                  "name",
+                                  "bounding_box",
+                                  "id",
+                                  "storages"
+                                ]
+                              }
+                            }
+                          },
+                          "additionalProperties": false,
+                          "required": [
+                            "name",
+                            "id",
+                            "areas"
+                          ]
+                        }
+                      },
+                      "products": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "id",
+                      "facilities",
+                      "products"
+                    ]
+                  }
+                },
+                "products": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "suppliers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "customers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sales": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "orders": {
+                  "type": "object",
+                  "properties": {
+                    "customers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "organization_id": {
+                            "type": "string"
+                          },
+                          "order_id": {
+                            "type": "string"
+                          },
+                          "customer_id": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "organization_id",
+                          "order_id",
+                          "customer_id"
+                        ]
+                      }
+                    },
+                    "suppliers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "organization_id": {
+                            "type": "string"
+                          },
+                          "order_id": {
+                            "type": "string"
+                          },
+                          "supplier_id": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "organization_id",
+                          "order_id",
+                          "supplier_id"
+                        ]
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "customers",
+                    "suppliers"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "id",
+                "slug",
+                "warehouses",
+                "products",
+                "suppliers",
+                "customers",
+                "sales",
+                "orders"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "name",
+          "id",
+          "hashed_password",
+          "organizations"
+        ]
+      }
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "sku": {
+            "type": "string"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "brand_id": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "minimumStock": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "maximumStock": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              }
+            ]
+          },
+          "reorderPoint": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              }
+            ]
+          },
+          "serialNumber": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "lotNumber": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "batchNumber": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "manufacturingDate": {
+            "type": "string"
+          },
+          "expirationDate": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "shelfLife": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "active",
+              "discontinued",
+              "out_of_stock",
+              "recalled",
+              "pending_review"
+            ]
+          },
+          "condition": {
+            "enum": [
+              "new",
+              "used",
+              "refurbished",
+              "damaged",
+              "expired"
+            ]
+          },
+          "purchasePrice": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "number",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            ]
+          },
+          "sellingPrice": {
+            "type": "number",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "msrp": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "number",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            ]
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "const": null
+                      }
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "items": {}
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                ]
+              }
+            ]
+          },
+          "dimensions": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "const": null
+                      }
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "items": {}
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                ]
+              }
+            ]
+          },
+          "safetyStock": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              }
+            ]
+          },
+          "customsTariffNumber": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "countryOfOrigin": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {},
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sku",
+          "manufacturingDate",
+          "expirationDate",
+          "sellingPrice",
+          "id",
+          "labels"
+        ]
+      }
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "color": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "image": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {},
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "id"
+        ]
+      }
+    },
+    "payment_methods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "cash",
+              "card",
+              "bank_account"
+            ]
+          },
+          "provider": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "id": {},
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "id"
+        ]
+      }
+    },
+    "warehouse_types": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {},
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "code",
+          "id"
+        ]
+      }
+    },
+    "document_storage_offers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "price": {
+            "type": "number",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "maxSize": {
+            "type": "number",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "maxQueueSize": {
+            "type": "number",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "shareable": {
+            "type": "boolean"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "requiresPaymentMethod": {
+            "type": "boolean"
+          },
+          "id": {}
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "id"
+        ]
+      }
+    },
+    "storage_types": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "id": {},
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "code",
+          "id"
+        ]
+      }
+    },
+    "brands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "website": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {}
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "code",
+          "id"
+        ]
+      }
+    },
+    "suppliers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "email": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "website": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "active",
+              "inactive",
+              "under_review",
+              "blacklisted"
+            ]
+          },
+          "payment_terms": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "bank_details": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {},
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "code",
+          "id",
+          "products"
+        ]
+      }
+    },
+    "customers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "image": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "active",
+              "inactive",
+              "blocked"
+            ]
+          },
+          "id": {},
+          "sales": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "email",
+          "id",
+          "sales"
+        ]
+      }
+    },
+    "sales": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "created",
+              "draft",
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled"
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {},
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "saleId": {
+                  "type": "string"
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647
+                },
+                "price": {
+                  "type": "number",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "currency": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "saleId",
+                "productId",
+                "quantity",
+                "price",
+                "currency"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "customerId",
+          "organizationId",
+          "id",
+          "items"
+        ]
+      }
+    },
+    "notifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "id": {},
+          "deletedAt": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "content",
+          "id"
+        ]
+      }
+    },
+    "$schema": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "users",
+    "products",
+    "labels",
+    "payment_methods",
+    "warehouse_types",
+    "document_storage_offers",
+    "storage_types",
+    "brands",
+    "suppliers",
+    "customers",
+    "sales",
+    "notifications",
+    "$schema"
+  ]
+}

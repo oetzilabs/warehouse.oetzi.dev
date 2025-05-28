@@ -1,0 +1,166 @@
+import dayjs from "dayjs";
+import { and, gte, lte } from "drizzle-orm";
+import { Effect } from "effect";
+import { safeParse } from "valibot";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
+import { TB_organizations_sales, TB_organizations_supplierorders } from "../../drizzle/sql/schema";
+import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { AccountingDateRangeInvalid, AccountingOrganizationInvalidId } from "./errors";
+
+export interface FinancialAmount {
+  amount: number;
+  currency: string;
+}
+
+export interface FinancialTransaction {
+  date: Date;
+  amounts: FinancialAmount[]; // Changed from single amount to array of amounts
+  type: "income" | "expense";
+  description: string;
+}
+
+export interface FinancialSummary {
+  totalsByCurrency: Record<
+    string,
+    {
+      income: number;
+      expenses: number;
+      netIncome: number;
+    }
+  >;
+  transactions: FinancialTransaction[];
+}
+
+export class AccountingService extends Effect.Service<AccountingService>()("@warehouse/accounting", {
+  effect: Effect.gen(function* (_) {
+    const database = yield* _(DatabaseService);
+    const db = yield* database.instance;
+
+    const getFinancialSummary = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new AccountingOrganizationInvalidId({ organizationId }));
+        }
+
+        // Get supplier orders (expenses)
+        const supplierOrders = yield* Effect.promise(() =>
+          db.query.TB_organizations_supplierorders.findMany({
+            where: (fields, operations) => and(operations.eq(fields.organization_id, parsedOrgId.output)),
+            with: {
+              order: {
+                with: {
+                  prods: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
+              },
+            },
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+          }),
+        );
+
+        // Get sales (income)
+        const orgSales = yield* Effect.promise(() =>
+          db.query.TB_organizations_sales.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+          }),
+        );
+        const salesId = orgSales.map((s) => s.saleId);
+
+        const sales = yield* Effect.promise(() =>
+          db.query.TB_sales.findMany({
+            where: (fields, operations) => operations.and(operations.inArray(fields.id, salesId)),
+            with: { items: { with: { product: true } } },
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+          }),
+        );
+
+        const transactions: FinancialTransaction[] = ([] as FinancialTransaction[])
+          .concat(
+            supplierOrders.map((so) => ({
+              date: so.createdAt,
+              amounts: Array.from(
+                so.order.prods
+                  .filter((prod) => prod.product.purchasePrice !== null && prod.product.currency !== null)
+                  .reduce((acc, prod) => {
+                    const price = prod.product.purchasePrice!;
+                    const currency = prod.product.currency!;
+                    const existingAmount = acc.get(currency);
+
+                    if (existingAmount) {
+                      acc.set(currency, existingAmount + price * prod.quantity);
+                    } else {
+                      acc.set(currency, price * prod.quantity);
+                    }
+                    return acc;
+                  }, new Map<string, number>())
+                  // Convert the Map entries back to the FinancialAmount[] format
+                  .entries(),
+              ).map(([currency, amount]) => ({ currency, amount }) as FinancialAmount),
+              type: "expense" as const,
+              description: `Supplier Order: ${so.order.id}`,
+            })),
+          )
+          .concat(
+            sales.map((s) => {
+              const itemsByCurrency = s.items.reduce(
+                (acc, item) => {
+                  if (!acc[item.currency]) acc[item.currency] = [];
+                  acc[item.currency].push(item);
+                  return acc;
+                },
+                {} as Record<string, typeof s.items>,
+              );
+
+              return {
+                date: s.createdAt,
+                amounts: Object.entries(itemsByCurrency).map(([currency, items]) => ({
+                  currency,
+                  amount: items.reduce((total, item) => total + item.price * item.quantity, 0),
+                })),
+                type: "income" as const,
+                description: `Sale: ${s.id}`,
+              };
+            }),
+          );
+
+        // Calculate totals by currency
+        const totalsByCurrency = transactions.reduce(
+          (acc, t) => {
+            t.amounts.forEach(({ currency, amount }) => {
+              if (!acc[currency]) {
+                acc[currency] = { income: 0, expenses: 0, netIncome: 0 };
+              }
+              if (t.type === "income") {
+                acc[currency].income += amount;
+              } else {
+                acc[currency].expenses += amount;
+              }
+              acc[currency].netIncome = acc[currency].income - acc[currency].expenses;
+            });
+            return acc;
+          },
+          {} as Record<string, { income: number; expenses: number; netIncome: number }>,
+        );
+
+        return {
+          totalsByCurrency,
+          transactions: transactions.sort((a, b) => b.date.getTime() - a.date.getTime()),
+        } satisfies FinancialSummary;
+      });
+
+    return {
+      getFinancialSummary,
+    } as const;
+  }),
+  dependencies: [DatabaseLive],
+}) {}
+
+export const AccountingLive = AccountingService.Default;
+
+export type AccountingInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<AccountingService["getFinancialSummary"]>>>
+>;

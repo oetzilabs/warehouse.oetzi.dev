@@ -19,6 +19,7 @@ export const TB_sale_items = schema.table(
       .notNull(),
     quantity: t.integer("quantity").notNull(),
     price: decimal("price", { precision: 10, scale: 2, mode: "number" }).notNull(),
+    currency: t.text("currency").notNull(),
   }),
   (table) => [primaryKey({ columns: [table.saleId, table.productId] })],
 );

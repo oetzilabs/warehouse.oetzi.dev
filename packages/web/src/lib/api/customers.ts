@@ -77,7 +77,7 @@ export const getCustomerById = query(async (id: string) => {
   return customer;
 }, "customer-by-id");
 
-export const createCustomer = action(async (data: InferInput<typeof CustomerCreateSchema>) => {
+export const createCustomer = action(async (data: Omit<InferInput<typeof CustomerCreateSchema>, "id">) => {
   "use server";
   const auth = await withSession();
   if (!auth) {

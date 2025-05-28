@@ -53,7 +53,8 @@ const Link = (
     <SidebarMenuButton
       class={cn("hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 select-none", {
         "text-white bg-indigo-600 font-medium hover:bg-indigo-600":
-          (relativePath() === props.href && props.exact) || (relativePath().startsWith(props.href) && !props.exact),
+          (relativePath() === props.href && props.exact) ||
+          ((relativePath() ?? "").startsWith(props.href) && !props.exact),
         "opacity-50 hover:bg-transparent": props.disabled,
       })}
       as={props.disabled ? "div" : A}
@@ -319,6 +320,13 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                           <SidebarMenuBadge class="mr-1">
                             {/* {org().documents.filter((c) => c.deletedAt === null).length} */}0
                           </SidebarMenuBadge>
+                        </Link>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <Link href="/accounting">
+                          <Notebook class="size-4" />
+                          Accounting
+                          <SidebarMenuBadge class="mr-1"></SidebarMenuBadge>
                         </Link>
                       </SidebarMenuItem>
                     </SidebarMenu>

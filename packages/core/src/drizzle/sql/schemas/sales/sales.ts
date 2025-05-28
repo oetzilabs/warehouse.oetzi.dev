@@ -52,8 +52,8 @@ export const sales_relations = relations(TB_sales, ({ one, many }) => ({
 
 export type SaleSelect = typeof TB_sales.$inferSelect;
 export type SaleInsert = typeof TB_sales.$inferInsert;
-export const SaleCreateSchema = createInsertSchema(TB_sales);
+export const SaleCreateSchema = omit(createInsertSchema(TB_sales), ["createdAt", "updatedAt", "deletedAt"]);
 export const SaleUpdateSchema = object({
-  ...partial(omit(SaleCreateSchema, ["createdAt", "updatedAt"])).entries,
+  ...partial(SaleCreateSchema).entries,
   id: prefixed_cuid2,
 });

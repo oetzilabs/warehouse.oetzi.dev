@@ -1,3 +1,4 @@
+import { toJsonSchema } from "@valibot/to-json-schema";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse } from "valibot";
@@ -10,15 +11,20 @@ import {
   TB_devices,
   TB_document_storage_offers,
   TB_notifications,
+  TB_organization_customers,
   TB_organization_users,
   TB_organizations,
+  TB_organizations_customerorders,
   TB_organizations_notifications,
   TB_organizations_products,
+  TB_organizations_sales,
   TB_organizations_warehouses,
   TB_payment_methods,
   TB_product_labels,
   TB_products,
   TB_products_to_labels,
+  TB_sale_items,
+  TB_sales,
   TB_storage_spaces,
   TB_storage_spaces_to_labels,
   TB_storage_spaces_to_products,
@@ -413,6 +419,54 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+
+            // Add customer to organization
+            for (const customerId of org.customers) {
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organization_customers)
+                  .values({ organization_id: org.id, customer_id: customerId })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
+
+            for (const saleId of org.sales) {
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_organizations_sales)
+                  .values({ organizationId: org.id, saleId: saleId })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
+          }
+        }
+
+        // seed sales
+        for (const sale of seedData.output.sales) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_sales)
+              .values(sale)
+              .onConflictDoUpdate({
+                target: TB_sales.id,
+                set: sale,
+              })
+              .returning(),
+          );
+
+          for (const item of sale.items) {
+            yield* Effect.promise(() =>
+              db
+                .insert(TB_sale_items)
+                .values(item)
+                .onConflictDoUpdate({
+                  target: [TB_sale_items.productId, TB_sale_items.saleId],
+                  set: item,
+                })
+                .returning(),
+            );
           }
         }
 

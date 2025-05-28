@@ -1,4 +1,5 @@
 {
+  "$schema": "./schema.json",
   "products": [
     {
       "id": "prod_uzujt3nrndmn90yyslc61wqv",
@@ -33,7 +34,6 @@
     },
     {
       "id": "prod_rljvumttoz3f2v122kw7bf4x",
-      "deletedAt": null,
       "name": "Nachhaltige Lebensmittelverpackung (Bio-Kunststoff)",
       "description": "Umweltfreundliche Lebensmittelbehälter aus Bio-Kunststoff für Take-Away und Lieferdienste.",
       "sku": "VERPACKUNG-BIO-002",
@@ -66,7 +66,6 @@
     },
     {
       "id": "prod_qgjolvdci0g8f0g6dq851dtf",
-      "deletedAt": null,
       "name": "Auswahl an Premium-Gewürzen (Gastronomie)",
       "description": "Ein Set hochwertiger Gewürze, ideal für die anspruchsvolle Restaurantküche.",
       "sku": "GEWUERZE-PREMIUM-GASTRO-003",
@@ -292,8 +291,42 @@
       "content": "This is a test notification 2"
     }
   ],
-  "sales": [],
-  "customers": [],
+  "sales": [
+    {
+      "id": "sale_yvqvzoet0tmx8fuq1r33m7df",
+      "note": "This is a test sale",
+      "status": "created",
+      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
+      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
+      "items": [
+        {
+          "saleId": "sale_yvqvzoet0tmx8fuq1r33m7df",
+          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+          "currency": "EUR",
+          "price": 10.0,
+          "quantity": 22
+        },
+        {
+          "saleId": "sale_yvqvzoet0tmx8fuq1r33m7df",
+          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+          "currency": "CHF",
+          "price": 10.0,
+          "quantity": 5
+        }
+      ]
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_gfy165rp4mmpzrq5muc838qn",
+      "email": "test@example.com",
+      "name": "Test Customer",
+      "phone": null,
+      "image": null,
+      "status": "active",
+      "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df"]
+    }
+  ],
   "suppliers": [],
   "users": [
     {
@@ -317,7 +350,9 @@
           "phone": null,
           "website": null,
           "description": null,
-          "address": null,
+          "address_id": null,
+          "deletedAt": null,
+          "uid": null,
           "orders": {
             "customers": [],
             "suppliers": []
@@ -488,7 +523,6 @@
                   "id": "whfc_ldf703ov4orvnwadnq1oqpgk",
                   "name": "Facility 2",
                   "description": "this is Facility 2",
-                  "dimensions": null,
                   "bounding_box": {
                     "x": 0,
                     "y": 0,
@@ -506,7 +540,8 @@
             }
           ],
           "suppliers": [],
-          "customers": [],
+          "customers": ["cust_gfy165rp4mmpzrq5muc838qn"],
+          "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df"],
           "products": [
             "prod_uzujt3nrndmn90yyslc61wqv",
             "prod_rljvumttoz3f2v122kw7bf4x",

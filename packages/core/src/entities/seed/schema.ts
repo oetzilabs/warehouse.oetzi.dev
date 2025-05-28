@@ -121,6 +121,7 @@ export const OrganizationSchema = object({
   products: array(string()), // references to product IDs
   suppliers: array(string()), // references to supplier IDs
   customers: array(string()), // references to customer IDs
+  sales: array(string()), // references to sales IDs
   orders: OrderSchema,
 });
 
