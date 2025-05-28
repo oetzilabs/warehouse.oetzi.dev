@@ -61,7 +61,6 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                 },
               },
             },
-            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
           }),
         );
 
@@ -83,56 +82,60 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
         const transactions: FinancialTransaction[] = ([] as FinancialTransaction[])
           .concat(
-            supplierOrders.map((so) => ({
-              date: so.createdAt,
-              productAmounts: so.order.prods.reduce((acc, prod) => acc + prod.quantity, 0),
-              amounts: Array.from(
-                so.order.prods
-                  .filter((prod) => prod.product.purchasePrice !== null && prod.product.currency !== null)
-                  .reduce((acc, prod) => {
-                    const price = prod.product.purchasePrice!;
-                    const currency = prod.product.currency!;
-                    const existingAmount = acc.get(currency);
+            supplierOrders
+              .sort((a, b) => b.order.createdAt.getTime() - a.order.createdAt.getTime())
+              .map((so) => ({
+                date: so.order.createdAt,
+                productAmounts: so.order.prods.reduce((acc, prod) => acc + prod.quantity, 0),
+                amounts: Array.from(
+                  so.order.prods
+                    .filter((prod) => prod.product.purchasePrice !== null && prod.product.currency !== null)
+                    .reduce((acc, prod) => {
+                      const price = prod.product.purchasePrice!;
+                      const currency = prod.product.currency!;
+                      const existingAmount = acc.get(currency);
 
-                    if (existingAmount) {
-                      acc.set(currency, existingAmount + price * prod.quantity);
-                    } else {
-                      acc.set(currency, price * prod.quantity);
-                    }
-                    return acc;
-                  }, new Map<string, number>())
-                  // Convert the Map entries back to the FinancialAmount[] format
-                  .entries(),
-              ).map(([currency, amount]) => ({ currency, amount }) as FinancialAmount),
-              type: "expense" as const,
-              description: `Supplier Order: ${so.order.id}`,
-            })),
+                      if (existingAmount) {
+                        acc.set(currency, price * prod.quantity + existingAmount);
+                      } else {
+                        acc.set(currency, price * prod.quantity);
+                      }
+                      return acc;
+                    }, new Map<string, number>())
+                    // Convert the Map entries back to the FinancialAmount[] format
+                    .entries(),
+                ).map(([currency, amount]) => ({ currency, amount }) as FinancialAmount),
+                type: "expense" as const,
+                description: `Supplier Order: ${so.order.id}`,
+              })),
           )
           .concat(
-            sales.map((s) => {
-              const itemsByCurrency = s.items.reduce(
-                (acc, item) => {
-                  if (!acc[item.currency]) acc[item.currency] = [];
-                  acc[item.currency].push(item);
-                  return acc;
-                },
-                {} as Record<string, typeof s.items>,
-              );
+            sales
+              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+              .map((s) => {
+                const itemsByCurrency = s.items.reduce(
+                  (acc, item) => {
+                    if (!acc[item.currency]) acc[item.currency] = [];
+                    acc[item.currency].push(item);
+                    return acc;
+                  },
+                  {} as Record<string, typeof s.items>,
+                );
 
-              return {
-                date: s.createdAt,
-                productAmounts: Object.values(itemsByCurrency).reduce(
-                  (acc, items) => acc + items.reduce((total, item) => total + item.price * item.quantity, 0),
-                  0,
-                ),
-                amounts: Object.entries(itemsByCurrency).map(([currency, items]) => ({
-                  currency,
-                  amount: items.reduce((total, item) => total + item.price * item.quantity, 0),
-                })),
-                type: "income" as const,
-                description: `Sale: ${s.id}`,
-              };
-            }),
+                return {
+                  date: s.createdAt,
+                  productAmounts: Object.values(itemsByCurrency).reduce(
+                    (acc, items) => acc + items.reduce((total, item) => total + item.quantity, 0),
+                    0,
+                  ),
+                  amounts: Object.entries(itemsByCurrency).map(([currency, items]) => ({
+                    currency,
+                    amount: items.reduce((total, item) => total + item.price * item.quantity, 0),
+                  })),
+                  type: "income" as const,
+                  description: `Sale: ${s.id}`,
+                };
+              }),
           );
 
         // Calculate totals by currency

@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { createSignal, For, onMount, Show } from "solid-js";
+import "@fontsource-variable/geist-mono";
 import { toast } from "solid-sonner";
 
 export const route = {
@@ -146,17 +147,11 @@ export default function AccountingPage() {
                     <TableBody>
                       <For each={Object.entries(accountingList().totalsByCurrency)}>
                         {([currency, values]) => (
-                          <TableRow class="border-b-0">
+                          <TableRow class="border-b-0 font-['Geist_Mono_Variable']">
                             <TableCell class="font-semibold p-4 h-auto">{currency}</TableCell>
-                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsIncome}</TableCell>
-                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsExpenses}</TableCell>
-                            <TableCell class="text-right font-semibold p-4 h-auto">
-                              {Intl.NumberFormat(zoneInfo(), {
-                                style: "currency",
-                                currency: currency,
-                                minimumFractionDigits: 2,
-                              }).format(values.netIncome)}
-                            </TableCell>
+                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsIncome}x</TableCell>
+                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsExpenses}x</TableCell>
+                            <TableCell class="text-right p-4 h-auto">{values.netIncome.toFixed(2)}</TableCell>
                           </TableRow>
                         )}
                       </For>

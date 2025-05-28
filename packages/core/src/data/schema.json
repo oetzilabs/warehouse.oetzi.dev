@@ -1632,9 +1632,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "saleId": {
-                  "type": "string"
-                },
                 "productId": {
                   "type": "string"
                 },
@@ -1654,7 +1651,6 @@
               },
               "additionalProperties": false,
               "required": [
-                "saleId",
                 "productId",
                 "quantity",
                 "price",
@@ -1699,6 +1695,9 @@
             ]
           },
           "id": {},
+          "createdAt": {
+            "type": "string"
+          },
           "products": {
             "type": "array",
             "items": {

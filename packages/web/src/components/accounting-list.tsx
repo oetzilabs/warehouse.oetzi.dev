@@ -12,6 +12,10 @@ import Plus from "lucide-solid/icons/plus";
 import { Accessor, createSignal, For, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { AccountingFilterPopover } from "./accounting-filter-popover";
+import "@fontsource-variable/geist-mono";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
 
 type AccoutingTransaction = AccountingInfo["transactions"][number];
 
@@ -32,14 +36,14 @@ export const AccountingList = (props: AccountingListProps) => {
     },
     search: { term: dsearch() },
     sort: {
-      default: "name",
-      current: "name",
+      default: "date",
+      current: "date",
       direction: "desc",
       variants: [
         {
           field: "date",
           label: "Date",
-          fn: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
+          fn: (a, b) => dayjs(b.date).unix() - dayjs(a.date).unix(),
         },
         {
           field: "description",
@@ -49,12 +53,12 @@ export const AccountingList = (props: AccountingListProps) => {
         {
           field: "income",
           label: "Income",
-          fn: (a, b) => (a.type === "income" ? 1 : -1),
+          fn: (a, b) => (a.type === "income" ? 1 : b.type === "income" ? -1 : 0),
         },
         {
           field: "expense",
           label: "Expenses",
-          fn: (a, b) => (a.type === "expense" ? 1 : -1),
+          fn: (a, b) => (a.type === "expense" ? 1 : b.type === "expense" ? -1 : 0),
         },
       ],
     },
@@ -117,7 +121,9 @@ export const AccountingList = (props: AccountingListProps) => {
               {(acc) => (
                 <TableRow>
                   <TableCell class="font-medium px-4">
-                    <div class="w-max">{dayjs(acc.date).format("MMM DD, YYYY")}</div>
+                    <div title={dayjs(acc.date).format("LLL")} class="w-max">
+                      {dayjs(acc.date).format("LL")}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div
@@ -141,7 +147,12 @@ export const AccountingList = (props: AccountingListProps) => {
                     <div class="flex flex-row gap-2 items-center justify-end">
                       <For each={acc.amounts}>
                         {(amount) => (
-                          <span class="text-sm font-medium">
+                          <span
+                            class={cn("text-sm font-medium leading-none font-['Geist_Mono_Variable']", {
+                              "text-emerald-500 dark:text-emerald-400": acc.type === "income",
+                              "text-rose-500 dark:text-rose-400": acc.type === "expense",
+                            })}
+                          >
                             {acc.type === "income" ? "+" : "-"}{" "}
                             {Intl.NumberFormat(zoneInfo(), {
                               style: "currency",

@@ -302,18 +302,50 @@
       "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
       "items": [
         {
-          "saleId": "sale_yvqvzoet0tmx8fuq1r33m7df",
           "productId": "prod_uzujt3nrndmn90yyslc61wqv",
           "currency": "EUR",
           "price": 10.0,
           "quantity": 22
         },
         {
-          "saleId": "sale_yvqvzoet0tmx8fuq1r33m7df",
           "productId": "prod_rljvumttoz3f2v122kw7bf4x",
           "currency": "CHF",
           "price": 10.0,
           "quantity": 5
+        },
+        {
+          "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
+          "currency": "EUR",
+          "price": 15.0,
+          "quantity": 100
+        }
+      ]
+    },
+    {
+      "id": "sale_pf0xvak0rwxcccpd9trgh9fa",
+      "note": "This is a test sale 2",
+      "status": "draft",
+      "createdAt": "2025-05-28T10:00:00.000Z",
+      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
+      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
+      "items": [
+        {
+          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+          "currency": "EUR",
+          "price": 10.0,
+          "quantity": 2
+        },
+        {
+          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+          "currency": "CHF",
+          "price": 10.0,
+          "quantity": 2
+        },
+        {
+          "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
+          "currency": "EUR",
+          "price": 15.0,
+          "quantity": 10
         }
       ]
     }
@@ -326,7 +358,7 @@
       "phone": null,
       "image": null,
       "status": "active",
-      "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df"]
+      "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df", "sale_pf0xvak0rwxcccpd9trgh9fa"]
     }
   ],
   "suppliers": [
@@ -349,6 +381,7 @@
       "id": "ord_mluhzjoc0ofr6xh53au78w3d",
       "status": "completed",
       "title": "Test Order",
+      "createdAt": "2025-05-25T10:00:00.000Z",
       "description": "This is a test order",
       "products": [
         { "id": "ordprod_d683xr2dlzdkwrdru1u42ckb", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 22 },
@@ -362,6 +395,7 @@
     {
       "id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
       "status": "pending",
+      "createdAt": "2025-05-26T10:00:00.000Z",
       "title": "Test Order 2",
       "description": "This is a test order",
       "products": [
@@ -370,6 +404,21 @@
           "id": "ordprod_za1ga7qrxvo2vsmrqdcyvmlj",
           "productId": "prod_rljvumttoz3f2v122kw7bf4x",
           "quantity": 8
+        }
+      ]
+    },
+    {
+      "id": "ord_a11be407877wogmtub8lx9sd",
+      "createdAt": "2025-05-27T10:00:00.000Z",
+      "status": "processing",
+      "title": "Test Order 3",
+      "description": "This is a test order",
+      "products": [
+        { "id": "ordprod_zcdnmf5hhzhe9uq7vaojrzay", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 80 },
+        {
+          "id": "ordprod_o1ji3fn6973ms4q8pu67ceuh",
+          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+          "quantity": 100
         }
       ]
     }
@@ -400,7 +449,12 @@
           "deletedAt": null,
           "uid": null,
           "orders": {
-            "customers": [],
+            "customers": [
+              {
+                "customer_id": "cust_gfy165rp4mmpzrq5muc838qn",
+                "order_id": "ord_a11be407877wogmtub8lx9sd"
+              }
+            ],
             "suppliers": [
               {
                 "order_id": "ord_mluhzjoc0ofr6xh53au78w3d",
@@ -408,6 +462,10 @@
               },
               {
                 "order_id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
+                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
+              },
+              {
+                "order_id": "ord_a11be407877wogmtub8lx9sd",
                 "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
               }
             ]
@@ -596,7 +654,7 @@
           ],
           "suppliers": ["sup_xdyn2y5k86zn3gxvss7rym0w"],
           "customers": ["cust_gfy165rp4mmpzrq5muc838qn"],
-          "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df"],
+          "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df", "sale_pf0xvak0rwxcccpd9trgh9fa"],
           "products": [
             "prod_uzujt3nrndmn90yyslc61wqv",
             "prod_rljvumttoz3f2v122kw7bf4x",

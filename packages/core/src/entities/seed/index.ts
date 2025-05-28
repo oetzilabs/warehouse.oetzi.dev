@@ -527,10 +527,10 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             yield* Effect.promise(() =>
               db
                 .insert(TB_sale_items)
-                .values(item)
+                .values({ ...item, saleId: sale.id })
                 .onConflictDoUpdate({
                   target: [TB_sale_items.productId, TB_sale_items.saleId],
-                  set: item,
+                  set: { ...item, saleId: sale.id },
                 })
                 .returning(),
             );

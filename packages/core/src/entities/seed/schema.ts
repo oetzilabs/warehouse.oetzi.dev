@@ -207,7 +207,7 @@ export const SaleSchema = object({
       ),
     ),
   ),
-  items: array(SalesItemSchema), // references to product IDs
+  items: array(omit(SalesItemSchema, ["saleId"])), // references to product IDs
 });
 
 export const CustomerSchema = object({
@@ -229,6 +229,12 @@ export const OrderProductSchema = object({
 export const NormalOrderSchema = object({
   ...OrderCreateSchema.entries,
   id: prefixed_cuid2,
+  createdAt: optional(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ),
   products: array(OrderProductSchema),
 });
 
