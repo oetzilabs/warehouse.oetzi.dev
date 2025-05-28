@@ -17,7 +17,7 @@ export const TB_order_products = commonTable(
       .notNull(),
     quantity: integer("quantity").notNull().default(0),
   },
-  "ord_prod",
+  "ordprod",
 );
 
 export const order_products_relations = relations(TB_order_products, ({ one }) => ({

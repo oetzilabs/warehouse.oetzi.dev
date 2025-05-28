@@ -15,6 +15,7 @@ export interface FinancialAmount {
 export interface FinancialTransaction {
   date: Date;
   amounts: FinancialAmount[]; // Changed from single amount to array of amounts
+  productAmounts: number;
   type: "income" | "expense";
   description: string;
 }
@@ -84,6 +85,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
           .concat(
             supplierOrders.map((so) => ({
               date: so.createdAt,
+              productAmounts: so.order.prods.reduce((acc, prod) => acc + prod.quantity, 0),
               amounts: Array.from(
                 so.order.prods
                   .filter((prod) => prod.product.purchasePrice !== null && prod.product.currency !== null)
@@ -119,6 +121,10 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
               return {
                 date: s.createdAt,
+                productAmounts: Object.values(itemsByCurrency).reduce(
+                  (acc, items) => acc + items.reduce((total, item) => total + item.price * item.quantity, 0),
+                  0,
+                ),
                 amounts: Object.entries(itemsByCurrency).map(([currency, items]) => ({
                   currency,
                   amount: items.reduce((total, item) => total + item.price * item.quantity, 0),

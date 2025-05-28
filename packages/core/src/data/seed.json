@@ -349,13 +349,29 @@
       "id": "ord_mluhzjoc0ofr6xh53au78w3d",
       "status": "completed",
       "title": "Test Order",
-      "description": "This is a test order"
+      "description": "This is a test order",
+      "products": [
+        { "id": "ordprod_d683xr2dlzdkwrdru1u42ckb", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 22 },
+        {
+          "id": "ordprod_yltrkzqyzhcy34edm7jg18hd",
+          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+          "quantity": 5
+        }
+      ]
     },
     {
       "id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
       "status": "pending",
       "title": "Test Order 2",
-      "description": "This is a test order"
+      "description": "This is a test order",
+      "products": [
+        { "id": "ordprod_fyyct49m0dkfoymc8qjvk4v9", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 12 },
+        {
+          "id": "ordprod_za1ga7qrxvo2vsmrqdcyvmlj",
+          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+          "quantity": 8
+        }
+      ]
     }
   ],
   "users": [

@@ -19,6 +19,7 @@ import {
   FacilityCreateSchema,
   NotificationCreateSchema,
   OrderCreateSchema,
+  OrderProductCreateSchema,
   OrganizationCustomerOrderCreateSchema,
   OrganizationSupplierOrderCreateSchema,
   SupplierCreateSchema,
@@ -220,9 +221,15 @@ export const NotificationSchema = object({
   id: prefixed_cuid2,
 });
 
+export const OrderProductSchema = object({
+  ...omit(OrderProductCreateSchema, ["orderId", "createdAt", "updatedAt", "deletedAt"]).entries,
+  id: prefixed_cuid2,
+});
+
 export const NormalOrderSchema = object({
   ...OrderCreateSchema.entries,
   id: prefixed_cuid2,
+  products: array(OrderProductSchema),
 });
 
 export const SeedDataSchema = object({

@@ -711,9 +711,6 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "organization_id": {
-                            "type": "string"
-                          },
                           "order_id": {
                             "type": "string"
                           },
@@ -721,13 +718,11 @@
                             "type": "string"
                           },
                           "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
+                            "type": "string"
                           }
                         },
                         "additionalProperties": false,
                         "required": [
-                          "organization_id",
                           "order_id",
                           "customer_id"
                         ]
@@ -1703,12 +1698,35 @@
               }
             ]
           },
-          "id": {}
+          "id": {},
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647
+                },
+                "id": {}
+              },
+              "additionalProperties": false,
+              "required": [
+                "productId",
+                "id"
+              ]
+            }
+          }
         },
         "additionalProperties": false,
         "required": [
           "title",
-          "id"
+          "id",
+          "products"
         ]
       }
     },

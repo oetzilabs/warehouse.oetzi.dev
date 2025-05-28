@@ -133,19 +133,7 @@ export const AccountingList = (props: AccountingListProps) => {
                     <div class="flex flex-col gap-1">
                       <span>{acc.description}</span>
                       <span class="text-xs text-muted-foreground">
-                        {acc.type === "income" ? "Sold" : "Purchased"}{" "}
-                        {acc.description.startsWith("Sale:")
-                          ? acc.description
-                              .split(":")[1]
-                              .trim()
-                              .split("-")
-                              .filter((p) => p.length > 0).length
-                          : acc.description
-                              .split(":")[1]
-                              .trim()
-                              .split("-")
-                              .filter((p) => p.length > 0).length}{" "}
-                        products
+                        {acc.type === "income" ? "Sold" : "Purchased"} {acc.productAmounts} products
                       </span>
                     </div>
                   </TableCell>
@@ -154,6 +142,7 @@ export const AccountingList = (props: AccountingListProps) => {
                       <For each={acc.amounts}>
                         {(amount) => (
                           <span class="text-sm font-medium">
+                            {acc.type === "income" ? "+" : "-"}{" "}
                             {Intl.NumberFormat(zoneInfo(), {
                               style: "currency",
                               currency: amount.currency,

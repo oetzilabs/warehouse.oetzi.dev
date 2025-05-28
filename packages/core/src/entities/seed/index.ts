@@ -11,6 +11,7 @@ import {
   TB_devices,
   TB_document_storage_offers,
   TB_notifications,
+  TB_order_products,
   TB_orders,
   TB_organization_customers,
   TB_organization_suppliers,
@@ -208,6 +209,15 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               })
               .returning(),
           );
+          for (const product of order.products) {
+            yield* Effect.promise(() =>
+              db
+                .insert(TB_order_products)
+                .values({ ...product, orderId: order.id })
+                .onConflictDoUpdate({ target: TB_order_products.id, set: { ...product, orderId: order.id } })
+                .returning(),
+            );
+          }
         }
 
         for (const supplier of seedData.output.suppliers) {
