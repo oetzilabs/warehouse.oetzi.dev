@@ -136,8 +136,8 @@ export const AccountingList = (props: AccountingListProps) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div class="flex flex-col gap-1">
-                      <span>{acc.description}</span>
+                    <div class="flex flex-col gap-1 py-2">
+                      {/* <span>{acc.description}</span> */}
                       <span class="text-xs text-muted-foreground">
                         {acc.type === "income" ? "Sold" : "Purchased"} {acc.productAmounts} products
                       </span>
