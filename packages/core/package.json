@@ -31,7 +31,7 @@
     "@openauthjs/openauth": "0.4.3",
     "@paralleldrive/cuid2": "2.2.2",
     "@valibot/to-json-schema": "^1.2.0",
-    "drizzle-orm": "0.43.1",
+    "drizzle-orm": "0.44.0",
     "drizzle-valibot": "0.4.2",
     "jsonwebtoken": "^9.0.2",
     "ms": "^2.1.3",
