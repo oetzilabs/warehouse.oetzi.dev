@@ -87,7 +87,7 @@ export const AccountingList = (props: AccountingListProps) => {
           <TableHeader class="py-4 !h-auto">
             <TableRow>
               <TableHead class="w-[120px] p-4 h-content">Date</TableHead>
-              <TableHead class="w-[50px] h-content p-4">Type</TableHead>
+              <TableHead class="w-[50px] h-content p-4 hidden md:table-cell">Type</TableHead>
               <TableHead class="p-4 h-content">Products</TableHead>
               <TableHead class="text-right p-4 h-content">Amounts</TableHead>
             </TableRow>
@@ -97,7 +97,7 @@ export const AccountingList = (props: AccountingListProps) => {
               each={filteredData()}
               fallback={
                 <TableRow>
-                  <TableCell colspan="4" class="text-center text-muted-foreground py-8">
+                  <TableCell colspan="5" class="text-center text-muted-foreground py-8">
                     No transactions found
                   </TableCell>
                 </TableRow>
@@ -105,46 +105,46 @@ export const AccountingList = (props: AccountingListProps) => {
             >
               {(acc) => (
                 <TableRow>
-                  <TableCell class="font-medium px-4">
-                    <div title={dayjs(acc.date).format("LLL")} class="w-max">
-                      {dayjs(acc.date).format("LL")}
+                  <TableCell class="font-medium px-4 align-top text-left">
+                    <div title={dayjs(acc.date).format("LL")} class="flex flex-col w-max">
+                      <span>{dayjs(acc.date).format("LL")}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div
-                      class={cn("text-xs font-medium leading-none", {
-                        "text-emerald-500 dark:text-emerald-400": acc.type === "income",
-                        "text-rose-500 dark:text-rose-400": acc.type === "expense",
-                        "text-amber-500 dark:text-amber-400": acc.type === "mixed",
-                      })}
-                    >
-                      {acc.type}
+                  <TableCell class="align-top hidden md:table-cell">
+                    <div class="flex flex-col">
+                      <span
+                        class={cn("text-sm font-medium uppercase", {
+                          "text-emerald-500 dark:text-emerald-400": acc.type === "income",
+                          "text-rose-500 dark:text-rose-400": acc.type === "expense",
+                          "text-amber-500 dark:text-amber-400": acc.type === "mixed",
+                        })}
+                      >
+                        {acc.type}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div class="flex flex-col gap-1 py-2">
-                      <div class="flex flex-col text-xs">
-                        <Show when={acc.productAmounts.bought > 0}>
-                          <span class="text-rose-500 dark:text-rose-400">
-                            Bought: {acc.productAmounts.bought} products
-                          </span>
-                        </Show>
-                        <Show when={acc.productAmounts.sold > 0}>
-                          <span class="text-emerald-500 dark:text-emerald-400">
-                            Sold: {acc.productAmounts.sold} products
-                          </span>
-                        </Show>
-                      </div>
+                  <TableCell class="align-top">
+                    <div class="flex flex-col text-sm w-max">
+                      <Show when={acc.productAmounts.bought > 0}>
+                        <span class="text-muted-foreground">
+                          Bought: {acc.productAmounts.bought - acc.productAmounts.stornosBought}
+                        </span>
+                      </Show>
+                      <Show when={acc.productAmounts.sold > 0}>
+                        <span class="text-muted-foreground">
+                          Sold: {acc.productAmounts.sold - acc.productAmounts.stornosSold}
+                        </span>
+                      </Show>
                     </div>
                   </TableCell>
                   <TableCell class="text-right px-4">
                     <div class="flex flex-col gap-2 items-end justify-end">
                       <For each={acc.amounts}>
                         {(amount) => (
-                          <div class="flex flex-col gap-1 font-['Geist_Mono_Variable']">
+                          <div class="flex flex-col gap-1 font-['Geist_Mono_Variable'] text-right items-end justify-end">
                             <Show when={amount.bought > 0}>
-                              <span class="text-sm font-medium leading-none text-rose-500 dark:text-rose-400">
-                                -{" "}
+                              <span class="text-sm font-medium leading-none text-rose-500 dark:text-rose-400 w-max text-right">
+                                -
                                 {Intl.NumberFormat(zoneInfo(), {
                                   style: "currency",
                                   currency: amount.currency,
@@ -153,13 +153,33 @@ export const AccountingList = (props: AccountingListProps) => {
                               </span>
                             </Show>
                             <Show when={amount.sold > 0}>
-                              <span class="text-sm font-medium leading-none text-emerald-500 dark:text-emerald-400">
-                                +{" "}
+                              <span class="text-sm font-medium leading-none text-emerald-500 dark:text-emerald-400 w-max text-right">
+                                +
                                 {Intl.NumberFormat(zoneInfo(), {
                                   style: "currency",
                                   currency: amount.currency,
                                   minimumFractionDigits: 2,
                                 }).format(amount.sold)}
+                              </span>
+                            </Show>
+                            <Show when={amount.stornosSold > 0}>
+                              <span class="text-sm font-medium leading-none text-rose-500 dark:text-rose-400 w-max text-right">
+                                Storno: -
+                                {Intl.NumberFormat(zoneInfo(), {
+                                  style: "currency",
+                                  currency: amount.currency,
+                                  minimumFractionDigits: 2,
+                                }).format(amount.stornosSold)}
+                              </span>
+                            </Show>
+                            <Show when={amount.stornosBought > 0}>
+                              <span class="text-sm font-medium leading-none text-muted-foreground w-max text-right">
+                                Supplier Storno:{" "}
+                                {Intl.NumberFormat(zoneInfo(), {
+                                  style: "currency",
+                                  currency: amount.currency,
+                                  minimumFractionDigits: 2,
+                                }).format(amount.stornosBought)}
                               </span>
                             </Show>
                           </div>

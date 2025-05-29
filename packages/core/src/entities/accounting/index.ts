@@ -16,12 +16,16 @@ export interface FinancialTransaction {
   date: Date;
   amounts: {
     currency: string;
-    bought: number; // Amount spent on purchases
-    sold: number; // Amount earned from sales
+    bought: number;
+    sold: number;
+    stornosBought: number; // Amount of cancelled purchases
+    stornosSold: number; // Amount of cancelled sales
   }[];
   productAmounts: {
-    bought: number; // Number of products bought
-    sold: number; // Number of products sold
+    bought: number;
+    sold: number;
+    stornosBought: number; // Number of products from cancelled purchases
+    stornosSold: number; // Number of products from cancelled sales
   };
   type: "income" | "expense" | "mixed";
   description: string;
@@ -34,8 +38,12 @@ export interface FinancialSummary {
       income: number;
       expenses: number;
       netIncome: number;
-      uniqueProductsIncome: number; // number of unique products sold
-      uniqueProductsExpenses: number; // number of unique products purchased
+      uniqueProductsIncome: number;
+      uniqueProductsExpenses: number;
+      stornos: {
+        income: number; // Total amount of cancelled sales
+        expenses: number; // Total amount of cancelled purchases
+      };
     }
   >;
   transactions: FinancialTransaction[];
@@ -116,9 +124,15 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
         const transactions: FinancialTransaction[] = Array.from(transactionsByDay.entries())
           .map(([day, { sales, orders }]) => {
-            const currencyMap = new Map<string, { bought: number; sold: number }>();
+            // Process transactions
+            const currencyMap = new Map<
+              string,
+              { bought: number; sold: number; stornosBought: number; stornosSold: number }
+            >();
             let totalProductsBought = 0;
             let totalProductsSold = 0;
+            let totalProductsStornoBought = 0;
+            let totalProductsStornoSold = 0;
 
             // Process orders (bought)
             orders.forEach((so) => {
@@ -126,10 +140,16 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                 if (prod.product.purchasePrice && prod.product.currency) {
                   const currency = prod.product.currency;
                   if (!currencyMap.has(currency)) {
-                    currencyMap.set(currency, { bought: 0, sold: 0 });
+                    currencyMap.set(currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
                   }
-                  currencyMap.get(currency)!.bought += prod.product.purchasePrice * prod.quantity;
-                  totalProductsBought += prod.quantity;
+                  const amount = prod.product.purchasePrice * Math.abs(prod.quantity);
+                  if (prod.quantity < 0) {
+                    currencyMap.get(currency)!.stornosBought += amount;
+                    totalProductsStornoBought += Math.abs(prod.quantity);
+                  } else {
+                    currencyMap.get(currency)!.bought += amount;
+                    totalProductsBought += prod.quantity;
+                  }
                 }
               });
             });
@@ -138,10 +158,16 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
             sales.forEach((sale) => {
               sale.items.forEach((item) => {
                 if (!currencyMap.has(item.currency)) {
-                  currencyMap.set(item.currency, { bought: 0, sold: 0 });
+                  currencyMap.set(item.currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
                 }
-                currencyMap.get(item.currency)!.sold += item.price * item.quantity;
-                totalProductsSold += item.quantity;
+                const amount = item.price * Math.abs(item.quantity);
+                if (item.quantity < 0) {
+                  currencyMap.get(item.currency)!.stornosSold += amount;
+                  totalProductsStornoSold += Math.abs(item.quantity);
+                } else {
+                  currencyMap.get(item.currency)!.sold += amount;
+                  totalProductsSold += item.quantity;
+                }
               });
             });
 
@@ -154,10 +180,14 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                 currency,
                 bought: amounts.bought,
                 sold: amounts.sold,
+                stornosBought: amounts.stornosBought,
+                stornosSold: amounts.stornosSold,
               })),
               productAmounts: {
                 bought: totalProductsBought,
                 sold: totalProductsSold,
+                stornosBought: totalProductsStornoBought,
+                stornosSold: totalProductsStornoSold,
               },
               type,
               description: `Daily summary for ${day}`,
@@ -168,7 +198,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
         // Update totals calculation
         const totalsByCurrency = transactions.reduce(
           (acc, t) => {
-            t.amounts.forEach(({ currency, bought, sold }) => {
+            t.amounts.forEach(({ currency, bought, sold, stornosBought, stornosSold }) => {
               if (!acc[currency]) {
                 acc[currency] = {
                   income: 0,
@@ -176,11 +206,17 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                   netIncome: 0,
                   uniqueProductsIncome: 0,
                   uniqueProductsExpenses: 0,
+                  stornos: { income: 0, expenses: 0 },
                 };
               }
               acc[currency].income += sold;
               acc[currency].expenses += bought;
-              acc[currency].netIncome = acc[currency].income - acc[currency].expenses;
+              acc[currency].stornos.income += stornosSold;
+              acc[currency].stornos.expenses += stornosBought;
+              acc[currency].netIncome =
+                acc[currency].income -
+                acc[currency].stornos.income -
+                (acc[currency].expenses - acc[currency].stornos.expenses);
             });
             return acc;
           },

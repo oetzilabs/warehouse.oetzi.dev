@@ -79,14 +79,16 @@ export default function AccountingPage() {
           data: allDates.map((date) => data[date]?.income ?? 0),
           fill: true,
           pointStyle: false,
-          borderColor: currency === "USD" ? "rgb(34, 197, 94)" : "rgb(59, 130, 246)",
+          borderColor: "rgb(34, 197, 94)", // Consistent green for income
+          backgroundColor: "rgba(34, 197, 94, 0.1)",
         },
         {
           label: `Expenses (${currency})`,
           data: allDates.map((date) => data[date]?.expenses ?? 0),
           fill: true,
           pointStyle: false,
-          borderColor: currency === "USD" ? "rgb(239, 68, 68)" : "rgb(168, 85, 247)",
+          borderColor: "rgb(239, 68, 68)", // Consistent red for expenses
+          backgroundColor: "rgba(239, 68, 68, 0.1)",
         },
       ]),
     };
@@ -136,9 +138,15 @@ export default function AccountingPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead class="w-full p-4 h-auto">Currency</TableHead>
-                        <TableHead class="text-right p-4 h-auto">Sold</TableHead>
-                        <TableHead class="text-right p-4 h-auto">Purchased</TableHead>
-                        <TableHead class="text-right w-content p-4 h-auto">Total</TableHead>
+                        <TableHead class="text-right p-4 h-auto">Income</TableHead>
+                        <TableHead class="text-right p-4 h-auto">Expenses</TableHead>
+                        <TableHead class="text-right p-4 h-auto hidden md:table-cell">Stornos</TableHead>
+                        <TableHead class="text-right w-content p-4 h-auto">
+                          <div class="flex flex-row items-end justify-end gap-0 w-max">
+                            <span>Net Total</span>
+                            <span class="inline-block md:hidden">*</span>
+                          </div>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -146,14 +154,59 @@ export default function AccountingPage() {
                         {([currency, values]) => (
                           <TableRow class="border-b-0 font-['Geist_Mono_Variable']">
                             <TableCell class="font-semibold p-4 h-auto">{currency}</TableCell>
-                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsIncome}x</TableCell>
-                            <TableCell class="text-right p-4 h-auto">{values.uniqueProductsExpenses}x</TableCell>
-                            <TableCell class="text-right p-4 h-auto">{values.netIncome.toFixed(2)}</TableCell>
+                            <TableCell class="text-right p-4 h-auto">
+                              <div class="flex flex-row gap-2 items-baseline justify-end">
+                                <span class="text-emerald-500">{values.income.toFixed(2)}</span>
+                                {/* <span class="text-xs text-muted-foreground">({values.uniqueProductsIncome}x)</span> */}
+                              </div>
+                            </TableCell>
+                            <TableCell class="text-right p-4 h-auto">
+                              <div class="flex flex-row gap-2 items-baseline justify-end">
+                                <span class="text-rose-500">{values.expenses.toFixed(2)}</span>
+                                {/* <span class="text-xs text-muted-foreground">({values.uniqueProductsExpenses}x)</span> */}
+                              </div>
+                            </TableCell>
+                            <TableCell class="text-right p-4 h-auto hidden md:table-cell">
+                              <div class="flex flex-row gap-2 items-baseline justify-end">
+                                <span class="text-rose-300 text-sm">{values.stornos.income.toFixed(2)}*</span>
+                                <span class="text-muted-foreground text-sm">
+                                  {values.stornos.expenses.toFixed(2)}**
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell class="text-right p-4 h-auto font-bold">
+                              <div class="flex flex-row gap-2 items-baseline justify-end">
+                                <span
+                                  class={cn({
+                                    "text-emerald-500": values.netIncome > 0,
+                                    "text-rose-500": values.netIncome < 0,
+                                    "text-muted-foreground": values.netIncome === 0,
+                                  })}
+                                >
+                                  {values.netIncome.toFixed(2)}
+                                </span>
+                              </div>
+                            </TableCell>
                           </TableRow>
                         )}
                       </For>
                     </TableBody>
                   </Table>
+                </div>
+                <div class="flex flex-col gap-1 items-end justify-start px-4">
+                  <div class="hidden md:flex flex-col gap-1 items-end justify-start px-4">
+                    <span class="text-xs text-muted-foreground text-right">
+                      * Storno: Income that is subtracted from the income total
+                    </span>
+                    <span class="text-xs text-muted-foreground text-right">
+                      ** Supplier Storno: Expenses that are subtracted from the expenses total
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-1 items-end justify-start px-4 md:hidden">
+                    <span class="text-xs text-muted-foreground text-right">
+                      * Storno and Supplier Storne has been subtracted from the totals
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

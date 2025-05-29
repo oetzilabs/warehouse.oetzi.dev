@@ -353,6 +353,34 @@
       ]
     },
     {
+      "id": "sale_xfdt86ehwalmpa21fpea6p5d",
+      "note": "This is a test sale 2, with storno and for mixed transactions. the last product needs to be a storno",
+      "status": "draft",
+      "createdAt": "2025-05-26T10:00:00.000Z",
+      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
+      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
+      "items": [
+        {
+          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+          "currency": "EUR",
+          "price": 10.0,
+          "quantity": 2
+        },
+        {
+          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+          "currency": "CHF",
+          "price": 10.0,
+          "quantity": 2
+        },
+        {
+          "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
+          "currency": "EUR",
+          "price": 15.0,
+          "quantity": -2
+        }
+      ]
+    },
+    {
       "id": "sale_snh8zs22qnvj4iyqm32tcj04",
       "note": "Storno for sale_yvqvzoet0tmx8fuq1r33m7df",
       "status": "created",
@@ -546,10 +574,6 @@
               {
                 "order_id": "ord_a11be407877wogmtub8lx9sd",
                 "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
-              },
-              {
-                "order_id": "ord_l30oshk08tc89p0bs4i76hqs",
-                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
               }
             ]
           },
@@ -737,7 +761,12 @@
           ],
           "suppliers": ["sup_xdyn2y5k86zn3gxvss7rym0w"],
           "customers": ["cust_gfy165rp4mmpzrq5muc838qn"],
-          "sales": ["sale_yvqvzoet0tmx8fuq1r33m7df", "sale_pf0xvak0rwxcccpd9trgh9fa", "sale_snh8zs22qnvj4iyqm32tcj04"],
+          "sales": [
+            "sale_yvqvzoet0tmx8fuq1r33m7df",
+            "sale_pf0xvak0rwxcccpd9trgh9fa",
+            "sale_snh8zs22qnvj4iyqm32tcj04",
+            "sale_xfdt86ehwalmpa21fpea6p5d"
+          ],
           "products": [
             "prod_uzujt3nrndmn90yyslc61wqv",
             "prod_rljvumttoz3f2v122kw7bf4x",
