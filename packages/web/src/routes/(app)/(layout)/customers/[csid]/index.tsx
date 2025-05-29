@@ -245,7 +245,7 @@ export default function CustomerPage() {
                                 class="bg-background"
                                 size="sm"
                                 as={A}
-                                href={`/orders/${o.order.id}`}
+                                href={`./orders/${o.order.id}`}
                               >
                                 View
                                 <ArrowUpRight class="size-4" />

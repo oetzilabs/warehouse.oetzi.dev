@@ -42,7 +42,7 @@ export const route = {
   },
 } as RouteDefinition;
 
-export default function SupplierOrderPage() {
+export default function CustomerOrderPage() {
   const params = useParams();
   const navigate = useNavigate();
   const order = createAsync(() => getOrderById(params.oid), { deferStream: true });
@@ -66,7 +66,7 @@ export default function SupplierOrderPage() {
           <div class="container flex flex-col gap-4 py-4">
             <div class="flex flex-row items-center justify-between gap-4">
               <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href={`/suppliers/${params.spid}`}>
+                <Button variant="outline" size="sm" as={A} href={`/customers/${params.csid}`}>
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
