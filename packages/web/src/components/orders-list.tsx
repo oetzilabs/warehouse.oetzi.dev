@@ -11,21 +11,21 @@ import { FilterPopover } from "./filter-popover";
 import { OrderStatusBadge } from "./order-status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-type OrderListProps = {
-  data: Accessor<OrderInfo[]>;
+type SuppliersOrdersListProps = {
+  data: Accessor<{ supplier_id: string; order: OrderInfo; createdAt: Date }[]>;
 };
-
-type SuppliersOrdersListProps = OrderListProps & {};
 
 export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<OrderInfo>>({
+  const [filterConfig, setFilterConfig] = createStore<
+    FilterConfig<{ supplier_id: string; order: OrderInfo; createdAt: Date }>
+  >({
     disabled: () => props.data().length === 0,
     dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
+      start: props.data().length === 0 ? new Date() : props.data()[0].order.createdAt,
+      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].order.createdAt,
       preset: "clear",
     },
     search: { term: dsearch() },
@@ -37,21 +37,21 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
         {
           field: "date",
           label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
+          fn: (a, b) => dayjs(a.order.createdAt).unix() - dayjs(b.order.createdAt).unix(),
         },
         {
           field: "price",
           label: "Price",
           fn: (a, b) => {
-            const aTotal = a.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-            const bTotal = b.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const aTotal = a.order.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const bTotal = b.order.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
             return aTotal - bTotal;
           },
         },
         {
           field: "products",
           label: "Products",
-          fn: (a, b) => a.prods.length - b.prods.length,
+          fn: (a, b) => a.order.prods.length - b.order.prods.length,
         },
       ],
     },
@@ -93,15 +93,15 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
           </div>
         }
       >
-        {(order) => (
+        {(item) => (
           <A
-            href={`./${order.id}`}
-            class="flex flex-col gap-4 w-full h-content min-h-40 p-4 border rounded-lg hover:bg-primary-foreground hover:border-primary/50 shadow-sm hover:shadow-primary/10 transition-colors"
+            href={`/suppliers/${item.supplier_id}/orders/${item.order.id}`}
+            class="flex flex-col gap-4 w-full h-content min-h-40 p-4 border rounded-lg hover:bg-primary-foreground hover:border-primary/50 shadow-sm hover:shadow-primary/10 transition-colors dark:hover:bg-primary-foreground/20 dark:hover:border-muted-foreground/50"
           >
             <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
               <div class="flex flex-row gap-4 items-center justify-start">
-                <OrderStatusBadge status={order.status} />
-                <span class="text-sm font-medium leading-none">{order.title}</span>
+                <OrderStatusBadge status={item.order.status} />
+                <span class="text-sm font-medium leading-none">{item.order.title}</span>
               </div>
               <div class="flex flex-row items-center gap-2">
                 <div class="flex flex-row items-center gap-2">
@@ -127,14 +127,14 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
             <div class="flex flex-col gap-2 w-full h-full">
               <span
                 class={cn("text-sm text-muted-foreground", {
-                  italic: !order.description,
+                  italic: !item.order.description,
                 })}
               >
-                {order.description ?? "No description provided"}
+                {item.order.description ?? "No description provided"}
               </span>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 w-full h-full">
                 <For
-                  each={order.prods}
+                  each={item.order.prods}
                   fallback={
                     <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground col-span-full bg-background">
                       <span class="text-sm select-none">No products added</span>
@@ -162,7 +162,9 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
                 </For>
               </div>
               <div class="flex w-full grow"></div>
-              <span class="text-xs">{dayjs(order.updatedAt ?? order.createdAt).format("MMM DD, YYYY - h:mm A")}</span>
+              <span class="text-xs">
+                {dayjs(item.order.updatedAt ?? item.order.createdAt).format("MMM DD, YYYY - h:mm A")}
+              </span>
             </div>
           </A>
         )}
@@ -171,17 +173,21 @@ export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
   );
 };
 
-type CustomersOrdersListProps = OrderListProps & {};
+type CustomersOrdersListProps = {
+  data: Accessor<{ customer_id: string; order: OrderInfo; createdAt: Date }[]>;
+};
 
 export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<OrderInfo>>({
+  const [filterConfig, setFilterConfig] = createStore<
+    FilterConfig<{ customer_id: string; order: OrderInfo; createdAt: Date }>
+  >({
     disabled: () => props.data().length === 0,
     dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
+      start: props.data().length === 0 ? new Date() : props.data()[0].order.createdAt,
+      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].order.createdAt,
       preset: "clear",
     },
     search: { term: dsearch() },
@@ -193,21 +199,21 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         {
           field: "date",
           label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
+          fn: (a, b) => dayjs(a.order.createdAt).unix() - dayjs(b.order.createdAt).unix(),
         },
         {
           field: "price",
           label: "Price",
           fn: (a, b) => {
-            const aTotal = a.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-            const bTotal = b.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const aTotal = a.order.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+            const bTotal = b.order.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
             return aTotal - bTotal;
           },
         },
         {
           field: "products",
           label: "Products",
-          fn: (a, b) => a.prods.length - b.prods.length,
+          fn: (a, b) => a.order.prods.length - b.order.prods.length,
         },
       ],
     },
@@ -254,15 +260,15 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
           </div>
         }
       >
-        {(order) => (
+        {(item) => (
           <A
-            href={`./${order.id}`}
-            class="flex flex-col gap-4 w-full h-content min-h-40 p-4 border rounded-lg hover:bg-primary-foreground hover:border-primary/50 shadow-sm hover:shadow-primary/10 transition-colors"
+            href={`/customers/${item.customer_id}/orders/${item.order.id}`}
+            class="flex flex-col gap-4 w-full h-content min-h-40 p-4 border rounded-lg hover:bg-primary-foreground hover:border-primary/50 shadow-sm hover:shadow-primary/10 transition-colors dark:hover:bg-primary-foreground/20 dark:hover:border-muted-foreground/50"
           >
             <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
               <div class="flex flex-row gap-4 items-center justify-start">
-                <OrderStatusBadge status={order.status} />
-                <span class="text-sm font-medium leading-none">{order.title}</span>
+                <OrderStatusBadge status={item.order.status} />
+                <span class="text-sm font-medium leading-none">{item.order.title}</span>
               </div>
               <div class="flex flex-row items-center gap-2">
                 <div class="flex flex-row items-center gap-2">
@@ -288,14 +294,14 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
             <div class="flex flex-col gap-2 w-full h-full">
               <span
                 class={cn("text-sm text-muted-foreground", {
-                  italic: !order.description,
+                  italic: !item.order.description,
                 })}
               >
-                {order.description ?? "No description provided"}
+                {item.order.description ?? "No description provided"}
               </span>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 w-full h-full">
                 <For
-                  each={order.prods}
+                  each={item.order.prods}
                   fallback={
                     <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground col-span-full bg-background">
                       <span class="text-sm select-none">No products added</span>
@@ -323,7 +329,9 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
                 </For>
               </div>
               <div class="flex w-full grow"></div>
-              <span class="text-xs">{dayjs(order.updatedAt ?? order.createdAt).format("MMM DD, YYYY - h:mm A")}</span>
+              <span class="text-xs">
+                {dayjs(item.order.updatedAt ?? item.order.createdAt).format("MMM DD, YYYY - h:mm A")}
+              </span>
             </div>
           </A>
         )}

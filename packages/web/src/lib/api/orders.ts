@@ -1,5 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { OrderInfo, OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
@@ -108,7 +108,7 @@ export const getPendingSupplyOrders = query(async () => {
     Effect.gen(function* (_) {
       const ordersService = yield* _(OrderService);
       const orders = yield* ordersService.findSupplierOrdersByOrganizationId(orgId);
-      return orders.filter((o) => o.status === "pending" || o.status === "processing");
+      return orders.filter((o) => o.order.status === "pending" || o.order.status === "processing");
     }).pipe(Effect.provide(OrderLive)),
   );
   return Exit.match(orders, {

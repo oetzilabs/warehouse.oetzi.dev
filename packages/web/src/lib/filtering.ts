@@ -48,8 +48,8 @@ export type FilterConfig<T> = {
 
 export type WithDates = object & {
   createdAt: Date;
-  updatedAt: Date | null;
-  deletedAt: Date | null;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
 };
 export type WithSimpleDates = object & {
   date: Date;

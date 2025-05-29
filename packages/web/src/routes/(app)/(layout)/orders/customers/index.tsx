@@ -2,14 +2,11 @@ import { CustomersOrdersList } from "@/components/orders-list";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCustomerOrders } from "@/lib/api/orders";
-import { cn } from "@/lib/utils";
-import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
+import { createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
-import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import X from "lucide-solid/icons/x";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
@@ -22,39 +19,9 @@ export const route = {
 } as RouteDefinition;
 
 export default function CustomerOrdersPage() {
-  const params = useParams();
   const data = createAsync(() => getCustomerOrders(), { deferStream: true });
   const [selectedOrder, setSelectedOrder] = createSignal<OrderInfo | null>(null);
   const [previewVisible, setPreviewVisible] = createSignal(false);
-
-  // const calculateOrders = (orders: OrderInfo[]) => {
-  //   // Calculate total sales for each day
-  //   const totalSales = orders.reduce(
-  //     (acc, order) => {
-  //       const date = dayjs(order.createdAt).format("YYYY-MM-DD");
-  //       if (!order.sale) return acc;
-  //       if (acc[date]) {
-  //         acc[date] += order.sale.total;
-  //       } else {
-  //         acc[date] = order.sale.total;
-  //       }
-  //       return acc;
-  //     },
-  //     {} as Record<string, number>,
-  //   );
-
-  //   return {
-  //     labels: Object.keys(totalSales),
-  //     datasets: [
-  //       {
-  //         label: "Daily Orders Total",
-  //         data: Object.values(totalSales),
-  //         fill: true,
-  //         pointStyle: false,
-  //       },
-  //     ],
-  //   };
-  // };
 
   return (
     <Show when={data()}>
@@ -93,43 +60,6 @@ export default function CustomerOrdersPage() {
                 </div>
                 <CustomersOrdersList data={os} />
               </div>
-            </div>
-            <div
-              class={cn("w-full lg:max-w-lg border rounded-lg lg:flex hidden flex-col grow", {
-                "!hidden": !previewVisible(),
-              })}
-            >
-              <div class="w-full flex flex-row gap-4 items-center justify-between border-b p-4">
-                <h2 class="font-semibold leading-none">Preview Orders</h2>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  onClick={() => {
-                    setPreviewVisible(false);
-                  }}
-                >
-                  <X class="size-4" />
-                </Button>
-              </div>
-              <For
-                each={selectedOrder()?.items}
-                fallback={
-                  <div class="p-4 w-full grow flex flex-col">
-                    <div class="flex flex-col gap-4 items-center justify-center bg-muted-foreground/5 rounded-lg p-14 border text-muted-foreground">
-                      <PackageSearch class="size-10 text-muted-foreground/50" stroke-width={1} />
-                      <span class="text-sm">No order selected</span>
-                    </div>
-                  </div>
-                }
-              >
-                {(p) => (
-                  <div class="p-4 w-full flex flex-col gap-4">
-                    <div class="flex items-center gap-4 justify-between w-full">
-                      <h1 class="text-2xl font-bold mb-4">{p.product.name}</h1>
-                    </div>
-                  </div>
-                )}
-              </For>
             </div>
           </div>
         </div>

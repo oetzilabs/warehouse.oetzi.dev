@@ -240,6 +240,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
           db.query.TB_organizations_customerorders.findMany({
             where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
+              customer: true,
               order: {
                 with: {
                   custSched: {
@@ -279,7 +280,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             },
           }),
         );
-        return orgOrders.map((o) => o.order);
+        return orgOrders;
       });
 
     const findSupplierOrdersByOrganizationId = (organizationId: string) =>
@@ -292,6 +293,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
           db.query.TB_organizations_supplierorders.findMany({
             where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
+              supplier: true,
               order: {
                 with: {
                   custSched: {
@@ -331,7 +333,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             },
           }),
         );
-        return orgOrders.map((o) => o.order);
+        return orgOrders;
       });
 
     const findMostPopularProductsByOrganizationId = (organizationId: string) =>

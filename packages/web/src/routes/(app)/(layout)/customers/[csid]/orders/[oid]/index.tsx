@@ -173,7 +173,7 @@ export default function CustomerOrderPage() {
                   <div class="flex flex-col gap-0">
                     <For each={orderInfo().prods}>
                       {(product) => (
-                        <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/5 rounded-md border-b last:border-b-0">
+                        <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/5 border-b last:border-b-0">
                           <div class="flex flex-col gap-0.5">
                             <span class="font-medium">{product.product.name}</span>
                             <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
