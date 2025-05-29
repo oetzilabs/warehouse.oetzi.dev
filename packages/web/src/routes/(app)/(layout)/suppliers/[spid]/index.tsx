@@ -29,6 +29,7 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Database from "lucide-solid/icons/database";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -246,14 +247,37 @@ export default function SupplierPage() {
                       </div>
                     </Show>
                     <Show when={supplierInfo().orders.length > 0}>
-                      <div class="flex flex-col gap-1 p-4">
+                      <div class="flex flex-col gap-0 overflow-clip">
                         <For each={supplierInfo().orders}>
                           {(o) => (
-                            <div class="flex flex-row gap-2 items-center justify-between">
-                              {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
-                              <span class="text-sm text-muted-foreground">
-                                {o.order.prods.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
-                              </span>
+                            <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/[0.025] border-b last:border-b-0">
+                              <div class="flex flex-col gap-1">
+                                <div class="flex flex-row items-center gap-2">
+                                  <span class="text-sm font-medium">#{o.order.barcode ?? "N/A"}</span>
+                                  <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                    {o.order.status}
+                                  </span>
+                                </div>
+                                <div class="flex flex-col">
+                                  <span class="text-xs text-muted-foreground">
+                                    {dayjs(o.order.createdAt).format("MMM D, YYYY")}
+                                  </span>
+                                  <span class="text-xs text-muted-foreground">
+                                    {o.order.prods.length} product{o.order.prods.length === 1 ? "" : "s"} •{" "}
+                                    {o.order.prods.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
+                                  </span>
+                                </div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                class="bg-background"
+                                size="sm"
+                                as={A}
+                                href={`./orders/${o.order.id}`}
+                              >
+                                View
+                                <ArrowUpRight class="size-4" />
+                              </Button>
                             </div>
                           )}
                         </For>

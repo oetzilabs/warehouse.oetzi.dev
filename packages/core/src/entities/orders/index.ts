@@ -97,7 +97,20 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
               },
               prods: {
                 with: {
-                  product: true,
+                  product: {
+                    with: {
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                      brands: true,
+                    },
+                  },
                 },
               },
             },
@@ -171,7 +184,20 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                   },
                   prods: {
                     with: {
-                      product: true,
+                      product: {
+                        with: {
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
+                          brands: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -232,7 +258,20 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                   },
                   prods: {
                     with: {
-                      product: true,
+                      product: {
+                        with: {
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
+                          brands: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -271,7 +310,20 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                   },
                   prods: {
                     with: {
-                      product: true,
+                      product: {
+                        with: {
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
+                          brands: true,
+                        },
+                      },
                     },
                   },
                 },

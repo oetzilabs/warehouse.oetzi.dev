@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."orders" ADD COLUMN "barcode" varchar;

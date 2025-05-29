@@ -24,6 +24,7 @@ export const TB_orders = commonTable(
     status: order_status("status").notNull().default("pending"),
     title: text("title").notNull(),
     description: text("description"),
+    barcode: varchar("barcode"),
   },
   "ord",
 );

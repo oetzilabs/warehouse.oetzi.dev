@@ -61,3 +61,10 @@ export class OrganizationUserRemoveFailed extends Schema.TaggedError<Organizatio
     organizationId: Schema.String,
   },
 ) {}
+
+export class OrganizationTaxRateNotFound extends Schema.TaggedError<OrganizationTaxRateNotFound>()(
+  "OrganizationTaxRateNotFound",
+  {
+    id: Schema.String,
+  },
+) {}

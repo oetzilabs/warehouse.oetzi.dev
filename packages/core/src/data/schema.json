@@ -1067,6 +1067,16 @@
               }
             ]
           },
+          "default_tax_group_id": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
           "id": {},
           "labels": {
             "type": "array",
@@ -1694,6 +1704,16 @@
               }
             ]
           },
+          "barcode": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
           "id": {},
           "createdAt": {
             "type": "string"
@@ -1729,6 +1749,89 @@
         ]
       }
     },
+    "tax_rates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rate": {
+            "type": "number",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "id": {}
+        },
+        "additionalProperties": false,
+        "required": [
+          "rate",
+          "id"
+        ]
+      }
+    },
+    "tax_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {}
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "id"
+        ]
+      }
+    },
+    "tax_group_countryrates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "country_code": {
+            "type": "string"
+          },
+          "taxGroupId": {
+            "type": "string"
+          },
+          "taxRateId": {
+            "type": "string"
+          },
+          "effective_date": {
+            "type": "string"
+          },
+          "expiration_date": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "country_code",
+          "taxGroupId",
+          "taxRateId",
+          "effective_date"
+        ]
+      }
+    },
     "$schema": {
       "type": "string"
     }
@@ -1748,6 +1851,9 @@
     "notifications",
     "sales",
     "orders",
+    "tax_rates",
+    "tax_groups",
+    "tax_group_countryrates",
     "$schema"
   ]
 }

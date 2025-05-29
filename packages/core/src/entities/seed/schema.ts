@@ -23,6 +23,9 @@ import {
   OrganizationCustomerOrderCreateSchema,
   OrganizationSupplierOrderCreateSchema,
   SupplierCreateSchema,
+  TaxGroupCountryRatesCreateSchema,
+  TaxGroupCreateSchema,
+  TaxRateCreateSchema,
   WarehouseAreaCreateSchema,
   WarehouseTypeCreateSchema,
 } from "../../drizzle/sql/schema";
@@ -238,6 +241,32 @@ export const NormalOrderSchema = object({
   products: array(OrderProductSchema),
 });
 
+export const TaxRateSchema = object({
+  ...TaxRateCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const TaxGroupSchema = object({
+  ...TaxGroupCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
+export const TaxGroupCountryRateSchema = object({
+  ...TaxGroupCountryRatesCreateSchema.entries,
+  effective_date: pipe(
+    string(),
+    transform((v) => dayjs(v).toDate().toISOString()),
+  ),
+  expiration_date: optional(
+    nullable(
+      pipe(
+        string(),
+        transform((v) => dayjs(v).toDate().toISOString()),
+      ),
+    ),
+  ),
+});
+
 export const SeedDataSchema = object({
   users: array(UserSchema),
   products: array(ProductSchema),
@@ -252,4 +281,7 @@ export const SeedDataSchema = object({
   notifications: array(NotificationSchema),
   sales: array(SaleSchema),
   orders: array(NormalOrderSchema),
+  tax_rates: array(TaxRateSchema),
+  tax_groups: array(TaxGroupSchema),
+  tax_group_countryrates: array(TaxGroupCountryRateSchema),
 });

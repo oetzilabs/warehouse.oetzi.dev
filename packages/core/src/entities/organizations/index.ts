@@ -20,6 +20,7 @@ import {
   OrganizationNotDeleted,
   OrganizationNotFound,
   OrganizationNotUpdated,
+  OrganizationTaxRateNotFound,
   OrganizationUserAddFailed,
   OrganizationUserAlreadyExists,
   OrganizationUserInvalidId,

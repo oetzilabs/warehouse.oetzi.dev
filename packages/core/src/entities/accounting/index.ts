@@ -158,22 +158,18 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
               if (t.type === "income") {
                 acc[currency].income += amount;
                 // For sales transactions
-                if (t.description.startsWith("Sale:")) {
-                  const saleId = t.description.split(":")[1].trim();
-                  const sale = sales.find((s) => s.id === saleId);
-                  const saleProducts = sale?.items.filter((i) => i.currency === currency).map((i) => i.productId) ?? [];
-                  saleProducts.forEach((p) => uniqueProducts.add(p));
-                }
+                const saleId = t.description.split(":")[1].trim();
+                const sale = sales.find((s) => s.id === saleId);
+                const saleProducts = sale?.items.filter((i) => i.currency === currency).map((i) => i.productId) ?? [];
+                saleProducts.forEach((p) => uniqueProducts.add(p));
               } else {
                 acc[currency].expenses += amount;
                 // For supplier orders
-                if (t.description.startsWith("Supplier Order:")) {
-                  const orderId = t.description.split(":")[1].trim();
-                  const order = supplierOrders.find((so) => so.order.id === orderId);
-                  const orderProducts =
-                    order?.order.prods.filter((p) => p.product.currency === currency).map((p) => p.productId) ?? [];
-                  orderProducts.forEach((p) => uniqueProducts.add(p));
-                }
+                const orderId = t.description.split(":")[1].trim();
+                const order = supplierOrders.find((so) => so.order.id === orderId);
+                const orderProducts =
+                  order?.order.prods.filter((p) => p.product.currency === currency).map((p) => p.productId) ?? [];
+                orderProducts.forEach((p) => uniqueProducts.add(p));
               }
 
               acc[currency].netIncome = acc[currency].income - acc[currency].expenses;

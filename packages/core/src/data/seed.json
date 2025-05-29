@@ -31,7 +31,8 @@
       "customsTariffNumber": "210390",
       "countryOfOrigin": "Italy",
       "brand_id": null,
-      "labels": ["labl_ejocn9366uhc0v2r94nc6tsv"]
+      "labels": ["labl_ejocn9366uhc0v2r94nc6tsv"],
+      "default_tax_group_id": "taxgroup_v2440iaek4v20c7cb2kth19e"
     },
     {
       "id": "prod_rljvumttoz3f2v122kw7bf4x",
@@ -63,7 +64,8 @@
       "safetyStock": 200,
       "customsTariffNumber": "392310",
       "countryOfOrigin": "Germany",
-      "labels": ["labl_p6he24lup7a2v1082673nghv", "labl_mhipj5xkrn7exvi9xkay59lq"]
+      "labels": ["labl_p6he24lup7a2v1082673nghv", "labl_mhipj5xkrn7exvi9xkay59lq"],
+      "default_tax_group_id": "taxgroup_ivjewi0guvz2hto2np14fjjj"
     },
     {
       "id": "prod_qgjolvdci0g8f0g6dq851dtf",
@@ -95,7 +97,8 @@
       "safetyStock": 5,
       "customsTariffNumber": "091099",
       "countryOfOrigin": "Germany",
-      "labels": []
+      "labels": [],
+      "default_tax_group_id": "taxgroup_v2440iaek4v20c7cb2kth19e"
     }
   ],
   "labels": [
@@ -379,6 +382,7 @@
   "orders": [
     {
       "id": "ord_mluhzjoc0ofr6xh53au78w3d",
+      "barcode": "ORD-TEST-001",
       "status": "completed",
       "title": "Test Order",
       "createdAt": "2025-05-25T10:00:00.000Z",
@@ -394,6 +398,7 @@
     },
     {
       "id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
+      "barcode": "ORD-TEST-002",
       "status": "pending",
       "createdAt": "2025-05-26T10:00:00.000Z",
       "title": "Test Order 2",
@@ -409,6 +414,7 @@
     },
     {
       "id": "ord_a11be407877wogmtub8lx9sd",
+      "barcode": "ORD-TEST-003",
       "createdAt": "2025-05-27T10:00:00.000Z",
       "status": "processing",
       "title": "Test Order 3",
@@ -421,6 +427,44 @@
           "quantity": 100
         }
       ]
+    }
+  ],
+  "tax_rates": [
+    {
+      "id": "tax_t7gwq9b71r7sv8tqs37s20u1",
+      "rate": 19.0
+    },
+    {
+      "id": "tax_icl1h0kj5pni2essdwbd1kai",
+      "rate": 7.0
+    }
+  ],
+  "tax_groups": [
+    {
+      "id": "taxgroup_v2440iaek4v20c7cb2kth19e",
+      "name": "Mehrwertsteuer A",
+      "description": "Mehrwertsteuer A"
+    },
+    {
+      "id": "taxgroup_ivjewi0guvz2hto2np14fjjj",
+      "name": "Mehrwertsteuer B",
+      "description": "Mehrwertsteuer B"
+    }
+  ],
+  "tax_group_countryrates": [
+    {
+      "country_code": "DE",
+      "taxGroupId": "taxgroup_v2440iaek4v20c7cb2kth19e",
+      "taxRateId": "tax_t7gwq9b71r7sv8tqs37s20u1",
+      "effective_date": "2025-05-01T10:00:00.000Z",
+      "expiration_date": "2027-05-01T10:00:00.000Z"
+    },
+    {
+      "country_code": "DE",
+      "taxGroupId": "taxgroup_ivjewi0guvz2hto2np14fjjj",
+      "taxRateId": "tax_icl1h0kj5pni2essdwbd1kai",
+      "effective_date": "2025-05-01T10:00:00.000Z",
+      "expiration_date": "2027-05-01T10:00:00.000Z"
     }
   ],
   "users": [

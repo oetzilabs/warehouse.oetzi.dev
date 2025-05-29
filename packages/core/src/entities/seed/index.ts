@@ -1,6 +1,7 @@
 import { toJsonSchema } from "@valibot/to-json-schema";
+import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import { safeParse } from "valibot";
 import data from "../../data/seed.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
@@ -36,6 +37,9 @@ import {
   TB_storages,
   TB_supplier_products,
   TB_suppliers,
+  TB_tax_group_countryrates,
+  TB_tax_groups,
+  TB_tax_rates,
   TB_users,
   TB_users_warehouses,
   TB_warehouse_areas,
@@ -84,6 +88,60 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
           );
         }
 
+        for (const taxRate of seedData.output.tax_rates) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_tax_rates)
+              .values(taxRate)
+              .onConflictDoUpdate({
+                target: TB_tax_rates.id,
+                set: taxRate,
+              })
+              .returning(),
+          );
+        }
+        yield* Console.log("tax_rates added");
+
+        for (const taxGroup of seedData.output.tax_groups) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_tax_groups)
+              .values(taxGroup)
+              .onConflictDoUpdate({
+                target: TB_tax_groups.id,
+                set: taxGroup,
+              })
+              .returning(),
+          );
+        }
+        yield* Console.log("tax_groups added");
+
+        for (const taxGroupCountryRate of seedData.output.tax_group_countryrates) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_tax_group_countryrates)
+              .values({
+                ...taxGroupCountryRate,
+                effective_date: dayjs(taxGroupCountryRate.effective_date).toDate(),
+                expiration_date: taxGroupCountryRate.expiration_date
+                  ? dayjs(taxGroupCountryRate.expiration_date).toDate()
+                  : null,
+              })
+              .onConflictDoUpdate({
+                target: [TB_tax_group_countryrates.taxGroupId, TB_tax_group_countryrates.taxRateId],
+                set: {
+                  ...taxGroupCountryRate,
+                  effective_date: dayjs(taxGroupCountryRate.effective_date).toDate(),
+                  expiration_date: taxGroupCountryRate.expiration_date
+                    ? dayjs(taxGroupCountryRate.expiration_date).toDate()
+                    : null,
+                },
+              })
+              .returning(),
+          );
+        }
+        yield* Console.log("tax_group_countryrates added");
+
         for (const storageType of seedData.output.storage_types) {
           yield* Effect.promise(() =>
             db
@@ -96,6 +154,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("storage_types added");
 
         // Seed warehouse types first since warehouses depend on them
         for (const warehouseType of seedData.output.warehouse_types) {
@@ -110,6 +169,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("warehouse_types added");
 
         // Seed payment methods first since products depend on them
         for (const paymentMethod of seedData.output.payment_methods) {
@@ -124,6 +184,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("payment_methods added");
 
         // Seed labels first since products depend on them
         for (const label of seedData.output.labels) {
@@ -138,6 +199,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("product_labels added");
 
         // Seed products
         for (const product of seedData.output.products) {
@@ -171,6 +233,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             );
           }
         }
+        yield* Console.log("products added");
 
         for (const notification of seedData.output.notifications) {
           yield* Effect.promise(() =>
@@ -184,6 +247,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("notifications added");
 
         for (const brand of seedData.output.brands) {
           yield* Effect.promise(() =>
@@ -197,6 +261,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("brands added");
 
         for (const order of seedData.output.orders) {
           yield* Effect.promise(() =>
@@ -219,6 +284,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             );
           }
         }
+        yield* Console.log("orders added");
 
         for (const supplier of seedData.output.suppliers) {
           yield* Effect.promise(() =>
@@ -241,6 +307,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             );
           }
         }
+        yield* Console.log("suppliers added");
 
         for (const customer of seedData.output.customers) {
           yield* Effect.promise(() =>
@@ -254,6 +321,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("customers added");
 
         // Seed storage offers
         for (const documentStorageOffer of seedData.output.document_storage_offers) {
@@ -268,6 +336,36 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               .returning(),
           );
         }
+        yield* Console.log("document_storage_offers added");
+
+        // seed sales
+        for (const sale of seedData.output.sales) {
+          const { items, ...saleData } = sale;
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_sales)
+              .values({ ...saleData, createdAt: saleData.createdAt ?? new Date() })
+              .onConflictDoUpdate({
+                target: TB_sales.id,
+                set: { ...saleData, createdAt: saleData.createdAt ?? new Date() },
+              })
+              .returning(),
+          );
+
+          for (const item of items) {
+            yield* Effect.promise(() =>
+              db
+                .insert(TB_sale_items)
+                .values({ ...item, saleId: sale.id })
+                .onConflictDoUpdate({
+                  target: [TB_sale_items.productId, TB_sale_items.saleId],
+                  set: { ...item, saleId: sale.id },
+                })
+                .returning(),
+            );
+          }
+        }
+        yield* Console.log("sales added");
 
         // Seed users and their nested data
         for (const user of seedData.output.users) {
@@ -444,6 +542,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                 );
               }
             }
+            yield* Console.log(`warehouses for organization ${org.id} added`);
 
             for (const productId of org.products) {
               // TODO: Add product to organization
@@ -455,6 +554,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+            yield* Console.log(`products for organization ${org.id} added`);
 
             // Add customer to organization
             for (const customerId of org.customers) {
@@ -466,6 +566,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+            yield* Console.log(`customers for organization ${org.id} added`);
 
             for (const saleId of org.sales) {
               yield* Effect.promise(() =>
@@ -476,6 +577,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+            yield* Console.log(`sales for organization ${org.id} added`);
 
             for (const supplierId of org.suppliers) {
               yield* Effect.promise(() =>
@@ -486,6 +588,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+            yield* Console.log(`suppliers for organization ${org.id} added`);
 
             for (const order of org.orders.suppliers) {
               yield* Effect.promise(() =>
@@ -496,6 +599,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+            yield* Console.log(`supply-orders for organization ${org.id} added`);
 
             for (const order of org.orders.customers) {
               yield* Effect.promise(() =>
@@ -506,36 +610,11 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   .returning(),
               );
             }
+            yield* Console.log(`customer-orders for organization ${org.id} added`);
           }
+          yield* Console.log(`organizations for user ${user.id} added`);
         }
-
-        // seed sales
-        for (const sale of seedData.output.sales) {
-          const { items, ...saleData } = sale;
-          yield* Effect.promise(() =>
-            db
-              .insert(TB_sales)
-              .values({ ...saleData, createdAt: saleData.createdAt ?? new Date() })
-              .onConflictDoUpdate({
-                target: TB_sales.id,
-                set: { ...saleData, createdAt: saleData.createdAt ?? new Date() },
-              })
-              .returning(),
-          );
-
-          for (const item of items) {
-            yield* Effect.promise(() =>
-              db
-                .insert(TB_sale_items)
-                .values({ ...item, saleId: sale.id })
-                .onConflictDoUpdate({
-                  target: [TB_sale_items.productId, TB_sale_items.saleId],
-                  set: { ...item, saleId: sale.id },
-                })
-                .returning(),
-            );
-          }
-        }
+        yield* Console.log("user added");
 
         return true;
       });

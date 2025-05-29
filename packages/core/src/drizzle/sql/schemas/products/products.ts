@@ -10,6 +10,7 @@ import { TB_catalog_products } from "../catalogs/catalog_products";
 import { commonTable } from "../entity";
 import { TB_organizations_products } from "../organizations/organizations_products";
 import { TB_sale_items } from "../sales/sales_items";
+import { TB_tax_groups } from "../taxes/tax_group";
 import { schema } from "../utils";
 import { TB_warehouse_products } from "../warehouses/warehouse_products";
 import { TB_products_to_labels } from "./product_labels";
@@ -81,6 +82,7 @@ export const TB_products = commonTable(
     safetyStock: integer("safety_stock"),
     customsTariffNumber: text("customs_tariff_number"),
     countryOfOrigin: text("country_of_origin"),
+    default_tax_group_id: text("default_tax_group_id").references(() => TB_tax_groups.id),
   },
   "prod",
 );
@@ -100,6 +102,10 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
   stco: many(TB_products_to_storage_conditions),
   catalogs: many(TB_catalog_products),
   space: many(TB_storage_spaces_to_products),
+  tg: one(TB_tax_groups, {
+    fields: [TB_products.default_tax_group_id],
+    references: [TB_tax_groups.id],
+  }),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

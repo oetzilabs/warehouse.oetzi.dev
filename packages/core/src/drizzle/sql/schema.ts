@@ -10,6 +10,10 @@ export * from "./schemas/devices/devices";
 export * from "./schemas/sessions";
 export * from "./schemas/address";
 
+export * from "./schemas/taxes/tax_rates";
+export * from "./schemas/taxes/tax_group";
+export * from "./schemas/taxes/tax_group_countryrates";
+
 export * from "./schemas/orders/orders";
 export * from "./schemas/orders/order_products";
 
