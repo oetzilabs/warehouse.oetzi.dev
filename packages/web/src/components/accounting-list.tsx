@@ -45,21 +45,6 @@ export const AccountingList = (props: AccountingListProps) => {
           label: "Date",
           fn: (a, b) => dayjs(b.date).unix() - dayjs(a.date).unix(),
         },
-        {
-          field: "description",
-          label: "Description",
-          fn: (a, b) => a.description.localeCompare(b.description),
-        },
-        {
-          field: "income",
-          label: "Income",
-          fn: (a, b) => (a.type === "income" ? 1 : b.type === "income" ? -1 : 0),
-        },
-        {
-          field: "expense",
-          label: "Expenses",
-          fn: (a, b) => (a.type === "expense" ? 1 : b.type === "expense" ? -1 : 0),
-        },
       ],
     },
   });
@@ -102,9 +87,9 @@ export const AccountingList = (props: AccountingListProps) => {
           <TableHeader class="py-4 !h-auto">
             <TableRow>
               <TableHead class="w-[120px] p-4 h-content">Date</TableHead>
-              <TableHead class="w-[50px] h-content p-4 ">Type</TableHead>
-              <TableHead class="p-4 h-content">Description</TableHead>
-              <TableHead class="text-right p-4 h-content">Amount</TableHead>
+              <TableHead class="w-[50px] h-content p-4">Type</TableHead>
+              <TableHead class="p-4 h-content">Products</TableHead>
+              <TableHead class="text-right p-4 h-content">Amounts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,7 +98,7 @@ export const AccountingList = (props: AccountingListProps) => {
               fallback={
                 <TableRow>
                   <TableCell colspan="4" class="text-center text-muted-foreground py-8">
-                    No sales/orders have been made
+                    No transactions found
                   </TableCell>
                 </TableRow>
               }
@@ -130,6 +115,7 @@ export const AccountingList = (props: AccountingListProps) => {
                       class={cn("text-xs font-medium leading-none", {
                         "text-emerald-500 dark:text-emerald-400": acc.type === "income",
                         "text-rose-500 dark:text-rose-400": acc.type === "expense",
+                        "text-amber-500 dark:text-amber-400": acc.type === "mixed",
                       })}
                     >
                       {acc.type}
@@ -137,29 +123,46 @@ export const AccountingList = (props: AccountingListProps) => {
                   </TableCell>
                   <TableCell>
                     <div class="flex flex-col gap-1 py-2">
-                      {/* <span>{acc.description}</span> */}
-                      <span class="text-xs text-muted-foreground">
-                        {acc.type === "income" ? "Sold" : "Purchased"} {acc.productAmounts} products
-                      </span>
+                      <div class="flex flex-col text-xs">
+                        <Show when={acc.productAmounts.bought > 0}>
+                          <span class="text-rose-500 dark:text-rose-400">
+                            Bought: {acc.productAmounts.bought} products
+                          </span>
+                        </Show>
+                        <Show when={acc.productAmounts.sold > 0}>
+                          <span class="text-emerald-500 dark:text-emerald-400">
+                            Sold: {acc.productAmounts.sold} products
+                          </span>
+                        </Show>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell class="text-right px-4">
-                    <div class="flex flex-row gap-2 items-center justify-end">
+                    <div class="flex flex-col gap-2 items-end justify-end">
                       <For each={acc.amounts}>
                         {(amount) => (
-                          <span
-                            class={cn("text-sm font-medium leading-none font-['Geist_Mono_Variable']", {
-                              "text-emerald-500 dark:text-emerald-400": acc.type === "income",
-                              "text-rose-500 dark:text-rose-400": acc.type === "expense",
-                            })}
-                          >
-                            {acc.type === "income" ? "+" : "-"}{" "}
-                            {Intl.NumberFormat(zoneInfo(), {
-                              style: "currency",
-                              currency: amount.currency,
-                              minimumFractionDigits: 2,
-                            }).format(amount.amount)}
-                          </span>
+                          <div class="flex flex-col gap-1 font-['Geist_Mono_Variable']">
+                            <Show when={amount.bought > 0}>
+                              <span class="text-sm font-medium leading-none text-rose-500 dark:text-rose-400">
+                                -{" "}
+                                {Intl.NumberFormat(zoneInfo(), {
+                                  style: "currency",
+                                  currency: amount.currency,
+                                  minimumFractionDigits: 2,
+                                }).format(amount.bought)}
+                              </span>
+                            </Show>
+                            <Show when={amount.sold > 0}>
+                              <span class="text-sm font-medium leading-none text-emerald-500 dark:text-emerald-400">
+                                +{" "}
+                                {Intl.NumberFormat(zoneInfo(), {
+                                  style: "currency",
+                                  currency: amount.currency,
+                                  minimumFractionDigits: 2,
+                                }).format(amount.sold)}
+                              </span>
+                            </Show>
+                          </div>
                         )}
                       </For>
                     </div>

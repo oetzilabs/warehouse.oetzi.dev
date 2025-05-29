@@ -14,9 +14,16 @@ export interface FinancialAmount {
 
 export interface FinancialTransaction {
   date: Date;
-  amounts: FinancialAmount[]; // Changed from single amount to array of amounts
-  productAmounts: number;
-  type: "income" | "expense";
+  amounts: {
+    currency: string;
+    bought: number; // Amount spent on purchases
+    sold: number; // Amount earned from sales
+  }[];
+  productAmounts: {
+    bought: number; // Number of products bought
+    sold: number; // Number of products sold
+  };
+  type: "income" | "expense" | "mixed";
   description: string;
 }
 
@@ -80,71 +87,88 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
           }),
         );
 
-        const transactions: FinancialTransaction[] = ([] as FinancialTransaction[])
-          .concat(
-            supplierOrders
-              .sort((a, b) => b.order.createdAt.getTime() - a.order.createdAt.getTime())
-              .map((so) => ({
-                date: so.order.createdAt,
-                productAmounts: so.order.prods.reduce((acc, prod) => acc + prod.quantity, 0),
-                amounts: Array.from(
-                  so.order.prods
-                    .filter((prod) => prod.product.purchasePrice !== null && prod.product.currency !== null)
-                    .reduce((acc, prod) => {
-                      const price = prod.product.purchasePrice!;
-                      const currency = prod.product.currency!;
-                      const existingAmount = acc.get(currency);
+        // Group transactions by date
+        const transactionsByDay = new Map<
+          string,
+          {
+            sales: typeof sales;
+            orders: typeof supplierOrders;
+          }
+        >();
 
-                      if (existingAmount) {
-                        acc.set(currency, price * prod.quantity + existingAmount);
-                      } else {
-                        acc.set(currency, price * prod.quantity);
-                      }
-                      return acc;
-                    }, new Map<string, number>())
-                    // Convert the Map entries back to the FinancialAmount[] format
-                    .entries(),
-                ).map(([currency, amount]) => ({ currency, amount }) as FinancialAmount),
-                type: "expense" as const,
-                description: `Supplier Order: ${so.order.id}`,
+        // Group sales by day
+        sales.forEach((sale) => {
+          const day = dayjs(sale.createdAt).format("YYYY-MM-DD");
+          if (!transactionsByDay.has(day)) {
+            transactionsByDay.set(day, { sales: [], orders: [] });
+          }
+          transactionsByDay.get(day)!.sales.push(sale);
+        });
+
+        // Group supplier orders by day
+        supplierOrders.forEach((order) => {
+          const day = dayjs(order.order.createdAt).format("YYYY-MM-DD");
+          if (!transactionsByDay.has(day)) {
+            transactionsByDay.set(day, { sales: [], orders: [] });
+          }
+          transactionsByDay.get(day)!.orders.push(order);
+        });
+
+        const transactions: FinancialTransaction[] = Array.from(transactionsByDay.entries())
+          .map(([day, { sales, orders }]) => {
+            const currencyMap = new Map<string, { bought: number; sold: number }>();
+            let totalProductsBought = 0;
+            let totalProductsSold = 0;
+
+            // Process orders (bought)
+            orders.forEach((so) => {
+              so.order.prods.forEach((prod) => {
+                if (prod.product.purchasePrice && prod.product.currency) {
+                  const currency = prod.product.currency;
+                  if (!currencyMap.has(currency)) {
+                    currencyMap.set(currency, { bought: 0, sold: 0 });
+                  }
+                  currencyMap.get(currency)!.bought += prod.product.purchasePrice * prod.quantity;
+                  totalProductsBought += prod.quantity;
+                }
+              });
+            });
+
+            // Process sales (sold)
+            sales.forEach((sale) => {
+              sale.items.forEach((item) => {
+                if (!currencyMap.has(item.currency)) {
+                  currencyMap.set(item.currency, { bought: 0, sold: 0 });
+                }
+                currencyMap.get(item.currency)!.sold += item.price * item.quantity;
+                totalProductsSold += item.quantity;
+              });
+            });
+
+            const type: FinancialTransaction["type"] =
+              sales.length > 0 && orders.length > 0 ? "mixed" : sales.length > 0 ? "income" : "expense";
+
+            return {
+              date: new Date(day),
+              amounts: Array.from(currencyMap.entries()).map(([currency, amounts]) => ({
+                currency,
+                bought: amounts.bought,
+                sold: amounts.sold,
               })),
-          )
-          .concat(
-            sales
-              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-              .map((s) => {
-                const itemsByCurrency = s.items.reduce(
-                  (acc, item) => {
-                    if (!acc[item.currency]) acc[item.currency] = [];
-                    acc[item.currency].push(item);
-                    return acc;
-                  },
-                  {} as Record<string, typeof s.items>,
-                );
+              productAmounts: {
+                bought: totalProductsBought,
+                sold: totalProductsSold,
+              },
+              type,
+              description: `Daily summary for ${day}`,
+            };
+          })
+          .sort((a, b) => b.date.getTime() - a.date.getTime());
 
-                return {
-                  date: s.createdAt,
-                  productAmounts: Object.values(itemsByCurrency).reduce(
-                    (acc, items) => acc + items.reduce((total, item) => total + item.quantity, 0),
-                    0,
-                  ),
-                  amounts: Object.entries(itemsByCurrency).map(([currency, items]) => ({
-                    currency,
-                    amount: items.reduce((total, item) => total + item.price * item.quantity, 0),
-                  })),
-                  type: "income" as const,
-                  description: `Sale: ${s.id}`,
-                };
-              }),
-          );
-
-        // Calculate totals by currency
+        // Update totals calculation
         const totalsByCurrency = transactions.reduce(
           (acc, t) => {
-            // Track unique products for each currency
-            const uniqueProducts = new Set<string>();
-
-            t.amounts.forEach(({ currency, amount }) => {
+            t.amounts.forEach(({ currency, bought, sold }) => {
               if (!acc[currency]) {
                 acc[currency] = {
                   income: 0,
@@ -154,43 +178,13 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                   uniqueProductsExpenses: 0,
                 };
               }
-
-              if (t.type === "income") {
-                acc[currency].income += amount;
-                // For sales transactions
-                const saleId = t.description.split(":")[1].trim();
-                const sale = sales.find((s) => s.id === saleId);
-                const saleProducts = sale?.items.filter((i) => i.currency === currency).map((i) => i.productId) ?? [];
-                saleProducts.forEach((p) => uniqueProducts.add(p));
-              } else {
-                acc[currency].expenses += amount;
-                // For supplier orders
-                const orderId = t.description.split(":")[1].trim();
-                const order = supplierOrders.find((so) => so.order.id === orderId);
-                const orderProducts =
-                  order?.order.prods.filter((p) => p.product.currency === currency).map((p) => p.productId) ?? [];
-                orderProducts.forEach((p) => uniqueProducts.add(p));
-              }
-
+              acc[currency].income += sold;
+              acc[currency].expenses += bought;
               acc[currency].netIncome = acc[currency].income - acc[currency].expenses;
-              if (t.type === "income") {
-                acc[currency].uniqueProductsIncome = uniqueProducts.size;
-              } else {
-                acc[currency].uniqueProductsExpenses = uniqueProducts.size;
-              }
             });
             return acc;
           },
-          {} as Record<
-            string,
-            {
-              income: number;
-              expenses: number;
-              netIncome: number;
-              uniqueProductsIncome: number;
-              uniqueProductsExpenses: number;
-            }
-          >,
+          {} as FinancialSummary["totalsByCurrency"],
         );
 
         return {

@@ -49,7 +49,7 @@ export default function AccountingPage() {
       (acc, transaction) => {
         const date = dayjs(transaction.date).format("YYYY-MM-DD");
 
-        transaction.amounts.forEach(({ amount, currency }) => {
+        transaction.amounts.forEach(({ bought, sold, currency }) => {
           if (!acc[currency]) {
             acc[currency] = {};
           }
@@ -57,11 +57,8 @@ export default function AccountingPage() {
             acc[currency][date] = { income: 0, expenses: 0 };
           }
 
-          if (transaction.type === "income") {
-            acc[currency][date].income += amount;
-          } else {
-            acc[currency][date].expenses += amount;
-          }
+          acc[currency][date].income += sold;
+          acc[currency][date].expenses += bought;
         });
 
         return acc;
