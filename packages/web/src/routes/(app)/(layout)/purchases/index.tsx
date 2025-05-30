@@ -3,7 +3,7 @@ import { OrdersDataTable } from "@/components/orders/orders-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getSupplyOrders } from "@/lib/api/orders";
+import { getPurchases } from "@/lib/api/orders";
 import { cn } from "@/lib/utils";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
@@ -19,14 +19,14 @@ export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
-    const orders = getSupplyOrders();
+    const orders = getPurchases();
     return { user, sessionToken, orders };
   },
 } as RouteDefinition;
 
-export default function SuppliersOrderPage() {
+export default function PurchasesPage() {
   const params = useParams();
-  const orders = createAsync(() => getSupplyOrders(), { deferStream: true, initialValue: [] });
+  const orders = createAsync(() => getPurchases(), { deferStream: true, initialValue: [] });
 
   const calculateOrders = (orders: { supplier_id: string; order: OrderInfo; createdAt: Date }[]) => {
     const ordersByDay = orders.reduce(
@@ -80,14 +80,14 @@ export default function SuppliersOrderPage() {
           <div class="w-full flex flex-row h-full ">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="font-semibold leading-none">Supply Orders</h1>
+                <h1 class="font-semibold leading-none">Purchases</h1>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
                     variant="outline"
                     class="w-9 rounded-r-none bg-background"
                     onClick={() => {
-                      toast.promise(revalidate(getSupplyOrders.key), {
+                      toast.promise(revalidate(getPurchases.key), {
                         loading: "Refreshing orders...",
                         success: "Orders refreshed",
                         error: "Failed to refresh orders",

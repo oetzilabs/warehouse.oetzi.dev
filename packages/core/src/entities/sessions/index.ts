@@ -47,7 +47,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                         order: true,
                       },
                     },
-                    supplierOrders: {
+                    purchases: {
                       with: {
                         order: true,
                       },
@@ -91,7 +91,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 order: true,
               },
             },
-            supplierOrders: {
+            purchases: {
               with: {
                 order: true,
               },
@@ -175,7 +175,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               order: true,
                             },
                           },
-                          supplierOrders: {
+                          purchases: {
                             with: {
                               order: true,
                             },
@@ -228,7 +228,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                       order: true,
                     },
                   },
-                  supplierOrders: {
+                  purchases: {
                     with: {
                       order: true,
                     },
@@ -312,7 +312,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               order: true,
                             },
                           },
-                          supplierOrders: {
+                          purchases: {
                             with: {
                               order: true,
                             },
@@ -417,7 +417,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               order: true,
                             },
                           },
-                          supplierOrders: {
+                          purchases: {
                             with: {
                               order: true,
                             },

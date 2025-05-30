@@ -46,12 +46,12 @@ export const getDashboardData = query(async () => {
         throw new Error("Organization not found");
       }
 
-      // we gotta get the customerOrders, supplierOrders, and other notifications
+      // we gotta get the customerOrders, purchases, and other notifications
       const customerOrders = organization.customerOrders
         .map((co) => ({ order: co.order, customerId: co.customer_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
-      const supplierOrders = organization.supplierOrders
+      const purchases = organization.purchases
         .map((so) => ({ order: so.order, supplierId: so.supplier_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
@@ -66,7 +66,7 @@ export const getDashboardData = query(async () => {
         organization.id,
       );
 
-      const supplierOrdersPercentageLastWeek = yield* orderService.percentageSupplierOrdersLastWeekByOrganizationId(
+      const purchasesPercentageLastWeek = yield* orderService.percentageSupplierOrdersLastWeekByOrganizationId(
         organization.id,
       );
 
@@ -75,7 +75,7 @@ export const getDashboardData = query(async () => {
       );
 
       const customerOrdersChartData = yield* orderService.getCustomerOrdersChartData(organization.id);
-      const supplierOrdersChartData = yield* orderService.getSupplierOrdersChartData(organization.id);
+      const purchasesChartData = yield* orderService.getSupplierOrdersChartData(organization.id);
       const popularProductsChartData = yield* orderService.getPopularProductsChartData(organization.id);
       const lastSoldProductsChartData = yield* orderService.getLastSoldProductsChartData(organization.id);
 
@@ -91,9 +91,9 @@ export const getDashboardData = query(async () => {
             chartData: customerOrdersChartData,
           },
           suppliers: {
-            values: supplierOrders,
-            deltaPercentageLastWeek: supplierOrdersPercentageLastWeek,
-            chartData: supplierOrdersChartData,
+            values: purchases,
+            deltaPercentageLastWeek: purchasesPercentageLastWeek,
+            chartData: purchasesChartData,
           },
         },
         lastUsedProductsFromCustomers,
@@ -122,7 +122,7 @@ export const getDashboardData = query(async () => {
             chartData: [],
           },
           suppliers: {
-            values: [] as { supplierId: string; order: OrganizationInfo["supplierOrders"][number]["order"] }[],
+            values: [] as { supplierId: string; order: OrganizationInfo["purchases"][number]["order"] }[],
             deltaPercentageLastWeek: 0,
             chartData: [],
           },

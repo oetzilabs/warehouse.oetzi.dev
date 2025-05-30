@@ -62,7 +62,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
         }
 
         // Get supplier orders (expenses)
-        const supplierOrders = yield* Effect.promise(() =>
+        const purchases = yield* Effect.promise(() =>
           db.query.TB_organizations_supplierorders.findMany({
             where: (fields, operations) => and(operations.eq(fields.organization_id, parsedOrgId.output)),
             with: {
@@ -100,7 +100,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
           string,
           {
             sales: typeof sales;
-            orders: typeof supplierOrders;
+            orders: typeof purchases;
           }
         >();
 
@@ -114,7 +114,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
         });
 
         // Group supplier orders by day
-        supplierOrders.forEach((order) => {
+        purchases.forEach((order) => {
           const day = dayjs(order.order.createdAt).format("YYYY-MM-DD");
           if (!transactionsByDay.has(day)) {
             transactionsByDay.set(day, { sales: [], orders: [] });

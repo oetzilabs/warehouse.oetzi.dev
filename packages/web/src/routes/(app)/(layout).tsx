@@ -236,7 +236,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                   <SidebarGroupContent>
                     <SidebarMenu>
                       <SidebarMenuItem>
-                        <Link href="/orders/customers">
+                        <Link href="/orders">
                           <Tags class="size-4" />
                           Customer Orders
                           <SidebarMenuBadge class="mr-1">
@@ -245,11 +245,11 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                         </Link>
                       </SidebarMenuItem>
                       <SidebarMenuItem>
-                        <Link href="/orders/suppliers">
+                        <Link href="/purchases">
                           <Tags class="size-4" />
-                          Supply Orders
+                          Purchases
                           <SidebarMenuBadge class="mr-1">
-                            {org().supplierOrders.length > 99 ? "99+" : org().supplierOrders.length}
+                            {org().purchases.length > 99 ? "99+" : org().purchases.length}
                           </SidebarMenuBadge>
                         </Link>
                       </SidebarMenuItem>

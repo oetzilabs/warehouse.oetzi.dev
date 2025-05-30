@@ -134,7 +134,7 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                             supps: true,
                             customers: true,
                             customerOrders: true,
-                            supplierOrders: true,
+                            purchases: true,
                             whs: {
                               with: {
                                 warehouse: {
@@ -197,7 +197,7 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                       })),
                       orders: {
                         customers: org.org.customerOrders,
-                        suppliers: org.org.supplierOrders,
+                        suppliers: org.org.purchases,
                       },
                     })),
                   })),

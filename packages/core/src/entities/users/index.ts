@@ -75,7 +75,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     },
                   },
                 },
-                supplierOrders: {
+                purchases: {
                   with: {
                     order: true,
                   },
@@ -678,7 +678,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           },
                         },
                       },
-                      supplierOrders: {
+                      purchases: {
                         with: {
                           order: true,
                         },
@@ -919,7 +919,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           },
                         },
                       },
-                      supplierOrders: {
+                      purchases: {
                         with: {
                           order: true,
                         },
@@ -1119,7 +1119,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           },
                         },
                       },
-                      supplierOrders: {
+                      purchases: {
                         with: {
                           order: true,
                         },

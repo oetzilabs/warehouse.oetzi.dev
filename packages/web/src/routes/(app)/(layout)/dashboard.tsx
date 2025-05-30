@@ -163,10 +163,10 @@ export default function DashboardPage() {
                   {(pso) => (
                     <A
                       class="flex flex-col gap-4 p-4 w-full border-r hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
-                      href="/orders/suppliers"
+                      href="/purchases"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
-                        <span class="font-semibold">Pending Supply Orders</span>
+                        <span class="font-semibold">Pending Purchases</span>
                         <ClockFading class="size-4" />
                       </div>
                       <div class="flex grow"></div>
@@ -303,17 +303,17 @@ export default function DashboardPage() {
                     <div class="flex flex-col w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
                       <div class="flex flex-row items-center justify-between p-4">
                         <div class="flex flex-row gap-2">
-                          <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Supplier Orders</h3>
+                          <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Purchases</h3>
                           <span class="text-sm text-neutral-500 dark:text-neutral-400">
                             <ArrowBadge value={d().orders.suppliers.deltaPercentageLastWeek} class="hidden md:block" />
                           </span>
                         </div>
                         <div class="flex flex-row gap-2">
-                          <Button size="sm" as={A} href="/orders/suppliers/new" disabled variant="secondary">
+                          <Button size="sm" as={A} href="/purchases/new" disabled variant="secondary">
                             <Plus class="size-4" />
                             Create
                           </Button>
-                          <Button size="sm" as={A} href="/orders/suppliers">
+                          <Button size="sm" as={A} href="/purchases">
                             View All
                             <ArrowUpRight class="size-4" />
                           </Button>

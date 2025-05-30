@@ -76,7 +76,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
             order: true,
           },
         },
-        supplierOrders: {
+        purchases: {
           with: {
             order: true,
           },
@@ -217,7 +217,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                   },
                 },
               },
-              supplierOrders: {
+              purchases: {
                 with: {
                   order: {
                     with: {
@@ -335,7 +335,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                   order: true,
                 },
               },
-              supplierOrders: {
+              purchases: {
                 with: {
                   order: true,
                 },

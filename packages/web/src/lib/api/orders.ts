@@ -46,7 +46,7 @@ export const getCustomerOrders = query(async () => {
   });
 }, "customer-order-by-warehouse-id");
 
-export const getSupplyOrders = query(async () => {
+export const getPurchases = query(async () => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -84,7 +84,7 @@ export const getSupplyOrders = query(async () => {
       throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
     },
   });
-}, "sales-order-by-warehouse-id");
+}, "purchased-orders");
 
 export const getPendingSupplyOrders = query(async () => {
   "use server";
@@ -215,7 +215,7 @@ export const deleteOrder = action(async (oid: string) => {
       return json(
         { success: true },
         {
-          revalidate: [getCustomerOrders.key, getSupplyOrders.key, getOrdersByUserId.key, getOrderById.keyFor(oid)],
+          revalidate: [getCustomerOrders.key, getPurchases.key, getOrdersByUserId.key, getOrderById.keyFor(oid)],
         },
       );
     },

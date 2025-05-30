@@ -52,7 +52,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   sessions: many(TB_sessions),
   catalogs: many(TB_catalogs),
   customerOrders: many(TB_organizations_customerorders),
-  supplierOrders: many(TB_organizations_supplierorders),
+  purchases: many(TB_organizations_supplierorders),
   sales: many(TB_organizations_sales),
 }));
 
