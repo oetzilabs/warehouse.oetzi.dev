@@ -10,6 +10,7 @@ import { TB_organizations } from "../organizations/organizations";
 import { TB_sale_items } from "../sales/sales_items";
 import { TB_users } from "../users/users";
 import { schema } from "../utils";
+import { TB_sales_discounts } from "./sales_discounts";
 
 export const sale_status = schema.enum("sale_status", [
   "created",
@@ -48,6 +49,7 @@ export const sales_relations = relations(TB_sales, ({ one, many }) => ({
   }),
   items: many(TB_sale_items),
   orders: many(TB_orders),
+  discounts: many(TB_sales_discounts),
 }));
 
 export type SaleSelect = typeof TB_sales.$inferSelect;

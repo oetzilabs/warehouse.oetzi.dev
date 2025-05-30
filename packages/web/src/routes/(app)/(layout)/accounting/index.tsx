@@ -45,7 +45,13 @@ export default function AccountingPage() {
         ],
       };
     }
-    const dailyStats = accounting.transactions.reduce(
+
+    // Sort transactions by date first
+    const sortedTransactions = [...accounting.transactions].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
+    const dailyStats = sortedTransactions.reduce(
       (acc, transaction) => {
         const date = dayjs(transaction.date).format("YYYY-MM-DD");
 
@@ -54,43 +60,63 @@ export default function AccountingPage() {
             acc[currency] = {};
           }
           if (!acc[currency][date]) {
-            acc[currency][date] = { income: 0, expenses: 0 };
+            // Find the last known total for this currency
+            const previousDates = Object.keys(acc[currency]).sort();
+            const lastTotal =
+              previousDates.length > 0 ? acc[currency][previousDates[previousDates.length - 1]].total : 0;
+
+            acc[currency][date] = { total: lastTotal };
           }
 
-          acc[currency][date].income += sold;
-          acc[currency][date].expenses += bought;
+          // Add today's transactions to the running total
+          acc[currency][date].total += sold - bought;
         });
 
         return acc;
       },
-      {} as Record<string, Record<string, { income: number; expenses: number }>>,
+      {} as Record<string, Record<string, { total: number }>>,
     );
 
-    // Convert to chart datasets
+    // Get all unique dates and sort them
     const allDates = [
       ...new Set(Object.values(dailyStats).flatMap((currencyData) => Object.keys(currencyData))),
     ].sort();
 
+    // Fill in missing dates with the last known total
+    Object.entries(dailyStats).forEach(([currency, data]) => {
+      let lastTotal = 0;
+      allDates.forEach((date) => {
+        if (!data[date]) {
+          data[date] = { total: lastTotal };
+        } else {
+          lastTotal = data[date].total;
+        }
+      });
+    });
+
     return {
       labels: allDates,
-      datasets: Object.entries(dailyStats).flatMap(([currency, data]) => [
-        {
-          label: `Income (${currency})`,
-          data: allDates.map((date) => data[date]?.income ?? 0),
-          fill: true,
-          pointStyle: false,
-          borderColor: "rgb(34, 197, 94)", // Consistent green for income
-          backgroundColor: "rgba(34, 197, 94, 0.1)",
+      datasets: Object.entries(dailyStats).map(([currency, data]) => ({
+        label: currency,
+        data: allDates.map((date) => data[date]?.total ?? 0),
+        fill: true,
+        pointStyle: false,
+        borderColor:
+          currency === "EUR" ? "rgb(34, 197, 94)" : currency === "USD" ? "rgb(59, 130, 246)" : "rgb(156, 163, 175)",
+        backgroundColor:
+          currency === "EUR"
+            ? "rgba(34, 197, 94, 0.1)"
+            : currency === "USD"
+              ? "rgba(59, 130, 246, 0.1)"
+              : "rgba(156, 163, 175, 0.1)",
+      })),
+      options: {
+        scales: {
+          x: {
+            display: false, // This will hide the x-axis labels
+          },
         },
-        {
-          label: `Expenses (${currency})`,
-          data: allDates.map((date) => data[date]?.expenses ?? 0),
-          fill: true,
-          pointStyle: false,
-          borderColor: "rgb(239, 68, 68)", // Consistent red for expenses
-          backgroundColor: "rgba(239, 68, 68, 0.1)",
-        },
-      ]),
+      },
     };
   };
 

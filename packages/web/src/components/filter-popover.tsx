@@ -1,48 +1,27 @@
 import { Button } from "@/components/ui/button";
-import {
-  DatePicker,
-  DatePickerContent,
-  DatePickerContext,
-  DatePickerControl,
-  DatePickerInput,
-  DatePickerNextTrigger,
-  DatePickerPositioner,
-  DatePickerPrevTrigger,
-  DatePickerRangeText,
-  DatePickerTable,
-  DatePickerTableBody,
-  DatePickerTableCell,
-  DatePickerTableCellTrigger,
-  DatePickerTableHead,
-  DatePickerTableHeader,
-  DatePickerTableRow,
-  DatePickerTrigger,
-  DatePickerView,
-  DatePickerViewControl,
-  DatePickerViewTrigger,
-} from "@/components/ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FilterConfig, WithDates } from "@/lib/filtering";
-import { CalendarDate } from "@internationalized/date";
+import { cn } from "@/lib/utils";
+import Calendar from "@corvu/calendar";
 import dayjs from "dayjs";
-import { Accessor, createMemo, Index } from "solid-js";
-import { Portal } from "solid-js/web";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
+import ArrowRight from "lucide-solid/icons/arrow-right";
+import { Accessor, Index } from "solid-js";
 
 type FilterPopoverProps<T extends WithDates> = {
   config: FilterConfig<T>;
   onChange: (config: FilterConfig<T>) => void;
   data: Accessor<T[]>;
+  itemKey?: keyof T;
 };
 
 export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>) => {
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { format: formatWeekdayLong } = new Intl.DateTimeFormat("en", { weekday: "long" });
+  const { format: formatWeekdayShort } = new Intl.DateTimeFormat("en", { weekday: "short" });
+  const { format: formatMonth } = new Intl.DateTimeFormat("en", { month: "long" });
 
-  const formatDateToCalendarDate = (date: Date) => {
-    return new CalendarDate(
-      date.getFullYear(),
-      date.getMonth() + 1, // months are 1-based in CalendarDate
-      date.getDate(),
-    );
+  const getDate = (item: T) => {
+    return props.itemKey ? (item[props.itemKey] as any)?.createdAt : item.createdAt;
   };
 
   return (
@@ -50,7 +29,7 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
       <PopoverTrigger as={Button} size="lg" disabled={props.config.disabled()} class="h-10 px-5">
         Filters & Sort
       </PopoverTrigger>
-      <PopoverContent class="w-[420px]">
+      <PopoverContent class="w-[720px]">
         <div class="grid gap-4">
           <div class="space-y-2">
             <h4 class="font-medium leading-none">Date Range</h4>
@@ -142,178 +121,117 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
                 Custom Range
               </Button>
             </div>
-            <DatePicker
-              numOfMonths={2}
-              selectionMode="range"
-              format={(e) => {
-                const parsedDate = new Date(Date.parse(e.toString()));
-                const normalizedDate = new Date(
-                  parsedDate.getUTCFullYear(),
-                  parsedDate.getUTCMonth(),
-                  parsedDate.getUTCDate(),
-                );
-                return new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(normalizedDate);
+
+            <Calendar
+              mode="range"
+              numberOfMonths={2}
+              initialValue={{
+                from: props.config.dateRange.start,
+                to: props.config.dateRange.end,
               }}
-              value={[
-                formatDateToCalendarDate(props.config.dateRange.start),
-                formatDateToCalendarDate(props.config.dateRange.end),
-              ]}
-              onValueChange={(change) => {
-                if (!change?.value) return;
+              onValueChange={(date) => {
+                if (!date.from || !date.to) return;
                 props.onChange({
                   ...props.config,
                   dateRange: {
-                    ...props.config.dateRange!,
-                    start: change.value[0].toDate(timezone),
-                    end: change.value[1].toDate(timezone),
+                    ...props.config.dateRange,
+                    start: date.from,
+                    end: date.to,
+                    preset: "custom",
                   },
                 });
               }}
             >
-              <DatePickerControl>
-                <DatePickerInput index={0} placeholder="Start date" />
-                <DatePickerInput index={1} placeholder="End date" />
-                <DatePickerTrigger />
-              </DatePickerControl>
-              <Portal>
-                <DatePickerPositioner>
-                  <DatePickerContent class="shadow-none">
-                    <DatePickerView view="day">
-                      <DatePickerContext>
-                        {(api) => {
-                          const offset = createMemo(() => api().getOffset({ months: 1 }));
-                          return (
-                            <>
-                              <DatePickerViewControl>
-                                <DatePickerPrevTrigger />
-                                <DatePickerViewTrigger>
-                                  <DatePickerRangeText />
-                                </DatePickerViewTrigger>
-                                <DatePickerNextTrigger />
-                              </DatePickerViewControl>
-                              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <DatePickerTable>
-                                  <DatePickerTableHead>
-                                    <DatePickerTableRow>
-                                      <Index each={api().weekDays}>
-                                        {(weekDay) => <DatePickerTableHeader>{weekDay().short}</DatePickerTableHeader>}
-                                      </Index>
-                                    </DatePickerTableRow>
-                                  </DatePickerTableHead>
-                                  <DatePickerTableBody>
-                                    <Index each={api().weeks}>
-                                      {(week) => (
-                                        <DatePickerTableRow>
-                                          <Index each={week()}>
-                                            {(day) => (
-                                              <DatePickerTableCell value={day()}>
-                                                <DatePickerTableCellTrigger>{day().day}</DatePickerTableCellTrigger>
-                                              </DatePickerTableCell>
-                                            )}
-                                          </Index>
-                                        </DatePickerTableRow>
-                                      )}
-                                    </Index>
-                                  </DatePickerTableBody>
-                                </DatePickerTable>
-                                <DatePickerTable>
-                                  <DatePickerTableHead>
-                                    <DatePickerTableRow>
-                                      <Index each={api().weekDays}>
-                                        {(weekDay) => <DatePickerTableHeader>{weekDay().short}</DatePickerTableHeader>}
-                                      </Index>
-                                    </DatePickerTableRow>
-                                  </DatePickerTableHead>
-                                  <DatePickerTableBody>
-                                    <Index each={offset().weeks}>
-                                      {(week) => (
-                                        <DatePickerTableRow>
-                                          <Index each={week()}>
-                                            {(day) => (
-                                              <DatePickerTableCell value={day()} visibleRange={offset().visibleRange}>
-                                                <DatePickerTableCellTrigger>{day().day}</DatePickerTableCellTrigger>
-                                              </DatePickerTableCell>
-                                            )}
-                                          </Index>
-                                        </DatePickerTableRow>
-                                      )}
-                                    </Index>
-                                  </DatePickerTableBody>
-                                </DatePickerTable>
-                              </div>
-                            </>
-                          );
-                        }}
-                      </DatePickerContext>
-                    </DatePickerView>
-                    <DatePickerView view="month">
-                      <DatePickerContext>
-                        {(api) => (
-                          <>
-                            <DatePickerViewControl>
-                              <DatePickerPrevTrigger />
-                              <DatePickerViewTrigger>
-                                <DatePickerRangeText />
-                              </DatePickerViewTrigger>
-                              <DatePickerNextTrigger />
-                            </DatePickerViewControl>
-                            <DatePickerTable>
-                              <DatePickerTableBody>
-                                <Index each={api().getMonthsGrid({ columns: 4, format: "short" })}>
-                                  {(months) => (
-                                    <DatePickerTableRow>
-                                      <Index each={months()}>
-                                        {(month) => (
-                                          <DatePickerTableCell value={month().value}>
-                                            <DatePickerTableCellTrigger>{month().label}</DatePickerTableCellTrigger>
-                                          </DatePickerTableCell>
-                                        )}
-                                      </Index>
-                                    </DatePickerTableRow>
+              {(api) => (
+                <div class="relative w-full">
+                  <Calendar.Nav
+                    action="prev-month"
+                    aria-label="Go to previous month"
+                    as={Button}
+                    size="icon"
+                    class="absolute left-0 top-0"
+                    variant="secondary"
+                    type="button"
+                  >
+                    <ArrowLeft class="size-4" />
+                  </Calendar.Nav>
+                  <Calendar.Nav
+                    action="next-month"
+                    aria-label="Go to next month"
+                    as={Button}
+                    size="icon"
+                    class="absolute right-0 top-0"
+                    variant="secondary"
+                    type="button"
+                  >
+                    <ArrowRight class="size-4" />
+                  </Calendar.Nav>
+                  <div class="w-full h-content flex flex-row gap-4 pt-10">
+                    <Index each={api.months}>
+                      {(month, index) => (
+                        <div class="w-full flex flex-col gap-4">
+                          <div class="flex h-8 items-center justify-center">
+                            <Calendar.Label index={index} class="text-sm">
+                              {formatMonth(month().month)} {month().month.getFullYear()}
+                            </Calendar.Label>
+                          </div>
+                          <Calendar.Table index={index} class="w-full">
+                            <thead>
+                              <tr>
+                                <Index each={api.weekdays}>
+                                  {(weekday) => (
+                                    <Calendar.HeadCell
+                                      abbr={formatWeekdayLong(weekday())}
+                                      class="w-8 flex-1 pb-1 text-sm font-normal text-muted-foreground"
+                                    >
+                                      {formatWeekdayShort(weekday())}
+                                    </Calendar.HeadCell>
                                   )}
                                 </Index>
-                              </DatePickerTableBody>
-                            </DatePickerTable>
-                          </>
-                        )}
-                      </DatePickerContext>
-                    </DatePickerView>
-                    <DatePickerView view="year">
-                      <DatePickerContext>
-                        {(api) => (
-                          <>
-                            <DatePickerViewControl>
-                              <DatePickerPrevTrigger />
-                              <DatePickerViewTrigger>
-                                <DatePickerRangeText />
-                              </DatePickerViewTrigger>
-                              <DatePickerNextTrigger />
-                            </DatePickerViewControl>
-                            <DatePickerTable>
-                              <DatePickerTableBody>
-                                <Index each={api().getYearsGrid({ columns: 4 })}>
-                                  {(years) => (
-                                    <DatePickerTableRow>
-                                      <Index each={years()}>
-                                        {(year) => (
-                                          <DatePickerTableCell value={year().value}>
-                                            <DatePickerTableCellTrigger>{year().label}</DatePickerTableCellTrigger>
-                                          </DatePickerTableCell>
-                                        )}
-                                      </Index>
-                                    </DatePickerTableRow>
-                                  )}
-                                </Index>
-                              </DatePickerTableBody>
-                            </DatePickerTable>
-                          </>
-                        )}
-                      </DatePickerContext>
-                    </DatePickerView>
-                  </DatePickerContent>
-                </DatePickerPositioner>
-              </Portal>
-            </DatePicker>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <Index each={month().weeks}>
+                                {(week) => (
+                                  <tr>
+                                    <Index each={week()}>
+                                      {(day) => (
+                                        <Calendar.Cell class="p-1 has-data-range-end:rounded-r-md has-data-range-start:rounded-l-md has-data-in-range:bg-muted/70">
+                                          <Calendar.CellTrigger
+                                            type="button"
+                                            day={day()}
+                                            month={month().month}
+                                            as={Button}
+                                            size="sm"
+                                            variant="outline"
+                                            class={cn("inline-flex w-full bg-background", {
+                                              "bg-primary/10 text-primary/70": dayjs(day()).isBetween(
+                                                props.config.dateRange.start,
+                                                props.config.dateRange.end,
+                                              ),
+                                              "bg-primary text-white": dayjs().isSame(day(), "day"),
+                                              "!bg-primary/50 !text-primary":
+                                                dayjs(day()).isSame(props.config.dateRange.start, "day") ||
+                                                dayjs(day()).isSame(props.config.dateRange.end, "day"),
+                                            })}
+                                          >
+                                            {day().getDate()}
+                                          </Calendar.CellTrigger>
+                                        </Calendar.Cell>
+                                      )}
+                                    </Index>
+                                  </tr>
+                                )}
+                              </Index>
+                            </tbody>
+                          </Calendar.Table>
+                        </div>
+                      )}
+                    </Index>
+                  </div>
+                </div>
+              )}
+            </Calendar>
           </div>
           <div class="space-y-2">
             <h4 class="font-medium leading-none">Sort</h4>
@@ -366,11 +284,15 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
           <Button
             variant="outline"
             onClick={() => {
+              const sorted = [...props.data()].sort((a, b) => dayjs(getDate(a)).diff(dayjs(getDate(b))));
+              const startDate = sorted.length === 0 ? new Date() : getDate(sorted[0]);
+              const endDate = sorted.length === 0 ? new Date() : getDate(sorted[sorted.length - 1]);
+
               props.onChange({
-                disabled: () => props.data().length === 0,
+                ...props.config,
                 dateRange: {
-                  start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-                  end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
+                  start: startDate,
+                  end: endDate,
                   preset: "clear",
                 },
                 search: { term: "" },

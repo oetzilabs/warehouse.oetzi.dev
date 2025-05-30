@@ -173,37 +173,40 @@ export default function SupplierOrderPage() {
                   <div class="flex flex-col gap-0">
                     <For each={orderInfo().prods}>
                       {(product) => (
-                        <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/5 border-b last:border-b-0">
-                          <div class="flex flex-col gap-0.5">
-                            <span class="font-medium">{product.product.name}</span>
-                            <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
-                            <Show when={product.product.tg}>
-                              <span class="text-sm text-muted-foreground">
-                                {product.product.tg?.name} ({product.product.tg?.crs[0]?.tr.rate}%)
-                              </span>
-                            </Show>
-                          </div>
-                          <div class="flex flex-col items-end">
-                            <div class="flex flex-row items-baseline gap-1">
-                              <span class="text-sm text-muted-foreground">
-                                {product.product.sellingPrice.toFixed(2)}
-                              </span>
-                              <span class="font-medium">x{product.quantity}</span>
+                        <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
+                          <div class="flex flex-row items-center justify-between">
+                            <div class="flex flex-col gap-0.5">
+                              <span class="font-medium">{product.product.name}</span>
+                              <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
+                              <Show when={product.product.tg}>
+                                <span class="text-sm text-muted-foreground">
+                                  {product.product.tg?.name} ({product.product.tg?.crs[0]?.tr.rate}%)
+                                </span>
+                              </Show>
                             </div>
-                            <span class="text-sm text-muted-foreground">
-                              {(product.product.sellingPrice * product.quantity).toFixed(2)} {product.product.currency}
-                            </span>
-                            <Show when={product.product.tg}>
-                              <span class="text-xs text-muted-foreground">
-                                {(
-                                  (product.product.sellingPrice *
-                                    product.quantity *
-                                    (product.product.tg!.crs[0]?.tr.rate ?? 0)) /
-                                  100
-                                ).toFixed(2)}{" "}
-                                {product.product.currency} Tax
+                            <div class="flex flex-col items-end">
+                              <div class="flex flex-row items-baseline gap-1">
+                                <span class="text-sm text-muted-foreground">
+                                  {product.product.sellingPrice.toFixed(2)}
+                                </span>
+                                <span class="font-medium">x{product.quantity}</span>
+                              </div>
+                              <span class="text-sm text-muted-foreground">
+                                {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
+                                {product.product.currency}
                               </span>
-                            </Show>
+                              <Show when={product.product.tg}>
+                                <span class="text-xs text-muted-foreground">
+                                  {(
+                                    (product.product.sellingPrice *
+                                      product.quantity *
+                                      (product.product.tg!.crs[0]?.tr.rate ?? 0)) /
+                                    100
+                                  ).toFixed(2)}{" "}
+                                  {product.product.currency} Tax
+                                </span>
+                              </Show>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -280,35 +283,41 @@ export default function SupplierOrderPage() {
                       )}
                     >
                       {([currency, amounts]) => (
-                        <div class="flex flex-col gap-1">
-                          <div class="flex justify-between">
-                            <span class="text-sm font-medium">{currency}</span>
-                          </div>
-                          <div class="flex justify-between">
-                            <span class="text-sm text-muted-foreground">Subtotal</span>
-                            <span class="text-sm font-medium">
-                              {amounts.subtotal.toFixed(2)} {currency}
-                            </span>
-                          </div>
+                        <div class="flex flex-col gap-4">
+                          <div class="flex flex-col gap-1">
+                            <div class="flex justify-between">
+                              <span class="text-sm font-medium">{currency}</span>
+                            </div>
+                            <div class="flex justify-between">
+                              <span class="text-sm text-muted-foreground">Subtotal</span>
+                              <span class="text-sm font-medium">
+                                {amounts.subtotal.toFixed(2)} {currency}
+                              </span>
+                            </div>
 
-                          <For each={Array.from(amounts.taxGroups.entries())}>
-                            {([_, taxGroup]) => (
-                              <For each={Array.from(taxGroup.rates.entries())}>
-                                {([_, rateInfo]) => (
-                                  <div class="flex justify-between pl-4">
-                                    <span class="text-sm text-muted-foreground">
-                                      {taxGroup.name} ({rateInfo.rate}%)
-                                    </span>
-                                    <span class="text-sm font-medium">
-                                      {rateInfo.amount.toFixed(2)} {currency}
-                                    </span>
-                                  </div>
-                                )}
-                              </For>
-                            )}
-                          </For>
-
-                          <div class="flex justify-between border-t border-dashed mt-2 pt-2">
+                            <For each={Array.from(amounts.taxGroups.entries())}>
+                              {([_, taxGroup]) => (
+                                <For each={Array.from(taxGroup.rates.entries())}>
+                                  {([_, rateInfo]) => (
+                                    <div class="flex justify-between pl-4">
+                                      <span class="text-sm text-muted-foreground">
+                                        {taxGroup.name} ({rateInfo.rate}%)
+                                      </span>
+                                      <span class="text-sm font-medium">
+                                        {rateInfo.amount.toFixed(2)} {currency}
+                                      </span>
+                                    </div>
+                                  )}
+                                </For>
+                              )}
+                            </For>
+                          </div>
+                          <div class="flex flex-row items-center w-full justify-between">
+                            <For each={Array.from({ length: 30 })}>
+                              {() => <div class="w-1 h-px bg-muted-foreground/50"></div>}
+                            </For>
+                          </div>
+                          <div class="flex justify-between py-2">
                             <span class="font-medium">Total</span>
                             <span class="font-medium">
                               {amounts.total.toFixed(2)} {currency}
@@ -319,9 +328,9 @@ export default function SupplierOrderPage() {
                     </For>
                   </div>
                 </div>
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
+                <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
-                  <div class="flex flex-row gap-2 w-full">
+                  <div class="flex flex-row gap-4 w-full">
                     <Button size="lg" variant="outline" class="bg-background w-full">
                       <Receipt class="size-6" />
                       Download Invoice
@@ -331,10 +340,10 @@ export default function SupplierOrderPage() {
                       Send Order
                     </Button>
                   </div>
-                  <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Suspense
                       fallback={
-                        <div class="w-full bg-muted-foreground/5 rounded-md p-2 flex items-center justify-center col-span-full">
+                        <div class="w-full bg-muted-foreground/5 rounded-md p-8 gap-4 flex items-center justify-center col-span-full">
                           <Loader2 class="size-4 animate-spin" />
                         </div>
                       }
@@ -344,7 +353,7 @@ export default function SupplierOrderPage() {
                           <For
                             each={printers()}
                             fallback={
-                              <div class="w-full bg-muted-foreground/5 rounded-md p-4 gap-2 flex flex-col items-center justify-center border col-span-full">
+                              <div class="w-full bg-muted-foreground/5 rounded-md p-8 gap-4 flex flex-col items-center justify-center border col-span-full">
                                 <span class="text-sm text-muted-foreground">No printers found</span>
                                 <Button
                                   size="sm"

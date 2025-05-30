@@ -48,16 +48,16 @@ export const getDashboardData = query(async () => {
 
       // we gotta get the customerOrders, supplierOrders, and other notifications
       const customerOrders = organization.customerOrders
-        .map((co) => co.order)
-        .sort((a, b) => dayjs(b.createdAt).unix() - dayjs(a.createdAt).unix())
+        .map((co) => ({ order: co.order, customerId: co.customer_id }))
+        .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
       const supplierOrders = organization.supplierOrders
-        .map((so) => so.order)
-        .sort((a, b) => dayjs(b.createdAt).unix() - dayjs(a.createdAt).unix())
+        .map((so) => ({ order: so.order, supplierId: so.supplier_id }))
+        .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
 
       const lastUsedProductsFromCustomers = customerOrders
-        .map((co) => co.prods)
+        .map((co) => co.order.prods)
         .flat()
         .sort((a, b) => dayjs(b.updatedAt).unix() - dayjs(a.updatedAt).unix())
         .slice(0, 3);
@@ -117,12 +117,12 @@ export const getDashboardData = query(async () => {
       return json({
         orders: {
           customers: {
-            values: [] as OrganizationInfo["customerOrders"][number]["order"][],
+            values: [] as { customerId: string; order: OrganizationInfo["customerOrders"][number]["order"] }[],
             deltaPercentageLastWeek: 0,
             chartData: [],
           },
           suppliers: {
-            values: [] as OrganizationInfo["supplierOrders"][number]["order"][],
+            values: [] as { supplierId: string; order: OrganizationInfo["supplierOrders"][number]["order"] }[],
             deltaPercentageLastWeek: 0,
             chartData: [],
           },

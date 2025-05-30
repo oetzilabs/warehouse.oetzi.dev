@@ -1,8 +1,8 @@
-import { query, redirect } from "@solidjs/router";
+import { action, json, query, redirect } from "@solidjs/router";
 import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
-import { Effect } from "effect";
+import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
 
 export const getSalesLastFewMonths = query(async () => {
@@ -119,3 +119,44 @@ export const getSaleById = query(async (sid: string) => {
   );
   return sale;
 }, "sale-by-id");
+
+export const deleteSale = action(async (sid: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromiseExit(
+    Effect.gen(function* (_) {
+      const salesService = yield* _(SalesService);
+      yield* salesService.safeRemove(sid);
+      return true;
+    }).pipe(Effect.provide(SalesLive)),
+  );
+
+  return Exit.match(result, {
+    onSuccess: () => {
+      return json(
+        { success: true },
+        {
+          revalidate: [getSales.key, getSaleById.keyFor(sid)],
+        },
+      );
+    },
+    onFailure: (cause) => {
+      console.log(cause);
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
+      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+    },
+  });
+});

@@ -127,6 +127,13 @@
       "when": 1748516066667,
       "tag": "0017_productive_supreme_intelligence",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1748604857849,
+      "tag": "0018_clear_shockwave",
+      "breakpoints": true
     }
   ]
 }

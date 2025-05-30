@@ -64,7 +64,20 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
             with: {
               items: {
                 with: {
-                  product: true,
+                  product: {
+                    with: {
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                      brands: true,
+                    },
+                  },
                 },
               },
               customer: true,
@@ -162,7 +175,20 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
                 with: {
                   items: {
                     with: {
-                      product: true,
+                      product: {
+                        with: {
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
+                          brands: true,
+                        },
+                      },
                     },
                   },
                   customer: true,
@@ -196,11 +222,30 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
     //     return sales;
     //   });
 
+    const safeRemove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SaleInvalidId({ id }));
+        }
+
+        const [deleted] = yield* Effect.promise(() =>
+          db.update(TB_sales).set({ deletedAt: new Date() }).where(eq(TB_sales.id, parsedId.output)).returning(),
+        );
+
+        if (!deleted) {
+          return yield* Effect.fail(new SaleNotDeleted({ id }));
+        }
+
+        return deleted;
+      });
+
     return {
       create,
       findById,
       update,
       remove,
+      safeRemove,
       calculateTotal,
       findWithinRange,
       findByOrganizationId,

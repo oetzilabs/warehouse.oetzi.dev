@@ -25,6 +25,7 @@ export const TB_orders = commonTable(
     title: text("title").notNull(),
     description: text("description"),
     barcode: varchar("barcode"),
+    saleId: varchar("sale_id").references(() => TB_sales.id),
   },
   "ord",
 );
@@ -35,6 +36,10 @@ export const order_relations = relations(TB_orders, ({ one, many }) => ({
   oco: many(TB_organizations_customerorders),
   oso: many(TB_organizations_supplierorders),
   custSched: many(TB_customer_schedules),
+  sale: one(TB_sales, {
+    fields: [TB_orders.saleId],
+    references: [TB_sales.id],
+  }),
 }));
 
 export type OrderSelect = typeof TB_orders.$inferSelect;

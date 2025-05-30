@@ -81,6 +81,15 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
           db.query.TB_orders.findFirst({
             where: (orders, operations) => operations.eq(orders.id, parsedId.output),
             with: {
+              sale: {
+                with: {
+                  discounts: {
+                    with: {
+                      discount: true,
+                    },
+                  },
+                },
+              },
               users: {
                 with: {
                   user: {
@@ -243,6 +252,15 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
               customer: true,
               order: {
                 with: {
+                  sale: {
+                    with: {
+                      discounts: {
+                        with: {
+                          discount: true,
+                        },
+                      },
+                    },
+                  },
                   custSched: {
                     with: {
                       schedule: true,
@@ -296,6 +314,15 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
               supplier: true,
               order: {
                 with: {
+                  sale: {
+                    with: {
+                      discounts: {
+                        with: {
+                          discount: true,
+                        },
+                      },
+                    },
+                  },
                   custSched: {
                     with: {
                       schedule: true,

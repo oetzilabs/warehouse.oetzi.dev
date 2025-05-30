@@ -76,40 +76,56 @@ export default function SalesPage() {
     500,
   );
 
-  // const calculateSales = (sales: SaleInfo[]) => {
-  //   // Calculate total sales for each day
-  //   const totalSales = sales.reduce(
-  //     (acc, sale) => {
-  //       const date = dayjs(sale.createdAt).format("YYYY-MM-DD");
-  //       if (acc[date]) {
-  //         acc[date] += sale.total;
-  //       } else {
-  //         acc[date] = sale.total;
-  //       }
-  //       return acc;
-  //     },
-  //     {} as Record<string, number>,
-  //   );
+  const calculateSales = (sales: SaleInfo[]) => {
+    const salesByDay = sales.reduce(
+      (acc, sale) => {
+        const date = dayjs(sale.createdAt).format("YYYY-MM-DD");
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-  //   // Convert to the required format
-  //   return {
-  //     labels: Object.keys(totalSales),
-  //     datasets: [
-  //       {
-  //         label: "Daily Sales Total",
-  //         data: Object.values(totalSales),
-  //         fill: true,
-  //         pointStyle: false,
-  //       },
-  //     ],
-  //   };
-  // };
+    const sortedDates = Object.keys(salesByDay).sort((a, b) => dayjs(a).diff(dayjs(b)));
+    const last30Days = sortedDates.slice(-30);
+
+    return {
+      labels: last30Days.map((d) => dayjs(d).format("MMM D")),
+      datasets: [
+        {
+          label: "Sales per Day",
+          data: last30Days.map((date) => salesByDay[date] || 0),
+          fill: true,
+          pointStyle: false,
+          tension: 0.4,
+          borderColor: "rgba(99, 102, 241, 1)",
+          backgroundColor: "rgba(99, 102, 241, 0.1)",
+          borderWidth: 2,
+        },
+      ],
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: "rgba(0, 0, 0, 0.1)",
+            },
+          },
+          x: {
+            grid: {
+              color: "rgba(0, 0, 0, 0.1)",
+            },
+          },
+        },
+      },
+    };
+  };
 
   return (
     <Show when={sales()}>
       {(salesList) => (
         <div class="container flex flex-col grow py-4">
-          <div class="w-full flex flex-row h-full">
+          <div class="w-full flex flex-row h-full gap-4">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full">
                 <h1 class="font-semibold leading-none">Sales</h1>
@@ -135,26 +151,9 @@ export default function SalesPage() {
                 </div>
               </div>
               <div class="flex flex-col gap-4 w-full grow">
-                <div class="flex flex-col gap-2 w-full">
-                  <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
-                    {/* <div class="flex flex-col gap-2 w-full h-full p-4">
-                      <LineChart data={calculateSales(salesList())} />
-                    </div> */}
-                  </div>
-                </div>
-                <div class="flex flex-row items-center justify-between gap-4">
-                  <TextField
-                    value={search()}
-                    onChange={(e) => {
-                      setSearch(e);
-                      debouncedSearch(e);
-                    }}
-                    class="w-full max-w-full"
-                  >
-                    <TextFieldInput placeholder="Search sales" class="w-full max-w-full rounded-lg px-4" />
-                  </TextField>
-                  <div class="w-max">
-                    <FilterPopover config={filterConfig} onChange={setFilterConfig} data={salesList} />
+                <div class="flex flex-col gap-4 w-full rounded-lg border h-60">
+                  <div class="flex flex-col gap-4 w-full h-full p-4">
+                    <LineChart data={calculateSales(salesList())} />
                   </div>
                 </div>
                 <SalesList data={salesList} />

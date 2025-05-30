@@ -44,6 +44,7 @@ export type FilterConfig<T> = {
     current: string;
     variants: SortVariant<T>[];
   };
+  itemKey?: keyof T; // Add this new property
 };
 
 export type WithDates = object & {
@@ -56,9 +57,8 @@ export type WithSimpleDates = object & {
 };
 
 export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: FilterConfig<T>) {
-  // Create a memoized Fuse instance
   const fuse = createMemo(() => {
-    const list = data(); // Fuse works on the list itself
+    const list = data();
     const options: IFuseOptions<T> = {
       // Basic options - adjust as needed
       isCaseSensitive: false,
@@ -69,51 +69,44 @@ export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: Filt
       // distance: 100, // Max distance from location
       // maxPatternLength: 32,
       minMatchCharLength: 1,
-      keys: config.search.fields ? config.search.fields.map(String) : Object.keys(list[0] || {}), // Use specified fields or all keys
+      // Add these keys to search through nested order properties
+      keys: ["order.title", "order.description", "order.status", "order.prods.product.name", "order.prods.product.sku"],
       ...config.search.fuseOptions, // Allow overriding options
     };
     return new Fuse(list, options);
   });
 
   return createMemo(() => {
-    let filtered = data();
+    let filtered = [...data()]; // Create a new array to avoid mutations
     if (config.disabled()) return filtered;
 
     const { start, end, preset } = config.dateRange;
-    if (preset === "start_of_week") {
+
+    // Fix date filtering by accessing the nested createdAt
+    if (preset !== "clear") {
       filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isAfter(dayjs().subtract(1, "week"));
-      });
-    } else if (preset === "start_of_month") {
-      filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isAfter(dayjs().subtract(1, "month"));
-      });
-    } else if (preset === "start_of_year") {
-      filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isAfter(dayjs().subtract(1, "year"));
-      });
-    } else if (preset === "custom" && start && end) {
-      filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isBetween(start, end, "day", "[]");
-      });
-    } else if (preset === "previous_week") {
-      filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isBefore(dayjs().subtract(1, "week"));
-      });
-    } else if (preset === "previous_month") {
-      filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isBefore(dayjs().subtract(1, "month"));
-      });
-    } else if (preset === "previous_year") {
-      filtered = filtered.filter((item) => {
-        const date = (item as any).createdAt || (item as any).date;
-        return dayjs(date).isBefore(dayjs().subtract(1, "year"));
+        // Get the date based on itemKey or fallback to item's createdAt
+        const date = config.itemKey ? (item[config.itemKey] as any)?.createdAt : item.createdAt;
+        if (!date) return true;
+
+        switch (preset) {
+          case "start_of_week":
+            return dayjs(date).isAfter(dayjs().subtract(1, "week"));
+          case "start_of_month":
+            return dayjs(date).isAfter(dayjs().subtract(1, "month"));
+          case "start_of_year":
+            return dayjs(date).isAfter(dayjs().subtract(1, "year"));
+          case "previous_week":
+            return dayjs(date).isBefore(dayjs().subtract(1, "week"));
+          case "previous_month":
+            return dayjs(date).isBefore(dayjs().subtract(1, "month"));
+          case "previous_year":
+            return dayjs(date).isBefore(dayjs().subtract(1, "year"));
+          case "custom":
+            return start && end ? dayjs(date).isBetween(start, end, "day", "[]") : true;
+          default:
+            return true;
+        }
       });
     }
 
@@ -127,11 +120,15 @@ export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: Filt
         .map((result) => result.item);
     }
 
-    const currentVariant = config.sort.variants.find((v) => v.field === (config.sort.current || config.sort.default));
+    // Completely revamped sorting logic
+    const currentVariant = config.sort.variants.find((v) => v.field === config.sort.current);
     if (currentVariant) {
       filtered.sort((a, b) => {
+        const result = currentVariant.fn(a, b);
+        // Ensure we're returning -1, 0, or 1 for consistent sorting
+        if (result === 0) return 0;
         const direction = config.sort.direction === "asc" ? 1 : -1;
-        return direction * currentVariant.fn(a, b);
+        return result > 0 ? direction : -direction;
       });
     }
 
@@ -219,8 +216,8 @@ export function useSimpleDateFilter<T extends WithSimpleDates>(data: Accessor<T[
     const currentVariant = config.sort.variants.find((v) => v.field === (config.sort.current || config.sort.default));
     if (currentVariant) {
       filtered.sort((a, b) => {
-        const direction = config.sort.direction === "asc" ? 1 : -1;
-        return direction * currentVariant.fn(a, b);
+        const result = currentVariant.fn(a, b);
+        return config.sort.direction === "asc" ? result : -result;
       });
     }
 

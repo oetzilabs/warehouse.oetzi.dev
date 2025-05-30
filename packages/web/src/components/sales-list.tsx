@@ -1,89 +1,164 @@
-import { cn } from "@/lib/utils";
+import { FilterConfig, useFilter } from "@/lib/filtering";
+import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
-import { type SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
+import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
-import { Accessor, For, Show } from "solid-js";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Accessor, createSignal, For, Show } from "solid-js";
+import { createStore } from "solid-js/store";
+import { FilterPopover } from "./filter-popover";
+import { Button } from "./ui/button";
+import { TextField, TextFieldInput } from "./ui/text-field";
 
 type SalesListProps = {
   data: Accessor<SaleInfo[]>;
 };
 
-export const SalesList = (props: SalesListProps) => {
+export function SalesList(props: SalesListProps) {
+  const [search, setSearch] = createSignal("");
+  const [dsearch, setDSearch] = createSignal("");
+
+  const defaultSort = {
+    default: "date",
+    current: "date",
+    direction: "desc" as const,
+    variants: [
+      {
+        field: "date",
+        label: "Date",
+        fn: (a: SaleInfo, b: SaleInfo) => dayjs(a.createdAt).diff(dayjs(b.createdAt)),
+      },
+      {
+        field: "items",
+        label: "Items",
+        fn: (a: SaleInfo, b: SaleInfo) => a.items.length - b.items.length,
+      },
+    ],
+  } as FilterConfig<SaleInfo>["sort"];
+
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<SaleInfo>>({
+    disabled: () => props.data().length === 0,
+    dateRange: {
+      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
+      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
+      preset: "clear",
+    },
+    search: { term: dsearch() },
+    sort: defaultSort,
+  });
+
+  const debouncedSearch = leadingAndTrailing(
+    debounce,
+    (text: string) => {
+      setDSearch(text);
+      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
+    },
+    500,
+  );
+
+  const filteredData = useFilter(props.data, filterConfig);
+
   return (
     <div class="w-full flex flex-col gap-4">
       <For
-        each={props.data()}
+        each={filteredData()}
         fallback={
           <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">No sales have been added</span>
+            <span class="text-sm select-none">
+              <Show when={props.data().length === 0}>No sales have been added</Show>
+              <Show when={props.data().length > 0 && filterConfig.search.term.length > 0}>
+                No sales have been found
+              </Show>
+            </span>
           </div>
         }
       >
         {(sale) => (
-          <A
-            href={`./${sale.id}`}
-            class="flex flex-col gap-4 w-full h-content min-h-40 p-4 border rounded-lg hover:bg-primary-foreground hover:border-primary/50 shadow-sm hover:shadow-primary/10 transition-colors"
-          >
-            <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
-              <div class="flex flex-row gap-4 items-center justify-start">
-                <span class="text-sm font-medium leading-none">{sale.customer.name}</span>
+          <div class="flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all">
+            <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
+              <div class="flex flex-row gap-4 items-center">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-sm font-medium">Sale #{sale.id}</span>
+                  <span class="text-xs text-muted-foreground">
+                    {dayjs(sale.updatedAt ?? sale.createdAt).format("MMM DD, YYYY - h:mm A")}
+                  </span>
+                </div>
               </div>
-              <div class="flex flex-row items-center gap-2">
-                <Avatar class="size-6 border border-primary">
-                  <AvatarImage
-                    src={
-                      (sale.customer.image?.length ?? 0) > 0
-                        ? sale.customer.image!
-                        : `https://avatar.iran.liara.run/public/boy?username=${sale.customer.name}`
-                    }
-                  />
-                  <AvatarFallback>
-                    {sale.customer.name
-                      .toUpperCase()
-                      .split(" ")
-                      .map((w) => w[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
-            <div class="flex flex-col gap-2 w-full h-full">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 w-full h-full">
-                <For
-                  each={sale.items}
-                  fallback={
-                    <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground col-span-full bg-background">
-                      <span class="text-sm select-none">No items added</span>
-                    </div>
-                  }
+              <Button as={A} href={`/sales/${sale.id}`} size="sm" class="gap-2">
+                Open
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
                 >
-                  {(item) => (
-                    <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-4 border bg-background">
-                      <div class="flex flex-col gap-2 w-full h-full">
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
+              </Button>
+            </div>
+
+            <div class="flex flex-col">
+              <For
+                each={sale.items}
+                fallback={
+                  <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">No items added</div>
+                }
+              >
+                {(item) => (
+                  <div class="flex flex-col border-b last:border-b-0 p-4 gap-4">
+                    <div class="flex flex-row items-center justify-between">
+                      <div class="flex flex-col gap-0.5">
                         <span class="text-sm font-medium">{item.product.name}</span>
-                        <span class="text-xs text-muted-foreground">
-                          QTY & Price: {item.quantity} x {item.product.sellingPrice} {item.product.currency}
-                        </span>
-                        <Show when={item.product.weight}>
-                          {(w) => (
-                            <span class="text-xs text-muted-foreground">
-                              Weight: {w().value} {w().unit}
+                        <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
+                        <Show when={item.product.tg}>
+                          {(tg) => (
+                            <span class="text-sm text-muted-foreground">
+                              {tg().name} ({tg().crs[0]?.tr.rate}%)
                             </span>
                           )}
                         </Show>
-                        <span class="text-xs text-muted-foreground">{item.product.sku}</span>
+                        <Show when={item.product.weight}>
+                          {(weight) => (
+                            <span class="text-xs text-muted-foreground">
+                              Weight: {weight().value} {weight().unit}
+                            </span>
+                          )}
+                        </Show>
+                      </div>
+                      <div class="flex flex-col items-end">
+                        <div class="flex flex-row items-baseline gap-1">
+                          <span class="text-xs text-muted-foreground">{item.quantity}x</span>
+                          <span class="text-sm font-medium">{item.product.sellingPrice.toFixed(2)}</span>
+                        </div>
+                        <span class="text-xs text-muted-foreground">
+                          {(item.product.sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
+                        </span>
+                        <Show when={item.product.tg}>
+                          {(tg) => (
+                            <span class="text-xs text-muted-foreground">
+                              {(
+                                (item.product.sellingPrice * item.quantity * (tg().crs[0]?.tr.rate ?? 0)) /
+                                100
+                              ).toFixed(2)}{" "}
+                              {item.product.currency} Tax
+                            </span>
+                          )}
+                        </Show>
                       </div>
                     </div>
-                  )}
-                </For>
-              </div>
-              <div class="flex w-full grow"></div>
-              <span class="text-xs">{dayjs(sale.updatedAt ?? sale.createdAt).format("MMM DD, YYYY - h:mm A")}</span>
+                  </div>
+                )}
+              </For>
             </div>
-          </A>
+          </div>
         )}
       </For>
     </div>
   );
-};
+}

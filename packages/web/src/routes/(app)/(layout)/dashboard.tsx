@@ -273,18 +273,22 @@ export default function DashboardPage() {
                             </div>
                             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                               <For each={d().orders.customers.values}>
-                                {(order) => (
+                                {(item) => (
                                   <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                                    <OrderStatusBadge status={order.status} />
+                                    <OrderStatusBadge status={item.order.status} />
                                     <div class="flex flex-col grow">
                                       <span class="font-medium text-neutral-900 dark:text-neutral-100">
-                                        {order.title}
+                                        {item.order.title}
                                       </span>
                                       <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                                        {dayjs(order.createdAt).format("MMM D, YYYY")}
+                                        {dayjs(item.order.createdAt).format("MMM D, YYYY")}
                                       </span>
                                     </div>
-                                    <Button size="sm" as={A} href={`/orders/customers/${order.id}`}>
+                                    <Button
+                                      size="sm"
+                                      as={A}
+                                      href={`/customers/${item.customerId}/orders/${item.order.id}`}
+                                    >
                                       Open
                                       <ArrowUpRight class="size-4" />
                                     </Button>
@@ -362,18 +366,22 @@ export default function DashboardPage() {
                             </div>
                             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                               <For each={d().orders.suppliers.values}>
-                                {(order) => (
+                                {(item) => (
                                   <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                                    <OrderStatusBadge status={order.status} />
+                                    <OrderStatusBadge status={item.order.status} />
                                     <div class="flex flex-col grow">
                                       <span class="font-medium text-neutral-900 dark:text-neutral-100">
-                                        {order.title}
+                                        {item.order.title}
                                       </span>
                                       <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                                        {dayjs(order.createdAt).format("MMM D, YYYY")}
+                                        {dayjs(item.order.createdAt).format("MMM D, YYYY")}
                                       </span>
                                     </div>
-                                    <Button size="sm" as={A} href={`/orders/suppliers/${order.id}`}>
+                                    <Button
+                                      size="sm"
+                                      as={A}
+                                      href={`/suppliers/${item.supplierId}/orders/${item.order.id}`}
+                                    >
                                       Open
                                       <ArrowUpRight class="size-4" />
                                     </Button>
