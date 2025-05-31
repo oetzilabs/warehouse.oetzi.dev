@@ -444,67 +444,23 @@ export default function CustomerOrderPage() {
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
                   <div class="flex flex-row gap-4 w-full">
-                    <Dialog open={convertToSaleDialogOpen()} onOpenChange={setConvertToSaleDialogOpen}>
-                      <DialogTrigger as={Button} size="lg" class="w-full" disabled={orderInfo().saleId !== null}>
-                        <Tickets class="size-6" />
-                        Convert to Sale
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Convert Order to Sale</DialogTitle>
-                          <DialogDescription>Select a customer to convert this order to a sale</DialogDescription>
-                        </DialogHeader>
-                        <div class="flex flex-col gap-2 py-4">
-                          <div class="grid grid-cols-1 gap-2">
-                            <Suspense
-                              fallback={
-                                <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
-                                  <Loader2 class="size-4 animate-spin mx-auto" />
-                                </div>
-                              }
-                            >
-                              <Show when={customers()}>
-                                {(customersList) => (
-                                  <For
-                                    each={customersList()}
-                                    fallback={
-                                      <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
-                                        There are no customers available.
-                                      </div>
-                                    }
-                                  >
-                                    {(customer) => (
-                                      <Button
-                                        variant="outline"
-                                        class="w-full justify-start"
-                                        onClick={() => {
-                                          setConvertToSaleDialogOpen(false);
-                                          toast.promise(convertToSaleAction(orderInfo().id, customer.id), {
-                                            loading: "Converting order to sale...",
-                                            success: "Order converted to sale",
-                                            error: "Failed to convert order to sale",
-                                          });
-                                        }}
-                                      >
-                                        <div class="flex flex-col items-start">
-                                          <span class="font-medium">{customer.name}</span>
-                                          <span class="text-xs text-muted-foreground">{customer.email}</span>
-                                        </div>
-                                      </Button>
-                                    )}
-                                  </For>
-                                )}
-                              </Show>
-                            </Suspense>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setConvertToSaleDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                    <Button
+                      disabled={isConvertingToSale.pending || orderInfo().saleId !== null}
+                      class="w-full"
+                      onClick={() => {
+                        setConvertToSaleDialogOpen(false);
+                        toast.promise(convertToSaleAction(orderInfo().id, params.csid), {
+                          loading: "Converting order to sale...",
+                          success: "Order converted to sale",
+                          error: "Failed to convert order to sale",
+                        });
+                      }}
+                    >
+                      <Show when={isConvertingToSale.pending} fallback={<Tickets class="size-6" />}>
+                        <Loader2 class="size-6 animate-spin" />
+                      </Show>
+                      Convert to Sale
+                    </Button>
                   </div>
                   <div class="flex flex-row gap-4 w-full">
                     <Button size="lg" variant="outline" class="bg-background w-full">

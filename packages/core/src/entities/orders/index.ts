@@ -659,7 +659,8 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
         if (!parsedCid.success) {
           return yield* Effect.fail(new CustomerInvalidId({ id: cid }));
         }
-        if (!orgId) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrganizationId.success) {
           return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
         }
 
@@ -716,9 +717,9 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
           db
             .insert(TB_organizations_customerorders)
             .values({
-              customer_id: cid,
-              order_id: id,
-              organization_id: orgId,
+              customer_id: parsedCid.output,
+              order_id: parsedId.output,
+              organization_id: parsedOrganizationId.output,
             })
             .returning(),
         );
