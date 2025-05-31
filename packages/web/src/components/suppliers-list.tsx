@@ -43,6 +43,11 @@ export const SuppliersList = (props: SuppliersListProps) => {
         },
       ],
     },
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
+    },
   });
 
   const debouncedSearch = leadingAndTrailing(

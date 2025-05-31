@@ -58,6 +58,11 @@ export const PurchasesList = (props: PurchasesListProps) => {
     search: { term: dsearch() },
     sort: defaultSort,
     itemKey: "order", // Add this line
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
+    },
   });
 
   // Add a handler for resetting sort
@@ -221,6 +226,11 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
     search: { term: dsearch() },
     sort: defaultSort,
     itemKey: "order", // Add this line
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
+    },
   });
 
   // Add a handler for resetting sort

@@ -48,6 +48,11 @@ export const ProductsList = (props: ProductsListProps) => {
         },
       ],
     },
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
+    },
   });
 
   const debouncedSearch = leadingAndTrailing(

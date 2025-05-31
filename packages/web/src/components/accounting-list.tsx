@@ -47,6 +47,11 @@ export const AccountingList = (props: AccountingListProps) => {
         },
       ],
     },
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
+    },
   });
 
   const debouncedSearch = leadingAndTrailing(

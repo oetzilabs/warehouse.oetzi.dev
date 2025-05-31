@@ -44,6 +44,11 @@ export function SalesList(props: SalesListProps) {
     },
     search: { term: dsearch() },
     sort: defaultSort,
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
+    },
   });
 
   const debouncedSearch = leadingAndTrailing(

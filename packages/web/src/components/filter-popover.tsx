@@ -6,7 +6,7 @@ import Calendar from "@corvu/calendar";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import ArrowRight from "lucide-solid/icons/arrow-right";
-import { Accessor, For, Index } from "solid-js";
+import { Accessor, For, Index, Show } from "solid-js";
 
 type FilterPopoverProps<T extends WithDates> = {
   config: FilterConfig<T>;
@@ -283,57 +283,58 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
               </div>
             </div>
           </div>
-          <div class="space-y-2">
-            <h4 class="font-medium leading-none">Filter</h4>
-            <div class="grid gap-2">
-              <div class="grid grid-cols-2 gap-2">
-                <For each={props.config.filter.variants}>
-                  {(variant) => (
-                    <Button
-                      variant={props.config.filter.current === variant.type ? "default" : "outline"}
-                      size="sm"
-                      onClick={() =>
-                        props.onChange({
-                          ...props.config,
-                          filter: { ...props.config.filter, current: variant.type },
-                        })
-                      }
-                    >
-                      {variant.label}
-                    </Button>
-                  )}
-                </For>
-              </div>
+          <Show when={props.config.filter.variants.length > 0}>
+            <div class="space-y-2">
+              <h4 class="font-medium leading-none">Filter</h4>
+              <div class="grid gap-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <For each={props.config.filter.variants}>
+                    {(variant) => (
+                      <Button
+                        variant={props.config.filter.current === variant.type ? "default" : "outline"}
+                        size="sm"
+                        onClick={() =>
+                          props.onChange({
+                            ...props.config,
+                            filter: { ...props.config.filter, current: variant.type },
+                          })
+                        }
+                      >
+                        {variant.label}
+                      </Button>
+                    )}
+                  </For>
+                </div>
 
-              <div class="grid grid-cols-2 gap-2">
-                <Button
-                  variant={props.config.sort.direction === "asc" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() =>
-                    props.onChange({
-                      ...props.config,
-                      sort: { ...props.config.sort, direction: "asc" },
-                    })
-                  }
-                >
-                  Ascending
-                </Button>
-                <Button
-                  variant={props.config.sort.direction === "desc" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() =>
-                    props.onChange({
-                      ...props.config,
-                      sort: { ...props.config.sort, direction: "desc" },
-                    })
-                  }
-                >
-                  Descending
-                </Button>
+                <div class="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={props.config.sort.direction === "asc" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      props.onChange({
+                        ...props.config,
+                        sort: { ...props.config.sort, direction: "asc" },
+                      })
+                    }
+                  >
+                    Ascending
+                  </Button>
+                  <Button
+                    variant={props.config.sort.direction === "desc" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      props.onChange({
+                        ...props.config,
+                        sort: { ...props.config.sort, direction: "desc" },
+                      })
+                    }
+                  >
+                    Descending
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-
+          </Show>
           <Button
             variant="outline"
             onClick={() => {
