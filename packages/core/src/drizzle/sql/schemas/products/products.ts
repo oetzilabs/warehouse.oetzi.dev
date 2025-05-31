@@ -4,7 +4,12 @@ import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, nullable, object, omit, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_order_products, TB_storage_spaces_to_products, TB_supplier_products } from "../../schema";
+import {
+  TB_order_products,
+  TB_product_to_images,
+  TB_storage_spaces_to_products,
+  TB_supplier_products,
+} from "../../schema";
 import { TB_brands } from "../brands/brands";
 import { TB_catalog_products } from "../catalogs/catalog_products";
 import { commonTable } from "../entity";
@@ -106,6 +111,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
     fields: [TB_products.default_tax_group_id],
     references: [TB_tax_groups.id],
   }),
+  images: many(TB_product_to_images),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

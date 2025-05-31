@@ -59,6 +59,21 @@ export function SalesList(props: SalesListProps) {
 
   return (
     <div class="w-full flex flex-col gap-4">
+      <div class="flex flex-row items-center justify-between gap-4">
+        <TextField
+          value={search()}
+          onChange={(e) => {
+            setSearch(e);
+            debouncedSearch(e);
+          }}
+          class="w-full max-w-full"
+        >
+          <TextFieldInput placeholder="Search sales" class="w-full max-w-full rounded-lg px-4" />
+        </TextField>
+        <div class="w-max">
+          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
+        </div>
+      </div>
       <For
         each={filteredData()}
         fallback={
@@ -105,7 +120,7 @@ export function SalesList(props: SalesListProps) {
 
             <div class="flex flex-col">
               <For
-                each={sale.items}
+                each={sale.items.slice(0, 5)}
                 fallback={
                   <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">No items added</div>
                 }
@@ -155,6 +170,18 @@ export function SalesList(props: SalesListProps) {
                   </div>
                 )}
               </For>
+              <Show when={sale.items.length > 5}>
+                <div class="flex flex-row items-center justify-between p-4 border-t bg-muted/30">
+                  <span class="text-sm text-muted-foreground">+ {sale.items.length - 5} more items</span>
+                  <span class="text-sm text-muted-foreground">
+                    {sale.items
+                      .slice(5)
+                      .reduce((acc, item) => acc + item.product.sellingPrice * item.quantity, 0)
+                      .toFixed(2)}{" "}
+                    {sale.items[0].product.currency}
+                  </span>
+                </div>
+              </Show>
             </div>
           </div>
         )}

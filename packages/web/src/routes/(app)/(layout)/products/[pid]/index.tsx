@@ -22,10 +22,13 @@ import {
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices, printProductSheet } from "@/lib/api/devices";
 import { deleteProduct, downloadProductSheet, getProductById } from "@/lib/api/products";
+import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+// import Barcode from "lucide-solid/icons/barcode";
+import ArrowRight from "lucide-solid/icons/arrow-right";
 import Copy from "lucide-solid/icons/copy";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -203,32 +206,111 @@ export default function ProductPage() {
                 </DropdownMenu>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
-                    <h2 class="font-medium">Details</h2>
-                    <div class="flex flex-row items-center">
+            <div class="flex flex-col gap-4 w-full">
+              <div class="flex flex-col p-4 border rounded-lg w-full">
+                <div class="flex flex-row items-center gap-4 justify-between">
+                  <h2 class="font-medium">Details</h2>
+                  <div class="flex flex-col items-end gap-2 min-w-[200px]">
+                    <div class="flex flex-row items-center gap-2">
                       <Button variant="ghost" size="icon">
                         <Edit class="size-4" />
                       </Button>
                     </div>
                   </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">SKU: {productInfo().sku}</span>
+                </div>
+                <div class="flex flex-row items-center gap-4 w-full justify-between">
+                  <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center gap-2">
+                      <span class="text-sm font-medium">SKU:</span>
+                      <span class="text-sm">{productInfo().sku}</span>
+                    </div>
                     <Show when={productInfo().weight}>
                       {(w) => (
-                        <span class="text-sm text-muted-foreground">
-                          Weight: {w().value} {w().unit}
-                        </span>
+                        <div class="flex justify-between items-center gap-2">
+                          <span class="text-sm font-medium">Weight:</span>
+                          <span class="text-sm">
+                            {w().value} {w().unit}
+                          </span>
+                        </div>
                       )}
                     </Show>
+                    <div class="flex justify-between items-center gap-2">
+                      <span class="text-sm font-medium">Last updated:</span>
+                      <span class="text-sm">
+                        {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-end gap-1">
+                    <span class="text-xl font-semibold">
+                      {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
+                    </span>
                     <span class="text-sm text-muted-foreground">
-                      Last updated:{" "}
-                      {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                      Purchase: {(productInfo().purchasePrice ?? 0).toFixed(2)} {productInfo().currency}
+                    </span>
+                    <span class="text-sm text-muted-foreground">
+                      Margin:{" "}
+                      {(
+                        ((productInfo().sellingPrice - (productInfo().purchasePrice ?? 0)) /
+                          productInfo().sellingPrice) *
+                        100
+                      ).toFixed(1)}
+                      %
+                    </span>
+                    <span class="text-sm text-muted-foreground">
+                      Stock: {productInfo().space.length}/
+                      {productInfo()
+                        .space.map((sp) => sp.storage.productCapacity)
+                        .reduce((a, b) => a + b, 0) ?? 0}
                     </span>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
+                <div class="flex flex-col gap-4 p-4 border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between">
+                    <h2 class="font-medium">Images</h2>
+                    <div class="flex flex-row items-center gap-2">
+                      <Button variant="outline" size="sm" class="bg-background">
+                        <Plus class="size-4" />
+                        Add Images
+                      </Button>
+                    </div>
+                  </div>
+                  <Show
+                    when={productInfo().images?.length > 0}
+                    fallback={
+                      <div class="flex flex-col items-center justify-center p-8 border rounded-lg bg-muted-foreground/5">
+                        <span class="text-sm text-muted-foreground">No images have been added yet</span>
+                      </div>
+                    }
+                  >
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <For each={productInfo().images.map((pi) => pi.image)}>
+                        {(image) => (
+                          <div class="relative aspect-square group">
+                            <img
+                              src={image.url}
+                              alt={image.alt ?? "Product image"}
+                              class="w-full h-full object-cover rounded-lg"
+                            />
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                              <Button size="icon" variant="secondary">
+                                <Edit class="size-4" />
+                              </Button>
+                              <Button size="icon" variant="destructive">
+                                <X class="size-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="font-medium">Codes</h2>
@@ -329,8 +411,138 @@ export default function ProductPage() {
                     }
                   >
                     {(supplier) => (
-                      <div class="flex flex-col gap-1">
-                        <span class="text-sm text-muted-foreground">{supplier.supplier.name ?? "N/A"}</span>
+                      <div class="flex flex-col gap-4 p-4 border rounded-md">
+                        <div class="flex flex-row items-center justify-between">
+                          <div class="flex flex-col gap-1">
+                            <span class="text-sm font-medium">{supplier.supplier.name}</span>
+                            <Show when={supplier.supplier.code}>
+                              <span class="text-xs text-muted-foreground">Code: {supplier.supplier.code}</span>
+                            </Show>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span
+                              class={cn("text-xs px-2 py-0.5 rounded-full", {
+                                "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400":
+                                  supplier.supplier.status === "active",
+                                "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400":
+                                  supplier.supplier.status === "under_review",
+                                "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400":
+                                  supplier.supplier.status === "blacklisted",
+                                "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400":
+                                  supplier.supplier.status === "inactive",
+                              })}
+                            >
+                              {supplier.supplier.status}
+                            </span>
+                            <Button
+                              as={A}
+                              href={`/suppliers/${supplier.supplier.id}`}
+                              variant="outline"
+                              class="bg-background"
+                              size="icon"
+                            >
+                              <ArrowRight class="size-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="flex flex-col gap-2">
+                            <span class="text-xs font-medium">Contact Information</span>
+                            <div class="flex flex-col gap-1">
+                              <Show when={supplier.supplier.email}>
+                                <span class="text-xs text-muted-foreground">Email: {supplier.supplier.email}</span>
+                              </Show>
+                              <Show when={supplier.supplier.phone}>
+                                <span class="text-xs text-muted-foreground">Phone: {supplier.supplier.phone}</span>
+                              </Show>
+                              <Show when={supplier.supplier.website}>
+                                <a
+                                  href={supplier.supplier.website!}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  class="text-xs text-primary hover:underline"
+                                >
+                                  {supplier.supplier.website}
+                                </a>
+                              </Show>
+                              <Show when={supplier.supplier.tax_id}>
+                                <span class="text-xs text-muted-foreground">Tax ID: {supplier.supplier.tax_id}</span>
+                              </Show>
+                            </div>
+                          </div>
+
+                          <div class="flex flex-col gap-2">
+                            <span class="text-xs font-medium">Payment Information</span>
+                            <div class="flex flex-col gap-1">
+                              <Show when={supplier.supplier.payment_terms}>
+                                <span class="text-xs text-muted-foreground">
+                                  Payment Terms: {supplier.supplier.payment_terms}
+                                </span>
+                              </Show>
+                              <Show when={supplier.supplier.bank_details}>
+                                <span class="text-xs text-muted-foreground whitespace-pre-line">
+                                  Bank Details: {supplier.supplier.bank_details}
+                                </span>
+                              </Show>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Show when={supplier.supplier.contacts?.length > 0}>
+                          <div class="flex flex-col gap-2">
+                            <span class="text-xs font-medium">Contacts</span>
+                            <div class="grid grid-cols-2 gap-4">
+                              <For each={supplier.supplier.contacts}>
+                                {(contact) => (
+                                  <div class="flex flex-col gap-1 p-2 border rounded-md">
+                                    <div class="flex items-center justify-between">
+                                      <span class="text-xs font-medium">{contact.name}</span>
+                                      <span class="text-xs text-muted-foreground capitalize">{contact.type}</span>
+                                    </div>
+                                    <Show when={contact.position}>
+                                      <span class="text-xs text-muted-foreground">{contact.position}</span>
+                                    </Show>
+                                    <Show when={contact.email || contact.phone || contact.mobile}>
+                                      <div class="flex flex-col gap-0.5">
+                                        <Show when={contact.email}>
+                                          <span class="text-xs text-muted-foreground">{contact.email}</span>
+                                        </Show>
+                                        <Show when={contact.phone}>
+                                          <span class="text-xs text-muted-foreground">Tel: {contact.phone}</span>
+                                        </Show>
+                                        <Show when={contact.mobile}>
+                                          <span class="text-xs text-muted-foreground">Mob: {contact.mobile}</span>
+                                        </Show>
+                                      </div>
+                                    </Show>
+                                  </div>
+                                )}
+                              </For>
+                            </div>
+                          </div>
+                        </Show>
+
+                        <Show when={supplier.supplier.notes?.length > 0}>
+                          <div class="flex flex-col gap-2">
+                            <span class="text-xs font-medium">Notes</span>
+                            <div class="grid grid-cols-1 gap-2">
+                              <For each={supplier.supplier.notes}>
+                                {(note) => (
+                                  <div class="flex flex-col gap-1 p-2 border rounded-md">
+                                    <div class="flex items-center justify-between">
+                                      <span class="text-xs font-medium">{note.title}</span>
+                                      <span class="text-xs text-muted-foreground capitalize">{note.type}</span>
+                                    </div>
+                                    <span class="text-xs text-muted-foreground whitespace-pre-line">
+                                      {note.content}
+                                    </span>
+                                  </div>
+                                )}
+                              </For>
+                            </div>
+                          </div>
+                        </Show>
                       </div>
                     )}
                   </For>
@@ -338,26 +550,24 @@ export default function ProductPage() {
               </div>
               <div class="col-span-full md:col-span-1 flex flex-col gap-4">
                 <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Pricing</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">
-                      Selling Price: {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Purchase Price: {(productInfo().purchasePrice ?? 0).toFixed(2)} {productInfo().currency}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
                   <h2 class="font-medium">Inventory</h2>
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Stock: 0</span>
-                    <span class="text-sm text-muted-foreground">Min Stock: {productInfo().minimumStock}</span>
-                    <span class="text-sm text-muted-foreground">Max Stock: {productInfo().maximumStock ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">
-                      Reordering At: {productInfo().reorderPoint ?? "N/A"}
-                    </span>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-muted-foreground">Stock:</span>
+                      <span class="text-sm text-muted-foreground">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-muted-foreground">Min Stock:</span>
+                      <span class="text-sm text-muted-foreground">{productInfo().minimumStock}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-muted-foreground">Max Stock:</span>
+                      <span class="text-sm text-muted-foreground">{productInfo().maximumStock ?? "N/A"}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-muted-foreground">Reordering At:</span>
+                      <span class="text-sm text-muted-foreground">{productInfo().reorderPoint ?? "N/A"}</span>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -12,11 +12,11 @@ import { OrderStatusBadge } from "./order-status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 
-type SuppliersOrdersListProps = {
+type PurchasesListProps = {
   data: Accessor<{ supplier_id: string; order: OrderInfo; createdAt: Date }[]>;
 };
 
-export const SuppliersOrdersList = (props: SuppliersOrdersListProps) => {
+export const PurchasesList = (props: PurchasesListProps) => {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 

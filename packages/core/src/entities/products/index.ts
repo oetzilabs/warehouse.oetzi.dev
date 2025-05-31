@@ -81,6 +81,16 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           db.query.TB_products.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: {
+              images: {
+                with: {
+                  image: true,
+                },
+              },
+              space: {
+                with: {
+                  storage: true,
+                },
+              },
               brands: true,
               saleItems: {
                 with: {
@@ -108,7 +118,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
               },
               suppliers: {
                 with: {
-                  supplier: true,
+                  supplier: {
+                    with: {
+                      contacts: true,
+                      notes: true,
+                    },
+                  },
                 },
               },
             },
@@ -184,6 +199,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
+                  images: {
+                    with: {
+                      image: true,
+                    },
+                  },
                   brands: true,
                   saleItems: {
                     with: {
@@ -234,6 +254,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
+                  images: {
+                    with: {
+                      image: true,
+                    },
+                  },
                   brands: true,
                   saleItems: {
                     with: {

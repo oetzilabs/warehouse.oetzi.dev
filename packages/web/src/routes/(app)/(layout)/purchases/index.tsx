@@ -1,4 +1,4 @@
-import { SuppliersOrdersList } from "@/components/orders-list";
+import { PurchasesList } from "@/components/orders-list";
 import { OrdersDataTable } from "@/components/orders/orders-data-table";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
@@ -108,7 +108,7 @@ export default function PurchasesPage() {
                     <LineChart data={calculateOrders(os())} />
                   </div>
                 </div>
-                <SuppliersOrdersList data={os} />
+                <PurchasesList data={os} />
               </div>
             </div>
           </div>

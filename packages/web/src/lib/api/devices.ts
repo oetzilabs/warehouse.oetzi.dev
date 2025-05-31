@@ -119,3 +119,35 @@ export const getDevices = query(async () => {
   );
   return devices;
 }, "get-devices");
+
+export const createDevice = action(async (data: { name: string; type: string }) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const fcid = session.current_warehouse_facility_id;
+  if (!fcid) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const device = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const deviceService = yield* _(DeviceService);
+      return yield* deviceService.create({
+        ...data,
+        facility_id: fcid,
+      });
+    }).pipe(Effect.provide(DeviceLive)),
+  );
+
+  return device;
+});

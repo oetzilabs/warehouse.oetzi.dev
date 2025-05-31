@@ -134,6 +134,13 @@
       "when": 1748604857849,
       "tag": "0018_clear_shockwave",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1748682155342,
+      "tag": "0019_chunky_agent_brand",
+      "breakpoints": true
     }
   ]
 }

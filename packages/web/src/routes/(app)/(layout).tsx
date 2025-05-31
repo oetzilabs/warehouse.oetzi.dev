@@ -14,6 +14,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { changeFacility } from "@/lib/api/facilities";
 import { changeWarehouse } from "@/lib/api/warehouses";
@@ -24,6 +25,7 @@ import BookOpenText from "lucide-solid/icons/book-open-text";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
 import Support from "lucide-solid/icons/heart-plus";
+import LayoutDashboard from "lucide-solid/icons/layout-dashboard";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MapIcon from "lucide-solid/icons/map";
 import MessageSquare from "lucide-solid/icons/message-square";
@@ -90,147 +92,40 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     <Search class="size-4" />
                   </div>
                 </SidebarGroup>
-                <SidebarGroup>
-                  <SidebarGroupLabel>Warehouses</SidebarGroupLabel>
-                  <SidebarGroupAction as={A} href="/warehouses/new" class="px-2 shrink-0 border ">
-                    <Plus />
-                  </SidebarGroupAction>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <Show when={user.currentOrganization()}>
-                        {(org) => (
-                          <>
-                            <For each={org().whs.map((w) => w.warehouse)}>
-                              {(wh) => (
-                                <SidebarMenuItem>
-                                  <SidebarMenuButton
-                                    onClick={() => {
-                                      const cwh = user.currentWarehouse();
-                                      if (cwh && cwh.id === wh.id) {
-                                        toast.info("You are already on this warehouse");
-                                        navigate(`/dashboard`);
-                                        return;
-                                      }
-                                      if (isChangingWarehouse.pending) return;
-                                      toast.promise(changeWarehouseAction(wh.id), {
-                                        loading: "Changing facility...",
-                                        success: "Facility changed",
-                                        error: "Failed to change facility",
-                                      });
-                                    }}
-                                    class={cn(
-                                      "hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 select-none",
-                                      {
-                                        "text-white bg-indigo-600 font-medium hover:bg-indigo-600":
-                                          wh.id === user.currentWarehouse()?.id,
-                                      },
-                                    )}
-                                  >
-                                    <Warehouse class="size-4" />
-                                    {wh.name}
-                                  </SidebarMenuButton>
-                                  <SidebarMenuSub class="pr-0 mr-0 pt-1">
-                                    <For each={wh.fcs}>
-                                      {(fc) => (
-                                        <SidebarMenuSubItem>
-                                          <SidebarMenuSubButton
-                                            onClick={() => {
-                                              const cfc = user.currentFacility();
-                                              if (cfc && cfc.id === fc.id) {
-                                                toast.info("You are already on this facility");
-                                                navigate(`/dashboard`);
-                                                return;
-                                              }
-                                              if (isChangingFacility.pending) return;
-                                              toast.promise(changeFacilityAction(wh.id, fc.id), {
-                                                loading: "Changing facility...",
-                                                success: "Facility changed",
-                                                error: "Failed to change facility",
-                                              });
-                                            }}
-                                            class={cn(
-                                              "hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 cursor-pointer",
-                                              {
-                                                "text-indigo-700 dark:text-foreground bg-indigo-600/10 font-medium hover:bg-indigo-600/20":
-                                                  fc.id === user.currentFacility()?.id,
-                                              },
-                                            )}
-                                          >
-                                            <Warehouse class="size-4" />
-                                            {fc.name}
-                                          </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                      )}
-                                    </For>
-                                    <SidebarMenuSubItem>
-                                      <SidebarMenuSubButton
-                                        as={A}
-                                        href={`/warehouse/${wh.id}/facility/new`}
-                                        class={cn(
-                                          "hover:bg-muted-foreground/10 rounded-lg px-3 py-2 h-auto gap-3 cursor-pointer",
-                                        )}
-                                      >
-                                        <Plus class="size-4" />
-                                        New Facility
-                                      </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                  </SidebarMenuSub>
-                                </SidebarMenuItem>
-                              )}
-                            </For>
-                          </>
-                        )}
-                      </Show>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
+                <SidebarGroup class="flex flex-col gap-0">
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <Link href="/dashboard">
+                        <LayoutDashboard class="size-4" />
+                        Dashboard
+                      </Link>
+                    </SidebarMenuItem>
+                    {/* <SidebarSeparator /> */}
+                    <SidebarMenuItem>
+                      <Link href="/map">
+                        <MapIcon class="size-4" />
+                        Map
+                        <SidebarMenuBadge class="mr-0.5">
+                          <TriangleAlert class="size-4" />
+                        </SidebarMenuBadge>
+                      </Link>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <Link href="/devices">
+                        <Cpu class="size-4" />
+                        Devices
+                        <SidebarMenuBadge
+                          class={cn("mr-1", {
+                            "text-indigo-600 dark:text-indigo-500": !(relativePath() ?? "").startsWith("/devices"),
+                            "text-white": (relativePath() ?? "").startsWith("/devices"),
+                          })}
+                        >
+                          <div class="size-1 rounded-full outline outline-1 outline-current bg-current outline-offset-2 animate-ping"></div>
+                        </SidebarMenuBadge>
+                      </Link>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
                 </SidebarGroup>
-                <Show when={user.currentFacility()}>
-                  {(fc) => (
-                    <SidebarGroup>
-                      <SidebarGroupLabel>Facility: {fc().name}</SidebarGroupLabel>
-                      <SidebarGroupContent>
-                        <SidebarMenu>
-                          <SidebarMenuItem>
-                            <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/inventory`}>
-                              <Package2 class="size-4" />
-                              Inventory
-                              <SidebarMenuBadge class="mr-1">
-                                <div class="size-1 rounded-full bg-current"></div>
-                              </SidebarMenuBadge>
-                            </Link>
-                          </SidebarMenuItem>
-                          <SidebarMenuItem>
-                            <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/map`}>
-                              <MapIcon class="size-4" />
-                              Map
-                              <SidebarMenuBadge class="mr-0.5">
-                                <TriangleAlert class="size-4" />
-                              </SidebarMenuBadge>
-                            </Link>
-                          </SidebarMenuItem>
-                          <SidebarMenuItem>
-                            <Link href={`/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/devices`}>
-                              <Cpu class="size-4" />
-                              Devices
-                              <SidebarMenuBadge
-                                class={cn("mr-1", {
-                                  "text-indigo-600 dark:text-indigo-500":
-                                    relativePath() !==
-                                    `/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/devices`,
-                                  "text-white":
-                                    relativePath() ===
-                                    `/warehouse/${user.currentWarehouse()?.id}/facility/${fc().id}/devices`,
-                                })}
-                              >
-                                <div class="size-1 rounded-full outline outline-1 outline-current bg-current outline-offset-2 animate-ping"></div>
-                              </SidebarMenuBadge>
-                            </Link>
-                          </SidebarMenuItem>
-                        </SidebarMenu>
-                      </SidebarGroupContent>
-                    </SidebarGroup>
-                  )}
-                </Show>
                 <SidebarGroup>
                   <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
                   <SidebarGroupContent>

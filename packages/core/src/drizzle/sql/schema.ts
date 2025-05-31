@@ -17,6 +17,8 @@ export * from "./schemas/taxes/tax_group_countryrates";
 export * from "./schemas/orders/orders";
 export * from "./schemas/orders/order_products";
 
+export * from "./schemas/images/images";
+
 export * from "./schemas/brands/brands";
 
 export * from "./schemas/certificates/certificates";
@@ -30,6 +32,7 @@ export * from "./schemas/products/products";
 export * from "./schemas/products/product_labels";
 export * from "./schemas/products/products_certificates";
 export * from "./schemas/products/products_to_storage_conditions";
+export * from "./schemas/products/product_to_images";
 
 export * from "./schemas/sales/sales";
 export * from "./schemas/sales/sales_items";

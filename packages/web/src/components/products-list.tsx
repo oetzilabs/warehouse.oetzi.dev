@@ -87,41 +87,63 @@ export const ProductsList = (props: ProductsListProps) => {
         }
       >
         {(product) => (
-          <A
-            href={`./${product.id}`}
-            class={cn(
-              "flex flex-col gap-4 w-full h-content p-4 border rounded-lg shadow-sm transition-colors h-auto hover:bg-primary-foreground hover:border-primary/50 hover:shadow-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:border-primary/20 dark:hover:shadow-primary/10 dark:hover:text-foreground",
-              {
-                "opacity-70": product.deletedAt,
-              },
-            )}
-          >
-            <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
-              <div class="flex flex-row gap-4 items-center justify-start">
-                <span class="text-sm font-medium leading-none">{product.name}</span>
-                <Show when={product.deletedAt}>
-                  <span class="text-xs text-red-500">Deleted</span>
-                </Show>
-              </div>
-              <span class="text-sm text-current font-medium">
-                {product.sellingPrice.toFixed(2)} {product.currency}
-              </span>
-            </div>
-            <div class="flex flex-col gap-2 w-full">
-              <span class="text-xs text-muted-foreground">SKU: {product.sku}</span>
-              <Show when={product.weight}>
-                {(w) => (
+          <div class="flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all">
+            <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
+              <div class="flex flex-row gap-4 items-center">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-sm font-medium">{product.name}</span>
                   <span class="text-xs text-muted-foreground">
-                    Weight: {w().value} {w().unit}
+                    {dayjs(product.updatedAt ?? product.createdAt).format("MMM DD, YYYY - h:mm A")}
                   </span>
-                )}
-              </Show>
-              <div class="flex w-full grow"></div>
-              <span class="text-xs">
-                {dayjs(product.updatedAt ?? product.createdAt).format("MMM DD, YYYY - h:mm A")}
-              </span>
+                </div>
+              </div>
+              <Button as={A} href={`./${product.id}`} size="sm" class="gap-2">
+                Open
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
+                >
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
+              </Button>
             </div>
-          </A>
+
+            <div class="flex flex-col p-4 gap-4">
+              <div class="flex flex-row items-center justify-between">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-xs text-muted-foreground">SKU: {product.sku}</span>
+                  <Show when={product.weight}>
+                    {(weight) => (
+                      <span class="text-xs text-muted-foreground">
+                        Weight: {weight().value} {weight().unit}
+                      </span>
+                    )}
+                  </Show>
+                  <Show when={product.dimensions}>
+                    {(dimension) => (
+                      <span class="text-xs text-muted-foreground">
+                        Width: {dimension().width} {dimension().unit}
+                      </span>
+                    )}
+                  </Show>
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-sm font-medium">
+                    {product.sellingPrice.toFixed(2)} {product.currency}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </For>
     </div>
