@@ -35,14 +35,11 @@ export default function EditDevicePage() {
 
             <DeviceForm
               defaultValues={{
-                id: deviceInfo().id,
-                name: deviceInfo().name,
-                description: deviceInfo().description ?? "",
+                ...deviceInfo(),
                 type: {
                   value: deviceInfo().type.id,
                   label: deviceInfo().type.name,
                 },
-                status: deviceInfo().status,
               }}
               onSubmit={async (values) => {
                 const promise = updateDeviceAction(values);

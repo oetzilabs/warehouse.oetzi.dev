@@ -1,5 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { DeviceInfo, DeviceLive, DeviceService } from "@warehouseoetzidev/core/src/entities/devices";
+import { DeviceInfo, DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotDeleted, ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
@@ -176,31 +176,29 @@ export const getDeviceById = query(async (id: string) => {
   return device;
 }, "get-device-by-id");
 
-export const updateDevice = action(
-  async (data: { id: string; name: string; type_id: string; description?: string; status: DeviceInfo["status"] }) => {
-    "use server";
-    const auth = await withSession();
-    if (!auth) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const user = auth[0];
-    if (!user) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const session = auth[1];
-    if (!session) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
+export const updateDevice = action(async (data: DeviceUpdateInfo) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
 
-    const device = await Effect.runPromise(
-      Effect.gen(function* (_) {
-        const deviceService = yield* _(DeviceService);
-        return yield* deviceService.update(data);
-      }).pipe(Effect.provide(DeviceLive)),
-    );
-    return device;
-  },
-);
+  const device = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const deviceService = yield* _(DeviceService);
+      return yield* deviceService.update(data);
+    }).pipe(Effect.provide(DeviceLive)),
+  );
+  return device;
+});
 
 export const deleteDevice = action(async (id: string) => {
   "use server";
