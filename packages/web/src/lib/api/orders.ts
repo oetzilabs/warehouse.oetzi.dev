@@ -255,6 +255,6 @@ export const convertToSale = action(async (id: string, cid: string) => {
     }).pipe(Effect.provide(OrderLive)),
   );
   return json(order, {
-    revalidate: [getCustomerOrders.key, getOrdersByUserId.keyFor(cid), getOrderById.keyFor(id), getSales.key],
+    revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
   });
 });
