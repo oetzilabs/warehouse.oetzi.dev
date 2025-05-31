@@ -81,6 +81,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
             order: true,
           },
         },
+        devices: {
+          with: {
+            type: true,
+          },
+        },
         sales: {
           with: {
             sale: true,
@@ -239,6 +244,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                   },
                 },
               },
+              devices: {
+                with: {
+                  type: true,
+                },
+              },
               sales: {
                 with: {
                   sale: true,
@@ -338,6 +348,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               purchases: {
                 with: {
                   order: true,
+                },
+              },
+              devices: {
+                with: {
+                  type: true,
                 },
               },
               sales: {

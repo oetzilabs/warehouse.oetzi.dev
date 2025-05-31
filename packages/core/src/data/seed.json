@@ -551,6 +551,15 @@
           "address_id": null,
           "deletedAt": null,
           "uid": null,
+          "devices": [
+            {
+              "id": "device_o43b6ue0qy4zxa5dy6c2is4y",
+              "description": "This is a test device",
+              "name": "Test Device",
+              "status": "online",
+              "type_id": "devicetype_nnq8rvwbfqn3wkumzkkh4wbv"
+            }
+          ],
           "orders": {
             "customers": [
               {
@@ -774,6 +783,56 @@
           ]
         }
       ]
+    }
+  ],
+  "device_types": [
+    {
+      "id": "devicetype_nnq8rvwbfqn3wkumzkkh4wbv",
+      "name": "Thermal Printer",
+      "code": "THERMAL_PRINTER",
+      "description": "Thermal printing device for labels and receipts"
+    },
+    {
+      "id": "devicetype_cx44qr1h28rrqi63ws7o1bn3",
+      "name": "Label Printer",
+      "code": "LABEL_PRINTER",
+      "description": "Specialized printer for labels"
+    },
+    {
+      "id": "devicetype_jsq13zbj9r4zdhon8tjdtf7q",
+      "name": "Barcode Scanner",
+      "code": "BARCODE_SCANNER",
+      "description": "Device for scanning barcodes"
+    },
+    {
+      "id": "devicetype_z9r63obvecfv1tmiomamisrg",
+      "name": "RFID Reader",
+      "code": "RFID_READER",
+      "description": "Device for reading RFID tags"
+    },
+    {
+      "id": "devicetype_cra1outtvqpn8jh16wr3nakk",
+      "name": "Cash Drawer",
+      "code": "CASH_DRAWER",
+      "description": "Electronic cash drawer for POS systems"
+    },
+    {
+      "id": "devicetype_wrg9x0d2m51x34h2l2cvrdv8",
+      "name": "QR Scanner",
+      "code": "QR_SCANNER",
+      "description": "Device for scanning QR codes"
+    },
+    {
+      "id": "devicetype_xftrlhsmznw4fvzyarpky42w",
+      "name": "Receipt Printer",
+      "code": "RECEIPT_PRINTER",
+      "description": "Specialized printer for receipts"
+    },
+    {
+      "id": "devicetype_e1pai19khflh5qj06fz77wg8",
+      "name": "Handheld Terminal",
+      "code": "HANDHELD_TERMINAL",
+      "description": "Mobile device for inventory management"
     }
   ]
 }

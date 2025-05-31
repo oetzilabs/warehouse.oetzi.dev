@@ -3,12 +3,12 @@ import { json, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { TB_devices } from "../devices/devices";
 import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
 import { TB_warehouse_areas } from "./warehouse_areas";
 import { TB_warehouses } from "./warehouses";
-import { TB_devices } from "../devices/devices";
 
 export const TB_warehouse_facilities = commonTable(
   "warehouse_facilities",
@@ -42,7 +42,6 @@ export const warehouse_facilities_relations = relations(TB_warehouse_facilities,
     references: [TB_users.id],
   }),
   sessions: many(TB_sessions),
-  devices: many(TB_devices),
 }));
 
 export type FacilitySelect = typeof TB_warehouse_facilities.$inferSelect;

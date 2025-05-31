@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."devices" ADD COLUMN "organization_id" varchar NOT NULL;--> statement-breakpoint
+ALTER TABLE "warehouse"."devices" ADD CONSTRAINT "devices_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "warehouse"."organizations"("id") ON DELETE set null ON UPDATE no action;

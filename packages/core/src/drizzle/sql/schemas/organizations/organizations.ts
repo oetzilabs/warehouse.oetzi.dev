@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "../address";
 import { TB_catalog_products } from "../catalogs/catalog_products";
 import { TB_catalogs } from "../catalogs/catalogs";
+import { TB_devices } from "../devices/devices";
 import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
 import { TB_users } from "../users/users";
@@ -54,6 +55,7 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   customerOrders: many(TB_organizations_customerorders),
   purchases: many(TB_organizations_supplierorders),
   sales: many(TB_organizations_sales),
+  devices: many(TB_devices),
 }));
 
 export type OrganizationSelect = typeof TB_organizations.$inferSelect;

@@ -5,8 +5,8 @@ import devices from "../../data/devices.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { DeviceCreateSchema, DeviceUpdateSchema, TB_devices } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import { WarehouseInvalidId } from "../warehouses/errors";
 import { OrganizationInvalidId, OrganizationNotFound } from "../organizations/errors";
+import { WarehouseInvalidId } from "../warehouses/errors";
 import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, DeviceNotUpdated } from "./errors";
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/devices", {
@@ -18,7 +18,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
 
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
       const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        facility: true,
+        type: true,
       };
 
       if (options) {
@@ -49,9 +49,9 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
           db.query.TB_devices.findFirst({
             where: (devices, operations) => operations.eq(devices.id, parsedId.output),
             with: {
-              facility: true,
+              type: true,
             },
-          })
+          }),
         );
 
         if (!device) {
@@ -59,30 +59,6 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         }
 
         return device;
-      });
-
-    const findByWarehouseId = (warehouseId: string) =>
-      Effect.gen(function* (_) {
-        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
-        if (!parsedWarehouseId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
-        }
-        // look into all the facilites of the warehouse
-        const whDevices = yield* Effect.promise(() =>
-          // facilites
-          db.query.TB_warehouse_facilities.findMany({
-            where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
-            with: {
-              devices: {
-                with: {
-                  facility: true,
-                },
-              },
-            },
-          })
-        );
-
-        return whDevices.map((whDevice) => whDevice.devices).flat();
       });
 
     const update = (input: InferInput<typeof DeviceUpdateSchema>) =>
@@ -97,7 +73,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
             .update(TB_devices)
             .set({ ...input, updatedAt: new Date() })
             .where(eq(TB_devices.id, parsedId.output))
-            .returning()
+            .returning(),
         );
 
         if (!updated) {
@@ -115,7 +91,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         }
 
         const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning()
+          db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning(),
         );
 
         if (!deleted) {
@@ -139,9 +115,9 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
             object({
               ...DeviceCreateSchema.entries,
               id: prefixed_cuid2,
-            })
+            }),
           ),
-          devices
+          devices,
         );
 
         const existing = dbDevices.map((d) => d.id);
@@ -160,7 +136,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
                 .update(TB_devices)
                 .set({ ...device, updatedAt: new Date() })
                 .where(eq(TB_devices.id, device.id))
-                .returning()
+                .returning(),
             );
           }
         }
@@ -179,38 +155,54 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
           db.query.TB_organizations.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedOrganizationId.output),
             with: {
-              whs: {
+              devices: {
                 with: {
-                  warehouse: {
-                    with:{
-                      fcs: {
-                        with: {
-                          devices: true,
-                        },
-                      },
-                    },
-                  },
+                  type: true,
                 },
               },
             },
-          })
+          }),
         );
         if (!orgs) {
           return yield* Effect.fail(new OrganizationNotFound({ id: organizationId }));
         }
-        const devices = orgs.whs.flatMap((wh) => wh.warehouse.fcs.flatMap((f) => f.devices)).flat();
-        return devices;
+        return orgs.devices;
+      });
+
+    const getDeviceTypes = () =>
+      Effect.gen(function* (_) {
+        const deviceTypes = yield* Effect.promise(() => db.query.TB_device_types.findMany());
+        return deviceTypes;
+      });
+
+    const safeRemove = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new DeviceInvalidId({ id }));
+        }
+
+        const [deleted] = yield* Effect.promise(() =>
+          db.update(TB_devices).set({ deletedAt: new Date() }).where(eq(TB_devices.id, parsedId.output)).returning(),
+        );
+
+        if (!deleted) {
+          return yield* Effect.fail(new DeviceNotDeleted({ id }));
+        }
+
+        return deleted;
       });
 
     return {
       create,
       findById,
-      findByWarehouseId,
       update,
       remove,
+      safeRemove,
       all,
       seed,
       findByOrganizationId,
+      getDeviceTypes,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -220,3 +212,4 @@ export const DeviceLive = DeviceService.Default;
 
 // Type exports
 export type DeviceInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["findById"]>>>>;
+export type DeviceUpdateInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["update"]>>>>;

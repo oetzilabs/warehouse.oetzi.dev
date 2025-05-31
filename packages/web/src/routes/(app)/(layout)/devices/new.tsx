@@ -1,59 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TextField, TextFieldErrorMessage, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
-import { createDevice } from "@/lib/api/devices";
-import { A, useNavigate } from "@solidjs/router";
+import { createDevice, getDeviceTypes } from "@/lib/api/devices";
+import { A, createAsync, useAction, useNavigate, useSubmission } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Loader2 from "lucide-solid/icons/loader-2";
-import { Show } from "solid-js";
+import { Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 import { minLength, pipe, string } from "valibot";
 
-const DEVICE_TYPES = [
-  // Printing & Labeling
-  "thermal_printer",
-  "label_printer",
-  "receipt_printer",
-  "industrial_printer",
-
-  // Scanning & Reading
-  "barcode_scanner",
-  "qr_scanner",
-  "rfid_reader",
-  "document_scanner",
-
-  // POS & Payment
-  "cash_drawer",
-  "card_reader",
-  "payment_terminal",
-  "pos_display",
-
-  // Material Handling
-  "handheld_terminal",
-  "mobile_computer",
-  "scale",
-  "weighing_station",
-
-  // Storage & Retrieval
-  "automated_storage",
-  "carousel_system",
-  "vertical_lift",
-
-  // Other Equipment
-  "security_camera",
-  "time_clock",
-  "access_control",
-  "environmental_sensor",
-] as const;
-
+type DeviceSelect = {
+  value: string;
+  label: string;
+};
 export default function NewDevicePage() {
   const navigate = useNavigate();
+  const deviceTypes = createAsync(() => getDeviceTypes(), { deferStream: true });
+  const createDeviceAction = useAction(createDevice);
+  const isCreatingDevice = useSubmission(createDevice);
 
   const formOps = formOptions({
     defaultValues: {
       name: "",
-      type: "printer",
+      type: {
+        value: "",
+        label: "Select device type...",
+      },
     },
     defaultState: {
       canSubmit: false,
@@ -63,18 +36,14 @@ export default function NewDevicePage() {
   const form = createForm(() => ({
     ...formOps,
     onSubmit: async (state) => {
-      try {
-        await toast.promise(createDevice(state.value), {
-          loading: "Creating device...",
-          success: (data) => {
-            navigate(`/devices/${data.id}`);
-            return "Device created successfully";
-          },
-          error: "Failed to create device",
-        });
-      } catch (error) {
-        console.error(error);
-      }
+      toast.promise(createDeviceAction({ name: state.value.name, typeId: state.value.type.value }), {
+        loading: "Creating device...",
+        success: (data) => {
+          navigate(`/devices/${data.id}`);
+          return "Device created successfully";
+        },
+        error: "Failed to create device",
+      });
     },
   }));
 
@@ -122,56 +91,42 @@ export default function NewDevicePage() {
             </TextField>
           )}
         </form.Field>
-
-        <form.Field
-          name="type"
-          validators={{
-            onChange: pipe(string(), minLength(1, "Device type is required")),
-            onBlur: pipe(string(), minLength(1, "Device type is required")),
-          }}
+        <Suspense
+          fallback={
+            <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          }
         >
-          {(field) => (
-            <TextField class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">
-                Type <span class="text-red-500">*</span>
-              </TextFieldLabel>
-              <Select
-                value={field().state.value}
-                onChange={(value) => {
-                  if (!value) return;
-                  field().handleChange(() => value);
-                }}
-                options={DEVICE_TYPES}
-                placeholder="Select device type..."
-                itemComponent={(props) => (
-                  <SelectItem item={props.item}>
-                    {props.item.rawValue
-                      .split("_")
-                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                      .join(" ")}
-                  </SelectItem>
+          <Show when={deviceTypes()}>
+            {(deviceTypes) => (
+              <form.Field name="type">
+                {(field) => (
+                  <Select<DeviceSelect>
+                    value={field().state.value}
+                    onChange={(value) => {
+                      if (!value) return;
+                      field().handleChange(() => value);
+                    }}
+                    options={deviceTypes().map((d) => ({ id: d.id, label: d.name, value: d.id }))}
+                    optionValue="value"
+                    optionTextValue="label"
+                    placeholder="Select device type..."
+                    itemComponent={(props) => <SelectItem item={props.item}>{props.item.rawValue.label}</SelectItem>}
+                  >
+                    <SelectTrigger aria-label="Device type" class="w-full">
+                      <SelectValue<DeviceSelect>>
+                        {(state) => state.selectedOption()?.label || "Select device type..."}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent />
+                  </Select>
                 )}
-              >
-                <SelectTrigger aria-label="Device type" class="w-full">
-                  <SelectValue<string>>
-                    {(state) =>
-                      state
-                        .selectedOption()
-                        ?.split("_")
-                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(" ") || "Select device type..."
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent />
-              </Select>
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
-            </TextField>
-          )}
-        </form.Field>
-
+              </form.Field>
+            )}
+          </Show>
+        </Suspense>
         <form.Subscribe
           selector={(state) => ({
             canSubmit: state.canSubmit,

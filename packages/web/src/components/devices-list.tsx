@@ -92,7 +92,7 @@ export function DevicesList(props: DevicesListProps) {
             <div class="flex flex-row items-center justify-between p-4">
               <div class="flex flex-col gap-0.5">
                 <span class="text-sm font-medium">{device.name}</span>
-                <span class="text-xs text-muted-foreground">Type: {device.type}</span>
+                <span class="text-xs text-muted-foreground">Type: {device.type.name}</span>
                 <span class="text-xs text-muted-foreground">
                   Added: {dayjs(device.createdAt).format("MMM DD, YYYY")}
                 </span>

@@ -80,6 +80,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     order: true,
                   },
                 },
+                devices: {
+                  with: {
+                    type: true,
+                  },
+                },
                 sales: {
                   with: {
                     sale: true,
@@ -683,6 +688,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           order: true,
                         },
                       },
+                      devices: {
+                        with: {
+                          type: true,
+                        },
+                      },
                       sales: {
                         with: {
                           sale: true,
@@ -924,6 +934,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           order: true,
                         },
                       },
+                      devices: {
+                        with: {
+                          type: true,
+                        },
+                      },
                       sales: {
                         with: {
                           sale: true,
@@ -1122,6 +1137,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                       purchases: {
                         with: {
                           order: true,
+                        },
+                      },
+                      devices: {
+                        with: {
+                          type: true,
                         },
                       },
                       sales: {

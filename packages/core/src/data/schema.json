@@ -756,6 +756,49 @@
                     "customers",
                     "suppliers"
                   ]
+                },
+                "devices": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "online",
+                          "offline",
+                          "unresponsive",
+                          "unknown",
+                          "shutting-down",
+                          "rebooting",
+                          "maintenance",
+                          "error"
+                        ]
+                      },
+                      "type_id": {
+                        "type": "string"
+                      },
+                      "id": {}
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "type_id",
+                      "id"
+                    ]
+                  }
                 }
               },
               "additionalProperties": false,
@@ -768,7 +811,8 @@
                 "suppliers",
                 "customers",
                 "sales",
-                "orders"
+                "orders",
+                "devices"
               ]
             }
           }
@@ -1714,6 +1758,16 @@
               }
             ]
           },
+          "saleId": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
           "id": {},
           "createdAt": {
             "type": "string"
@@ -1832,6 +1886,37 @@
         ]
       }
     },
+    "device_types": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "id": {}
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "code",
+          "id"
+        ]
+      }
+    },
     "$schema": {
       "type": "string"
     }
@@ -1854,6 +1939,7 @@
     "tax_rates",
     "tax_groups",
     "tax_group_countryrates",
+    "device_types",
     "$schema"
   ]
 }

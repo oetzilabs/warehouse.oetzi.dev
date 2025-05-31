@@ -131,7 +131,7 @@ export default function ProductPage() {
                                     }}
                                   >
                                     <Printer class="size-4" />
-                                    {device.name.length > 0 ? device.name : device.type}
+                                    {device.name.length > 0 ? device.name : device.type.name}
                                   </DropdownMenuItem>
                                 )}
                               </For>

@@ -30,6 +30,7 @@ import {
   WarehouseTypeCreateSchema,
 } from "../../drizzle/sql/schema";
 import { BrandCreateSchema } from "../../drizzle/sql/schemas/brands/brands";
+import { DeviceTypeCreateSchema } from "../../drizzle/sql/schemas/devices/device_type";
 import { DeviceCreateSchema } from "../../drizzle/sql/schemas/devices/devices";
 import { DocumentStorageOfferCreateSchema } from "../../drizzle/sql/schemas/documents/storage_offers";
 import { OrganizationCreateSchema } from "../../drizzle/sql/schemas/organizations/organizations";
@@ -145,6 +146,11 @@ export const OrderSchema = object({
   suppliers: array(SupplierOrderSchema),
 });
 
+export const DeviceSchema = object({
+  ...omit(DeviceCreateSchema, ["organization_id"]).entries,
+  id: prefixed_cuid2,
+});
+
 export const OrganizationSchema = object({
   ...OrganizationCreateSchema.entries,
   id: prefixed_cuid2,
@@ -155,6 +161,7 @@ export const OrganizationSchema = object({
   customers: array(string()), // references to customer IDs
   sales: array(string()), // references to sales IDs
   orders: OrderSchema,
+  devices: array(DeviceSchema), // references to device IDs
 });
 
 export const UserSchema = object({
@@ -267,6 +274,11 @@ export const TaxGroupCountryRateSchema = object({
   ),
 });
 
+export const DeviceTypeSchema = object({
+  ...DeviceTypeCreateSchema.entries,
+  id: prefixed_cuid2,
+});
+
 export const SeedDataSchema = object({
   users: array(UserSchema),
   products: array(ProductSchema),
@@ -284,4 +296,5 @@ export const SeedDataSchema = object({
   tax_rates: array(TaxRateSchema),
   tax_groups: array(TaxGroupSchema),
   tax_group_countryrates: array(TaxGroupCountryRateSchema),
+  device_types: array(DeviceTypeSchema),
 });

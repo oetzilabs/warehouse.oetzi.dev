@@ -9,6 +9,7 @@ import {
   ProductCreateWithDateTransformSchema,
   TB_brands,
   TB_customers,
+  TB_device_types,
   TB_devices,
   TB_document_storage_offers,
   TB_notifications,
@@ -56,26 +57,6 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    // const generateRandomLetters = (length: number): string => {
-    //   let result = "";
-    //   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    //   const charactersLength = characters.length;
-    //   for (let i = 0; i < length; i++) {
-    //     result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    //   }
-    //   return result;
-    // };
-
-    // const generateSlug = (name: string) => {
-    //   const slug = name
-    //     .toLowerCase()
-    //     .replace(/\s+/g, "-")
-    //     .replace(/[^\w-]+/g, "")
-    //     .replace(/-+/g, "-");
-
-    //   return `${slug}-${generateRandomLetters(6)}`;
-    // };
-
     const seed = () =>
       Effect.gen(function* (_) {
         const seedData = safeParse(SeedDataSchema, data);
@@ -87,6 +68,21 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             }),
           );
         }
+
+        // Add device types seeding before other resources
+        for (const deviceType of seedData.output.device_types) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_device_types)
+              .values(deviceType)
+              .onConflictDoUpdate({
+                target: TB_device_types.id,
+                set: deviceType,
+              })
+              .returning(),
+          );
+        }
+        yield* Console.log("device_types added");
 
         for (const taxRate of seedData.output.tax_rates) {
           yield* Effect.promise(() =>
@@ -379,6 +375,18 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                 .returning(),
             );
             yield* Console.log(`user ${user.id} added to organization ${org.id}`);
+
+            // Add devices to organization
+            for (const device of org.devices) {
+              yield* Effect.promise(() =>
+                db
+                  .insert(TB_devices)
+                  .values({ ...device, organization_id: org.id })
+                  .onConflictDoNothing()
+                  .returning(),
+              );
+            }
+            yield* Console.log(`devices for organization ${org.id} added`);
 
             // Process warehouses
             for (const warehouse of warehouses) {

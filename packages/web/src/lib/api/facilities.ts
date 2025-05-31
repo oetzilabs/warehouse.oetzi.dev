@@ -254,34 +254,3 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
     status: 303,
   });
 });
-
-export const getFacilityDevicesByWarehouseId = query(async (whid: string, fcid: string) => {
-  "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const warehouse = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const whService = yield* _(WarehouseService);
-      const fcService = yield* _(FacilityService);
-      const wh = yield* whService.findById(whid);
-      if (!wh) {
-        return yield* Effect.fail(new Error("Warehouse not found"));
-      }
-      if (!wh.fcs.find((f) => f.id === fcid)) {
-        return yield* Effect.fail(new WarehouseDoesNotContainFacility({ id: whid, fcid }));
-      }
-      const fc = yield* fcService.findById(fcid);
-      if (!fc) {
-        return yield* Effect.fail(new FacilityNotFound({ id: fcid }));
-      }
-      return yield* fcService.findDevicesByFacilityId(fc.id);
-    }).pipe(Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
-  );
-  return warehouse;
-}, "device-by-facility-id");

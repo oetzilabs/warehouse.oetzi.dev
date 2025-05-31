@@ -52,6 +52,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                         order: true,
                       },
                     },
+                    devices: {
+                      with: {
+                        type: true,
+                      },
+                    },
                     sales: {
                       with: {
                         sale: true,
@@ -74,11 +79,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                     },
                   },
                 },
-                fc: {
-                  with: {
-                    devices: true,
-                  },
-                },
+                fc: true,
               },
             },
           },
@@ -89,6 +90,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
             customerOrders: {
               with: {
                 order: true,
+              },
+            },
+            devices: {
+              with: {
+                type: true,
               },
             },
             purchases: {
@@ -127,11 +133,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
             },
           },
         },
-        fc: {
-          with: {
-            devices: true,
-          },
-        },
+        fc: true,
       };
 
       if (options) {
@@ -175,6 +177,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               order: true,
                             },
                           },
+                          devices: {
+                            with: {
+                              type: true,
+                            },
+                          },
                           purchases: {
                             with: {
                               order: true,
@@ -211,11 +218,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                           },
                         },
                       },
-                      fc: {
-                        with: {
-                          devices: true,
-                        },
-                      },
+                      fc: true,
                     },
                   },
                 },
@@ -226,6 +229,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   customerOrders: {
                     with: {
                       order: true,
+                    },
+                  },
+                  devices: {
+                    with: {
+                      type: true,
                     },
                   },
                   purchases: {
@@ -264,11 +272,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   },
                 },
               },
-              fc: {
-                with: {
-                  devices: true,
-                },
-              },
+              fc: true,
             },
           }),
         );
@@ -312,6 +316,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               order: true,
                             },
                           },
+                          devices: {
+                            with: {
+                              type: true,
+                            },
+                          },
                           purchases: {
                             with: {
                               order: true,
@@ -348,11 +357,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                           },
                         },
                       },
-                      fc: {
-                        with: {
-                          devices: true,
-                        },
-                      },
+                      fc: true,
                     },
                   },
                 },
@@ -386,11 +391,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   },
                 },
               },
-              fc: {
-                with: {
-                  devices: true,
-                },
-              },
+              fc: true,
             },
           }),
         );
@@ -427,6 +428,11 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               sale: true,
                             },
                           },
+                          devices: {
+                            with: {
+                              type: true,
+                            },
+                          },
                           supps: {
                             with: {
                               supplier: true,
@@ -453,11 +459,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                           },
                         },
                       },
-                      fc: {
-                        with: {
-                          devices: true,
-                        },
-                      },
+                      fc: true,
                     },
                   },
                 },
@@ -491,11 +493,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                   },
                 },
               },
-              fc: {
-                with: {
-                  devices: true,
-                },
-              },
+              fc: true,
             },
           }),
         );

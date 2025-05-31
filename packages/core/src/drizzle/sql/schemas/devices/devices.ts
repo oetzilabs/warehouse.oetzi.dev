@@ -4,8 +4,10 @@ import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
+import { TB_organizations } from "../organizations/organizations";
 import { schema } from "../utils";
 import { TB_warehouse_facilities } from "../warehouses/warehouse_facility";
+import { TB_device_types } from "./device_type";
 
 export const device_status = schema.enum("device_status", [
   "online",
@@ -24,16 +26,24 @@ export const TB_devices = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     status: device_status("status").default("unknown").notNull(),
-    type: text("type").notNull(),
-    facility_id: varchar("facility_id").references(() => TB_warehouse_facilities.id, { onDelete: "set null" }),
+    type_id: varchar("type_id")
+      .references(() => TB_device_types.id, { onDelete: "restrict" })
+      .notNull(),
+    organization_id: varchar("organization_id")
+      .notNull()
+      .references(() => TB_organizations.id, { onDelete: "set null" }),
   },
   "device",
 );
 
 export const device_relations = relations(TB_devices, ({ one, many }) => ({
-  facility: one(TB_warehouse_facilities, {
-    fields: [TB_devices.facility_id],
-    references: [TB_warehouse_facilities.id],
+  type: one(TB_device_types, {
+    fields: [TB_devices.type_id],
+    references: [TB_device_types.id],
+  }),
+  organization: one(TB_organizations, {
+    fields: [TB_devices.organization_id],
+    references: [TB_organizations.id],
   }),
 }));
 
