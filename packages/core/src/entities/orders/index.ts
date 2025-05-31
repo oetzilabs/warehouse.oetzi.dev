@@ -712,6 +712,16 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
             })
             .returning(),
         );
+        yield* Effect.promise(() =>
+          db
+            .insert(TB_organizations_customerorders)
+            .values({
+              customer_id: cid,
+              order_id: id,
+              organization_id: orgId,
+            })
+            .returning(),
+        );
 
         return { sale, items };
       });
