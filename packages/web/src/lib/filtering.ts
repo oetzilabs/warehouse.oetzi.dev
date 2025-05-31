@@ -25,6 +25,12 @@ export type SortVariant<T> = {
   fn: (a: T, b: T) => number;
 };
 
+export type FilterVariant<T> = {
+  type: string;
+  label: string;
+  fn: (item: T) => boolean;
+};
+
 export type FilterConfig<T> = {
   disabled: Accessor<boolean>;
   dateRange: {
@@ -43,6 +49,11 @@ export type FilterConfig<T> = {
     direction: SortDirection;
     current: string;
     variants: SortVariant<T>[];
+  };
+  filter: {
+    default: string | null;
+    current: string | null;
+    variants: FilterVariant<T>[];
   };
   itemKey?: keyof T; // Add this new property
 };
@@ -132,6 +143,19 @@ export function useFilter<T extends WithDates>(data: Accessor<T[]>, config: Filt
       });
     }
 
+    // Custom Filtering
+    if (config.filter.variants.length > 0) {
+      const currentFilter = config.filter.current;
+      if (currentFilter) {
+        filtered = filtered.filter((item) =>
+          config.filter.variants
+            .filter((filterFn) => filterFn.type === currentFilter)
+            .every((filterFn) => filterFn.fn(item)),
+        );
+        console.log(filtered);
+      }
+    }
+
     return filtered;
   });
 }
@@ -219,6 +243,18 @@ export function useSimpleDateFilter<T extends WithSimpleDates>(data: Accessor<T[
         const result = currentVariant.fn(a, b);
         return config.sort.direction === "asc" ? result : -result;
       });
+    }
+
+    if (config.filter.variants.length > 0) {
+      const currentFilter = config.filter.current;
+      if (currentFilter) {
+        filtered = filtered.filter((item) =>
+          config.filter.variants
+            .filter((filterFn) => filterFn.type === currentFilter)
+            .every((filterFn) => filterFn.fn(item)),
+        );
+        console.log(filtered);
+      }
     }
 
     return filtered;

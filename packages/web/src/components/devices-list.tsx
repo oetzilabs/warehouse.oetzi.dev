@@ -35,6 +35,22 @@ export function DevicesList(props: DevicesListProps) {
     ],
   } as FilterConfig<DeviceInfo>["sort"];
 
+  // Create a Map to store unique device types
+  const uniqueTypesMap = new Map<string, DeviceInfo["type"]>();
+  props.data().forEach((di) => {
+    if (!uniqueTypesMap.has(di.type.id)) {
+      uniqueTypesMap.set(di.type.id, di.type);
+    }
+  });
+
+  // Convert the unique types from the Map into the desired format
+  const uniqueTypeVariants = Array.from(uniqueTypesMap.values()).map((t) => ({
+    type: `device_type:${t.code}`,
+    label: t.name,
+    // This fn still checks against the original data, which seems to be your intention
+    fn: (item: DeviceInfo) => t.id === item.type.id,
+  }));
+
   const [filterConfig, setFilterConfig] = createStore<FilterConfig<DeviceInfo>>({
     disabled: () => props.data().length === 0,
     dateRange: {
@@ -42,8 +58,17 @@ export function DevicesList(props: DevicesListProps) {
       end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
       preset: "clear",
     },
-    search: { term: dsearch() },
+    search: {
+      term: dsearch(),
+      fields: ["name", "description"],
+      fuseOptions: { keys: ["name", "type.name", "description"] },
+    },
     sort: defaultSort,
+    filter: {
+      default: null,
+      current: null,
+      variants: uniqueTypeVariants,
+    },
   });
 
   const debouncedSearch = leadingAndTrailing(

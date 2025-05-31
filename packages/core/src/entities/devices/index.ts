@@ -159,6 +159,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
                 with: {
                   type: true,
                 },
+                where: (fields, operators) => operators.isNull(fields.deletedAt),
               },
             },
           }),

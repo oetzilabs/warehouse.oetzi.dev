@@ -436,7 +436,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           return yield* Effect.fail(new ProductInvalidId({ id: product.id }));
         }
 
-        if (printer.type !== "printer") {
+        if (!printer.type.code.toLowerCase().includes("printer")) {
           return yield* Effect.fail(new DeviceNotPrinter({ id: printer.id }));
         }
 
