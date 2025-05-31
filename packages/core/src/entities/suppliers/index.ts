@@ -315,3 +315,6 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
 
 export const SupplierLive = SupplierService.Default;
 export type SupplierInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findById"]>>>>;
+export type SupplierOrderInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<SupplierService["getOrdersBySupplierIdAndOrganizationId"]>>>
+>[number]["order"];

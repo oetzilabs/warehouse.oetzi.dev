@@ -6,14 +6,20 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   OrderCreateSchema,
   OrderUpdateSchema,
+  SaleItemCreate,
   TB_order_products,
   TB_orders,
   TB_organizations_customerorders,
+  TB_organizations_sales,
   TB_organizations_supplierorders,
   TB_products,
+  TB_sale_items,
+  TB_sales,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { CustomerInvalidId } from "../customers/errors";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { SaleNotCreated } from "../sales/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   OrderInvalidId,
@@ -643,6 +649,73 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
         };
       });
 
+    const convertToSale = (id: string, cid: string, orgId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new OrderInvalidId({ id }));
+        }
+        const parsedCid = safeParse(prefixed_cuid2, cid);
+        if (!parsedCid.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id: cid }));
+        }
+        if (!orgId) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
+
+        const order = yield* findById(id);
+        if (!order) {
+          return yield* Effect.fail(new OrderNotFound({ id }));
+        }
+        const itemsFromOrder = order.prods.map(
+          (p) =>
+            ({
+              currency: p.product.currency,
+              quantity: p.quantity,
+              productId: p.product.id,
+              price: p.product.sellingPrice,
+            }) satisfies Omit<SaleItemCreate, "saleId">,
+        );
+        const [sale, ...items] = yield* Effect.promise(() =>
+          db.transaction((tx) => {
+            return tx
+              .insert(TB_sales)
+              .values({
+                customerId: cid,
+                organizationId: orgId,
+                status: "created",
+              })
+              .returning()
+              .catch(() => tx.rollback())
+              .then(async ([sale]) => {
+                const items = await tx
+                  .insert(TB_sale_items)
+                  .values(itemsFromOrder.map((i) => ({ ...i, saleId: sale.id })))
+                  .returning()
+                  .catch(() => tx.rollback());
+                return [sale, ...items] as const;
+              });
+          }),
+        );
+
+        if (!sale) {
+          return yield* Effect.fail(new SaleNotCreated());
+        }
+
+        yield* update({ id, saleId: sale.id, status: "processing" });
+        yield* Effect.promise(() =>
+          db
+            .insert(TB_organizations_sales)
+            .values({
+              organizationId: orgId,
+              saleId: sale.id,
+            })
+            .returning(),
+        );
+
+        return { sale, items };
+      });
+
     return {
       create,
       findById,
@@ -660,6 +733,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
       getSupplierOrdersChartData,
       getPopularProductsChartData,
       getLastSoldProductsChartData,
+      convertToSale,
     } as const;
   }),
   dependencies: [DatabaseLive],

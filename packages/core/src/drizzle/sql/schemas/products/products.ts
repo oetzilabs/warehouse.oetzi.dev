@@ -69,7 +69,7 @@ export const TB_products = commonTable(
     purchasePrice: decimal("purchase_price", { precision: 10, scale: 2, mode: "number" }),
     sellingPrice: decimal("selling_price", { precision: 10, scale: 2, mode: "number" }).notNull(),
     msrp: decimal("msrp", { precision: 10, scale: 2, mode: "number" }),
-    currency: text("currency").default("USD"),
+    currency: text("currency").notNull(),
 
     // Physical Attributes
     weight: json("weight").$type<{

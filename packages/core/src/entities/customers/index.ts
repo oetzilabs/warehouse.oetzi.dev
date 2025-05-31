@@ -258,27 +258,43 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             with: {
               order: {
                 with: {
+                  sale: {
+                    with: {
+                      discounts: {
+                        with: {
+                          discount: true,
+                        },
+                      },
+                    },
+                  },
                   custSched: {
                     with: {
                       schedule: true,
+                    },
+                  },
+                  users: {
+                    with: {
+                      user: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
                     },
                   },
                   prods: {
                     with: {
                       product: {
                         with: {
-                          labels: true,
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
                           brands: true,
-                          certs: {
-                            with: {
-                              cert: true,
-                            },
-                          },
-                          stco: {
-                            with: {
-                              condition: true,
-                            },
-                          },
                         },
                       },
                     },

@@ -4,6 +4,7 @@ import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/user
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
 import { Cause, Chunk, Effect, Exit } from "effect";
+import { getSales } from "./sales";
 import { withSession } from "./session";
 
 export const getCustomerOrders = query(async () => {
@@ -225,5 +226,35 @@ export const deleteOrder = action(async (oid: string) => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
       throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
     },
+  });
+});
+
+export const convertToSale = action(async (id: string, cid: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const order = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const orderService = yield* _(OrderService);
+      return yield* orderService.convertToSale(id, cid, orgId);
+    }).pipe(Effect.provide(OrderLive)),
+  );
+  return json(order, {
+    revalidate: [getCustomerOrders.key, getOrdersByUserId.keyFor(cid), getOrderById.keyFor(id), getSales.key],
   });
 });

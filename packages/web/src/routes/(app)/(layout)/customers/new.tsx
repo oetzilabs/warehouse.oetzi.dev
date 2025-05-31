@@ -32,7 +32,7 @@ export default function NewCustomerPage() {
       phone: "",
       image: "",
       status: "active",
-    } satisfies Required<CustomerCreate>,
+    } satisfies Required<Omit<CustomerCreate, "id">>,
     defaultState: {
       canSubmit: false,
     },

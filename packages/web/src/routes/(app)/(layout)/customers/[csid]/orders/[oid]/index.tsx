@@ -16,9 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
+import { getCustomers } from "@/lib/api/customers";
 import { getDevices } from "@/lib/api/devices";
 import { getDiscounts } from "@/lib/api/discounts";
-import { deleteOrder, getOrderById } from "@/lib/api/orders";
+import { convertToSale, deleteOrder, getOrderById } from "@/lib/api/orders";
 import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
@@ -31,6 +32,7 @@ import Printer from "lucide-solid/icons/printer";
 import Receipt from "lucide-solid/icons/receipt";
 import Send from "lucide-solid/icons/send";
 import Tag from "lucide-solid/icons/tag";
+import Tickets from "lucide-solid/icons/tickets";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -51,11 +53,17 @@ export default function CustomerOrderPage() {
   const devices = createAsync(() => getDevices(), { deferStream: true });
   const discounts = createAsync(() => getDiscounts());
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
+  const [convertToSaleDialogOpen, setConvertToSaleDialogOpen] = createSignal(false);
 
   const deleteOrderAction = useAction(deleteOrder);
   const isDeletingOrder = useSubmission(deleteOrder);
 
   const [dialogOpen, setDialogOpen] = createSignal(false);
+
+  const convertToSaleAction = useAction(convertToSale);
+  const isConvertingToSale = useSubmission(convertToSale);
+
+  const customers = createAsync(() => getCustomers());
 
   return (
     <Suspense
@@ -436,6 +444,69 @@ export default function CustomerOrderPage() {
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
                   <div class="flex flex-row gap-4 w-full">
+                    <Dialog open={convertToSaleDialogOpen()} onOpenChange={setConvertToSaleDialogOpen}>
+                      <DialogTrigger as={Button} size="lg" class="w-full" disabled={orderInfo().saleId !== null}>
+                        <Tickets class="size-6" />
+                        Convert to Sale
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Convert Order to Sale</DialogTitle>
+                          <DialogDescription>Select a customer to convert this order to a sale</DialogDescription>
+                        </DialogHeader>
+                        <div class="flex flex-col gap-2 py-4">
+                          <div class="grid grid-cols-1 gap-2">
+                            <Suspense
+                              fallback={
+                                <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                  <Loader2 class="size-4 animate-spin mx-auto" />
+                                </div>
+                              }
+                            >
+                              <Show when={customers()}>
+                                {(customersList) => (
+                                  <For
+                                    each={customersList()}
+                                    fallback={
+                                      <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                        There are no customers available.
+                                      </div>
+                                    }
+                                  >
+                                    {(customer) => (
+                                      <Button
+                                        variant="outline"
+                                        class="w-full justify-start"
+                                        onClick={() => {
+                                          setConvertToSaleDialogOpen(false);
+                                          toast.promise(convertToSaleAction(orderInfo().id, customer.id), {
+                                            loading: "Converting order to sale...",
+                                            success: "Order converted to sale",
+                                            error: "Failed to convert order to sale",
+                                          });
+                                        }}
+                                      >
+                                        <div class="flex flex-col items-start">
+                                          <span class="font-medium">{customer.name}</span>
+                                          <span class="text-xs text-muted-foreground">{customer.email}</span>
+                                        </div>
+                                      </Button>
+                                    )}
+                                  </For>
+                                )}
+                              </Show>
+                            </Suspense>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setConvertToSaleDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div class="flex flex-row gap-4 w-full">
                     <Button size="lg" variant="outline" class="bg-background w-full">
                       <Receipt class="size-6" />
                       Download Invoice
@@ -482,7 +553,7 @@ export default function CustomerOrderPage() {
                                 class="w-full"
                               >
                                 <Printer class="size-4" />
-                                {printer.name || printer.type}
+                                {printer.name || printer.type.name}
                               </Button>
                             )}
                           </For>

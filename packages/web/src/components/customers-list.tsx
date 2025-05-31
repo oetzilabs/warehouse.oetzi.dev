@@ -6,6 +6,7 @@ import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type CustomerInfo } from "@warehouseoetzidev/core/src/entities/customers";
 import dayjs from "dayjs";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { FilterPopover } from "./filter-popover";
@@ -92,32 +93,36 @@ export const CustomersList = (props: CustomersListProps) => {
         }
       >
         {(customer) => (
-          <A
-            href={`./${customer.id}`}
+          <div
             class={cn(
-              "flex flex-col gap-4 w-full h-content p-4 border rounded-lg shadow-sm transition-colors h-auto hover:bg-primary-foreground hover:border-primary/50 hover:shadow-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:border-primary/20 dark:hover:shadow-primary/10 dark:hover:text-foreground",
+              "flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all",
               {
                 "opacity-70": customer.deletedAt,
               },
             )}
           >
-            <div class="flex flex-row items-center gap-4 justify-between w-full h-content">
-              <div class="flex flex-row gap-4 items-center justify-start">
-                <span class="text-sm font-medium leading-none">{customer.name}</span>
+            <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
+              <div class="flex flex-row gap-4 items-center">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-sm font-medium">{customer.name}</span>
+                  <span class="text-xs text-muted-foreground">
+                    {dayjs(customer.updatedAt ?? customer.createdAt).format("MMM DD, YYYY - h:mm A")}
+                  </span>
+                </div>
                 <Show when={customer.deletedAt}>
                   <span class="text-xs text-red-500">Deleted</span>
                 </Show>
               </div>
+              <Button as={A} href={`./${customer.id}`} size="sm" class="gap-2">
+                Open
+                <ArrowUpRight class="size-4" />
+              </Button>
             </div>
-            <div class="flex flex-col gap-2 w-full">
+            <div class="flex flex-col p-4 gap-2">
               <span class="text-xs text-muted-foreground">Email: {customer.email}</span>
               <span class="text-xs text-muted-foreground">Phone: {customer.phone}</span>
-              <div class="flex w-full grow"></div>
-              <span class="text-xs">
-                {dayjs(customer.updatedAt ?? customer.createdAt).format("MMM DD, YYYY - h:mm A")}
-              </span>
             </div>
-          </A>
+          </div>
         )}
       </For>
     </div>

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
+import { type SupplierOrderInfo } from "@warehouseoetzidev/core/src/entities/suppliers";
 import dayjs from "dayjs";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -13,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 
 type PurchasesListProps = {
-  data: Accessor<{ supplier_id: string; order: OrderInfo; createdAt: Date }[]>;
+  data: Accessor<{ supplier_id: string; order: SupplierOrderInfo; createdAt: Date }[]>;
 };
 
 export const PurchasesList = (props: PurchasesListProps) => {
@@ -44,10 +45,10 @@ export const PurchasesList = (props: PurchasesListProps) => {
         },
       },
     ],
-  } as FilterConfig<{ supplier_id: string; order: OrderInfo; createdAt: Date }>["sort"];
+  } as FilterConfig<{ supplier_id: string; order: SupplierOrderInfo; createdAt: Date }>["sort"];
 
   const [filterConfig, setFilterConfig] = createStore<
-    FilterConfig<{ supplier_id: string; order: OrderInfo; createdAt: Date }>
+    FilterConfig<{ supplier_id: string; order: SupplierOrderInfo; createdAt: Date }>
   >({
     disabled: () => props.data().length === 0,
     dateRange: {
@@ -140,7 +141,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
 
             <div class="flex flex-col">
               <For
-                each={item.order.prods}
+                each={item.order.prods.slice(0, 5)}
                 fallback={
                   <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">
                     No products added
@@ -174,6 +175,18 @@ export const PurchasesList = (props: PurchasesListProps) => {
                   </div>
                 )}
               </For>
+              <Show when={item.order.prods.length > 5}>
+                <div class="flex flex-row items-center justify-between p-4 border-t bg-muted/30">
+                  <span class="text-sm text-muted-foreground">+ {item.order.prods.length - 5} more products</span>
+                  <span class="text-sm text-muted-foreground">
+                    {item.order.prods
+                      .slice(5)
+                      .reduce((acc, p) => acc + p.product.sellingPrice * p.quantity, 0)
+                      .toFixed(2)}{" "}
+                    {item.order.prods[0].product.currency}
+                  </span>
+                </div>
+              </Show>
             </div>
           </div>
         )}
@@ -313,7 +326,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
 
             <div class="flex flex-col">
               <For
-                each={item.order.prods}
+                each={item.order.prods.slice(0, 5)}
                 fallback={
                   <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">
                     No products added
@@ -347,6 +360,18 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
                   </div>
                 )}
               </For>
+              <Show when={item.order.prods.length > 5}>
+                <div class="flex flex-row items-center justify-between p-4 border-t bg-muted/30">
+                  <span class="text-sm text-muted-foreground">+ {item.order.prods.length - 5} more products</span>
+                  <span class="text-sm text-muted-foreground">
+                    {item.order.prods
+                      .slice(5)
+                      .reduce((acc, p) => acc + p.product.sellingPrice * p.quantity, 0)
+                      .toFixed(2)}{" "}
+                    {item.order.prods[0].product.currency}
+                  </span>
+                </div>
+              </Show>
             </div>
           </div>
         )}

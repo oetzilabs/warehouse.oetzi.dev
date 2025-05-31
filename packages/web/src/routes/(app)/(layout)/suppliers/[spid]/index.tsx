@@ -247,8 +247,8 @@ export default function SupplierPage() {
                       </div>
                     </Show>
                     <Show when={supplierInfo().orders.length > 0}>
-                      <div class="flex flex-col gap-0 overflow-clip">
-                        <For each={supplierInfo().orders}>
+                      <div class="flex flex-col gap-0">
+                        <For each={supplierInfo().orders.slice(0, 10)}>
                           {(o) => (
                             <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/[0.025] border-b last:border-b-0">
                               <div class="flex flex-col gap-1">
@@ -281,6 +281,14 @@ export default function SupplierPage() {
                             </div>
                           )}
                         </For>
+                        <Show when={supplierInfo().orders.length > 10}>
+                          <div class="flex flex-row items-center justify-center p-4 border-t bg-muted/30">
+                            <Button as={A} href="./orders" variant="ghost" size="sm" class="gap-2">
+                              Show All Orders ({supplierInfo().orders.length})
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        </Show>
                       </div>
                     </Show>
                   </div>

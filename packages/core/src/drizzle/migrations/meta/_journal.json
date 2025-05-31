@@ -155,6 +155,13 @@
       "when": 1748688969490,
       "tag": "0021_orange_maelstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1748702457176,
+      "tag": "0022_chief_thor",
+      "breakpoints": true
     }
   ]
 }

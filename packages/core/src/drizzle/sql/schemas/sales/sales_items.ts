@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { decimal, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
+import { InferInput } from "valibot";
 import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_sales } from "./sales";
@@ -39,3 +40,5 @@ export type SaleItemSelect = typeof TB_sale_items.$inferSelect;
 export type SaleItemInsert = typeof TB_sale_items.$inferInsert;
 export const SaleItemCreateSchema = createInsertSchema(TB_sale_items);
 export const SaleItemUpdateSchema = SaleItemCreateSchema;
+export type SaleItemCreate = InferInput<typeof SaleItemCreateSchema>;
+export type SaleItemUpdate = InferInput<typeof SaleItemUpdateSchema>;

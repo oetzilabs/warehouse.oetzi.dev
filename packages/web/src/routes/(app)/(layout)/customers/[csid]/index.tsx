@@ -220,7 +220,7 @@ export default function CustomerPage() {
                     </Show>
                     <Show when={customerInfo().orders.length > 0}>
                       <div class="flex flex-col gap-0">
-                        <For each={customerInfo().orders}>
+                        <For each={customerInfo().orders.slice(0, 10)}>
                           {(o) => (
                             <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/[0.025] border-b last:border-b-0">
                               <div class="flex flex-col gap-1">
@@ -253,6 +253,14 @@ export default function CustomerPage() {
                             </div>
                           )}
                         </For>
+                        <Show when={customerInfo().orders.length > 10}>
+                          <div class="flex flex-row items-center justify-center p-4 border-t bg-muted/30">
+                            <Button as={A} href="./orders" variant="ghost" size="sm" class="gap-2">
+                              Show All Orders ({customerInfo().orders.length})
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        </Show>
                       </div>
                     </Show>
                   </div>
