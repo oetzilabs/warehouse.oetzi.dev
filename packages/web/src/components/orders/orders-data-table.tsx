@@ -27,7 +27,7 @@ import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import IconChevronDown from "lucide-solid/icons/chevron-down";
 import IconDots from "lucide-solid/icons/ellipsis";
 import { Accessor, createEffect, createSignal, For } from "solid-js";
-import { fuzzyFilter } from "../fuzzyFilter";
+import { fuzzyFilter } from "../filters/fuzzyFilter";
 import { columns } from "./columns";
 
 export function OrdersDataTable(props: { data: Accessor<OrderInfo[]>; onSelectedOrder: (order: OrderInfo) => void }) {

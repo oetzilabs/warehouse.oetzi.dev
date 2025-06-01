@@ -1,4 +1,4 @@
-import { DevicesList } from "@/components/devices-list";
+import { DevicesList } from "@/components/lists/devices";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices } from "@/lib/api/devices";

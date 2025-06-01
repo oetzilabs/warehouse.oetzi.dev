@@ -1,5 +1,5 @@
-import { CatalogsList } from "@/components/catalogs-list";
-import { FilterPopover } from "@/components/filter-popover";
+import { FilterPopover } from "@/components/filters/popover";
+import { CatalogsList } from "@/components/lists/catalogs";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
@@ -55,6 +55,11 @@ export default function CatalogsPage() {
           fn: (a, b) => a.products.length - b.products.length,
         },
       ],
+    },
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
     },
   });
 

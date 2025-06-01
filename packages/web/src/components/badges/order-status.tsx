@@ -1,5 +1,5 @@
+import { cn } from "@/lib/utils";
 import { Component, ParentProps, splitProps } from "solid-js";
-import { cn } from "../lib/utils";
 
 type OrderStatusType = "pending" | "processing" | "completed" | "cancelled";
 

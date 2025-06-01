@@ -1,19 +1,15 @@
-import { Button } from "@/components/ui/button";
+import { AccountingFilterPopover } from "@/components/lists/accounting/filter-popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter, useSimpleDateFilter } from "@/lib/filtering";
+import { FilterConfig, useSimpleDateFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
+import "@fontsource-variable/geist-mono";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
-import { A } from "@solidjs/router";
 import { type AccountingInfo } from "@warehouseoetzidev/core/src/entities/accounting";
 import dayjs from "dayjs";
-import Minus from "lucide-solid/icons/minus";
-import Plus from "lucide-solid/icons/plus";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Accessor, createSignal, For, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { AccountingFilterPopover } from "./accounting-filter-popover";
-import "@fontsource-variable/geist-mono";
-import localizedFormat from "dayjs/plugin/localizedFormat";
 
 dayjs.extend(localizedFormat);
 

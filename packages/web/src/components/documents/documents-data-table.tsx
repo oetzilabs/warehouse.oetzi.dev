@@ -27,7 +27,7 @@ import { DocumentInfo } from "@warehouseoetzidev/core/src/entities/documents";
 import IconChevronDown from "lucide-solid/icons/chevron-down";
 import IconDots from "lucide-solid/icons/ellipsis";
 import { Accessor, createEffect, createSignal, For } from "solid-js";
-import { fuzzyFilter } from "../fuzzyFilter";
+import { fuzzyFilter } from "../filters/fuzzyFilter";
 import { columns } from "./columns";
 
 export function DocumentsDataTable(props: {

@@ -1,10 +1,10 @@
+import { Button } from "@/components/ui/button";
+import { TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
 import { subscribe } from "@/lib/api/application";
 import { TextField } from "@kobalte/core/text-field";
 import { A, useAction, useSubmission } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
-import { Button } from "./ui/button";
-import { TextFieldInput, TextFieldLabel } from "./ui/text-field";
 
 export function Footer() {
   const footer_links: Record<string, Array<{ name: string; href: string; note?: string }>> = {

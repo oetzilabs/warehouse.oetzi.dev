@@ -1,6 +1,6 @@
+import { Button } from "@/components/ui/button";
 import type { UseQueryResult } from "@tanstack/solid-query";
 import { Match, Suspense, Switch, type JSX } from "solid-js";
-import { Button } from "./ui/button";
 
 export interface QueryBoundaryProps<T = unknown> {
   query: UseQueryResult<T, Error>;

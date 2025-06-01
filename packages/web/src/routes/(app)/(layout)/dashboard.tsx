@@ -287,6 +287,8 @@ export default function DashboardPage() {
                                     <Button
                                       size="sm"
                                       as={A}
+                                      variant="outline"
+                                      class="bg-background"
                                       href={`/customers/${item.customerId}/orders/${item.order.id}`}
                                     >
                                       Open
@@ -380,6 +382,8 @@ export default function DashboardPage() {
                                     <Button
                                       size="sm"
                                       as={A}
+                                      variant="outline"
+                                      class="bg-background"
                                       href={`/suppliers/${item.supplierId}/orders/${item.order.id}`}
                                     >
                                       Open
@@ -416,7 +420,13 @@ export default function DashboardPage() {
                                     {product.orderCount} orders
                                   </span>
                                 </div>
-                                <Button size="sm" as={A} href={`/orders/suppliers/${product.product.id}`}>
+                                <Button
+                                  size="sm"
+                                  as={A}
+                                  href={`/orders/suppliers/${product.product.id}`}
+                                  variant="outline"
+                                  class="bg-background"
+                                >
                                   Open
                                   <ArrowUpRight class="size-4" />
                                 </Button>
@@ -449,7 +459,13 @@ export default function DashboardPage() {
                                     {dayjs(product.createdAt).format("MMM D, YYYY")}
                                   </span>
                                 </div>
-                                <Button size="sm" as={A} href={`/orders/suppliers/${product.product.id}`}>
+                                <Button
+                                  size="sm"
+                                  as={A}
+                                  href={`/orders/suppliers/${product.product.id}`}
+                                  variant="outline"
+                                  class="bg-background"
+                                >
                                   Open
                                   <ArrowUpRight class="size-4" />
                                 </Button>

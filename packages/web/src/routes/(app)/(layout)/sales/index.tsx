@@ -1,22 +1,16 @@
-import { FilterPopover } from "@/components/filter-popover";
-import { SalesList } from "@/components/sales-list";
-import { SalesDataTable } from "@/components/sales/sales-data-table";
+import { SalesList } from "@/components/lists/sales";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
-import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getSales } from "@/lib/api/sales";
-import { FilterConfig, useFilter } from "@/lib/filtering";
-import { cn } from "@/lib/utils";
+import { FilterConfig } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
-import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import X from "lucide-solid/icons/x";
-import { createSignal, For, Show, Suspense } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 
@@ -64,6 +58,11 @@ export default function SalesPage() {
           fn: (a, b) => a.items.length - b.items.length,
         },
       ],
+    },
+    filter: {
+      default: null,
+      current: null,
+      variants: [],
     },
   });
 

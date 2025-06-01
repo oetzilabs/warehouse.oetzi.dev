@@ -1,9 +1,9 @@
+import { cn } from "@/lib/utils";
 import ArrowDown from "lucide-solid/icons/arrow-down";
 import ArrowRight from "lucide-solid/icons/arrow-right";
 import ArrowUp from "lucide-solid/icons/arrow-up";
 import CircleHelp from "lucide-solid/icons/circle-help";
 import { Match, splitProps, Switch } from "solid-js";
-import { cn } from "../lib/utils";
 import "@fontsource-variable/geist-mono";
 
 type ArrowBadgeProps = {

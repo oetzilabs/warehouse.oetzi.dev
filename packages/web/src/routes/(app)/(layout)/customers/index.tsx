@@ -1,4 +1,4 @@
-import { CustomersList } from "@/components/customers-list";
+import { CustomersList } from "@/components/lists/customers";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

@@ -1,5 +1,5 @@
+import { cn } from "@/lib/utils";
 import { Component, createEffect, createSignal, For, ParentProps, Show } from "solid-js";
-import { cn } from "../lib/utils";
 
 type StatusType =
   | "online"

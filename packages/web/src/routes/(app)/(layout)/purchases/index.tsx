@@ -1,18 +1,14 @@
-import { PurchasesList } from "@/components/orders-list";
-import { OrdersDataTable } from "@/components/orders/orders-data-table";
+import { PurchasesList } from "@/components/lists/orders";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getPurchases } from "@/lib/api/orders";
-import { cn } from "@/lib/utils";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
-import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import X from "lucide-solid/icons/x";
-import { createSignal, For, Show, Suspense } from "solid-js";
+import { Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {

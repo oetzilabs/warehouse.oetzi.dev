@@ -1,6 +1,8 @@
+import { OrderStatusBadge } from "@/components/badges/order-status";
+import { FilterPopover } from "@/components/filters/popover";
+import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
-import { cn } from "@/lib/utils";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
@@ -8,10 +10,6 @@ import { type SupplierOrderInfo } from "@warehouseoetzidev/core/src/entities/sup
 import dayjs from "dayjs";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FilterPopover } from "./filter-popover";
-import { OrderStatusBadge } from "./order-status-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
 
 type PurchasesListProps = {
   data: Accessor<{ supplier_id: string; order: SupplierOrderInfo; createdAt: Date }[]>;

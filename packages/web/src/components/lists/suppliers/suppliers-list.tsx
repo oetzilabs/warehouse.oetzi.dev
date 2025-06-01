@@ -1,3 +1,4 @@
+import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
@@ -9,7 +10,6 @@ import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FilterPopover } from "./filter-popover";
 
 type SuppliersListProps = {
   data: Accessor<SupplierInfo[]>;

@@ -1,4 +1,4 @@
-import { AccountingList } from "@/components/accounting-list";
+import { AccountingList } from "@/components/lists/accounting";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

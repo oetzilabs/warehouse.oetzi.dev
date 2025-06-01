@@ -27,7 +27,7 @@ import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import IconChevronDown from "lucide-solid/icons/chevron-down";
 import IconDots from "lucide-solid/icons/ellipsis";
 import { Accessor, createSignal, For } from "solid-js";
-import { fuzzyFilter } from "../fuzzyFilter";
+import { fuzzyFilter } from "../filters/fuzzyFilter";
 import { columns } from "./columns";
 
 export function SalesDataTable(props: {

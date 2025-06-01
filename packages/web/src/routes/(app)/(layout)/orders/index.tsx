@@ -1,4 +1,4 @@
-import { CustomersOrdersList } from "@/components/orders-list";
+import { CustomersOrdersList } from "@/components/lists/orders";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
@@ -8,7 +8,7 @@ import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import { createSignal, Show } from "solid-js";
+import { Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
@@ -22,8 +22,6 @@ export const route = {
 
 export default function CustomerOrdersPage() {
   const data = createAsync(() => getCustomerOrders(), { deferStream: true });
-  const [selectedOrder, setSelectedOrder] = createSignal<OrderInfo | null>(null);
-  const [previewVisible, setPreviewVisible] = createSignal(false);
 
   const calculateOrders = (orders: { customer_id: string; order: OrderInfo; createdAt: Date }[]) => {
     const ordersByDay = orders.reduce(

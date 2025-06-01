@@ -1,7 +1,5 @@
-import { ProductsList } from "@/components/products-list";
-import { ProductsDataTable } from "@/components/products/products-data-table";
+import { ProductsList } from "@/components/lists/products";
 import { Button } from "@/components/ui/button";
-import { LineChart } from "@/components/ui/charts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,15 +8,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getProducts } from "@/lib/api/products";
-import { cn } from "@/lib/utils";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
-import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Upload from "lucide-solid/icons/upload";
-import X from "lucide-solid/icons/x";
-import { createSignal, For, Show, Suspense } from "solid-js";
+import { Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {

@@ -1,4 +1,4 @@
-import { SuppliersList } from "@/components/suppliers-list";
+import { SuppliersList } from "@/components/lists/suppliers/suppliers-list";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

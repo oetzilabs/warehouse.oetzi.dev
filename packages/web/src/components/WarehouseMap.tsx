@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,6 @@ import { createEffect, createResource, createSignal, onCleanup, onMount, Show } 
 import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 import { useUser } from "./providers/User";
-import { Button } from "./ui/button";
 
 const WarehouseSettingsForm = clientOnly(() => import("@/components/forms/warehouse-settings"));
 

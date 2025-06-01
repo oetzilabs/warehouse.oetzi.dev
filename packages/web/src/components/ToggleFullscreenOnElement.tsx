@@ -1,7 +1,7 @@
+import { Button } from "@/components/ui/button";
 import Fullscreen from "lucide-solid/icons/maximize";
 import ExitFullscreen from "lucide-solid/icons/minimize";
 import { createMemo, createSignal, Show } from "solid-js";
-import { Button } from "./ui/button";
 
 export default function ToggleFullscreenOnElement(props: {
   element: HTMLElement;

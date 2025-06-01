@@ -1,25 +1,24 @@
+import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
-import { type CustomerInfo } from "@warehouseoetzidev/core/src/entities/customers";
+import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
-import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FilterPopover } from "./filter-popover";
 
-type CustomersListProps = {
-  data: Accessor<CustomerInfo[]>;
+type ProductsListProps = {
+  data: Accessor<ProductInfo[]>;
 };
 
-export const CustomersList = (props: CustomersListProps) => {
+export const ProductsList = (props: ProductsListProps) => {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CustomerInfo>>({
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<ProductInfo>>({
     disabled: () => props.data().length === 0,
     dateRange: {
       start: props.data().length === 0 ? new Date() : (props.data()[0]?.createdAt ?? new Date()),
@@ -41,6 +40,11 @@ export const CustomersList = (props: CustomersListProps) => {
           field: "name",
           label: "Name",
           fn: (a, b) => a.name.localeCompare(b.name),
+        },
+        {
+          field: "price",
+          label: "Price",
+          fn: (a, b) => a.sellingPrice - b.sellingPrice,
         },
       ],
     },
@@ -73,7 +77,7 @@ export const CustomersList = (props: CustomersListProps) => {
           }}
           class="w-full max-w-full"
         >
-          <TextFieldInput placeholder="Search customers" class="w-full max-w-full rounded-lg px-4" />
+          <TextFieldInput placeholder="Search products" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
         <div class="w-max">
           <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
@@ -83,44 +87,66 @@ export const CustomersList = (props: CustomersListProps) => {
         each={filteredData()}
         fallback={
           <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">
-              <Show when={props.data().length === 0}>No customers have been added</Show>
-              <Show when={props.data().length > 0 && filterConfig.search.term.length > 0}>
-                No customers have been found
-              </Show>
-            </span>
+            <span class="text-sm select-none">No products have been added</span>
           </div>
         }
       >
-        {(customer) => (
-          <div
-            class={cn(
-              "flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all",
-              {
-                "opacity-70": customer.deletedAt,
-              },
-            )}
-          >
+        {(product) => (
+          <div class="flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all">
             <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
               <div class="flex flex-row gap-4 items-center">
                 <div class="flex flex-col gap-0.5">
-                  <span class="text-sm font-medium">{customer.name}</span>
+                  <span class="text-sm font-medium">{product.name}</span>
                   <span class="text-xs text-muted-foreground">
-                    {dayjs(customer.updatedAt ?? customer.createdAt).format("MMM DD, YYYY - h:mm A")}
+                    {dayjs(product.updatedAt ?? product.createdAt).format("MMM DD, YYYY - h:mm A")}
                   </span>
                 </div>
-                <Show when={customer.deletedAt}>
-                  <span class="text-xs text-red-500">Deleted</span>
-                </Show>
               </div>
-              <Button as={A} href={`./${customer.id}`} size="sm" class="gap-2">
+              <Button as={A} href={`./${product.id}`} size="sm" class="gap-2">
                 Open
-                <ArrowUpRight class="size-4" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
+                >
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
               </Button>
             </div>
-            <div class="flex flex-col p-4 gap-2">
-              <span class="text-xs text-muted-foreground">Email: {customer.email}</span>
-              <span class="text-xs text-muted-foreground">Phone: {customer.phone}</span>
+
+            <div class="flex flex-col p-4 gap-4">
+              <div class="flex flex-row items-center justify-between">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-xs text-muted-foreground">SKU: {product.sku}</span>
+                  <Show when={product.weight}>
+                    {(weight) => (
+                      <span class="text-xs text-muted-foreground">
+                        Weight: {weight().value} {weight().unit}
+                      </span>
+                    )}
+                  </Show>
+                  <Show when={product.dimensions}>
+                    {(dimension) => (
+                      <span class="text-xs text-muted-foreground">
+                        Width: {dimension().width} {dimension().unit}
+                      </span>
+                    )}
+                  </Show>
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-sm font-medium">
+                    {product.sellingPrice.toFixed(2)} {product.currency}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}

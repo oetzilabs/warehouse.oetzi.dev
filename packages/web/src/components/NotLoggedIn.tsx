@@ -1,8 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { A } from "@solidjs/router";
 import Fingerprint from "lucide-solid/icons/fingerprint";
 import Home from "lucide-solid/icons/home";
 import LogIn from "lucide-solid/icons/log-in";
-import { Button } from "./ui/button";
 
 export const NotLoggedIn = () => {
   return (

@@ -1,3 +1,6 @@
+import { FilterPopover } from "@/components/filters/popover";
+import { Button } from "@/components/ui/button";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
@@ -5,9 +8,6 @@ import { DeviceInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import dayjs from "dayjs";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FilterPopover } from "./filter-popover";
-import { Button } from "./ui/button";
-import { TextField, TextFieldInput } from "./ui/text-field";
 
 type DevicesListProps = {
   data: Accessor<DeviceInfo[]>;

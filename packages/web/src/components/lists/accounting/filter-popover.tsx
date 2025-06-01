@@ -140,14 +140,21 @@ export const AccountingFilterPopover = <T extends WithSimpleDates & AccoutingTra
                 },
                 search: { term: "" },
                 sort: {
-                  default: "all",
-                  current: "all",
+                  default: "date",
+                  current: "date",
                   direction: "desc",
                   variants: [
-                    { field: "all", label: "All", fn: (a, b) => a.date.getTime() - b.date.getTime() },
-                    { field: "income", label: "Income", fn: (a, b) => a.amounts[0].amount - b.amounts[0].amount },
-                    { field: "expense", label: "Expenses", fn: (a, b) => a.amounts[0].amount - b.amounts[0].amount },
+                    {
+                      field: "date",
+                      label: "Date",
+                      fn: (a, b) => dayjs(b.date).unix() - dayjs(a.date).unix(),
+                    },
                   ],
+                },
+                filter: {
+                  default: props.config.filter.default,
+                  current: props.config.filter.current,
+                  variants: props.config.filter.variants,
                 },
               });
             }}
