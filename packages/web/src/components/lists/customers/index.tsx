@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { GenericList } from "../default";
 
 type CustomersListProps = {
   data: Accessor<CustomerInfo[]>;
@@ -62,6 +63,38 @@ export const CustomersList = (props: CustomersListProps) => {
 
   const filteredData = useFilter(props.data, filterConfig);
 
+  const renderCustomerItem = (customer: CustomerInfo) => (
+    <>
+      <div
+        class={cn("flex flex-col w-full", {
+          "opacity-70": customer.deletedAt,
+        })}
+      >
+        <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
+          <div class="flex flex-row gap-4 items-center">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-sm font-medium">{customer.name}</span>
+              <span class="text-xs text-muted-foreground">
+                {dayjs(customer.updatedAt ?? customer.createdAt).format("MMM DD, YYYY - h:mm A")}
+              </span>
+            </div>
+            <Show when={customer.deletedAt}>
+              <span class="text-xs text-red-500">Deleted</span>
+            </Show>
+          </div>
+          <Button as={A} href={`./${customer.id}`} size="sm" class="gap-2">
+            Open
+            <ArrowUpRight class="size-4" />
+          </Button>
+        </div>
+        <div class="flex flex-col p-4 gap-2">
+          <span class="text-xs text-muted-foreground">Email: {customer.email}</span>
+          <span class="text-xs text-muted-foreground">Phone: {customer.phone}</span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -79,52 +112,15 @@ export const CustomersList = (props: CustomersListProps) => {
           <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
         </div>
       </div>
-      <For
-        each={filteredData()}
-        fallback={
-          <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">
-              <Show when={props.data().length === 0}>No customers have been added</Show>
-              <Show when={props.data().length > 0 && filterConfig.search.term.length > 0}>
-                No customers have been found
-              </Show>
-            </span>
-          </div>
-        }
-      >
-        {(customer) => (
-          <div
-            class={cn(
-              "flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all",
-              {
-                "opacity-70": customer.deletedAt,
-              },
-            )}
-          >
-            <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
-              <div class="flex flex-row gap-4 items-center">
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-sm font-medium">{customer.name}</span>
-                  <span class="text-xs text-muted-foreground">
-                    {dayjs(customer.updatedAt ?? customer.createdAt).format("MMM DD, YYYY - h:mm A")}
-                  </span>
-                </div>
-                <Show when={customer.deletedAt}>
-                  <span class="text-xs text-red-500">Deleted</span>
-                </Show>
-              </div>
-              <Button as={A} href={`./${customer.id}`} size="sm" class="gap-2">
-                Open
-                <ArrowUpRight class="size-4" />
-              </Button>
-            </div>
-            <div class="flex flex-col p-4 gap-2">
-              <span class="text-xs text-muted-foreground">Email: {customer.email}</span>
-              <span class="text-xs text-muted-foreground">Phone: {customer.phone}</span>
-            </div>
-          </div>
-        )}
-      </For>
+
+      <GenericList
+        data={props.data}
+        filteredData={filteredData}
+        renderItem={renderCustomerItem}
+        emptyMessage="No customers have been added"
+        noResultsMessage="No customers have been found"
+        searchTerm={() => filterConfig.search.term}
+      />
     </div>
   );
 };

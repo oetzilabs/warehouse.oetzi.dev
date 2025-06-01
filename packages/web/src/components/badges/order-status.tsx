@@ -40,13 +40,13 @@ export const OrderStatusBadge = (props: ParentProps<OrderStatusBadgeProps>) => {
   return (
     <span
       class={cn(
-        "flex items-center justify-center rounded-full p-1 ring-1 ring-inset",
+        "flex items-center justify-center rounded-full p-0.5 px-2 ring-1 ring-inset",
         statusColorMap[props.status].bg,
         statusColorMap[props.status].ring,
         local.class,
       )}
     >
-      <div class={cn("size-[6px] rounded-full", statusColorMap[props.status].bg2)}></div>
+      <span class={cn("text-[10px]", statusColorMap[props.status].text)}>{props.status.replace("-", " ")}</span>
     </span>
   );
 };

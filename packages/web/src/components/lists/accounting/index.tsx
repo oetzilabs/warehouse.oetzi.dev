@@ -20,9 +20,6 @@ type AccountingListProps = {
 };
 
 export const AccountingList = (props: AccountingListProps) => {
-  const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
   const [filterConfig, setFilterConfig] = createStore<FilterConfig<AccoutingTransaction>>({
     disabled: () => props.data().length === 0,
     dateRange: {
@@ -30,7 +27,7 @@ export const AccountingList = (props: AccountingListProps) => {
       end: props.data().length === 0 ? new Date() : (props.data()[props.data().length - 1]?.date ?? new Date()),
       preset: "clear",
     },
-    search: { term: dsearch() },
+    search: { term: "" },
     sort: {
       default: "date",
       current: "date",
@@ -50,15 +47,6 @@ export const AccountingList = (props: AccountingListProps) => {
     },
   });
 
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
   const filteredData = useSimpleDateFilter(props.data, filterConfig);
 
   const [zoneInfo, setZoneInfo] = createSignal("en-US");
@@ -68,21 +56,6 @@ export const AccountingList = (props: AccountingListProps) => {
 
   return (
     <div class="w-full flex flex-col gap-4">
-      <div class="flex flex-row items-center justify-between gap-4">
-        <TextField
-          value={search()}
-          onChange={(e) => {
-            setSearch(e);
-            debouncedSearch(e);
-          }}
-          class="w-full max-w-full"
-        >
-          <TextFieldInput placeholder="Search products" class="w-full max-w-full rounded-lg px-4" />
-        </TextField>
-        <div class="w-max">
-          <AccountingFilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
-        </div>
-      </div>
       <div class="border rounded-lg overflow-clip">
         <Table class="table-auto">
           <TableHeader class="py-4 !h-auto">

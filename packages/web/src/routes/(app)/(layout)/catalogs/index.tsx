@@ -31,47 +31,6 @@ export default function CatalogsPage() {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CatalogInfo>>({
-    disabled: () => (catalogs() ?? []).length === 0,
-    dateRange: {
-      start: catalogs()?.length ? catalogs()![0].createdAt : new Date(),
-      end: catalogs()?.length ? catalogs()![catalogs()!.length - 1].createdAt : new Date(),
-      preset: "clear",
-    },
-    search: { term: dsearch() },
-    sort: {
-      default: "date",
-      current: "date",
-      direction: "desc",
-      variants: [
-        {
-          field: "date",
-          label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
-        },
-        {
-          field: "items",
-          label: "Items",
-          fn: (a, b) => a.products.length - b.products.length,
-        },
-      ],
-    },
-    filter: {
-      default: null,
-      current: null,
-      variants: [],
-    },
-  });
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
   const calculateCatalogStats = (catalogs: CatalogInfo[]) => {
     const dailyStats = catalogs.reduce(
       (acc, catalog) => {
@@ -97,18 +56,6 @@ export default function CatalogsPage() {
         },
       ],
     };
-  };
-
-  const searchCatalogs = (catalogs: CatalogInfo[], filterConfig: FilterConfig<CatalogInfo>) => {
-    if (filterConfig.disabled()) return catalogs;
-    if (filterConfig.search.term === "") return catalogs;
-    return catalogs.filter((catalog) => {
-      return (
-        filterConfig.search.term &&
-        (catalog.name.toLowerCase().includes(filterConfig.search.term.toLowerCase()) ||
-          catalog.description?.toLowerCase().includes(filterConfig.search.term.toLowerCase()))
-      );
-    });
   };
 
   return (
@@ -148,22 +95,7 @@ export default function CatalogsPage() {
                     </div>
                   </div>
                 </div>
-                <div class="flex flex-row items-center justify-between gap-4">
-                  <TextField
-                    value={search()}
-                    onChange={(e) => {
-                      setSearch(e);
-                      debouncedSearch(e);
-                    }}
-                    class="w-full max-w-full"
-                  >
-                    <TextFieldInput placeholder="Search catalogs" class="w-full max-w-full rounded-lg px-4" />
-                  </TextField>
-                  <div class="w-max">
-                    <FilterPopover config={filterConfig} onChange={(cfg) => setFilterConfig(cfg)} data={catalogsList} />
-                  </div>
-                </div>
-                <CatalogsList data={() => searchCatalogs(catalogsList(), filterConfig)} />
+                <CatalogsList data={catalogsList} />
               </div>
             </div>
           </div>

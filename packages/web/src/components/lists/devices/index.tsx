@@ -6,8 +6,10 @@ import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { DeviceInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import dayjs from "dayjs";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { GenericList } from "../default";
 
 type DevicesListProps = {
   data: Accessor<DeviceInfo[]>;
@@ -82,6 +84,25 @@ export function DevicesList(props: DevicesListProps) {
 
   const filteredData = useFilter(props.data, filterConfig);
 
+  const renderDeviceItem = (device: DeviceInfo) => (
+    <div class="flex flex-col w-full h-content">
+      <div class="flex flex-row items-center justify-between p-4 border-b  bg-muted/30">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-sm font-medium">{device.name}</span>
+        </div>
+        <Button as={A} href={`/devices/${device.id}`} size="sm" class="gap-2">
+          Open
+          <ArrowUpRight class="size-4" />
+        </Button>
+      </div>
+      <div class="flex flex-col gap-1 w-full h-full p-4">
+        <span class="text-xs text-muted-foreground">Type: {device.type.name}</span>
+        <span class="text-xs text-muted-foreground">Added: {dayjs(device.createdAt).format("MMM DD, YYYY")}</span>
+        <span class="text-xs text-muted-foreground">Last Location: </span>
+      </div>
+    </div>
+  );
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -99,51 +120,15 @@ export function DevicesList(props: DevicesListProps) {
           <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
         </div>
       </div>
-      <For
-        each={filteredData()}
-        fallback={
-          <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">
-              <Show when={props.data().length === 0}>No devices have been added</Show>
-              <Show when={props.data().length > 0 && filterConfig.search.term.length > 0}>
-                No devices found matching your search
-              </Show>
-            </span>
-          </div>
-        }
-      >
-        {(device) => (
-          <div class="flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all">
-            <div class="flex flex-row items-center justify-between p-4">
-              <div class="flex flex-col gap-0.5">
-                <span class="text-sm font-medium">{device.name}</span>
-                <span class="text-xs text-muted-foreground">Type: {device.type.name}</span>
-                <span class="text-xs text-muted-foreground">
-                  Added: {dayjs(device.createdAt).format("MMM DD, YYYY")}
-                </span>
-              </div>
-              <Button as={A} href={`/devices/${device.id}`} size="sm" class="gap-2">
-                Open
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <path d="M7 17L17 7" />
-                  <path d="M7 7h10v10" />
-                </svg>
-              </Button>
-            </div>
-          </div>
-        )}
-      </For>
+
+      <GenericList
+        data={props.data}
+        filteredData={filteredData}
+        renderItem={renderDeviceItem}
+        emptyMessage="No devices have been added"
+        noResultsMessage="No devices have been found"
+        searchTerm={() => filterConfig.search.term}
+      />
     </div>
   );
 }

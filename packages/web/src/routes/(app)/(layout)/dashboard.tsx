@@ -1,30 +1,28 @@
-import ArrowBadge from "@/components/arrow-badges";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import ArrowBadge from "@/components/badges/arrow";
+import { OrderStatusBadge } from "@/components/badges/order-status";
 import { Alert, AlertClose, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { BarChart, LineChart } from "@/components/ui/charts";
+import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
 import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { getPendingSupplyOrders } from "@/lib/api/orders";
 import { getSchedules } from "@/lib/api/schedules";
+import "@fontsource-variable/geist-mono";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import CalendarClock from "lucide-solid/icons/calendar-clock";
-import ChartSpline from "lucide-solid/icons/chart-spline";
 import Check from "lucide-solid/icons/check";
 import ClockFading from "lucide-solid/icons/clock-fading";
 import Info from "lucide-solid/icons/info";
-import Layers from "lucide-solid/icons/layers";
 import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Workflow from "lucide-solid/icons/workflow";
 import { For, Show } from "solid-js";
 import { toast } from "solid-sonner";
-import "@fontsource-variable/geist-mono";
 
 export const route = {
   preload: async () => {

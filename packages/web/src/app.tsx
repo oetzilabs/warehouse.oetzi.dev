@@ -33,18 +33,42 @@ export default function App() {
   return (
     <ErrorBoundary
       fallback={(error, reset) => (
-        <div class="fixed z-[99999] flex flex-row items-center justify-center inset-0 top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-          <div class="flex flex-col gap-6 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 bg-neutral-50 dark:bg-neutral-950 items-center justify-center">
-            <span class="text-red-500 font-medium">Something went wrong...</span>
-            <Show
-              when={error instanceof Error}
-              fallback={<pre class="font-mono w-96 h-80 overflow-x-scroll">{JSON.stringify(error, null, 2)}</pre>}
-            >
-              <pre class="font-mono w-96 h-80 overflow-x-scroll">{error.message}</pre>
-              <pre class="font-mono w-96 h-80 overflow-x-scroll">{error.stack}</pre>
-            </Show>
-            <div class="flex flex-row gap-2 w-max">
-              <button onClick={() => reset()}>RESET</button>
+        <div class="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-800">
+            <div class="p-6 flex flex-col gap-4">
+              <div class="flex items-center gap-2 text-red-500">
+                <AlertCircleIcon class="size-5" />
+                <h2 class="text-lg font-semibold">Something went wrong</h2>
+              </div>
+
+              <div class="overflow-auto max-h-[60vh]">
+                <Show
+                  when={error instanceof Error}
+                  fallback={
+                    <pre class="font-mono text-sm p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg overflow-x-auto">
+                      {JSON.stringify(error, null, 2)}
+                    </pre>
+                  }
+                >
+                  <div class="space-y-2">
+                    <pre class="font-mono text-sm p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg overflow-x-auto">
+                      {error.message}
+                    </pre>
+                    <pre class="font-mono text-sm p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg overflow-x-auto">
+                      {error.stack}
+                    </pre>
+                  </div>
+                </Show>
+              </div>
+
+              <div class="flex justify-end pt-2">
+                <button
+                  onClick={() => reset()}
+                  class="px-4 py-2 rounded-lg bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 hover:opacity-90 transition-opacity"
+                >
+                  Try again
+                </button>
+              </div>
             </div>
           </div>
         </div>

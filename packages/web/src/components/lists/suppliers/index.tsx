@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { GenericList } from "../default";
 
 type SuppliersListProps = {
   data: Accessor<SupplierInfo[]>;
@@ -26,7 +27,7 @@ export const SuppliersList = (props: SuppliersListProps) => {
       end: props.data().length === 0 ? new Date() : (props.data()[props.data().length - 1]?.createdAt ?? new Date()),
       preset: "clear",
     },
-    search: { term: dsearch() },
+    search: { term: dsearch(), fields: ["name", "email", "phone"], fuseOptions: { keys: ["name", "email", "phone"] } },
     sort: {
       default: "name",
       current: "name",
@@ -62,6 +63,38 @@ export const SuppliersList = (props: SuppliersListProps) => {
 
   const filteredData = useFilter(props.data, filterConfig);
 
+  const renderSupplierItem = (supplier: SupplierInfo) => (
+    <>
+      <div
+        class={cn("flex flex-col w-full", {
+          "opacity-70": supplier.deletedAt,
+        })}
+      >
+        <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
+          <div class="flex flex-row gap-4 items-center">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-sm font-medium">{supplier.name}</span>
+              <span class="text-xs text-muted-foreground">
+                {dayjs(supplier.updatedAt ?? supplier.createdAt).format("MMM DD, YYYY - h:mm A")}
+              </span>
+            </div>
+            <Show when={supplier.deletedAt}>
+              <span class="text-xs text-red-500">Deleted</span>
+            </Show>
+          </div>
+          <Button as={A} href={`./${supplier.id}`} size="sm" class="gap-2">
+            Open
+            <ArrowUpRight class="size-4" />
+          </Button>
+        </div>
+        <div class="flex flex-col p-4 gap-2">
+          <span class="text-xs text-muted-foreground">Email: {supplier.email}</span>
+          <span class="text-xs text-muted-foreground">Phone: {supplier.phone}</span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -79,47 +112,15 @@ export const SuppliersList = (props: SuppliersListProps) => {
           <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
         </div>
       </div>
-      <For
-        each={filteredData()}
-        fallback={
-          <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">No suppliers have been added</span>
-          </div>
-        }
-      >
-        {(supplier) => (
-          <div
-            class={cn(
-              "flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all",
-              {
-                "opacity-70": supplier.deletedAt,
-              },
-            )}
-          >
-            <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
-              <div class="flex flex-row gap-4 items-center">
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-sm font-medium">{supplier.name}</span>
-                  <span class="text-xs text-muted-foreground">
-                    {dayjs(supplier.updatedAt ?? supplier.createdAt).format("MMM DD, YYYY - h:mm A")}
-                  </span>
-                </div>
-                <Show when={supplier.deletedAt}>
-                  <span class="text-xs text-red-500">Deleted</span>
-                </Show>
-              </div>
-              <Button as={A} href={`./${supplier.id}`} size="sm" class="gap-2">
-                Open
-                <ArrowUpRight class="size-4" />
-              </Button>
-            </div>
-            <div class="flex flex-col p-4 gap-2">
-              <span class="text-xs text-muted-foreground">Email: {supplier.email}</span>
-              <span class="text-xs text-muted-foreground">Phone: {supplier.phone}</span>
-            </div>
-          </div>
-        )}
-      </For>
+
+      <GenericList
+        data={props.data}
+        filteredData={filteredData}
+        renderItem={renderSupplierItem}
+        emptyMessage="No suppliers have been added"
+        noResultsMessage="No suppliers have been found"
+        searchTerm={() => filterConfig.search.term}
+      />
     </div>
   );
 };

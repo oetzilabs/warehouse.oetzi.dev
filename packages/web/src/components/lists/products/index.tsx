@@ -2,13 +2,14 @@ import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
-import { cn } from "@/lib/utils";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
-import { Accessor, createSignal, For, Show } from "solid-js";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import { Accessor, createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { GenericList } from "../default";
 
 type ProductsListProps = {
   data: Accessor<ProductInfo[]>;
@@ -66,6 +67,52 @@ export const ProductsList = (props: ProductsListProps) => {
 
   const filteredData = useFilter(props.data, filterConfig);
 
+  const renderProductItem = (product: ProductInfo) => (
+    <>
+      <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
+        <div class="flex flex-row gap-4 items-center">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-medium">{product.name}</span>
+            <span class="text-xs text-muted-foreground">
+              {dayjs(product.updatedAt ?? product.createdAt).format("MMM DD, YYYY - h:mm A")}
+            </span>
+          </div>
+        </div>
+        <Button as={A} href={`./${product.id}`} size="sm" class="gap-2">
+          Open
+          <ArrowUpRight class="size-4" />
+        </Button>
+      </div>
+
+      <div class="flex flex-col p-4 gap-4">
+        <div class="flex flex-row items-center justify-between">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-xs text-muted-foreground">SKU: {product.sku}</span>
+            <Show when={product.weight}>
+              {(weight) => (
+                <span class="text-xs text-muted-foreground">
+                  Weight: {weight().value} {weight().unit}
+                </span>
+              )}
+            </Show>
+            <Show when={product.dimensions}>
+              {(dimension) => (
+                <span class="text-xs text-muted-foreground">
+                  Width: {dimension().width} {dimension().unit}
+                </span>
+              )}
+            </Show>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-sm font-medium">
+              {product.sellingPrice.toFixed(2)} {product.currency}
+            </span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -83,74 +130,19 @@ export const ProductsList = (props: ProductsListProps) => {
           <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
         </div>
       </div>
-      <For
-        each={filteredData()}
-        fallback={
+
+      <GenericList
+        data={props.data}
+        filteredData={filteredData}
+        renderItem={renderProductItem}
+        emptyMessage={
           <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
             <span class="text-sm select-none">No products have been added</span>
           </div>
         }
-      >
-        {(product) => (
-          <div class="flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all">
-            <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
-              <div class="flex flex-row gap-4 items-center">
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-sm font-medium">{product.name}</span>
-                  <span class="text-xs text-muted-foreground">
-                    {dayjs(product.updatedAt ?? product.createdAt).format("MMM DD, YYYY - h:mm A")}
-                  </span>
-                </div>
-              </div>
-              <Button as={A} href={`./${product.id}`} size="sm" class="gap-2">
-                Open
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <path d="M7 17L17 7" />
-                  <path d="M7 7h10v10" />
-                </svg>
-              </Button>
-            </div>
-
-            <div class="flex flex-col p-4 gap-4">
-              <div class="flex flex-row items-center justify-between">
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-xs text-muted-foreground">SKU: {product.sku}</span>
-                  <Show when={product.weight}>
-                    {(weight) => (
-                      <span class="text-xs text-muted-foreground">
-                        Weight: {weight().value} {weight().unit}
-                      </span>
-                    )}
-                  </Show>
-                  <Show when={product.dimensions}>
-                    {(dimension) => (
-                      <span class="text-xs text-muted-foreground">
-                        Width: {dimension().width} {dimension().unit}
-                      </span>
-                    )}
-                  </Show>
-                </div>
-                <div class="flex flex-col items-end">
-                  <span class="text-sm font-medium">
-                    {product.sellingPrice.toFixed(2)} {product.currency}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </For>
+        noResultsMessage="No products have been found"
+        searchTerm={() => filterConfig.search.term}
+      />
     </div>
   );
 };
