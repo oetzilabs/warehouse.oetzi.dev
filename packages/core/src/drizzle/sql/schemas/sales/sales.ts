@@ -21,6 +21,7 @@ export const sale_status = schema.enum("sale_status", [
   "shipped",
   "delivered",
   "cancelled",
+  "deleted",
 ]);
 
 export const TB_sales = commonTable(

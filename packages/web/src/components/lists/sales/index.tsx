@@ -6,6 +6,7 @@ import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
@@ -43,12 +44,34 @@ export function SalesList(props: SalesListProps) {
       end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
       preset: "clear",
     },
-    search: { term: dsearch() },
+    search: {
+      term: dsearch(),
+      fields: ["id", "status", "note"],
+      fuseOptions: {
+        keys: ["id", "status", "note", "items.product.name", "items.product.sku"],
+      },
+    },
     sort: defaultSort,
     filter: {
-      default: null,
-      current: null,
-      variants: [],
+      default: "non-deleted",
+      current: "non-deleted",
+      variants: [
+        {
+          type: "all",
+          label: "All",
+          fn: (item) => true,
+        },
+        {
+          type: "non-deleted",
+          label: "Non Deleted",
+          fn: (item) => item.status !== "deleted",
+        },
+        {
+          type: "deleted",
+          label: "Deleted",
+          fn: (item) => item.status === "deleted",
+        },
+      ],
     },
   });
 
@@ -76,21 +99,7 @@ export function SalesList(props: SalesListProps) {
         </div>
         <Button as={A} href={`/sales/${sale.id}`} size="sm" class="gap-2">
           Open
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="size-4"
-          >
-            <path d="M7 17L17 7" />
-            <path d="M7 7h10v10" />
-          </svg>
+          <ArrowUpRight class="size-4" />
         </Button>
       </div>
 

@@ -639,6 +639,7 @@
                               "inventories": [
                                 {
                                   "id": "inv_m21cs2a1ia2ebvdovsag66jy",
+                                  "productCapacity": 10,
                                   "name": "inventory test 1",
                                   "barcode": "inv-test-1",
                                   "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
@@ -654,6 +655,7 @@
                               "inventories": [
                                 {
                                   "id": "inv_zsv150vhw66k0mrk2ui6zzl9",
+                                  "productCapacity": 10,
                                   "barcode": "inv-test-2",
                                   "name": "inventory test 2",
                                   "products": ["prod_uzujt3nrndmn90yyslc61wqv"]

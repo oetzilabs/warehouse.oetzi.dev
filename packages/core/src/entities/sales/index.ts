@@ -230,7 +230,11 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         }
 
         const [deleted] = yield* Effect.promise(() =>
-          db.update(TB_sales).set({ deletedAt: new Date() }).where(eq(TB_sales.id, parsedId.output)).returning(),
+          db
+            .update(TB_sales)
+            .set({ status: "deleted", deletedAt: new Date(), updatedAt: new Date() })
+            .where(eq(TB_sales.id, parsedId.output))
+            .returning(),
         );
 
         if (!deleted) {

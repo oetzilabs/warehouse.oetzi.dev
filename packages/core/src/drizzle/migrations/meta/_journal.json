@@ -162,6 +162,13 @@
       "when": 1748702457176,
       "tag": "0022_chief_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1748770370877,
+      "tag": "0023_brief_gressill",
+      "breakpoints": true
     }
   ]
 }

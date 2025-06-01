@@ -26,54 +26,6 @@ export const route = {
 export default function SalesPage() {
   const params = useParams();
   const sales = createAsync(() => getSales(), { deferStream: true });
-  const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<SaleInfo>>({
-    disabled: () => (sales() ?? []).length === 0,
-    dateRange: {
-      start: sales()?.length ? sales()![0].createdAt : new Date(),
-      end: sales()?.length ? sales()![sales()!.length - 1].createdAt : new Date(),
-      preset: "clear",
-    },
-    search: { term: dsearch() },
-    sort: {
-      default: "date",
-      current: "date",
-      direction: "desc",
-      variants: [
-        {
-          field: "date",
-          label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
-        },
-        // {
-        //   field: "total",
-        //   label: "Total",
-        //   fn: (a, b) => a.total - b.total,
-        // },
-        {
-          field: "items",
-          label: "Items",
-          fn: (a, b) => a.items.length - b.items.length,
-        },
-      ],
-    },
-    filter: {
-      default: null,
-      current: null,
-      variants: [],
-    },
-  });
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
 
   const calculateSales = (sales: SaleInfo[]) => {
     const salesByDay = sales.reduce(

@@ -84,7 +84,14 @@ export default function SaleIdPage() {
                       Edit
                     </DropdownMenuItem>
                     <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
-                      <DialogTrigger as={DropdownMenuItem} class="!text-red-500 gap-2 cursor-pointer">
+                      <DialogTrigger
+                        as={DropdownMenuItem}
+                        class="!text-red-500 gap-2 cursor-pointer"
+                        closeOnSelect={false}
+                        onSelect={() => {
+                          setTimeout(() => setDeleteDialogOpen(true), 10);
+                        }}
+                      >
                         <X class="size-4" />
                         Delete
                       </DialogTrigger>
@@ -358,7 +365,7 @@ export default function SaleIdPage() {
                                 class="w-full"
                               >
                                 <Printer class="size-4" />
-                                {printer.name || printer.type}
+                                {printer.name || printer.type.name}
                               </Button>
                             )}
                           </For>

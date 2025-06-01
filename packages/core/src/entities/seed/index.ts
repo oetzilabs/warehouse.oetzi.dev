@@ -494,7 +494,10 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                           db
                             .insert(TB_storage_spaces)
                             .values({ ...inventory, storageId: storage.id })
-                            .onConflictDoNothing()
+                            .onConflictDoUpdate({
+                              target: TB_storage_spaces.id,
+                              set: { ...inventory, storageId: storage.id },
+                            })
                             .returning(),
                         );
 
