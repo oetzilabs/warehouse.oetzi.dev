@@ -79,12 +79,12 @@ export const AccountingList = (props: AccountingListProps) => {
             >
               {(acc) => (
                 <TableRow>
-                  <TableCell class="font-medium px-4 align-top text-left">
+                  <TableCell class="font-medium px-4 align-top text-left py-4">
                     <div title={dayjs(acc.date).format("LL")} class="flex flex-col w-max">
                       <span>{dayjs(acc.date).format("LL")}</span>
                     </div>
                   </TableCell>
-                  <TableCell class="align-top hidden md:table-cell">
+                  <TableCell class="align-top hidden md:table-cell py-4">
                     <div class="flex flex-col">
                       <span
                         class={cn("text-sm font-medium uppercase", {
@@ -97,7 +97,7 @@ export const AccountingList = (props: AccountingListProps) => {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell class="align-top">
+                  <TableCell class="align-top py-4">
                     <div class="flex flex-col text-sm w-max">
                       <Show when={acc.productAmounts.bought > 0}>
                         <span class="text-muted-foreground">
@@ -111,7 +111,7 @@ export const AccountingList = (props: AccountingListProps) => {
                       </Show>
                     </div>
                   </TableCell>
-                  <TableCell class="text-right px-4">
+                  <TableCell class="text-right px-4 py-4">
                     <div class="flex flex-col gap-2 items-end justify-end">
                       <For each={acc.amounts}>
                         {(amount) => (
