@@ -17,12 +17,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { deleteDevice, getDeviceById } from "@/lib/api/devices";
-import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams } from "@solidjs/router";
+import { A, createAsync, revalidate, RouteDefinition, useAction, useNavigate, useParams } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import RotateCw from "lucide-solid/icons/rotate-cw";
 import X from "lucide-solid/icons/x";
 import { createSignal, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -55,22 +56,37 @@ export default function DevicePage() {
         {(deviceInfo) => (
           <div class="container flex flex-col gap-4 py-4">
             <div class="flex flex-row items-center justify-between gap-4">
-              <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href="/devices">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
+              <Button variant="outline" size="sm" as={A} href="/devices" class="w-max">
+                <ArrowLeft class="size-4" />
+                Back
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  toast.promise(revalidate(getDeviceById.keyFor(deviceInfo().id)), {
+                    loading: "Refreshing device...",
+                    success: "Refreshed device",
+                    error: "Failed to refresh device",
+                  });
+                }}
+              >
+                <RotateCw class="size-4" />
+                Refresh
+              </Button>
+            </div>
+
+            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+              <div class="flex flex-row items-center gap-2 justify-between">
                 <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="text-xl font-semibold">{deviceInfo().name}</h1>
+                  <h2 class="text-2xl font-bold tracking-wide uppercase">{deviceInfo().name}</h2>
                   <Show when={deviceInfo().deletedAt}>
                     <span class="text-sm font-semibold text-red-500">Deleted</span>
                   </Show>
                 </div>
-              </div>
-              <div class="flex flex-row items-center gap-2">
                 <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
-                    <MoreHorizontal class="size-4" />
+                  <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">
+                    <MoreHorizontal class="size-3" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href={`./edit`}>
@@ -125,30 +141,20 @@ export default function DevicePage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
-                    <h2 class="font-medium">Details</h2>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Description: {deviceInfo().description ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">Type: {deviceInfo().type.name}</span>
-                    <span class="text-sm text-muted-foreground">
-                      Last updated:{" "}
-                      {dayjs(deviceInfo().updatedAt ?? deviceInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Status</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Status: {deviceInfo().status}</span>
-                  </div>
-                </div>
+              <div class="flex flex-col gap-1">
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Description: {deviceInfo().description ?? "N/A"}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Type: {deviceInfo().type.name}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Status: {deviceInfo().status}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Last Updated:{" "}
+                  {dayjs(deviceInfo().updatedAt ?? deviceInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                </span>
               </div>
             </div>
           </div>
