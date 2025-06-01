@@ -7,7 +7,7 @@ import { A } from "@solidjs/router";
 import { CatalogInfo } from "@warehouseoetzidev/core/src/entities/catalogs";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import { Accessor, createSignal, For } from "solid-js";
+import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
@@ -82,26 +82,35 @@ export const CatalogsList = (props: CatalogsListProps) => {
         </Button>
       </div>
       <div class="flex flex-col gap-1 w-full h-full p-4">
-        <For
-          each={catalog.products.map((p) => p.product)}
+        <Show
+          when={catalog.deletedAt === null}
           fallback={
-            <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground">
-              No products added
+            <div class="text-sm text-muted-foreground flex flex-col items-center justify-center">
+              This catalog has been deleted
             </div>
           }
         >
-          {(product) => (
-            <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-4 border bg-background">
-              <div class="flex flex-col gap-2 w-full h-full">
-                <span class="text-sm font-medium">{product.name}</span>
-                <span class="text-xs text-muted-foreground">
-                  Price: {product.sellingPrice} {product.currency}
-                </span>
-                <span class="text-xs text-muted-foreground">{product.sku}</span>
+          <For
+            each={catalog.products.map((p) => p.product)}
+            fallback={
+              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground">
+                No products added
               </div>
-            </div>
-          )}
-        </For>
+            }
+          >
+            {(product) => (
+              <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-4 border bg-background">
+                <div class="flex flex-col gap-2 w-full h-full">
+                  <span class="text-sm font-medium">{product.name}</span>
+                  <span class="text-xs text-muted-foreground">
+                    Price: {product.sellingPrice} {product.currency}
+                  </span>
+                  <span class="text-xs text-muted-foreground">{product.sku}</span>
+                </div>
+              </div>
+            )}
+          </For>
+        </Show>
       </div>
     </div>
   );

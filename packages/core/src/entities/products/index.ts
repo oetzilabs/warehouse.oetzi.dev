@@ -55,7 +55,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       },
       suppliers: {
         with: {
-          supplier: true,
+          supplier: {
+            with: {
+              contacts: true,
+              notes: true,
+            },
+          },
         },
       },
     });
@@ -199,6 +204,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
+                  space: {
+                    with: {
+                      storage: true,
+                    },
+                  },
                   images: {
                     with: {
                       image: true,
@@ -231,7 +241,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   },
                   suppliers: {
                     with: {
-                      supplier: true,
+                      supplier: {
+                        with: {
+                          contacts: true,
+                          notes: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -286,7 +301,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   },
                   suppliers: {
                     with: {
-                      supplier: true,
+                      supplier: {
+                        with: {
+                          contacts: true,
+                          notes: true,
+                        },
+                      },
                     },
                   },
                 },

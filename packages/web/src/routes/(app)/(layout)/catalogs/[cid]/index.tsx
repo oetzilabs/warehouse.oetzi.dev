@@ -28,6 +28,7 @@ import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
@@ -71,23 +72,22 @@ export default function CatalogPage() {
       <Show when={catalog()}>
         {(catalogInfo) => (
           <div class="container flex flex-col gap-4 py-4">
-            <div class="flex flex-row items-center justify-between gap-4">
-              <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href="/catalogs">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
+            <Button variant="outline" size="sm" as={A} href="/catalogs" class="w-max">
+              <ArrowLeft class="size-4" />
+              Back
+            </Button>
+
+            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+              <div class="flex flex-row items-center gap-2 justify-between">
                 <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="text-xl font-semibold">{catalogInfo().name}</h1>
+                  <h2 class="text-2xl font-bold tracking-wide uppercase">{catalogInfo().name}</h2>
                   <Show when={catalogInfo().deletedAt}>
                     <span class="text-sm font-semibold text-red-500">Deleted</span>
                   </Show>
                 </div>
-              </div>
-              <div class="flex flex-row items-center gap-2">
                 <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
-                    <MoreHorizontal class="size-4" />
+                  <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">
+                    <MoreHorizontal class="size-3" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href={`./edit`}>
@@ -121,7 +121,7 @@ export default function CatalogPage() {
                                     }}
                                   >
                                     <Printer class="size-4" />
-                                    {device.name.length > 0 ? device.name : device.type}
+                                    {device.name.length > 0 ? device.name : device.type.name}
                                   </DropdownMenuItem>
                                 )}
                               </For>
@@ -196,70 +196,51 @@ export default function CatalogPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
-                    <h2 class="font-medium">Details</h2>
-                    <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon">
-                        <Edit class="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Description: {catalogInfo().description ?? "N/A"}</span>
-                    <span class="text-sm text-muted-foreground">
-                      Last updated:{" "}
-                      {dayjs(catalogInfo().updatedAt ?? catalogInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                    </span>
-                  </div>
-                </div>
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
-                    <h2 class="font-medium">Products</h2>
-                    <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon">
-                        <Edit class="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <For
-                      each={catalogInfo().products}
-                      fallback={
-                        <div class="col-span-full flex flex-col gap-1 items-center justify-center p-8 border rounded-lg">
-                          <span class="text-sm text-muted-foreground">No products in this catalog</span>
-                        </div>
-                      }
-                    >
-                      {(product) => (
-                        <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                          <span class="text-sm font-medium">{product.product.name}</span>
-                          <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
-                          <span class="text-sm text-muted-foreground">
-                            Price: {product.product.sellingPrice} {product.product.currency}
-                          </span>
-                        </div>
-                      )}
-                    </For>
-                  </div>
-                </div>
+              <div class="flex flex-col gap-1">
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Description: {catalogInfo().description ?? "N/A"}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Status: {catalogInfo().isActive ? "Active" : "Inactive"}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Date Range: {dayjs(catalogInfo().startDate).format("MMM DD, YYYY")} -{" "}
+                  {dayjs(catalogInfo().endDate).format("MMM DD, YYYY")}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Last Updated:{" "}
+                  {dayjs(catalogInfo().updatedAt ?? catalogInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                </span>
               </div>
-              <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Status</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">Active: {catalogInfo().isActive ? "Yes" : "No"}</span>
-                    <span class="text-sm text-muted-foreground">
-                      Start Date: {dayjs(catalogInfo().startDate).format("MMM DD, YYYY")}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      End Date: {dayjs(catalogInfo().endDate).format("MMM DD, YYYY")}
-                    </span>
-                  </div>
-                </div>
+            </div>
+
+            <div class="flex flex-col border rounded-lg">
+              <div class="flex flex-row items-center gap-2 justify-between p-4 border-b bg-muted/30">
+                <h2 class="font-medium">Products</h2>
+                <Button size="sm">
+                  <Plus class="size-4" />
+                  Add Product
+                </Button>
+              </div>
+              <div class="flex flex-col gap-4 p-4">
+                <For
+                  each={catalogInfo().products}
+                  fallback={
+                    <div class="col-span-full flex flex-col gap-1 items-center justify-center p-8">
+                      <span class="text-sm text-muted-foreground select-none">No products in this catalog</span>
+                    </div>
+                  }
+                >
+                  {(product) => (
+                    <div class="flex flex-col gap-2 p-4 border rounded-lg">
+                      <span class="text-sm font-medium">{product.product.name}</span>
+                      <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
+                      <span class="text-sm text-muted-foreground">
+                        Price: {product.product.sellingPrice} {product.product.currency}
+                      </span>
+                    </div>
+                  )}
+                </For>
               </div>
             </div>
           </div>

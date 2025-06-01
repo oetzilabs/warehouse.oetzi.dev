@@ -322,6 +322,7 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
                 },
               },
             },
+            orderBy: (fields, operations) => [operations.desc(fields.createdAt), operations.desc(fields.deletedAt)],
           }),
         );
       });
