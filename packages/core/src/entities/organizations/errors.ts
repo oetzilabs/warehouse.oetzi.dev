@@ -68,3 +68,27 @@ export class OrganizationTaxRateNotFound extends Schema.TaggedError<Organization
     id: Schema.String,
   },
 ) {}
+
+export class OrganizationProductNotAdded extends Schema.TaggedError<OrganizationProductNotAdded>()(
+  "OrganizationProductNotAdded",
+  {
+    productId: Schema.String,
+    organizationId: Schema.String,
+  },
+) {}
+
+export class OrganizationProductNotFound extends Schema.TaggedError<OrganizationProductNotFound>()(
+  "OrganizationProductNotFound",
+  {
+    productId: Schema.String,
+    organizationId: Schema.String,
+  },
+) {}
+
+export class OrganizationProductNotRemoved extends Schema.TaggedError<OrganizationProductNotRemoved>()(
+  "OrganizationProductNotRemoved",
+  {
+    productId: Schema.String,
+    organizationId: Schema.String,
+  },
+) {}

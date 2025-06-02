@@ -1,10 +1,11 @@
 import { FilterPopover } from "@/components/filters/popover";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
-import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
+import { type OrganizationProductInfo, type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, Show } from "solid-js";
@@ -12,18 +13,21 @@ import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
 type ProductsListProps = {
-  data: Accessor<ProductInfo[]>;
+  data: Accessor<OrganizationProductInfo[]>;
 };
 
 export const ProductsList = (props: ProductsListProps) => {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<ProductInfo>>({
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<OrganizationProductInfo>>({
     disabled: () => props.data().length === 0,
     dateRange: {
-      start: props.data().length === 0 ? new Date() : (props.data()[0]?.createdAt ?? new Date()),
-      end: props.data().length === 0 ? new Date() : (props.data()[props.data().length - 1]?.createdAt ?? new Date()),
+      start: props.data().length === 0 ? new Date() : (props.data()[0]?.product.createdAt ?? new Date()),
+      end:
+        props.data().length === 0
+          ? new Date()
+          : (props.data()[props.data().length - 1]?.product.createdAt ?? new Date()),
       preset: "clear",
     },
     search: { term: dsearch() },
@@ -35,17 +39,17 @@ export const ProductsList = (props: ProductsListProps) => {
         {
           field: "date",
           label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
+          fn: (a, b) => dayjs(a.product.createdAt).unix() - dayjs(b.product.createdAt).unix(),
         },
         {
           field: "name",
           label: "Name",
-          fn: (a, b) => a.name.localeCompare(b.name),
+          fn: (a, b) => a.product.name.localeCompare(b.product.name),
         },
         {
           field: "price",
           label: "Price",
-          fn: (a, b) => a.sellingPrice - b.sellingPrice,
+          fn: (a, b) => a.product.sellingPrice - b.product.sellingPrice,
         },
       ],
     },
@@ -67,18 +71,30 @@ export const ProductsList = (props: ProductsListProps) => {
 
   const filteredData = useFilter(props.data, filterConfig);
 
-  const renderProductItem = (product: ProductInfo) => (
+  const renderProductItem = (item: OrganizationProductInfo) => (
     <>
       <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
         <div class="flex flex-row gap-4 items-center">
           <div class="flex flex-col gap-0.5">
-            <span class="text-sm font-medium">{product.name}</span>
+            <div class="flex flex-row items-center gap-2">
+              <span class="text-sm font-medium">{item.product.name}</span>
+              <Show when={item.deletedAt}>
+                <Badge variant="outline" class="bg-rose-500 border-0 text-white">
+                  Not in Sortiment
+                </Badge>
+              </Show>
+              <Show when={item.product.deletedAt}>
+                <Badge variant="outline" class="bg-rose-500 border-0">
+                  Deleted
+                </Badge>
+              </Show>
+            </div>
             <span class="text-xs text-muted-foreground">
-              {dayjs(product.updatedAt ?? product.createdAt).format("MMM DD, YYYY - h:mm A")}
+              {dayjs(item.product.updatedAt ?? item.product.createdAt).format("MMM DD, YYYY - h:mm A")}
             </span>
           </div>
         </div>
-        <Button as={A} href={`./${product.id}`} size="sm" class="gap-2">
+        <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2">
           Open
           <ArrowUpRight class="size-4" />
         </Button>
@@ -87,15 +103,15 @@ export const ProductsList = (props: ProductsListProps) => {
       <div class="flex flex-col p-4 gap-4">
         <div class="flex flex-row items-center justify-between">
           <div class="flex flex-col gap-0.5">
-            <span class="text-xs text-muted-foreground">SKU: {product.sku}</span>
-            <Show when={product.weight}>
+            <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
+            <Show when={item.product.weight}>
               {(weight) => (
                 <span class="text-xs text-muted-foreground">
                   Weight: {weight().value} {weight().unit}
                 </span>
               )}
             </Show>
-            <Show when={product.dimensions}>
+            <Show when={item.product.dimensions}>
               {(dimension) => (
                 <span class="text-xs text-muted-foreground">
                   Width: {dimension().width} {dimension().unit}
@@ -105,7 +121,7 @@ export const ProductsList = (props: ProductsListProps) => {
           </div>
           <div class="flex flex-col items-end">
             <span class="text-sm font-medium">
-              {product.sellingPrice.toFixed(2)} {product.currency}
+              {item.product.sellingPrice.toFixed(2)} {item.product.currency}
             </span>
           </div>
         </div>
@@ -135,11 +151,7 @@ export const ProductsList = (props: ProductsListProps) => {
         data={props.data}
         filteredData={filteredData}
         renderItem={renderProductItem}
-        emptyMessage={
-          <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
-            <span class="text-sm select-none">No products have been added</span>
-          </div>
-        }
+        emptyMessage="No products have been added"
         noResultsMessage="No products have been found"
         searchTerm={() => filterConfig.search.term}
       />

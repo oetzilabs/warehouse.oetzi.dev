@@ -6,6 +6,7 @@ import {
   SupplierContactCreateSchema,
   SupplierCreateSchema,
   SupplierNoteCreateSchema,
+  SupplierNoteUpdateSchema,
   SupplierUpdateSchema,
   TB_organization_suppliers,
   TB_supplier_contacts,
@@ -21,6 +22,9 @@ import {
   SupplierNotCreated,
   SupplierNotDeleted,
   SupplierNoteNotCreated,
+  SupplierNoteNotDeleted,
+  SupplierNoteNotFound,
+  SupplierNoteNotUpdated,
   SupplierNotFound,
   SupplierNotUpdated,
 } from "./errors";
@@ -94,6 +98,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                   product: {
                     with: {
                       labels: true,
+                      organizations: true,
                     },
                   },
                 },
@@ -200,6 +205,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                       product: {
                         with: {
                           labels: true,
+                          organizations: true,
                         },
                       },
                     },
@@ -298,12 +304,77 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return deleted;
       });
 
+    const updateNote = (input: InferInput<typeof SupplierNoteUpdateSchema>) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, input.id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id: input.id }));
+        }
+        const [updated] = yield* Effect.promise(() =>
+          db
+            .update(TB_supplier_notes)
+            .set({ ...input, updatedAt: new Date() })
+            .where(eq(TB_supplier_notes.id, parsedId.output))
+            .returning(),
+        );
+        if (!updated) {
+          return yield* Effect.fail(new SupplierNoteNotUpdated({ id: input.id }));
+        }
+        return updated;
+      });
+
+    const removeNote = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id }));
+        }
+        const [deleted] = yield* Effect.promise(() =>
+          db.delete(TB_supplier_notes).where(eq(TB_supplier_notes.id, parsedId.output)).returning(),
+        );
+        if (!deleted) {
+          return yield* Effect.fail(new SupplierNoteNotDeleted({ id }));
+        }
+        return deleted;
+      });
+
+    const findNoteById = (id: string, sid: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id }));
+        }
+        const parsedSid = safeParse(prefixed_cuid2, sid);
+        if (!parsedSid.success) {
+          return yield* Effect.fail(new SupplierInvalidId({ id: sid }));
+        }
+        const note = yield* Effect.promise(() =>
+          db.query.TB_supplier_notes.findFirst({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.id, parsedId.output),
+                operations.eq(fields.supplierId, parsedSid.output),
+              ),
+            with: {
+              supplier: true,
+            },
+          }),
+        );
+        if (!note) {
+          return yield* Effect.fail(new SupplierNoteNotFound({ id }));
+        }
+        return note;
+      });
+
     return {
       create,
       findById,
       update,
       addContact,
       addNote,
+      updateNote,
+      removeNote,
+      findNoteById,
       findByOrganizationId,
       remove,
       safeRemove,
@@ -318,3 +389,4 @@ export type SupplierInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<
 export type SupplierOrderInfo = NonNullable<
   Awaited<Effect.Effect.Success<ReturnType<SupplierService["getOrdersBySupplierIdAndOrganizationId"]>>>
 >[number]["order"];
+export type SupplierNoteInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findNoteById"]>>>>;

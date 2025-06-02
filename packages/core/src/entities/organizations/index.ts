@@ -8,11 +8,13 @@ import {
   TB_organization_users,
   TB_organizations,
   TB_organizations_customerorders,
+  TB_organizations_products,
   TB_organizations_supplierorders,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
 import { OrderInvalidId } from "../orders/errors";
+import { ProductInvalidId } from "../products/errors";
 import { SupplierInvalidId } from "../suppliers/errors";
 import {
   OrganizationAlreadyExists,
@@ -20,6 +22,9 @@ import {
   OrganizationNotDeleted,
   OrganizationNotFound,
   OrganizationNotUpdated,
+  OrganizationProductNotAdded,
+  OrganizationProductNotFound,
+  OrganizationProductNotRemoved,
   OrganizationTaxRateNotFound,
   OrganizationUserAddFailed,
   OrganizationUserAlreadyExists,
@@ -739,6 +744,116 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    const removeProduct = (organizationId: string, productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        const exists = yield* Effect.promise(() =>
+          db.query.TB_organizations_products.findFirst({
+            where: (organization_products, operations) =>
+              and(
+                operations.eq(organization_products.organizationId, parsedOrgId.output),
+                operations.eq(organization_products.productId, parsedProductId.output),
+              ),
+          }),
+        );
+
+        if (!exists) {
+          return yield* Effect.fail(
+            new OrganizationProductNotFound({ productId: parsedProductId.output, organizationId: parsedOrgId.output }),
+          );
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .update(TB_organizations_products)
+            .set({ deletedAt: new Date() })
+            .where(
+              and(
+                eq(TB_organizations_products.organizationId, parsedOrgId.output),
+                eq(TB_organizations_products.productId, parsedProductId.output),
+              ),
+            )
+            .returning(),
+        );
+      });
+
+    const addProduct = (organizationId: string, productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        const exists = yield* Effect.promise(() =>
+          db.query.TB_organizations_products.findFirst({
+            where: (organization_products, operations) =>
+              and(
+                operations.eq(organization_products.organizationId, parsedOrgId.output),
+                operations.eq(organization_products.productId, parsedProductId.output),
+              ),
+          }),
+        );
+
+        if (exists) {
+          return yield* Effect.promise(() =>
+            db
+              .update(TB_organizations_products)
+              .set({ deletedAt: null })
+              .where(
+                and(
+                  eq(TB_organizations_products.organizationId, parsedOrgId.output),
+                  eq(TB_organizations_products.productId, parsedProductId.output),
+                ),
+              )
+              .returning(),
+          );
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .insert(TB_organizations_products)
+            .values({ organizationId: parsedOrgId.output, productId: parsedProductId.output })
+            .returning(),
+        );
+      });
+
+    const findProductById = (organizationId: string, productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        return yield* Effect.promise(() =>
+          db.query.TB_organizations_products.findFirst({
+            where: (organization_products, operations) =>
+              and(
+                operations.eq(organization_products.organizationId, parsedOrgId.output),
+                operations.eq(organization_products.productId, parsedProductId.output),
+              ),
+          }),
+        );
+      });
+
     return {
       create,
       findById,
@@ -754,6 +869,9 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       removeCustomerOrder,
       addSupplierOrder,
       removeSupplierOrder,
+      findProductById,
+      removeProduct,
+      addProduct,
     } as const;
   }),
   dependencies: [DatabaseLive],

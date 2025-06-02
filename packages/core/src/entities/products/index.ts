@@ -254,7 +254,13 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             },
           }),
         );
-        return orgProds.map((p) => p.product).sort((a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix());
+        return orgProds
+          .sort((a, b) => dayjs(a.product.createdAt).diff(dayjs(b.product.createdAt)))
+          .map((op) => ({
+            ...op,
+            createdAt: op.product.createdAt,
+            updatedAt: op.product.updatedAt,
+          }));
       });
 
     const findByWarehouseId = (warehouseId: string) =>
@@ -499,3 +505,6 @@ export const ProductLive = ProductService.Default;
 
 // Type exports
 export type ProductInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<ProductService["findById"]>>>>;
+export type OrganizationProductInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<ProductService["findByOrganizationId"]>>>
+>[number];

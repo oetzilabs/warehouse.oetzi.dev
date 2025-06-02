@@ -3,6 +3,10 @@ import {
   SupplierCreateSchema,
   SupplierUpdateSchema,
 } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/suppliers/suppliers";
+import {
+  SupplierNoteCreateSchema,
+  SupplierNoteUpdateSchema,
+} from "@warehouseoetzidev/core/src/drizzle/sql/schemas/suppliers/suppliers_notes";
 import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
@@ -61,10 +65,19 @@ export const getSupplierById = query(async (id: string) => {
   const supplier = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
-      const supplier = yield* supplierService.findById(id);
-      if (!supplier) {
+      const supplierFromDb = yield* supplierService.findById(id);
+      if (!supplierFromDb) {
         throw redirect(`/suppliers/${id}`, { status: 404, statusText: "Not Found" });
       }
+
+      const supplier = {
+        ...supplierFromDb,
+        products: supplierFromDb.products.map((p) => ({
+          ...p,
+          organizations: p.product.organizations.filter((po) => po.organizationId === orgId),
+          isInSortiment: p.product.organizations.find((po) => po.organizationId === orgId)?.deletedAt,
+        })),
+      };
       const orders = yield* supplierService.getOrdersBySupplierIdAndOrganizationId(supplier.id, orgId);
       return { supplier, orders };
     }).pipe(Effect.provide(SupplierLive)),
@@ -128,4 +141,82 @@ export const deleteSupplier = action(async (id: string) => {
     }).pipe(Effect.provide(SupplierLive)),
   );
   return supplier;
+});
+
+export const addNote = action(async (sid: string, data: InferInput<typeof SupplierNoteCreateSchema>) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const note = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(SupplierService);
+      return yield* service.addNote(sid, data);
+    }).pipe(Effect.provide(SupplierLive)),
+  );
+  return json(note, {
+    revalidate: [getAuthenticatedUser.key, getSuppliers.key, getSupplierById.keyFor(sid)],
+  });
+});
+
+export const updateNote = action(async (sid: string, data: InferInput<typeof SupplierUpdateSchema>) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const note = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(SupplierService);
+      return yield* service.updateNote(data);
+    }).pipe(Effect.provide(SupplierLive)),
+  );
+  return json(note, {
+    revalidate: [getAuthenticatedUser.key, getSuppliers.key, getSupplierById.keyFor(sid)],
+  });
+});
+
+export const removeNote = action(async (sid: string, id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const note = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(SupplierService);
+      return yield* service.removeNote(id);
+    }).pipe(Effect.provide(SupplierLive)),
+  );
+  return json(note, {
+    revalidate: [getAuthenticatedUser.key, getSuppliers.key, getSupplierById.keyFor(sid)],
+  });
 });

@@ -53,3 +53,15 @@ export class SupplierOrganizationUnlinkFailed extends Schema.TaggedError<Supplie
     supplierId: Schema.String,
   },
 ) {}
+
+export class SupplierNoteNotFound extends Schema.TaggedError<SupplierNoteNotFound>()("SupplierNoteNotFound", {
+  id: Schema.String,
+}) {}
+
+export class SupplierNoteNotUpdated extends Schema.TaggedError<SupplierNoteNotUpdated>()("SupplierNoteNotUpdated", {
+  id: Schema.String,
+}) {}
+
+export class SupplierNoteNotDeleted extends Schema.TaggedError<SupplierNoteNotDeleted>()("SupplierNoteNotDeleted", {
+  id: Schema.String,
+}) {}

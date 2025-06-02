@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices, printProductSheet } from "@/lib/api/devices";
-import { deleteProduct, downloadProductSheet, getProductById } from "@/lib/api/products";
+import { deleteProduct, downloadProductSheet, getProductById, reAddProduct } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
@@ -62,6 +63,9 @@ export default function ProductPage() {
   const deleteProductAction = useAction(deleteProduct);
   const isDeletingProduct = useSubmission(deleteProduct);
 
+  const reAddProductAction = useAction(reAddProduct);
+  const isReAddingProduct = useSubmission(reAddProduct);
+
   const printProductSheetAction = useAction(printProductSheet);
   const isPrintingProductSheet = useSubmission(printProductSheet);
 
@@ -86,135 +90,164 @@ export default function ProductPage() {
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
-                <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="text-xl font-semibold">{productInfo().name}</h1>
-                  <Show when={productInfo().deletedAt}>
-                    <span class="text-xs font-semibold text-red-500">Deleted</span>
-                  </Show>
-                </div>
               </div>
               <div class="flex flex-row items-center gap-2">
                 <Button size="sm" as={A} href={`/map?products=${productInfo().id}`}>
                   <Map class="size-4" />
                   Show on Map
                 </Button>
-                <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
-                    <MoreHorizontal class="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href={`./edit`}>
-                      <Edit class="size-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSub overlap>
-                      <DropdownMenuSubTrigger class="gap-2 cursor-pointer">
-                        <Printer class="size-4" />
-                        Print Sheet
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                          <Show when={printers()}>
-                            {(devices) => (
-                              <For
-                                each={devices()}
-                                fallback={<DropdownMenuItem disabled>No printers found</DropdownMenuItem>}
-                              >
-                                {(device) => (
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      toast.promise(printProductSheetAction(params.whid, device.id, productInfo().id), {
-                                        loading: "Printing product sheet...",
-                                        success: "Product sheet printed",
-                                        error: "Failed to print product sheet",
-                                      });
-                                    }}
-                                  >
-                                    <Printer class="size-4" />
-                                    {device.name.length > 0 ? device.name : device.type.name}
-                                  </DropdownMenuItem>
-                                )}
-                              </For>
-                            )}
-                          </Show>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              toast.promise(downloadProductSheetAction(productInfo().id), {
-                                loading: "Downloading product sheet...",
-                                success: "Product sheet downloaded",
-                                error: "Failed to download product sheet",
-                              });
-                            }}
-                            disabled
-                          >
-                            Download as PDF
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                    <DropdownMenuSeparator />
-                    <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
-                      <DialogTrigger
-                        as={DropdownMenuItem}
-                        class="!text-red-500 gap-2 cursor-pointer"
-                        closeOnSelect={false}
-                        onSelect={() => {
-                          setTimeout(() => setDeleteDialogOpen(true), 10);
-                        }}
-                      >
-                        <X class="size-4" />
-                        Delete
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Are you sure you want to delete this product?</DialogTitle>
-                          <DialogDescription>
-                            This action cannot be undone. This will permanently delete the product and all its data.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setDeleteDialogOpen(false);
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => {
-                              const promise = new Promise(async (resolve, reject) => {
-                                const p = await deleteProductAction(productInfo().id).catch(reject);
-                                setDeleteDialogOpen(false);
-                                return resolve(p);
-                              });
-                              toast.promise(promise, {
-                                loading: "Deleting product...",
-                                success: "Product deleted",
-                                error: "Failed to delete product",
-                              });
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>
             <div class="flex flex-col gap-4 w-full">
-              <div class="flex flex-col p-4 border rounded-lg w-full">
+              <div class="flex flex-col gap-4 p-4 rounded-lg w-full bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                 <div class="flex flex-row items-center gap-4 justify-between">
-                  <h2 class="font-medium">Details</h2>
+                  <div class="flex flex-row gap-2 items-center">
+                    <h2 class="text-2xl font-bold tracking-wide uppercase">{productInfo().name}</h2>
+                    <Show when={productInfo().deletedAt}>
+                      <Badge variant="outline" class="bg-rose-500 border-0">
+                        Deleted
+                      </Badge>
+                    </Show>
+                    <Show when={!productInfo().isInSortiment}>
+                      <Badge variant="outline" class="bg-rose-500 border-0 text-white">
+                        Not in Sortiment
+                      </Badge>
+                    </Show>
+                  </div>
                   <div class="flex flex-col items-end gap-2 min-w-[200px]">
                     <div class="flex flex-row items-center gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Edit class="size-4" />
-                      </Button>
+                      <DropdownMenu placement="bottom-end">
+                        <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">
+                          <MoreHorizontal class="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href={`./edit`}>
+                            <Edit class="size-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSub overlap>
+                            <DropdownMenuSubTrigger class="gap-2 cursor-pointer">
+                              <Printer class="size-4" />
+                              Print Sheet
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                                <Show when={printers()}>
+                                  {(devices) => (
+                                    <For
+                                      each={devices()}
+                                      fallback={<DropdownMenuItem disabled>No printers found</DropdownMenuItem>}
+                                    >
+                                      {(device) => (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            toast.promise(
+                                              printProductSheetAction(params.whid, device.id, productInfo().id),
+                                              {
+                                                loading: "Printing product sheet...",
+                                                success: "Product sheet printed",
+                                                error: "Failed to print product sheet",
+                                              },
+                                            );
+                                          }}
+                                        >
+                                          <Printer class="size-4" />
+                                          {device.name.length > 0 ? device.name : device.type.name}
+                                        </DropdownMenuItem>
+                                      )}
+                                    </For>
+                                  )}
+                                </Show>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    toast.promise(downloadProductSheetAction(productInfo().id), {
+                                      loading: "Downloading product sheet...",
+                                      success: "Product sheet downloaded",
+                                      error: "Failed to download product sheet",
+                                    });
+                                  }}
+                                  disabled
+                                >
+                                  Download as PDF
+                                </DropdownMenuItem>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSeparator />
+                          <Show
+                            when={!productInfo().isInSortiment}
+                            fallback={
+                              <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
+                                <DialogTrigger
+                                  as={DropdownMenuItem}
+                                  class="!text-red-500 gap-2 cursor-pointer"
+                                  closeOnSelect={false}
+                                  onSelect={() => {
+                                    setTimeout(() => setDeleteDialogOpen(true), 10);
+                                  }}
+                                  disabled={productInfo().deletedAt !== null}
+                                >
+                                  <X class="size-4" />
+                                  Remove from Sortiment
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Are you sure you want to delete this product?</DialogTitle>
+                                    <DialogDescription>
+                                      This action cannot be undone. This will permanently delete the product and all its
+                                      data.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <DialogFooter>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setDeleteDialogOpen(false);
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="destructive"
+                                      onClick={() => {
+                                        const promise = new Promise(async (resolve, reject) => {
+                                          const p = await deleteProductAction(productInfo().id).catch(reject);
+                                          setDeleteDialogOpen(false);
+                                          return resolve(p);
+                                        });
+                                        toast.promise(promise, {
+                                          loading: "Deleting product...",
+                                          success: "Product deleted",
+                                          error: "Failed to delete product",
+                                        });
+                                      }}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            }
+                          >
+                            <DropdownMenuItem
+                              class="cursor-pointer"
+                              onSelect={() => {
+                                toast.promise(reAddProductAction(productInfo().id), {
+                                  loading: "Adding product back to Sortiment...",
+                                  success: "Product added back to Sortiment",
+                                  error: "Failed to add product back to Sortiment",
+                                });
+                              }}
+                            >
+                              <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
+                                <Loader2 class="size-4 animate-spin" />
+                              </Show>
+                              Readd to Sortiment
+                            </DropdownMenuItem>
+                          </Show>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>

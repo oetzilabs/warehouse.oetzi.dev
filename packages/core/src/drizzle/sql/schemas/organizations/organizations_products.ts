@@ -18,6 +18,7 @@ export const TB_organizations_products = schema.table(
       .varchar("product_id")
       .references(() => TB_products.id, { onDelete: "cascade" })
       .notNull(),
+    deletedAt: t.timestamp("deleted_at", { withTimezone: true, mode: "date" }),
   }),
   (table) => [primaryKey({ columns: [table.organizationId, table.productId] })],
 );

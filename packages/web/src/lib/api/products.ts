@@ -1,6 +1,17 @@
 import { action, json, query, redirect } from "@solidjs/router";
+import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import {
+  OrganizationNotFound,
+  OrganizationProductNotAdded,
+  OrganizationProductNotFound,
+  OrganizationProductNotRemoved,
+} from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
-import { ProductNotDeleted, ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
+import {
+  ProductNotDeleted,
+  ProductNotFound,
+  ProductNotUpdated,
+} from "@warehouseoetzidev/core/src/entities/products/errors";
 import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
@@ -81,15 +92,29 @@ export const getProductById = query(async (pid: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
+      const orgService = yield* _(OrganizationService);
+      const org = yield* orgService.findById(orgId);
+      if (!org) {
+        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
+      }
       const productService = yield* _(ProductService);
       const product = yield* productService.findById(pid);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id: pid }));
       }
-      return product;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(WarehouseLive)),
+      const orgP = yield* orgService.findProductById(orgId, pid);
+      if (!orgP) {
+        return yield* Effect.fail(new OrganizationProductNotFound({ productId: pid, organizationId: orgId }));
+      }
+
+      return { ...product, isInSortiment: orgP.deletedAt === null };
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
   );
   return product;
 }, "product-by-id");
@@ -108,37 +133,31 @@ export const deleteProduct = action(async (id: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const whid = session.current_warehouse_id;
-  if (!whid) {
+  const orgId = session.current_organization_id;
+  if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
       const productService = yield* _(ProductService);
-      const warehouseService = yield* _(WarehouseService);
-      const wh = yield* warehouseService.findById(whid);
-      if (!wh) {
-        return yield* Effect.fail(new WarehouseNotFound({ id: whid }));
+      const orgService = yield* _(OrganizationService);
+      const org = yield* orgService.findById(orgId);
+      if (!org) {
+        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
       const product = yield* productService.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
-      const p = yield* productService.safeRemove(product.id);
-      if (!p) {
-        return yield* Effect.fail(new ProductNotDeleted({ id }));
-      }
+      const p = yield* orgService.removeProduct(org.id, product.id);
       // remove the product from the warehouse
       // yield* warehouseService.removeProduct(wh.id, product.id);
       return p;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(WarehouseLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
   );
   return json(product, {
-    revalidate: [getProductById.keyFor(product.id), getProducts.key],
-    // headers: {
-    //   Location: `/warehouse/${whid}/products`,
-    // },
-    // status: 303,
+    revalidate: [getProductById.keyFor(id), getProducts.key],
   });
 });
 
@@ -188,5 +207,49 @@ export const downloadProductSheet = action(async (pid: string) => {
       });
       throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
     },
+  });
+});
+
+export const reAddProduct = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const product = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const orgService = yield* _(OrganizationService);
+      const org = yield* orgService.findById(orgId);
+      if (!org) {
+        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
+      }
+      const productService = yield* _(ProductService);
+      const product = yield* productService.findById(id);
+      if (!product) {
+        return yield* Effect.fail(new ProductNotFound({ id }));
+      }
+
+      const p = yield* orgService.addProduct(org.id, product.id);
+      if (!p) {
+        return yield* Effect.fail(new OrganizationProductNotAdded({ productId: id, organizationId: orgId }));
+      }
+
+      return p;
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+  );
+  return json(product, {
+    revalidate: [getProductById.keyFor(id), getProducts.key],
   });
 });

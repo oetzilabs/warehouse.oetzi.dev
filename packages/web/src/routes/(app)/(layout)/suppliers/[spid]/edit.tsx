@@ -35,10 +35,14 @@ export default function EditSupplierPage() {
 
             <SupplierForm
               defaultValues={{
-                id: supplierInfo().id,
-                name: supplierInfo().name,
-                email: supplierInfo().email,
-                phone: supplierInfo().phone ?? "",
+                id: supplierInfo().supplier.id,
+                name: supplierInfo().supplier.name,
+                email: supplierInfo().supplier.email,
+                phone: supplierInfo().supplier.phone ?? "",
+                bank_details: supplierInfo().supplier.bank_details,
+                code: supplierInfo().supplier.code,
+                payment_terms: supplierInfo().supplier.payment_terms,
+                website: supplierInfo().supplier.website,
               }}
               onSubmit={async (values) => {
                 const promise = updateSupplierAction(values);

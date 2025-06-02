@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { relations } from "drizzle-orm";
 import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { InferInput, nullable, object, omit, partial, pipe, string, transform } from "valibot";
+import { date, InferInput, nullable, object, omit, optional, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import {
   TB_order_products,
@@ -136,6 +136,7 @@ export const ProductCreateWithDateStringToDateSchema = object({});
 export const ProductUpdateSchema = object({
   ...partial(ProductCreateSchema).entries,
   id: prefixed_cuid2,
+  deletedAt: optional(nullable(date())),
 });
 
 export type ProductCreate = InferInput<typeof ProductCreateSchema>;
