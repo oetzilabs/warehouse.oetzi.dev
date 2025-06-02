@@ -629,7 +629,15 @@ export default function ProductPage() {
                         toast.promise(downloadProductSheetAction(productInfo().id), {
                           loading: "Downloading product sheet...",
                           success: (data) => {
-                            const blob = new Blob([data.pdf], { type: "application/pdf" });
+                            const binaryString = atob(data.pdf);
+
+                            const len = binaryString.length;
+                            const bytes = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) {
+                              bytes[i] = binaryString.charCodeAt(i);
+                            }
+
+                            const blob = new Blob([bytes], { type: "application/pdf" });
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement("a");
                             link.href = url;
@@ -641,7 +649,7 @@ export default function ProductPage() {
 
                             return "Product sheet downloaded";
                           },
-                          error: "Failed to download product sheet",
+                          error: (e) => `Failed to download product sheet: ${e}`,
                         });
                       }}
                     >

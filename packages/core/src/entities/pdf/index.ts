@@ -34,15 +34,15 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     const createProductInfoPDF = ({
       organization,
       product,
-      supplier,
+      suppliers,
       certificates,
       conditions,
     }: {
       organization: { name: string; address: string; contact: string };
       product: { name: string; sku: string; description: string };
-      supplier: { name: string; contact: string };
+      suppliers: Array<{ name: string; contact: string }>;
       certificates: Array<{ name: string; number: string }>;
-      conditions: Array<{ type: string; value: string }>;
+      conditions: Array<{ name: string; values: Record<string, string> }>;
     }) =>
       Effect.gen(function* (_) {
         const qrCodeData = yield* generateQRCode(product.sku);
@@ -73,9 +73,9 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                   ],
                 },
                 {
-                  width: 100,
+                  width: 50, // reduced from 100
                   image: `data:image/png;base64,${qrCodeData}`,
-                  fit: [100, 100],
+                  fit: [50, 50], // reduced from [100, 100]
                 },
               ],
             },
@@ -89,26 +89,63 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
               ],
               margin: [0, 0, 0, 20],
             },
-            { text: "Supplier Information", style: "sectionHeader", margin: [0, 0, 0, 8] },
-            { text: `Supplier: ${supplier.name}`, style: "normalText", margin: [0, 0, 0, 20] },
-            conditions.length > 0
+            { text: "Suppliers Information", style: "sectionHeader", margin: [0, 0, 0, 8] },
+            {
+              stack: suppliers.map((s) => ({
+                text: `${s.name} (${s.contact})`,
+                style: "normalText",
+              })),
+              margin: [0, 0, 0, 20],
+            },
+            ...(conditions.length > 0
               ? [
-                  { text: "Conditions", style: "sectionHeader", margin: [0, 0, 0, 8] },
-                  ...conditions.map((c) => ({
-                    text: `${c.type}: ${c.value}`,
-                    style: "normalText",
+                  {
+                    text: "Conditions",
+                    style: "sectionHeader",
+                    margin: [0, 0, 0, 8] as [number, number, number, number],
+                  },
+                  ...conditions.map((condition) => ({
+                    table: {
+                      widths: ["*", "*"],
+                      headerRows: 1,
+                      body: [
+                        [
+                          { text: condition.name, style: "tableHeader", fillColor: "#f8f9fa" },
+                          { text: "Value", style: "tableHeader", fillColor: "#f8f9fa" },
+                        ],
+                        ...Object.entries(condition.values).map(([key, value]) => [
+                          { text: key, style: "tableCell" },
+                          { text: value, style: "tableCell" },
+                        ]),
+                      ],
+                    },
+                    layout: {
+                      hLineWidth: () => 1,
+                      vLineWidth: () => 1,
+                      hLineColor: () => "#e9ecef",
+                      vLineColor: () => "#e9ecef",
+                      paddingLeft: () => 8,
+                      paddingRight: () => 8,
+                      paddingTop: () => 8,
+                      paddingBottom: () => 8,
+                    },
+                    margin: [0, 0, 0, 15] as [number, number, number, number],
                   })),
                 ]
-              : [],
-            certificates.length > 0
+              : []),
+            ...(certificates.length > 0
               ? [
-                  { text: "Certificates", style: "sectionHeader", margin: [0, 20, 0, 8] },
+                  {
+                    text: "Certificates",
+                    style: "sectionHeader",
+                    margin: [0, 20, 0, 8] as [number, number, number, number],
+                  },
                   ...certificates.map((cert) => ({
                     text: `${cert.name}: ${cert.number}`,
                     style: "normalText",
                   })),
                 ]
-              : [],
+              : []),
             { canvas: [{ type: "line", x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: "#CCCCCC" }] },
             {
               image: barcodeData,
@@ -138,20 +175,28 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
               font: "Courier",
               lineHeight: 1.2,
             },
+            tableHeader: {
+              fontSize: 10,
+              bold: true,
+              font: "Courier",
+              color: "#495057",
+            },
+            tableCell: {
+              fontSize: 9,
+              font: "Courier",
+              color: "#212529",
+            },
           },
         };
-
-        return yield* Effect.promise(
-          () =>
-            new Promise<Buffer>((resolve, reject) => {
-              const pdfDoc = printer.createPdfKitDocument(docDefinition);
-              const chunks: Uint8Array[] = [];
-              pdfDoc.on("data", (chunk) => chunks.push(chunk));
-              pdfDoc.on("end", () => resolve(Buffer.concat(chunks)));
-              pdfDoc.on("error", reject);
-              pdfDoc.end();
-            }),
-        );
+        const pdf = yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
+          const pdfDoc = printer.createPdfKitDocument(docDefinition);
+          const chunks: Uint8Array[] = [];
+          pdfDoc.on("data", (chunk) => chunks.push(chunk));
+          pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
+          pdfDoc.on("error", (error) => resume(Effect.fail(error)));
+          pdfDoc.end();
+        });
+        return pdf;
       });
 
     return {

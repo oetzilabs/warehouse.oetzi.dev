@@ -112,6 +112,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
     references: [TB_tax_groups.id],
   }),
   images: many(TB_product_to_images),
+  stcs: many(TB_products_to_storage_conditions),
 }));
 
 export type ProductSelect = typeof TB_products.$inferSelect;

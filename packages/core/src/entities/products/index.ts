@@ -87,6 +87,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           db.query.TB_products.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: {
+              stcs: {
+                with: {
+                  condition: true,
+                },
+              },
               certs: {
                 with: {
                   cert: true,
@@ -483,20 +488,41 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return buffer;
       });
 
-    const generatePDF = (product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>) =>
+    const generatePDF = (
+      product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
+      options: {
+        organization: {
+          name: string;
+          address: string;
+          contact: string;
+        };
+        suppliers: Array<{
+          name: string;
+          contact: string;
+        }>;
+      },
+    ) =>
       Effect.gen(function* (_) {
         const pdfGenService = yield* _(PDFService);
 
         const generatedPdf = yield* pdfGenService.createProductInfoPDF({
           product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-          organization: {
-            name: "ASDF",
-            address: "ASDF",
-            contact: "ASDF",
-          },
-          supplier: { name: "ASDF", contact: "ASDF" },
+          organization: options.organization,
+          suppliers: options.suppliers,
           certificates: product.certs.map((c) => ({ name: c.cert.name, number: c.cert.certificationNumber ?? "N/A" })),
-          conditions: [{ type: "ASDF", value: "ASDF" }],
+          conditions: product.stcs
+            .map((sc) => sc.condition)
+            .map((c) => ({
+              name: `${c.name} (${c.description})`,
+              values: {
+                "Min Temperature": (c.temperatureMin ?? 0).toFixed(2),
+                "Max Temperature": (c.temperatureMax ?? 0).toFixed(2),
+                "Min Humidity": (c.humidityMin ?? 0).toFixed(2),
+                "Max Humidity": (c.humidityMax ?? 0).toFixed(2),
+                "Min Light Level": (c.lightLevelMin ?? 0).toFixed(2),
+                "Max Light Level": (c.lightLevelMax ?? 0).toFixed(2),
+              },
+            })),
         });
 
         return generatedPdf;

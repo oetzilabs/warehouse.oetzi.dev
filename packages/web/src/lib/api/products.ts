@@ -4,17 +4,12 @@ import {
   OrganizationNotFound,
   OrganizationProductNotAdded,
   OrganizationProductNotFound,
-  OrganizationProductNotRemoved,
 } from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
-import {
-  ProductNotDeleted,
-  ProductNotFound,
-  ProductNotUpdated,
-} from "@warehouseoetzidev/core/src/entities/products/errors";
+import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
-import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
+import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
+import { SupplierNotFound } from "@warehouseoetzidev/core/src/entities/suppliers/errors";
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
 
@@ -177,6 +172,10 @@ export const downloadProductSheet = action(async (pid: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const productExit = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const productService = yield* _(ProductService);
@@ -184,12 +183,30 @@ export const downloadProductSheet = action(async (pid: string) => {
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id: pid }));
       }
-      const pdf = yield* productService.generatePDF(product);
+      const orgService = yield* _(OrganizationService);
+      const org = yield* orgService.findById(orgId);
+      if (!org) {
+        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
+      }
+      const suppliers = product.suppliers.map((s) => ({
+        name: s.supplier.name,
+        contact: s.supplier.contacts.map((c) => `${c.name}: ${c.email}`).join(", "),
+      }));
+
+      const pdf = yield* productService.generatePDF(product, {
+        organization: {
+          name: org.name,
+          address: "",
+          contact: "",
+        },
+        suppliers,
+      });
+
       return yield* Effect.succeed({
-        pdf,
+        pdf: pdf.toString("base64"),
         name: product.name,
       });
-    }).pipe(Effect.provide(ProductLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(SupplierLive)),
   );
 
   return Exit.match(productExit, {

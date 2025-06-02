@@ -12,12 +12,12 @@ export const TB_storage_conditions = commonTable(
   {
     name: text("name").notNull(),
     description: text("description"),
-    temperatureMin: decimal("temperature_min", { precision: 5, scale: 2 }),
-    temperatureMax: decimal("temperature_max", { precision: 5, scale: 2 }),
-    humidityMin: decimal("humidity_min", { precision: 5, scale: 2 }),
-    humidityMax: decimal("humidity_max", { precision: 5, scale: 2 }),
-    lightLevelMin: decimal("light_level_min", { precision: 5, scale: 2 }),
-    lightLevelMax: decimal("light_level_max", { precision: 5, scale: 2 }),
+    temperatureMin: decimal("temperature_min", { precision: 5, scale: 2, mode: "number" }),
+    temperatureMax: decimal("temperature_max", { precision: 5, scale: 2, mode: "number" }),
+    humidityMin: decimal("humidity_min", { precision: 5, scale: 2, mode: "number" }),
+    humidityMax: decimal("humidity_max", { precision: 5, scale: 2, mode: "number" }),
+    lightLevelMin: decimal("light_level_min", { precision: 5, scale: 2, mode: "number" }),
+    lightLevelMax: decimal("light_level_max", { precision: 5, scale: 2, mode: "number" }),
   },
   "stcond",
 );
