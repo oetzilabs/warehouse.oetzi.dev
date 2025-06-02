@@ -9,7 +9,7 @@ import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehous
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
 
-export const printProductSheet = action(async (whid: string, did: string, pid: string) => {
+export const printProductSheet = action(async (did: string, pid: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) {
@@ -26,12 +26,7 @@ export const printProductSheet = action(async (whid: string, did: string, pid: s
 
   const program = Effect.gen(function* (_) {
     const productService = yield* _(ProductService);
-    const whService = yield* _(WarehouseService);
     const deviceService = yield* _(DeviceService);
-    const wh = yield* whService.findById(whid);
-    if (!wh) {
-      return yield* Effect.fail(new WarehouseNotFound({ id: whid }));
-    }
     const product = yield* productService.findById(pid);
     if (!product) {
       return yield* Effect.fail(new ProductNotFound({ id: pid }));
@@ -44,7 +39,7 @@ export const printProductSheet = action(async (whid: string, did: string, pid: s
     const result = yield* productService.printProductSheet(device, product);
 
     return result;
-  }).pipe(Effect.provide(ProductLive), Effect.provide(WarehouseLive), Effect.provide(DeviceLive));
+  }).pipe(Effect.provide(ProductLive), Effect.provide(DeviceLive));
 
   const productExit = await Effect.runPromiseExit(program);
 

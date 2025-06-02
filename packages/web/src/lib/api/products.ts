@@ -113,7 +113,9 @@ export const getProductById = query(async (pid: string) => {
         return yield* Effect.fail(new OrganizationProductNotFound({ productId: pid, organizationId: orgId }));
       }
 
-      return { ...product, isInSortiment: orgP.deletedAt === null };
+      const stock = yield* productService.getStockCount(product.id, orgId);
+
+      return { ...product, isInSortiment: orgP.deletedAt === null, stock };
     }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
   );
   return product;
@@ -183,21 +185,16 @@ export const downloadProductSheet = action(async (pid: string) => {
         return yield* Effect.fail(new ProductNotFound({ id: pid }));
       }
       const pdf = yield* productService.generatePDF(product);
-      return {
+      return yield* Effect.succeed({
         pdf,
         name: product.name,
-      };
+      });
     }).pipe(Effect.provide(ProductLive)),
   );
 
   return Exit.match(productExit, {
     onSuccess: (data) => {
-      return new Response(data.pdf, {
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename=${data.name}.pdf`,
-        },
-      });
+      return json(data);
     },
     onFailure: (cause) => {
       console.log(cause);

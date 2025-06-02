@@ -8,6 +8,7 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { PDFLive, PDFService } from "../pdf";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
@@ -86,6 +87,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           db.query.TB_products.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: {
+              certs: {
+                with: {
+                  cert: true,
+                },
+              },
               images: {
                 with: {
                   image: true,
@@ -479,9 +485,90 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
     const generatePDF = (product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>) =>
       Effect.gen(function* (_) {
-        const buffer = new Uint8Array(1024);
+        const pdfGenService = yield* _(PDFService);
 
-        return buffer;
+        const generatedPdf = yield* pdfGenService.createProductInfoPDF({
+          product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
+          organization: {
+            name: "ASDF",
+            address: "ASDF",
+            contact: "ASDF",
+          },
+          supplier: { name: "ASDF", contact: "ASDF" },
+          certificates: product.certs.map((c) => ({ name: c.cert.name, number: c.cert.certificationNumber ?? "N/A" })),
+          conditions: [{ type: "ASDF", value: "ASDF" }],
+        });
+
+        return generatedPdf;
+      }).pipe(Effect.provide(PDFLive));
+
+    const getStockCount = (productId: string, orgId: string) =>
+      Effect.gen(function* (_) {
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
+
+        // First check if product belongs to organization
+        const orgProduct = yield* Effect.promise(() =>
+          db.query.TB_organizations_products.findFirst({
+            where: (products, { and, eq }) =>
+              and(eq(products.productId, parsedProductId.output), eq(products.organizationId, parsedOrgId.output)),
+          }),
+        );
+
+        if (!orgProduct) {
+          return yield* Effect.fail(new ProductNotFound({ id: productId }));
+        }
+
+        // Get all warehouses belonging to the organization
+        const orgWarehouses = yield* Effect.promise(() =>
+          db.query.TB_organizations_warehouses.findMany({
+            where: (ow, { eq }) => eq(ow.organizationId, parsedOrgId.output),
+            with: {
+              warehouse: {
+                with: {
+                  fcs: {
+                    with: {
+                      ars: {
+                        with: {
+                          strs: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+
+        // Get all storage spaces containing this product
+        const productSpaces = yield* Effect.promise(() =>
+          db.query.TB_storage_spaces_to_products.findMany({
+            where: (products, { eq }) => eq(products.productId, parsedProductId.output),
+            with: {
+              storage: {
+                with: {
+                  storage: true,
+                },
+              },
+            },
+          }),
+        );
+
+        // Count only products in storage spaces that belong to organization's warehouses
+        const storageIds = new Set(
+          orgWarehouses.flatMap((ow) => ow.warehouse.fcs.flatMap((f) => f.ars.flatMap((a) => a.strs.map((s) => s.id)))),
+        );
+
+        const count = productSpaces.filter((ps) => storageIds.has(ps.storage.storage.id)).length;
+
+        return count;
       });
 
     return {
@@ -496,6 +583,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       removeLabel,
       printProductSheet,
       generatePDF,
+      getStockCount,
     } as const;
   }),
   dependencies: [DatabaseLive],

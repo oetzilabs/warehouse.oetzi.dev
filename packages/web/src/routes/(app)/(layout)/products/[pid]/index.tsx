@@ -30,6 +30,7 @@ import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 // import Barcode from "lucide-solid/icons/barcode";
 import ArrowRight from "lucide-solid/icons/arrow-right";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Copy from "lucide-solid/icons/copy";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -37,6 +38,8 @@ import Map from "lucide-solid/icons/map";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
 import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
+import RulerDimensionLine from "lucide-solid/icons/ruler-dimension-line";
+import Weight from "lucide-solid/icons/weight";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -125,55 +128,6 @@ export default function ProductPage() {
                             <Edit class="size-4" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuSub overlap>
-                            <DropdownMenuSubTrigger class="gap-2 cursor-pointer">
-                              <Printer class="size-4" />
-                              Print Sheet
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                                <Show when={printers()}>
-                                  {(devices) => (
-                                    <For
-                                      each={devices()}
-                                      fallback={<DropdownMenuItem disabled>No printers found</DropdownMenuItem>}
-                                    >
-                                      {(device) => (
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            toast.promise(
-                                              printProductSheetAction(params.whid, device.id, productInfo().id),
-                                              {
-                                                loading: "Printing product sheet...",
-                                                success: "Product sheet printed",
-                                                error: "Failed to print product sheet",
-                                              },
-                                            );
-                                          }}
-                                        >
-                                          <Printer class="size-4" />
-                                          {device.name.length > 0 ? device.name : device.type.name}
-                                        </DropdownMenuItem>
-                                      )}
-                                    </For>
-                                  )}
-                                </Show>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    toast.promise(downloadProductSheetAction(productInfo().id), {
-                                      loading: "Downloading product sheet...",
-                                      success: "Product sheet downloaded",
-                                      error: "Failed to download product sheet",
-                                    });
-                                  }}
-                                  disabled
-                                >
-                                  Download as PDF
-                                </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                          </DropdownMenuSub>
                           <DropdownMenuSeparator />
                           <Show
                             when={!productInfo().isInSortiment}
@@ -252,31 +206,9 @@ export default function ProductPage() {
                   </div>
                 </div>
                 <div class="flex flex-row items-center gap-4 w-full justify-between">
-                  <div class="flex flex-col gap-2">
-                    <div class="flex justify-between items-center gap-2">
-                      <span class="text-sm font-medium">SKU:</span>
-                      <span class="text-sm">{productInfo().sku}</span>
-                    </div>
-                    <Show when={productInfo().weight}>
-                      {(w) => (
-                        <div class="flex justify-between items-center gap-2">
-                          <span class="text-sm font-medium">Weight:</span>
-                          <span class="text-sm">
-                            {w().value} {w().unit}
-                          </span>
-                        </div>
-                      )}
-                    </Show>
-                    <div class="flex justify-between items-center gap-2">
-                      <span class="text-sm font-medium">Last updated:</span>
-                      <span class="text-sm">
-                        {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="flex flex-col items-end gap-1">
+                  <div class="flex flex-col items-start gap-1">
                     <span class="text-xl font-semibold">
-                      {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
+                      Selling Price: {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
                     </span>
                     <span class="text-sm text-muted-foreground">
                       Purchase: {(productInfo().purchasePrice ?? 0).toFixed(2)} {productInfo().currency}
@@ -297,13 +229,29 @@ export default function ProductPage() {
                         .reduce((a, b) => a + b, 0) ?? 0}
                     </span>
                   </div>
+                  <div class="px-4 flex flex-row items-center gap-4">
+                    <div class="flex flex-col justify-between items-center gap-1 text-muted-foreground">
+                      <RulerDimensionLine class="size-6" />
+                      <span class="text-sm font-medium">
+                        <Show when={productInfo().dimensions} fallback="N/A">
+                          {(w) => `${w().width}/${w().height}/${w().length}/${w().unit}`}
+                        </Show>
+                      </span>
+                    </div>
+                    <div class="flex flex-col justify-between items-center gap-1 text-muted-foreground">
+                      <Weight class="size-6" />
+                      <span class="text-sm font-medium">
+                        <Show when={productInfo().weight}>{(w) => `${w().value} ${w().unit}`}</Show>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-4 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between">
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Images</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button variant="outline" size="sm" class="bg-background">
@@ -315,7 +263,7 @@ export default function ProductPage() {
                   <Show
                     when={productInfo().images?.length > 0}
                     fallback={
-                      <div class="flex flex-col items-center justify-center p-8 border rounded-lg bg-muted-foreground/5">
+                      <div class="flex flex-col items-center justify-center p-8">
                         <span class="text-sm text-muted-foreground">No images have been added yet</span>
                       </div>
                     }
@@ -344,30 +292,32 @@ export default function ProductPage() {
                   </Show>
                 </div>
 
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
+                <div class="flex flex-col gap-2 border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Codes</h2>
-                    <div class="flex flex-row items-center">
+                    <div class="flex flex-row items-center gap-2">
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="outline"
+                        size="sm"
+                        class="bg-background"
                         onClick={() => {
                           toast.promise(navigator.clipboard.writeText(productInfo().sku ?? ""), {
                             loading: "Copying Barcode...",
-                            success: `Barcode '${productInfo().barcode}' copied to clipboard`,
+                            success: `Barcode '${productInfo().sku}' copied to clipboard`,
                             error: "Failed to copy Barcode",
                           });
                         }}
                       >
                         <Copy class="size-4" />
+                        Copy Barcode
                       </Button>
                     </div>
                   </div>
-                  <div class="flex flex-row gap-10 items-center justify-center">
+                  <div class="flex flex-row gap-10 items-center justify-center p-4">
                     <Barcode
                       value={productInfo().sku ?? ""}
                       fallback={
-                        <span class="h-32 w-[250px] items-center justify-center flex flex-col bg-muted-foreground/10 rounded-lg">
+                        <span class="h-32 w-full items-center justify-center flex flex-col bg-muted-foreground/10 rounded-lg">
                           <Loader2 class="size-4 animate-spin" />
                         </span>
                       }
@@ -382,99 +332,112 @@ export default function ProductPage() {
                     />
                   </div>
                 </div>
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
+                <div class="flex flex-col gap-2 border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Brand</h2>
-                    <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon">
+                    <div class="flex flex-row items-center gap-2">
+                      <Button variant="outline" size="sm" class="bg-background">
                         <Plus class="size-4" />
+                        Assign Brand
                       </Button>
                     </div>
                   </div>
+
                   <Show
                     when={productInfo().brands}
-                    fallback={<span class="text-sm text-muted-foreground">No brands added.</span>}
+                    fallback={
+                      <span class="flex flex-col items-center justify-center text-sm text-muted-foreground p-8">
+                        No brands added.
+                      </span>
+                    }
                   >
                     {(b) => (
-                      <div class="flex flex-col gap-1">
-                        <span class="text-sm text-muted-foreground">{b().name ?? "N/A"}</span>
+                      <div class="flex flex-col gap-1 p-4">
+                        <div class="flex flex-col gap-1">
+                          <span class="text-sm text-muted-foreground">{b().name ?? "N/A"}</span>
+                        </div>
                       </div>
                     )}
                   </Show>
                 </div>
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
+                <div class="flex flex-col gap-2 border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Condition</h2>
-                    <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon">
+                    <div class="flex flex-row items-center gap-2">
+                      <Button variant="outline" size="sm" class="bg-background">
                         <Plus class="size-4" />
+                        Add Condition
                       </Button>
                     </div>
                   </div>
                   <For
                     each={productInfo().stco}
                     fallback={
-                      <div class="flex flex-col gap-1">
+                      <div class="flex flex-col items-center justify-center p-8">
                         <span class="text-sm text-muted-foreground">No conditions added.</span>
                       </div>
                     }
                   >
                     {(stco) => (
-                      <div class="flex flex-col gap-1">
+                      <div class="flex flex-col gap-1 p-4">
                         <span class="text-sm text-muted-foreground">{stco.condition?.name ?? "N/A"}</span>
                       </div>
                     )}
                   </For>
                 </div>
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between">
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Suppliers</h2>
-                    <div class="flex flex-row items-center">
-                      <Button variant="ghost" size="icon">
+                    <div class="flex flex-row items-center gap-2">
+                      <Button variant="outline" size="sm" class="bg-background">
                         <Plus class="size-4" />
+                        Add Supplier
                       </Button>
                     </div>
                   </div>
                   <For
                     each={productInfo().suppliers}
                     fallback={
-                      <div class="flex flex-col gap-1">
+                      <div class="flex flex-col items-center justify-center p-8">
                         <span class="text-sm text-muted-foreground">No suppliers added.</span>
                       </div>
                     }
                   >
                     {(supplier) => (
-                      <div class="flex flex-col gap-4 p-4 border rounded-md">
+                      <div class="flex flex-col gap-4 p-4">
                         <div class="flex flex-row items-center justify-between">
                           <div class="flex flex-col gap-1">
-                            <span class="text-sm font-medium">{supplier.supplier.name}</span>
+                            <div class="flex flex-row items-center gap-2">
+                              <span class="text-sm font-medium">{supplier.supplier.name}</span>
+                              <span
+                                class={cn("text-xs px-2 py-0.5 rounded-full select-none", {
+                                  "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400":
+                                    supplier.supplier.status === "active",
+                                  "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400":
+                                    supplier.supplier.status === "under_review",
+                                  "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400":
+                                    supplier.supplier.status === "blacklisted",
+                                  "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400":
+                                    supplier.supplier.status === "inactive",
+                                })}
+                              >
+                                {supplier.supplier.status}
+                              </span>
+                            </div>
                             <Show when={supplier.supplier.code}>
                               <span class="text-xs text-muted-foreground">Code: {supplier.supplier.code}</span>
                             </Show>
                           </div>
                           <div class="flex items-center gap-2">
-                            <span
-                              class={cn("text-xs px-2 py-0.5 rounded-full", {
-                                "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400":
-                                  supplier.supplier.status === "active",
-                                "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400":
-                                  supplier.supplier.status === "under_review",
-                                "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400":
-                                  supplier.supplier.status === "blacklisted",
-                                "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400":
-                                  supplier.supplier.status === "inactive",
-                              })}
-                            >
-                              {supplier.supplier.status}
-                            </span>
                             <Button
                               as={A}
                               href={`/suppliers/${supplier.supplier.id}`}
                               variant="outline"
                               class="bg-background"
-                              size="icon"
+                              size="sm"
                             >
-                              <ArrowRight class="size-4" />
+                              View
+                              <ArrowUpRight class="size-4" />
                             </Button>
                           </div>
                         </div>
@@ -582,12 +545,14 @@ export default function ProductPage() {
                 </div>
               </div>
               <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Inventory</h2>
-                  <div class="flex flex-col gap-1">
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                    <h2 class="font-medium p-4">Inventory</h2>
+                  </div>
+                  <div class="flex flex-col gap-1 p-4 border-b">
                     <div class="flex justify-between">
                       <span class="text-sm text-muted-foreground">Stock:</span>
-                      <span class="text-sm text-muted-foreground">0</span>
+                      <span class="text-sm text-muted-foreground">{productInfo().stock}</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-sm text-muted-foreground">Min Stock:</span>
@@ -601,6 +566,92 @@ export default function ProductPage() {
                       <span class="text-sm text-muted-foreground">Reordering At:</span>
                       <span class="text-sm text-muted-foreground">{productInfo().reorderPoint ?? "N/A"}</span>
                     </div>
+                  </div>
+                  <div class="flex flex-col p-4">
+                    <Button>Reorder Now</Button>
+                  </div>
+                </div>
+
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                    <h2 class="font-medium p-4">Actions</h2>
+                  </div>
+                  <div class="flex flex-col gap-2 p-4">
+                    <DropdownMenu sameWidth>
+                      <DropdownMenuTrigger as={Button} class="w-full justify-between">
+                        <div class="flex items-center gap-2">
+                          <Printer class="size-4" />
+                          Print Product Sheet
+                        </div>
+                        <ArrowRight class="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <Show when={printers()}>
+                          {(devices) => (
+                            <For
+                              each={devices()}
+                              fallback={<DropdownMenuItem disabled>No printers found</DropdownMenuItem>}
+                            >
+                              {(device) => (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    toast.promise(printProductSheetAction(device.id, productInfo().id), {
+                                      loading: "Printing product sheet...",
+                                      success: "Product sheet printed",
+                                      error: "Failed to print product sheet",
+                                    });
+                                  }}
+                                >
+                                  <Show
+                                    when={
+                                      isPrintingProductSheet.pending &&
+                                      isPrintingProductSheet.input[0] === device.id &&
+                                      isPrintingProductSheet.input[1] === productInfo().id
+                                    }
+                                    fallback={<Printer class="size-4" />}
+                                  >
+                                    <Loader2 class="size-4 animate-spin" />
+                                  </Show>
+                                  {device.name.length > 0 ? device.name : device.type.name}
+                                </DropdownMenuItem>
+                              )}
+                            </For>
+                          )}
+                        </Show>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button
+                      variant="outline"
+                      class="w-full justify-between"
+                      disabled={isDownloadingProductSheet.pending}
+                      onClick={() => {
+                        toast.promise(downloadProductSheetAction(productInfo().id), {
+                          loading: "Downloading product sheet...",
+                          success: (data) => {
+                            const blob = new Blob([data.pdf], { type: "application/pdf" });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = `${data.name}.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+
+                            return "Product sheet downloaded";
+                          },
+                          error: "Failed to download product sheet",
+                        });
+                      }}
+                    >
+                      <div class="flex items-center gap-2">
+                        <Show when={isDownloadingProductSheet.pending} fallback={<ArrowUpRight class="size-4" />}>
+                          <Loader2 class="size-4 animate-spin" />
+                        </Show>
+                        Download as PDF
+                      </div>
+                    </Button>
                   </div>
                 </div>
               </div>

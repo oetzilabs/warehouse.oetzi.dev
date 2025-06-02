@@ -193,7 +193,7 @@ export default function SupplierPage() {
                 </div>
 
                 <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
                     <h2 class="font-medium">Products</h2>
                     <div class="flex flex-row items-center">
                       <Button size="sm">
@@ -225,7 +225,7 @@ export default function SupplierPage() {
                             <div class="flex flex-row gap-2 items-center justify-between border-b last:border-b-0 p-4">
                               <div class="flex flex-col gap-1">
                                 <div class="flex flex-row items-center gap-2">
-                                  <span class="text-sm text-muted-foreground">{product.product.name}</span>
+                                  <span class="text-sm font-medium">{product.product.name}</span>
                                   <Show when={product.isInSortiment}>
                                     <Badge variant="outline" class="bg-rose-500 border-0 text-white">
                                       Not in Sortiment
@@ -260,7 +260,7 @@ export default function SupplierPage() {
                 </div>
 
                 <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
                     <h2 class="font-medium">Orders</h2>
                     <div class="flex flex-row items-center">
                       <Button size="sm">
@@ -289,7 +289,7 @@ export default function SupplierPage() {
                       <div class="flex flex-col gap-0">
                         <For each={supplierInfo().orders.slice(0, 10)}>
                           {(o) => (
-                            <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/[0.025] border-b last:border-b-0">
+                            <div class="flex flex-row items-center justify-between p-4 border-b last:border-b-0">
                               <div class="flex flex-col gap-1">
                                 <div class="flex flex-row items-center gap-2">
                                   <span class="text-sm font-medium">#{o.order.barcode ?? "N/A"}</span>
@@ -334,7 +334,7 @@ export default function SupplierPage() {
                 </div>
 
                 <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
                     <h2 class="font-medium">Notes</h2>
                     <div class="flex flex-row items-center">
                       <AddNoteDialog id={supplierInfo().supplier.id} />
@@ -368,7 +368,7 @@ export default function SupplierPage() {
                       <div class="flex flex-col gap-0">
                         <For each={supplierInfo().supplier.notes}>
                           {(note) => (
-                            <div class="flex flex-col gap-2 p-4 border-b last:border-b-0 hover:bg-muted-foreground/5">
+                            <div class="flex flex-col gap-2 p-4 border-b last:border-b-0">
                               <div class="flex flex-col gap-3">
                                 <div class="flex flex-row items-center gap-1 justify-between">
                                   <span class="font-semibold">{note.title}</span>

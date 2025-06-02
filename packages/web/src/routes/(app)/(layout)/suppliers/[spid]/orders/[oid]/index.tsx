@@ -377,7 +377,7 @@ export default function SupplierOrderPage() {
                                 class="w-full"
                               >
                                 <Printer class="size-4 mr-2" />
-                                {printer.name || printer.type}
+                                {printer.name || printer.type.name}
                               </Button>
                             )}
                           </For>
