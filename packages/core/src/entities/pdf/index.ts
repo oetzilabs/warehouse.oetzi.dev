@@ -158,22 +158,6 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
           pageOrientation: paper.orientation,
           pageMargins: [margins / 2, margins / 2, margins / 2, margins / 2],
           content: [
-            // Outer border box
-            // {
-            //   canvas: [
-            //     {
-            //       type: "rect",
-            //       x: margins / 2,
-            //       y: margins / 2,
-            //       w: pageWidth - margins,
-            //       h: pageHeight - margins,
-            //       lineWidth: 0.5,
-            //       lineColor: "#222222",
-            //     },
-            //   ],
-            //   absolutePosition: { x: 0, y: 0 },
-            // },
-            // Main content table
             {
               table: {
                 widths: ["*"],
@@ -427,65 +411,57 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       conditions: Array<{ name: string; values: Record<string, string> }>;
     }) =>
       Effect.gen(function* (_) {
-        const qrCodeData = yield* generateQRCode(product.sku);
-        const barcodeData = yield* generateBarcode(product.sku);
+        const basePdf = yield* createBasePDF({
+          paper,
+          headerVariant: "small",
+          organization,
+          product,
+        });
 
-        const printer = new PdfPrinter(fonts);
-
-        const docDefinition: TDocumentDefinitions = {
-          pageSize: paper.size,
-          pageOrientation: paper.orientation,
-          content: [
-            { text: "Product Conditions", style: "header" },
-            { text: `${product.name} (${product.sku})`, style: "subheader" },
-            ...conditions.map((c) => ({
-              stack: [
-                { text: c.name, style: "sectionHeader" },
-                ...Object.entries(c.values).map(([k, v]) => ({
-                  text: `${k}: ${v}`,
-                  style: "normalText",
-                })),
-              ],
-              margin: [0, 10] as [number, number],
-            })),
-          ],
-          styles: {
-            header: {
-              fontSize: 16,
-              bold: true,
-              font: "Courier",
-            },
-            subheader: {
-              fontSize: 8,
-              color: "grey",
-              font: "Courier",
-            },
-            sectionHeader: {
-              fontSize: 14,
-              bold: true,
-              font: "Courier",
-            },
-            normalText: {
-              fontSize: 12,
-              font: "Courier",
-              lineHeight: 1.2,
-            },
-            tableHeader: {
-              fontSize: 10,
-              bold: true,
-              font: "Courier",
-              color: "#495057",
-            },
-            tableCell: {
-              fontSize: 9,
-              font: "Courier",
-              color: "#212529",
-            },
+        ((basePdf.content as Content[])[0] as ContentTable).table.body.push([
+          {
+            stack: [
+              {
+                table: {
+                  widths: ["*"],
+                  body: [
+                    [
+                      {
+                        stack: [
+                          { text: "Product Conditions", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          ...conditions.map((c) => ({
+                            stack: [
+                              { text: c.name, style: "normalText", bold: true },
+                              ...Object.entries(c.values).map(([k, v]) => ({
+                                text: `${k}: ${v}`,
+                                style: "normalText",
+                              })),
+                            ],
+                            margin: [0, 5, 0, 5],
+                          })),
+                        ],
+                        border: [false, false, false, true],
+                        borderColor: Array(4).fill("#222222"),
+                      },
+                    ],
+                  ],
+                },
+                layout: getTableLayout(undefined, {
+                  paddingBottom: (i, node) => 10,
+                  paddingLeft: (i, node) => 10,
+                  paddingRight: (i, node) => 10,
+                  paddingTop: (i, node) => 10,
+                  defaultBorder: false,
+                }),
+              },
+            ],
+            border: [true, false, true, true],
+            borderColor: Array(4).fill("#222222"),
           },
-        };
+        ]);
 
         return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
-          const pdfDoc = printer.createPdfKitDocument(docDefinition);
+          const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
           const chunks: Uint8Array[] = [];
           pdfDoc.on("data", (chunk) => chunks.push(chunk));
           pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
@@ -506,59 +482,52 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       labels: Array<any>; // Replace with proper type
     }) =>
       Effect.gen(function* (_) {
-        const printer = new PdfPrinter(fonts);
-        const docDefinition: TDocumentDefinitions = {
-          pageSize: paper.size,
-          pageOrientation: paper.orientation,
-          content: [
-            { text: "Product Labels", style: "header" },
-            { text: `${product.name} (${product.sku})`, style: "subheader" },
-            ...labels.map(
-              (label) =>
-                ({
-                  text: label.name,
-                  style: "normalText",
-                  margin: [0, 5],
-                }) as ContentText,
-            ),
-          ],
-          styles: {
-            header: {
-              fontSize: 16,
-              bold: true,
-              font: "Courier",
-            },
-            subheader: {
-              fontSize: 8,
-              color: "grey",
-              font: "Courier",
-            },
-            sectionHeader: {
-              fontSize: 12,
-              bold: true,
-              font: "Courier",
-            },
-            normalText: {
-              fontSize: 10,
-              font: "Courier",
-              lineHeight: 1.2,
-            },
-            tableHeader: {
-              fontSize: 10,
-              bold: true,
-              font: "Courier",
-              color: "#495057",
-            },
-            tableCell: {
-              fontSize: 9,
-              font: "Courier",
-              color: "#212529",
-            },
+        const basePdf = yield* createBasePDF({
+          paper,
+          headerVariant: "small",
+          organization,
+          product,
+        });
+
+        ((basePdf.content as Content[])[0] as ContentTable).table.body.push([
+          {
+            stack: [
+              {
+                table: {
+                  widths: ["*"],
+                  body: [
+                    [
+                      {
+                        stack: [
+                          { text: "Product Labels", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          ...labels.map((label) => ({
+                            text: label.name,
+                            style: "normalText",
+                            margin: [0, 2, 0, 2],
+                          })),
+                        ],
+                        border: [false, false, false, true],
+                        borderColor: Array(4).fill("#222222"),
+                      },
+                    ],
+                  ],
+                },
+                layout: getTableLayout(undefined, {
+                  paddingBottom: (i, node) => 10,
+                  paddingLeft: (i, node) => 10,
+                  paddingRight: (i, node) => 10,
+                  paddingTop: (i, node) => 10,
+                  defaultBorder: false,
+                }),
+              },
+            ],
+            border: [true, false, true, true],
+            borderColor: Array(4).fill("#222222"),
           },
-        };
+        ]);
 
         return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
-          const pdfDoc = printer.createPdfKitDocument(docDefinition);
+          const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
           const chunks: Uint8Array[] = [];
           pdfDoc.on("data", (chunk) => chunks.push(chunk));
           pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
@@ -579,59 +548,52 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       certificates: Array<{ name: string; number: string }>;
     }) =>
       Effect.gen(function* (_) {
-        const printer = new PdfPrinter(fonts);
-        const docDefinition: TDocumentDefinitions = {
-          pageSize: paper.size,
-          pageOrientation: paper.orientation,
-          content: [
-            { text: "Product Certifications", style: "header" },
-            { text: `${product.name} (${product.sku})`, style: "subheader" },
-            ...certificates.map(
-              (cert) =>
-                ({
-                  text: `${cert.name}: ${cert.number}`,
-                  style: "normalText",
-                  margin: [0, 5],
-                }) as import("pdfmake/interfaces").ContentText,
-            ),
-          ],
-          styles: {
-            header: {
-              fontSize: 16,
-              bold: true,
-              font: "Courier",
-            },
-            subheader: {
-              fontSize: 8,
-              color: "grey",
-              font: "Courier",
-            },
-            sectionHeader: {
-              fontSize: 12,
-              bold: true,
-              font: "Courier",
-            },
-            normalText: {
-              fontSize: 10,
-              font: "Courier",
-              lineHeight: 1.2,
-            },
-            tableHeader: {
-              fontSize: 10,
-              bold: true,
-              font: "Courier",
-              color: "#495057",
-            },
-            tableCell: {
-              fontSize: 9,
-              font: "Courier",
-              color: "#212529",
-            },
+        const basePdf = yield* createBasePDF({
+          paper,
+          headerVariant: "small",
+          organization,
+          product,
+        });
+
+        ((basePdf.content as Content[])[0] as ContentTable).table.body.push([
+          {
+            stack: [
+              {
+                table: {
+                  widths: ["*"],
+                  body: [
+                    [
+                      {
+                        stack: [
+                          { text: "Product Certifications", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          ...certificates.map((cert) => ({
+                            text: `${cert.name}: ${cert.number}`,
+                            style: "normalText",
+                            margin: [0, 2, 0, 2],
+                          })),
+                        ],
+                        border: [false, false, false, true],
+                        borderColor: Array(4).fill("#222222"),
+                      },
+                    ],
+                  ],
+                },
+                layout: getTableLayout(undefined, {
+                  paddingBottom: (i, node) => 10,
+                  paddingLeft: (i, node) => 10,
+                  paddingRight: (i, node) => 10,
+                  paddingTop: (i, node) => 10,
+                  defaultBorder: false,
+                }),
+              },
+            ],
+            border: [true, false, true, true],
+            borderColor: Array(4).fill("#222222"),
           },
-        };
+        ]);
 
         return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
-          const pdfDoc = printer.createPdfKitDocument(docDefinition);
+          const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
           const chunks: Uint8Array[] = [];
           pdfDoc.on("data", (chunk) => chunks.push(chunk));
           pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
@@ -655,56 +617,53 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       };
     }) =>
       Effect.gen(function* (_) {
-        const printer = new PdfPrinter(fonts);
-        const docDefinition: TDocumentDefinitions = {
-          pageSize: paper.size,
-          pageOrientation: paper.orientation,
-          content: [
-            { text: "Product Location Map", style: "header" },
-            { text: `${product.name} (${product.sku})`, style: "subheader" },
-            ...Object.entries(map.metadata).map(([k, v]) => ({
-              text: `${k}: ${v}`,
-              style: "normalText",
-            })),
-            // TODO: Add actual map visualization
-          ],
-          styles: {
-            header: {
-              fontSize: 16,
-              bold: true,
-              font: "Courier",
-            },
-            subheader: {
-              fontSize: 8,
-              color: "grey",
-              font: "Courier",
-            },
-            sectionHeader: {
-              fontSize: 12,
-              bold: true,
-              font: "Courier",
-            },
-            normalText: {
-              fontSize: 10,
-              font: "Courier",
-              lineHeight: 1.2,
-            },
-            tableHeader: {
-              fontSize: 10,
-              bold: true,
-              font: "Courier",
-              color: "#495057",
-            },
-            tableCell: {
-              fontSize: 9,
-              font: "Courier",
-              color: "#212529",
-            },
+        const basePdf = yield* createBasePDF({
+          paper,
+          headerVariant: "small",
+          organization,
+          product,
+        });
+
+        ((basePdf.content as Content[])[0] as ContentTable).table.body.push([
+          {
+            stack: [
+              {
+                table: {
+                  widths: ["*"],
+                  body: [
+                    [
+                      {
+                        stack: [
+                          { text: "Product Location Map", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          ...Object.entries(map.metadata).map(([k, v]) => ({
+                            text: `${k}: ${v}`,
+                            style: "normalText",
+                            margin: [0, 2, 0, 2],
+                          })),
+                          // TODO: Add map visualization
+                        ],
+                        border: [false, false, false, true],
+                        borderColor: Array(4).fill("#222222"),
+                      },
+                    ],
+                  ],
+                },
+                layout: getTableLayout(undefined, {
+                  paddingBottom: (i, node) => 10,
+                  paddingLeft: (i, node) => 10,
+                  paddingRight: (i, node) => 10,
+                  paddingTop: (i, node) => 10,
+                  defaultBorder: false,
+                }),
+              },
+            ],
+            border: [true, false, true, true],
+            borderColor: Array(4).fill("#222222"),
           },
-        };
+        ]);
 
         return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
-          const pdfDoc = printer.createPdfKitDocument(docDefinition);
+          const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
           const chunks: Uint8Array[] = [];
           pdfDoc.on("data", (chunk) => chunks.push(chunk));
           pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
