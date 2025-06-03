@@ -7,6 +7,7 @@ import { ProductCreateSchema, ProductUpdateSchema, TB_products, TB_products_to_l
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
+import { OrganizationInfo } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
 import { WarehouseInvalidId } from "../warehouses/errors";
@@ -490,132 +491,21 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
     const generateSheet = (
       product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
+      organization: OrganizationInfo,
       options: {
         type: "full" | "conditions" | "labels" | "certifications" | "map";
-        paper: {
+        page: {
           size: PaperSize;
           orientation: PaperOrientation;
         };
-        organization: {
-          name: string;
-          address: string;
-          contact: string;
-        };
-        suppliers: Array<{
-          name: string;
-          contact: string;
-        }>;
       },
     ) =>
       Effect.gen(function* (_) {
         const pdfGenService = yield* _(PDFService);
-        let generatedPdf: Buffer<ArrayBuffer>;
-        switch (options.type) {
-          case "full":
-            generatedPdf = yield* pdfGenService.createProductInfoPDF({
-              paper: {
-                size: "A4",
-                orientation: "portrait",
-              },
-              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-              organization: options.organization,
-              suppliers: options.suppliers,
-              certificates: product.certs.map((c) => ({
-                name: c.cert.name,
-                number: c.cert.certificationNumber ?? "N/A",
-              })),
-              labels: product.labels.map((l) => ({
-                name: l.label.name,
-                value: l.label.name,
-              })),
-              conditions: product.stcs
-                .map((sc) => sc.condition)
-                .map((c) => ({
-                  name: `${c.name} (${c.description})`,
-                  values: {
-                    "Min Temperature": (c.temperatureMin ?? 0).toFixed(2),
-                    "Max Temperature": (c.temperatureMax ?? 0).toFixed(2),
-                    "Min Humidity": (c.humidityMin ?? 0).toFixed(2),
-                    "Max Humidity": (c.humidityMax ?? 0).toFixed(2),
-                    "Min Light Level": (c.lightLevelMin ?? 0).toFixed(2),
-                    "Max Light Level": (c.lightLevelMax ?? 0).toFixed(2),
-                  },
-                })),
-            });
+        let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.product(product, organization, {
+          page: options.page,
+        });
 
-            break;
-          case "conditions":
-            generatedPdf = yield* pdfGenService.createProductConditionsPDF({
-              paper: {
-                size: "A4",
-                orientation: "portrait",
-              },
-              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-              organization: options.organization,
-              conditions: product.stcs
-                .map((sc) => sc.condition)
-                .map((c) => ({
-                  name: `${c.name} (${c.description})`,
-                  values: {
-                    "Min Temperature": (c.temperatureMin ?? 0).toFixed(2),
-                    "Max Temperature": (c.temperatureMax ?? 0).toFixed(2),
-                    "Min Humidity": (c.humidityMin ?? 0).toFixed(2),
-                    "Max Humidity": (c.humidityMax ?? 0).toFixed(2),
-                    "Min Light Level": (c.lightLevelMin ?? 0).toFixed(2),
-                    "Max Light Level": (c.lightLevelMax ?? 0).toFixed(2),
-                  },
-                })),
-            });
-
-            break;
-          case "labels":
-            generatedPdf = yield* pdfGenService.createProductLabelsPDF({
-              paper: {
-                size: "A4",
-                orientation: "portrait",
-              },
-              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-              organization: options.organization,
-              labels: product.labels,
-            });
-
-            break;
-          case "certifications":
-            generatedPdf = yield* pdfGenService.createProductCertificationsPDF({
-              paper: {
-                size: "A4",
-                orientation: "portrait",
-              },
-              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-              organization: options.organization,
-              certificates: product.certs.map((c) => ({
-                name: c.cert.name,
-                number: c.cert.certificationNumber ?? "N/A",
-              })),
-            });
-            break;
-
-          case "map":
-            generatedPdf = yield* pdfGenService.createProductMapPDF({
-              paper: {
-                size: "A4",
-                orientation: "landscape",
-              },
-              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-              organization: options.organization,
-              map: {
-                metadata: {
-                  "Warehouse Name": "",
-                  "Facility Name": "",
-                },
-                items: [],
-              },
-            });
-
-            break;
-          default:
-            return "";
-        }
         return generatedPdf;
       }).pipe(Effect.provide(PDFLive));
 

@@ -195,23 +195,10 @@ export const downloadProductSheet = action(
         if (!org) {
           return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
         }
-        const suppliers = product.suppliers.map((s) => ({
-          name: s.supplier.name,
-          contact:
-            s.supplier.contacts.length > 0
-              ? s.supplier.contacts.map((c) => `${c.name}: ${c.email}`).join(", ")
-              : (s.supplier.email ?? "no contact"),
-        }));
 
-        const pdf = yield* productService.generatePDF(product, {
-          paper: { size: options.size, orientation: options.type === "map" ? "landscape" : "portrait" },
-          type: options.type,
-          organization: {
-            name: org.name,
-            address: "teststreet 123",
-            contact: "no contact, full page",
-          },
-          suppliers,
+        const pdf = yield* productService.generatePDF(product, org, {
+          type: "full",
+          page: { size: options.size, orientation: "portrait" },
         });
 
         return yield* Effect.succeed({
