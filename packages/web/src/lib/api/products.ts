@@ -202,6 +202,7 @@ export const downloadProductSheet = action(
 
         const pdf = yield* productService.generatePDF(product, {
           paper: { size: options.size, orientation: options.type === "map" ? "landscape" : "portrait" },
+          type: options.type,
           organization: {
             name: org.name,
             address: "",

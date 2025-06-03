@@ -641,7 +641,7 @@ export default function ProductPage() {
                       </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <DropdownMenu>
+                    <DropdownMenu sameWidth>
                       <DropdownMenuTrigger
                         as={Button}
                         variant="outline"
@@ -656,7 +656,7 @@ export default function ProductPage() {
                         </div>
                         <ArrowRight class="size-4" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent class="w-48">
+                      <DropdownMenuContent>
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger>
                             <div class="flex items-center gap-2">A4</div>
@@ -682,28 +682,71 @@ export default function ProductPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "conditions" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A4", type: "conditions" }),
+                                    {
+                                      loading: "Downloading conditions sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Conditions sheet downloaded";
+                                      },
+                                      error: "Failed to download conditions sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Conditions
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "labels" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A4", type: "labels" }),
+                                    {
+                                      loading: "Downloading labels sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Labels sheet downloaded";
+                                      },
+                                      error: "Failed to download labels sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Labels
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "certifications" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, {
+                                      size: "A4",
+                                      type: "certifications",
+                                    }),
+                                    {
+                                      loading: "Downloading certifications sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Certifications sheet downloaded";
+                                      },
+                                      error: "Failed to download certifications sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Certifications
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "map" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A4", type: "map" }),
+                                    {
+                                      loading: "Downloading map sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Map sheet downloaded";
+                                      },
+                                      error: "Failed to download map sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Map
@@ -719,35 +762,88 @@ export default function ProductPage() {
                             <DropdownMenuSubContent>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "full" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A5", type: "full" }),
+                                    {
+                                      loading: "Downloading product sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Product sheet downloaded";
+                                      },
+                                      error: "Failed to download product sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Entire Sheet
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "conditions" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A5", type: "conditions" }),
+                                    {
+                                      loading: "Downloading conditions sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Conditions sheet downloaded";
+                                      },
+                                      error: "Failed to download conditions sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Conditions
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "labels" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A5", type: "labels" }),
+                                    {
+                                      loading: "Downloading labels sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Labels sheet downloaded";
+                                      },
+                                      error: "Failed to download labels sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Labels
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "certifications" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, {
+                                      size: "A5",
+                                      type: "certifications",
+                                    }),
+                                    {
+                                      loading: "Downloading certifications sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Certifications sheet downloaded";
+                                      },
+                                      error: "Failed to download certifications sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Certifications
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "map" })
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A5", type: "map" }),
+                                    {
+                                      loading: "Downloading map sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Map sheet downloaded";
+                                      },
+                                      error: "Failed to download map sheet",
+                                    },
+                                  )
                                 }
                               >
                                 Map

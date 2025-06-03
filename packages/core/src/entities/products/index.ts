@@ -488,9 +488,10 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return buffer;
       });
 
-    const generatePDF = (
+    const generateSheet = (
       product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
       options: {
+        type: "full" | "conditions" | "labels" | "certifications" | "map";
         paper: {
           size: PaperSize;
           orientation: PaperOrientation;
@@ -508,31 +509,109 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
     ) =>
       Effect.gen(function* (_) {
         const pdfGenService = yield* _(PDFService);
-
-        const generatedPdf = yield* pdfGenService.createProductInfoPDF({
-          paper: {
-            size: "A4",
-            orientation: "portrait",
-          },
-          product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
-          organization: options.organization,
-          suppliers: options.suppliers,
-          certificates: product.certs.map((c) => ({ name: c.cert.name, number: c.cert.certificationNumber ?? "N/A" })),
-          conditions: product.stcs
-            .map((sc) => sc.condition)
-            .map((c) => ({
-              name: `${c.name} (${c.description})`,
-              values: {
-                "Min Temperature": (c.temperatureMin ?? 0).toFixed(2),
-                "Max Temperature": (c.temperatureMax ?? 0).toFixed(2),
-                "Min Humidity": (c.humidityMin ?? 0).toFixed(2),
-                "Max Humidity": (c.humidityMax ?? 0).toFixed(2),
-                "Min Light Level": (c.lightLevelMin ?? 0).toFixed(2),
-                "Max Light Level": (c.lightLevelMax ?? 0).toFixed(2),
+        let generatedPdf: Buffer<ArrayBuffer>;
+        switch (options.type) {
+          case "full":
+            generatedPdf = yield* pdfGenService.createProductInfoPDF({
+              paper: {
+                size: "A4",
+                orientation: "portrait",
               },
-            })),
-        });
+              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
+              organization: options.organization,
+              suppliers: options.suppliers,
+              certificates: product.certs.map((c) => ({
+                name: c.cert.name,
+                number: c.cert.certificationNumber ?? "N/A",
+              })),
+              conditions: product.stcs
+                .map((sc) => sc.condition)
+                .map((c) => ({
+                  name: `${c.name} (${c.description})`,
+                  values: {
+                    "Min Temperature": (c.temperatureMin ?? 0).toFixed(2),
+                    "Max Temperature": (c.temperatureMax ?? 0).toFixed(2),
+                    "Min Humidity": (c.humidityMin ?? 0).toFixed(2),
+                    "Max Humidity": (c.humidityMax ?? 0).toFixed(2),
+                    "Min Light Level": (c.lightLevelMin ?? 0).toFixed(2),
+                    "Max Light Level": (c.lightLevelMax ?? 0).toFixed(2),
+                  },
+                })),
+            });
 
+            break;
+          case "conditions":
+            generatedPdf = yield* pdfGenService.createProductConditionsPDF({
+              paper: {
+                size: "A4",
+                orientation: "portrait",
+              },
+              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
+              organization: options.organization,
+              conditions: product.stcs
+                .map((sc) => sc.condition)
+                .map((c) => ({
+                  name: `${c.name} (${c.description})`,
+                  values: {
+                    "Min Temperature": (c.temperatureMin ?? 0).toFixed(2),
+                    "Max Temperature": (c.temperatureMax ?? 0).toFixed(2),
+                    "Min Humidity": (c.humidityMin ?? 0).toFixed(2),
+                    "Max Humidity": (c.humidityMax ?? 0).toFixed(2),
+                    "Min Light Level": (c.lightLevelMin ?? 0).toFixed(2),
+                    "Max Light Level": (c.lightLevelMax ?? 0).toFixed(2),
+                  },
+                })),
+            });
+
+            break;
+          case "labels":
+            generatedPdf = yield* pdfGenService.createProductLabelsPDF({
+              paper: {
+                size: "A4",
+                orientation: "portrait",
+              },
+              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
+              organization: options.organization,
+              labels: product.labels,
+            });
+
+            break;
+          case "certifications":
+            generatedPdf = yield* pdfGenService.createProductCertificationsPDF({
+              paper: {
+                size: "A4",
+                orientation: "portrait",
+              },
+              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
+              organization: options.organization,
+              certificates: product.certs.map((c) => ({
+                name: c.cert.name,
+                number: c.cert.certificationNumber ?? "N/A",
+              })),
+            });
+            break;
+
+          case "map":
+            generatedPdf = yield* pdfGenService.createProductMapPDF({
+              paper: {
+                size: "A4",
+                orientation: "landscape",
+              },
+              product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
+              organization: options.organization,
+              map: {
+                metadata: {
+                  "Warehouse Name": "",
+                  "Facility Name": "",
+                },
+                items: [],
+              },
+            });
+
+            break;
+          default:
+            return "";
+        }
         return generatedPdf;
       }).pipe(Effect.provide(PDFLive));
 
@@ -616,7 +695,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       addLabel,
       removeLabel,
       printProductSheet,
-      generatePDF,
+      generatePDF: generateSheet,
       getStockCount,
     } as const;
   }),
