@@ -721,6 +721,7 @@ export default function ProductPage() {
                                 Entire Sheet
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                disabled={productInfo().stco.length === 0}
                                 onSelect={() =>
                                   toast.promise(
                                     downloadProductSheetAction(productInfo().id, { size: "A4", type: "conditions" }),
@@ -738,6 +739,7 @@ export default function ProductPage() {
                                 Conditions
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                disabled={productInfo().labels.length === 0}
                                 onSelect={() =>
                                   toast.promise(
                                     downloadProductSheetAction(productInfo().id, { size: "A4", type: "labels" }),
@@ -755,6 +757,7 @@ export default function ProductPage() {
                                 Labels
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                disabled={productInfo().certs.length === 0}
                                 onSelect={() =>
                                   toast.promise(
                                     downloadProductSheetAction(productInfo().id, {
@@ -818,6 +821,7 @@ export default function ProductPage() {
                                 Entire Sheet
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                disabled={productInfo().stco.length === 0}
                                 onSelect={() =>
                                   toast.promise(
                                     downloadProductSheetAction(productInfo().id, { size: "A5", type: "conditions" }),
@@ -835,6 +839,7 @@ export default function ProductPage() {
                                 Conditions
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                disabled={productInfo().labels.length === 0}
                                 onSelect={() =>
                                   toast.promise(
                                     downloadProductSheetAction(productInfo().id, { size: "A5", type: "labels" }),
@@ -852,6 +857,7 @@ export default function ProductPage() {
                                 Labels
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                disabled={productInfo().certs.length === 0}
                                 onSelect={() =>
                                   toast.promise(
                                     downloadProductSheetAction(productInfo().id, {

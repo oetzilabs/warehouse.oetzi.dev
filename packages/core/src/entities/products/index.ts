@@ -493,7 +493,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
       organization: OrganizationInfo,
       options: {
-        type: "full" | "conditions" | "labels" | "certifications" | "map";
+        type: "full" | ("conditions" | "labels" | "certifications" | "suppliers" | "map" | "information")[];
         page: {
           size: PaperSize;
           orientation: PaperOrientation;
@@ -502,9 +502,14 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
     ) =>
       Effect.gen(function* (_) {
         const pdfGenService = yield* _(PDFService);
-        let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.product(product, organization, {
-          page: options.page,
-        });
+        let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.product(
+          product,
+          organization,
+          options.type === "full" ? ["conditions", "labels", "certifications", "map", "information"] : options.type,
+          {
+            page: options.page,
+          },
+        );
 
         return generatedPdf;
       }).pipe(Effect.provide(PDFLive));

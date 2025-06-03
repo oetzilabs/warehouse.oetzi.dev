@@ -197,7 +197,7 @@ export const downloadProductSheet = action(
         }
 
         const pdf = yield* productService.generatePDF(product, org, {
-          type: "full",
+          type: options.type === "full" ? "full" : [options.type],
           page: { size: options.size, orientation: "portrait" },
         });
 

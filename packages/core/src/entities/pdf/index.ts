@@ -135,10 +135,10 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       paper: { size: PaperSize; orientation: PaperOrientation };
       header: {
         variant: "small" | "big";
-        content: TableCell[];
+        content: TableCell[][];
       };
-      content: TableCell[];
-      footer?: TableCell[];
+      content: TableCell[][];
+      footer?: TableCell[][];
     }) =>
       Effect.gen(function* (_) {
         const dimensions = getPaperDimensions(options.paper.size, options.paper.orientation);
@@ -154,9 +154,9 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                 heights: "auto",
                 body: [
                   // Each item needs to be in its own array to represent a row
-                  ...options.header.content.map((item) => [item]),
-                  ...options.content.map((item) => [item]),
-                  ...(options.footer ? options.footer.map((item) => [item]) : []),
+                  ...options.header.content,
+                  ...options.content,
+                  ...(options.footer ? options.footer : []),
                 ],
               },
               layout: getTableLayout(
@@ -224,6 +224,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     const product = (
       data: ProductInfo,
       organization: OrganizationInfo,
+      contents: ("conditions" | "labels" | "certifications" | "map" | "information" | "suppliers")[],
       config: {
         page: {
           size: "A4" | "A5";
@@ -240,170 +241,179 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
           header: {
             variant: config.page.size === "A4" ? "big" : "small",
             content: [
-              {
-                columns: [
-                  {
-                    width: config.page.size === "A4" ? 50 : 30,
-                    ...getLogoElement(config.page.size === "A4" ? 50 : 30, organization.image ?? undefined),
-                  },
-                  {
-                    width: "*",
-                    stack:
-                      config.page.size === "A4"
-                        ? [
-                            { text: organization.name, style: "header", margin: [0, 0, 0, 5] },
-                            { text: organization.website, style: "subheader", lineHeight: 1.4 },
-                            { text: organization.phone, style: "subheader", lineHeight: 1.4 },
-                          ]
-                        : [
-                            { text: organization.name, style: "smallHeaderTitle", margin: [0, 0, 0, 5] },
-                            { text: organization.website, style: "smallHeaderText", lineHeight: 1.4 },
-                            { text: organization.phone, style: "smallHeaderText", lineHeight: 1.4 },
-                          ],
-                    margin: [15, 5, 5, 5],
-                  },
-                  {
-                    width: config.page.size === "A4" ? 50 : 30,
-                    image: `data:image/png;base64,${qr}`,
-                    fit: config.page.size === "A4" ? [50, 50] : [30, 30],
-                  },
-                ].filter(Boolean),
-                border: [true, true, true, true],
-                borderColor: Array(4).fill("#222222"),
-              },
+              [
+                {
+                  columns: [
+                    {
+                      width: config.page.size === "A4" ? 50 : 30,
+                      ...getLogoElement(config.page.size === "A4" ? 50 : 30, organization.image ?? undefined),
+                    },
+                    {
+                      width: "*",
+                      stack:
+                        config.page.size === "A4"
+                          ? [
+                              { text: organization.name, style: "header", margin: [0, 0, 0, 5] },
+                              { text: organization.website, style: "subheader", lineHeight: 1.4 },
+                              { text: organization.phone, style: "subheader", lineHeight: 1.4 },
+                            ]
+                          : [
+                              { text: organization.name, style: "smallHeaderTitle", margin: [0, 0, 0, 5] },
+                              { text: organization.website, style: "smallHeaderText", lineHeight: 1.4 },
+                              { text: organization.phone, style: "smallHeaderText", lineHeight: 1.4 },
+                            ],
+                      margin: [15, 5, 5, 5],
+                    },
+                    {
+                      width: config.page.size === "A4" ? 50 : 30,
+                      image: `data:image/png;base64,${qr}`,
+                      fit: config.page.size === "A4" ? [50, 50] : [30, 30],
+                    },
+                  ].filter(Boolean),
+                  border: [true, true, true, true],
+                  borderColor: Array(4).fill("#222222"),
+                },
+              ],
             ],
           },
           content: [
-            {
-              stack: [
-                {
-                  table: {
-                    widths: ["*"],
-                    body: [
-                      // Title row
-                      [
-                        {
-                          stack: [
-                            { text: "Product Information.", style: "sectionHeader", margin: [0, 0, 0, 5] },
-                            { text: `Name: ${data.name}`, style: "normalText" },
-                            { text: `SKU: ${data.sku}`, style: "normalText" },
-                            { text: `Description: ${data.description}`, style: "normalText" },
-                            // subtitle ? { text: subtitle, style: "normalText", margin: [0, 0, 0, 0] } : null,
-                          ].filter(Boolean),
-                          border: [false, false, false, true],
-                          borderColor: Array(4).fill("#222222"),
-                        },
-                      ],
-                      [
-                        {
-                          stack: [
-                            { text: "Suppliers.", style: "sectionHeader", margin: [0, 0, 0, 5] },
-                            ...data.suppliers.map((s) => ({
-                              text: `${s.supplier.name} (${s.supplier.email})`,
-                              style: "normalText",
-                            })),
-                          ],
-                          border: [false, false, false, true],
-                          borderColor: Array(4).fill("#222222"),
-                        },
-                      ],
-                      ...(data.stco.map((sc) => sc.condition).length > 0
-                        ? [
-                            [
+            [
+              {
+                stack: [
+                  {
+                    table: {
+                      widths: ["*"],
+                      body: [
+                        contents.includes("information")
+                          ? [
                               {
                                 stack: [
-                                  { text: "Conditions.", style: "sectionHeader", margin: [0, 0, 0, 5] },
-                                  ...data.stco
-                                    .map((sc) => sc.condition)
-                                    .map((condition) => ({
-                                      table: {
-                                        widths: ["*", "*"],
-                                        body: [
-                                          [
-                                            { text: condition.name, style: "tableHeader" },
-                                            { text: "Value", style: "tableHeader" },
-                                          ],
-                                          ...Object.entries({
-                                            "Min Temperature": (condition.temperatureMin ?? 0).toFixed(2),
-                                            "Max Temperature": (condition.temperatureMax ?? 0).toFixed(2),
-                                            "Min Humidity": (condition.humidityMin ?? 0).toFixed(2),
-                                            "Max Humidity": (condition.humidityMax ?? 0).toFixed(2),
-                                            "Min Light Level": (condition.lightLevelMin ?? 0).toFixed(2),
-                                            "Max Light Level": (condition.lightLevelMax ?? 0).toFixed(2),
-                                          }).map(([key, value]) => [
-                                            { text: key, style: "tableCell" },
-                                            { text: value, style: "tableCell" },
-                                          ]),
-                                        ],
-                                      },
-                                      layout: getTableLayout({ color: "#e9ecef" }),
-                                    })),
-                                ],
+                                  { text: "Product Information.", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                  { text: `Name: ${data.name}`, style: "normalText" },
+                                  { text: `SKU: ${data.sku}`, style: "normalText" },
+                                  { text: `Description: ${data.description}`, style: "normalText" },
+                                  // subtitle ? { text: subtitle, style: "normalText", margin: [0, 0, 0, 0] } : null,
+                                ].filter(Boolean),
                                 border: [false, false, false, true],
                                 borderColor: Array(4).fill("#222222"),
                               },
-                            ],
-                          ]
-                        : []),
-                      ...(data.certs.length > 0
-                        ? [
-                            [
+                            ]
+                          : null,
+                        contents.includes("suppliers")
+                          ? [
                               {
                                 stack: [
-                                  { text: "Certificates.", style: "sectionHeader", margin: [0, 0, 0, 5] },
-                                  ...data.certs
-                                    .map((c) => c.cert)
-                                    .map((cert) => ({
-                                      text: `${cert.name}: ${cert.certificationNumber}`,
-                                      style: "normalText",
-                                    })),
-                                ],
-                                border: [false, false, false, true],
-                                borderColor: Array(4).fill("#222222"),
-                              },
-                            ],
-                          ]
-                        : []),
-                      ...(data.labels.length > 0
-                        ? [
-                            [
-                              {
-                                stack: [
-                                  { text: "Product Labels.", style: "sectionHeader", margin: [0, 0, 0, 5] },
-                                  ...data.labels.map((label) => ({
-                                    text: label.label.name,
+                                  { text: "Suppliers.", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                  ...data.suppliers.map((s) => ({
+                                    text: `${s.supplier.name} (${s.supplier.email})`,
                                     style: "normalText",
-                                    margin: [0, 2, 0, 2],
                                   })),
                                 ],
                                 border: [false, false, false, true],
                                 borderColor: Array(4).fill("#222222"),
                               },
-                            ],
-                          ]
-                        : []),
-                    ],
+                            ]
+                          : null,
+                        ...(contents.includes("conditions") && data.stco.map((sc) => sc.condition).length > 0
+                          ? [
+                              [
+                                {
+                                  stack: [
+                                    { text: "Conditions.", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                    ...data.stco
+                                      .map((sc) => sc.condition)
+                                      .map((condition) => ({
+                                        table: {
+                                          widths: ["*", "*"],
+                                          body: [
+                                            [
+                                              { text: condition.name, style: "tableHeader" },
+                                              { text: "Value", style: "tableHeader" },
+                                            ],
+                                            ...Object.entries({
+                                              "Min Temperature": (condition.temperatureMin ?? 0).toFixed(2),
+                                              "Max Temperature": (condition.temperatureMax ?? 0).toFixed(2),
+                                              "Min Humidity": (condition.humidityMin ?? 0).toFixed(2),
+                                              "Max Humidity": (condition.humidityMax ?? 0).toFixed(2),
+                                              "Min Light Level": (condition.lightLevelMin ?? 0).toFixed(2),
+                                              "Max Light Level": (condition.lightLevelMax ?? 0).toFixed(2),
+                                            }).map(([key, value]) => [
+                                              { text: key, style: "tableCell" },
+                                              { text: value, style: "tableCell" },
+                                            ]),
+                                          ],
+                                        },
+                                        layout: getTableLayout({ color: "#e9ecef" }),
+                                      })),
+                                  ],
+                                  border: [false, false, false, true],
+                                  borderColor: Array(4).fill("#222222"),
+                                },
+                              ],
+                            ]
+                          : []),
+                        ...(contents.includes("certifications") && data.certs.length > 0
+                          ? [
+                              [
+                                {
+                                  stack: [
+                                    { text: "Certificates.", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                    ...data.certs
+                                      .map((c) => c.cert)
+                                      .map((cert) => ({
+                                        text: `${cert.name}: ${cert.certificationNumber}`,
+                                        style: "normalText",
+                                      })),
+                                  ],
+                                  border: [false, false, false, true],
+                                  borderColor: Array(4).fill("#222222"),
+                                },
+                              ],
+                            ]
+                          : []),
+                        ...(contents.includes("labels") && data.labels.length > 0
+                          ? [
+                              [
+                                {
+                                  stack: [
+                                    { text: "Product Labels.", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                    ...data.labels.map((label) => ({
+                                      text: label.label.name,
+                                      style: "normalText",
+                                      margin: [0, 2, 0, 2],
+                                    })),
+                                  ],
+                                  border: [false, false, false, true],
+                                  borderColor: Array(4).fill("#222222"),
+                                },
+                              ],
+                            ]
+                          : []),
+                      ].filter(Boolean),
+                    },
+                    layout: getTableLayout(undefined, {
+                      paddingBottom: (i, node) => 10,
+                      paddingLeft: (i, node) => 10,
+                      paddingRight: (i, node) => 10,
+                      paddingTop: (i, node) => 10,
+                      defaultBorder: false,
+                    }),
                   },
-                  layout: getTableLayout(undefined, {
-                    paddingBottom: (i, node) => 10,
-                    paddingLeft: (i, node) => 10,
-                    paddingRight: (i, node) => 10,
-                    paddingTop: (i, node) => 10,
-                    defaultBorder: false,
-                  }),
-                },
-              ],
-              border: [true, false, true, true],
-              borderColor: Array(4).fill("#222222"),
-            },
+                ],
+                border: [true, false, true, true],
+                borderColor: Array(4).fill("#222222"),
+              },
+            ],
           ],
           footer: [
-            {
-              image: barcodeData,
-              width: 250,
-              alignment: "center",
-              margin: [0, 10, 0, 10],
-            },
+            [
+              {
+                image: barcodeData,
+                width: 250,
+                alignment: "center",
+                margin: [0, 10, 0, 10],
+              },
+            ],
           ],
         });
 
