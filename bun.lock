@@ -172,6 +172,7 @@
   "trustedDependencies": [
     "aws-sdk",
     "esbuild",
+    "msgpackr-extract",
     "@parcel/watcher",
   ],
   "packages": {

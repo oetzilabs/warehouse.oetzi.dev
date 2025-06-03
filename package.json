@@ -35,6 +35,7 @@
     "aws-sdk",
     "canvas",
     "esbuild",
+    "msgpackr-extract",
     "sharp"
   ]
 }
