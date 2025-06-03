@@ -75,6 +75,26 @@ export default function ProductPage() {
   const downloadProductSheetAction = useAction(downloadProductSheet);
   const isDownloadingProductSheet = useSubmission(downloadProductSheet);
 
+  const triggerDownload = (data: string, filename: string) => {
+    const binaryString = atob(data);
+
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${filename}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Suspense
       fallback={
@@ -621,45 +641,122 @@ export default function ProductPage() {
                       </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Button
-                      variant="outline"
-                      class="w-full justify-between"
-                      disabled={isDownloadingProductSheet.pending}
-                      onClick={() => {
-                        toast.promise(downloadProductSheetAction(productInfo().id), {
-                          loading: "Downloading product sheet...",
-                          success: (data) => {
-                            const binaryString = atob(data.pdf);
-
-                            const len = binaryString.length;
-                            const bytes = new Uint8Array(len);
-                            for (let i = 0; i < len; i++) {
-                              bytes[i] = binaryString.charCodeAt(i);
-                            }
-
-                            const blob = new Blob([bytes], { type: "application/pdf" });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement("a");
-                            link.href = url;
-                            link.download = `${data.name}.pdf`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-
-                            return "Product sheet downloaded";
-                          },
-                          error: (e) => `Failed to download product sheet: ${e}`,
-                        });
-                      }}
-                    >
-                      <div class="flex items-center gap-2">
-                        <Show when={isDownloadingProductSheet.pending} fallback={<ArrowUpRight class="size-4" />}>
-                          <Loader2 class="size-4 animate-spin" />
-                        </Show>
-                        Download as PDF
-                      </div>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        as={Button}
+                        variant="outline"
+                        class="w-full justify-between"
+                        disabled={isDownloadingProductSheet.pending}
+                      >
+                        <div class="flex items-center gap-2">
+                          <Show when={isDownloadingProductSheet.pending} fallback={<ArrowUpRight class="size-4" />}>
+                            <Loader2 class="size-4 animate-spin" />
+                          </Show>
+                          Download as PDF
+                        </div>
+                        <ArrowRight class="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent class="w-48">
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <div class="flex items-center gap-2">A4</div>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  toast.promise(
+                                    downloadProductSheetAction(productInfo().id, { size: "A4", type: "full" }),
+                                    {
+                                      loading: "Downloading product sheet...",
+                                      success: (data) => {
+                                        triggerDownload(data.pdf, data.name);
+                                        return "Product sheet downloaded";
+                                      },
+                                      error: "Failed to download product sheet",
+                                    },
+                                  )
+                                }
+                              >
+                                Entire Sheet
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "conditions" })
+                                }
+                              >
+                                Conditions
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "labels" })
+                                }
+                              >
+                                Labels
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "certifications" })
+                                }
+                              >
+                                Certifications
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A4", type: "map" })
+                                }
+                              >
+                                Map
+                              </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <div class="flex items-center gap-2">A5</div>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "full" })
+                                }
+                              >
+                                Entire Sheet
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "conditions" })
+                                }
+                              >
+                                Conditions
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "labels" })
+                                }
+                              >
+                                Labels
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "certifications" })
+                                }
+                              >
+                                Certifications
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  downloadProductSheetAction(productInfo().id, { size: "A5", type: "map" })
+                                }
+                              >
+                                Map
+                              </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>

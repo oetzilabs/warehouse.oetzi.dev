@@ -8,7 +8,7 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
 import { OrganizationInvalidId } from "../organizations/errors";
-import { PDFLive, PDFService } from "../pdf";
+import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
@@ -491,6 +491,10 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
     const generatePDF = (
       product: NonNullable<Awaited<Effect.Effect.Success<ReturnType<typeof findById>>>>,
       options: {
+        paper: {
+          size: PaperSize;
+          orientation: PaperOrientation;
+        };
         organization: {
           name: string;
           address: string;
@@ -506,6 +510,10 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         const pdfGenService = yield* _(PDFService);
 
         const generatedPdf = yield* pdfGenService.createProductInfoPDF({
+          paper: {
+            size: "A4",
+            orientation: "portrait",
+          },
           product: { name: product.name, sku: product.sku, description: product.description ?? "No description" },
           organization: options.organization,
           suppliers: options.suppliers,

@@ -4,6 +4,9 @@ import PdfPrinter from "pdfmake";
 import { TDocumentDefinitions } from "pdfmake/interfaces";
 import QRCode from "qrcode";
 
+export type PaperSize = "A4" | "A5";
+export type PaperOrientation = "portrait" | "landscape";
+
 export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
   effect: Effect.gen(function* (_) {
     const generateQRCode = (text: string) =>
@@ -31,18 +34,29 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
         );
       });
 
+    const getPaperDimensions = (size: PaperSize, orientation: PaperOrientation): [number, number] => {
+      const dimensions = {
+        A4: [595, 842] as [number, number], // width, height in points
+        A5: [420, 595] as [number, number],
+      };
+      const [width, height] = dimensions[size];
+      return orientation === "portrait" ? [width, height] : [height, width];
+    };
+
     const createProductInfoPDF = ({
       organization,
       product,
       suppliers,
       certificates,
       conditions,
+      paper = { size: "A4" as PaperSize, orientation: "portrait" as PaperOrientation },
     }: {
       organization: { name: string; address: string; contact: string };
       product: { name: string; sku: string; description: string };
       suppliers: Array<{ name: string; contact: string }>;
       certificates: Array<{ name: string; number: string }>;
       conditions: Array<{ name: string; values: Record<string, string> }>;
+      paper?: { size: PaperSize; orientation: PaperOrientation };
     }) =>
       Effect.gen(function* (_) {
         const qrCodeData = yield* generateQRCode(product.sku);
@@ -58,9 +72,11 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
         };
 
         const printer = new PdfPrinter(fonts);
+        const [pageWidth, pageHeight] = getPaperDimensions(paper.size, paper.orientation);
 
         const docDefinition: TDocumentDefinitions = {
-          pageSize: "A4",
+          pageSize: { width: pageWidth, height: pageHeight },
+          pageOrientation: paper.orientation,
           pageMargins: [40, 40, 40, 40],
           content: [
             {
@@ -188,6 +204,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
             },
           },
         };
+
         const pdf = yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
           const pdfDoc = printer.createPdfKitDocument(docDefinition);
           const chunks: Uint8Array[] = [];

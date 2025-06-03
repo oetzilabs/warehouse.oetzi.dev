@@ -158,71 +158,80 @@ export const deleteProduct = action(async (id: string) => {
   });
 });
 
-export const downloadProductSheet = action(async (pid: string) => {
-  "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const productExit = await Effect.runPromiseExit(
-    Effect.gen(function* (_) {
-      const productService = yield* _(ProductService);
-      const product = yield* productService.findById(pid);
-      if (!product) {
-        return yield* Effect.fail(new ProductNotFound({ id: pid }));
-      }
-      const orgService = yield* _(OrganizationService);
-      const org = yield* orgService.findById(orgId);
-      if (!org) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-      }
-      const suppliers = product.suppliers.map((s) => ({
-        name: s.supplier.name,
-        contact: s.supplier.contacts.map((c) => `${c.name}: ${c.email}`).join(", "),
-      }));
-
-      const pdf = yield* productService.generatePDF(product, {
-        organization: {
-          name: org.name,
-          address: "",
-          contact: "",
-        },
-        suppliers,
-      });
-
-      return yield* Effect.succeed({
-        pdf: pdf.toString("base64"),
-        name: product.name,
-      });
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(SupplierLive)),
-  );
-
-  return Exit.match(productExit, {
-    onSuccess: (data) => {
-      return json(data);
+export const downloadProductSheet = action(
+  async (
+    pid: string,
+    options: {
+      size: "A4" | "A5";
+      type: "full" | "conditions" | "labels" | "certifications" | "map";
     },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
-    },
-  });
-});
+  ) => {
+    "use server";
+    const auth = await withSession();
+    if (!auth) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const user = auth[0];
+    if (!user) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const session = auth[1];
+    if (!session) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const orgId = session.current_organization_id;
+    if (!orgId) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const productExit = await Effect.runPromiseExit(
+      Effect.gen(function* (_) {
+        const productService = yield* _(ProductService);
+        const product = yield* productService.findById(pid);
+        if (!product) {
+          return yield* Effect.fail(new ProductNotFound({ id: pid }));
+        }
+        const orgService = yield* _(OrganizationService);
+        const org = yield* orgService.findById(orgId);
+        if (!org) {
+          return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
+        }
+        const suppliers = product.suppliers.map((s) => ({
+          name: s.supplier.name,
+          contact: s.supplier.contacts.map((c) => `${c.name}: ${c.email}`).join(", "),
+        }));
+
+        const pdf = yield* productService.generatePDF(product, {
+          paper: { size: options.size, orientation: options.type === "map" ? "landscape" : "portrait" },
+          organization: {
+            name: org.name,
+            address: "",
+            contact: "",
+          },
+          suppliers,
+        });
+
+        return yield* Effect.succeed({
+          pdf: pdf.toString("base64"),
+          name: product.name,
+        });
+      }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(SupplierLive)),
+    );
+
+    return Exit.match(productExit, {
+      onSuccess: (data) => {
+        return json(data);
+      },
+      onFailure: (cause) => {
+        console.log(cause);
+        const causes = Cause.failures(cause);
+        const errors = Chunk.toReadonlyArray(causes).map((c) => {
+          return c.message;
+        });
+        throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      },
+    });
+  },
+);
 
 export const reAddProduct = action(async (id: string) => {
   "use server";
