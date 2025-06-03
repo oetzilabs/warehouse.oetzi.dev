@@ -312,7 +312,7 @@ export default function ProductPage() {
                   </Show>
                 </div>
 
-                <div class="flex flex-col gap-2 border rounded-lg">
+                <div class="flex flex-col border rounded-lg">
                   <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Codes</h2>
                     <div class="flex flex-row items-center gap-2">
@@ -352,7 +352,7 @@ export default function ProductPage() {
                     />
                   </div>
                 </div>
-                <div class="flex flex-col gap-2 border rounded-lg">
+                <div class="flex flex-col border rounded-lg">
                   <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
                     <h2 class="font-medium">Brand</h2>
                     <div class="flex flex-row items-center gap-2">
@@ -379,6 +379,46 @@ export default function ProductPage() {
                       </div>
                     )}
                   </Show>
+                </div>
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                    <h2 class="font-medium">Labels</h2>
+                    <div class="flex flex-row items-center gap-2">
+                      <Button variant="outline" size="sm" class="bg-background">
+                        <Plus class="size-4" />
+                        Add Label
+                      </Button>
+                    </div>
+                  </div>
+                  <For
+                    each={productInfo().labels}
+                    fallback={
+                      <div class="flex flex-col items-center justify-center p-8">
+                        <span class="text-sm text-muted-foreground">No labels added.</span>
+                      </div>
+                    }
+                  >
+                    {(label) => (
+                      <div class="flex flex-row gap-2 p-4 items-center border-b last:border-b-0 justify-between">
+                        <div class="flex flex-row items-center gap-2">
+                          <Show when={label.label.image && label.label.image.length > 0 && label.label.image}>
+                            {(src) => (
+                              <img src={src()} alt={label.label.name} class="size-16 object-cover rounded-md" />
+                            )}
+                          </Show>
+                          <div class="flex flex-col gap-1">
+                            <span class="text-sm ">{label.label.name ?? "N/A"}</span>
+                            <span class="text-xs text-muted-foreground">{label.label.description ?? "N/A"}</span>
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-2 h-full">
+                          <Button variant="outline" class="bg-background size-6 place-self-start" size="icon">
+                            <X class="!size-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </For>
                 </div>
                 <div class="flex flex-col gap-2 border rounded-lg">
                   <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">

@@ -197,7 +197,10 @@ export const downloadProductSheet = action(
         }
         const suppliers = product.suppliers.map((s) => ({
           name: s.supplier.name,
-          contact: s.supplier.contacts.map((c) => `${c.name}: ${c.email}`).join(", "),
+          contact:
+            s.supplier.contacts.length > 0
+              ? s.supplier.contacts.map((c) => `${c.name}: ${c.email}`).join(", ")
+              : (s.supplier.email ?? "no contact"),
         }));
 
         const pdf = yield* productService.generatePDF(product, {
@@ -205,8 +208,8 @@ export const downloadProductSheet = action(
           type: options.type,
           organization: {
             name: org.name,
-            address: "",
-            contact: "",
+            address: "teststreet 123",
+            contact: "no contact, full page",
           },
           suppliers,
         });

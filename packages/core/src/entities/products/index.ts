@@ -524,6 +524,10 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                 name: c.cert.name,
                 number: c.cert.certificationNumber ?? "N/A",
               })),
+              labels: product.labels.map((l) => ({
+                name: l.label.name,
+                value: l.label.name,
+              })),
               conditions: product.stcs
                 .map((sc) => sc.condition)
                 .map((c) => ({

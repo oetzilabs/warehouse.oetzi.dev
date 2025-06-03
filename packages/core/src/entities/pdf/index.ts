@@ -1,3 +1,4 @@
+import path from "path";
 import bwipjs from "bwip-js";
 import { Effect } from "effect";
 import PdfPrinter from "pdfmake";
@@ -89,11 +90,11 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     };
 
     const fonts = {
-      Courier: {
-        normal: "Courier",
-        bold: "Courier-Bold",
-        italics: "Courier-Oblique",
-        bolditalics: "Courier-BoldOblique",
+      Helvetica: {
+        normal: "Helvetica",
+        bold: "Helvetica-Bold",
+        italics: "Helvetica-Oblique",
+        bolditalics: "Helvetica-BoldOblique",
       },
     };
 
@@ -138,18 +139,12 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                 y: 0,
                 w: size,
                 h: size,
-                lineWidth: 0.5,
-                lineColor: "#222222",
-                fillColor: "#222222",
+                lineWidth: 0.5, // This is the stroke width
+                lineColor: "#222222", // This is the stroke color
+                color: "#222222", // This is the fill color
               },
             ],
-            stack: [
-              {
-                text: "LOGO",
-                style: "smallHeaderLogo",
-                margin: [5, 5, 5, 5],
-              },
-            ],
+            margin: [5, 5, 5, 5], // Apply margin to the canvas element itself
           };
         };
 
@@ -161,7 +156,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
             {
               table: {
                 widths: ["*"],
-                heights: (row) => (row === 0 ? 80 : "auto"),
+                heights: "auto",
                 body: [
                   // Header row
                   [
@@ -176,13 +171,16 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                           stack:
                             headerVariant === "big"
                               ? [
-                                  { text: organization.name, style: "header", margin: [5, 5, 5, 5] },
-                                  { text: organization.address, style: "subheader" },
+                                  { text: organization.name, style: "header", margin: [0, 0, 0, 5] },
+                                  { text: organization.address, style: "subheader", lineHeight: 1.4 },
+                                  { text: organization.contact, style: "subheader", lineHeight: 1.4 },
                                 ]
                               : [
-                                  { text: organization.name, style: "smallHeaderTitle", margin: [2, 2, 2, 2] },
-                                  { text: organization.contact, style: "smallHeaderText" },
+                                  { text: organization.name, style: "smallHeaderTitle", margin: [0, 0, 0, 5] },
+                                  { text: organization.address, style: "smallHeaderText", lineHeight: 1.4 },
+                                  { text: organization.contact, style: "smallHeaderText", lineHeight: 1.4 },
                                 ],
+                          margin: [15, 5, 5, 5],
                         },
                         showQR
                           ? {
@@ -212,48 +210,48 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
             header: {
               fontSize: 14,
               bold: true,
-              font: "Courier",
+              font: "Helvetica",
             },
             subheader: {
               fontSize: 8,
-              color: "grey",
-              font: "Courier",
+              color: "#555555",
+              font: "Helvetica",
             },
             sectionHeader: {
               fontSize: 10,
               bold: true,
-              font: "Courier",
+              font: "Helvetica",
             },
             normalText: {
               fontSize: 8,
-              font: "Courier",
-              lineHeight: 1.2,
+              font: "Helvetica",
+              lineHeight: 1.4,
             },
             tableHeader: {
               fontSize: 10,
               bold: true,
-              font: "Courier",
+              font: "Helvetica",
               color: "#495057",
             },
             tableCell: {
               fontSize: 9,
-              font: "Courier",
+              font: "Helvetica",
               color: "#212529",
             },
             smallHeaderLogo: {
               fontSize: 8,
-              font: "Courier",
+              font: "Helvetica",
               alignment: "center",
             },
             smallHeaderTitle: {
               fontSize: 10,
               bold: true,
-              font: "Courier",
+              font: "Helvetica",
             },
             smallHeaderText: {
               fontSize: 8,
               color: "grey",
-              font: "Courier",
+              font: "Helvetica",
             },
           },
         } as TDocumentDefinitions;
@@ -264,6 +262,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       product,
       suppliers,
       certificates,
+      labels,
       conditions,
       paper = { size: "A4" as PaperSize, orientation: "portrait" as PaperOrientation },
     }: {
@@ -272,6 +271,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       suppliers: Array<{ name: string; contact: string }>;
       certificates: Array<{ name: string; number: string }>;
       conditions: Array<{ name: string; values: Record<string, string> }>;
+      labels: Array<{ name: string; value: string }>;
       paper?: { size: PaperSize; orientation: PaperOrientation };
     }) =>
       Effect.gen(function* (_) {
@@ -296,7 +296,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                     [
                       {
                         stack: [
-                          { text: "Product Information", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: "Product Information.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                           { text: `Name: ${product.name}`, style: "normalText" },
                           { text: `SKU: ${product.sku}`, style: "normalText" },
                           { text: `Description: ${product.description}`, style: "normalText" },
@@ -309,7 +309,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                     [
                       {
                         stack: [
-                          { text: "Suppliers Information", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: "Suppliers.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                           ...suppliers.map((s) => ({
                             text: `${s.name} (${s.contact})`,
                             style: "normalText",
@@ -324,7 +324,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                           [
                             {
                               stack: [
-                                { text: "Conditions", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                { text: "Conditions.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                                 ...conditions.map((condition) => ({
                                   table: {
                                     widths: ["*", "*"],
@@ -353,10 +353,28 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                           [
                             {
                               stack: [
-                                { text: "Certificates", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                { text: "Certificates.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                                 ...certificates.map((cert) => ({
                                   text: `${cert.name}: ${cert.number}`,
                                   style: "normalText",
+                                })),
+                              ],
+                              border: [false, false, false, true],
+                              borderColor: Array(4).fill("#222222"),
+                            },
+                          ],
+                        ]
+                      : []),
+                    ...(labels.length > 0
+                      ? [
+                          [
+                            {
+                              stack: [
+                                { text: "Product Labels.", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                ...labels.map((label) => ({
+                                  text: label.name,
+                                  style: "normalText",
+                                  margin: [0, 2, 0, 2],
                                 })),
                               ],
                               border: [false, false, false, true],
@@ -428,7 +446,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                     [
                       {
                         stack: [
-                          { text: "Product Conditions", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: "Product Conditions.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                           ...conditions.map((c) => ({
                             stack: [
                               { text: c.name, style: "normalText", bold: true },
@@ -499,7 +517,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                     [
                       {
                         stack: [
-                          { text: "Product Labels", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: "Product Labels.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                           ...labels.map((label) => ({
                             text: label.name,
                             style: "normalText",
@@ -565,7 +583,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                     [
                       {
                         stack: [
-                          { text: "Product Certifications", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: "Product Certifications.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                           ...certificates.map((cert) => ({
                             text: `${cert.name}: ${cert.number}`,
                             style: "normalText",
@@ -634,7 +652,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                     [
                       {
                         stack: [
-                          { text: "Product Location Map", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: "Product Location.", style: "sectionHeader", margin: [0, 0, 0, 5] },
                           ...Object.entries(map.metadata).map(([k, v]) => ({
                             text: `${k}: ${v}`,
                             style: "normalText",
