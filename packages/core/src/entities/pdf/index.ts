@@ -1,12 +1,56 @@
 import bwipjs from "bwip-js";
 import { Effect } from "effect";
 import PdfPrinter from "pdfmake";
-import { ContentText, TDocumentDefinitions } from "pdfmake/interfaces";
+import {
+  Content,
+  ContentTable,
+  ContentText,
+  CustomTableLayout,
+  TableCell,
+  TableLayout,
+  TDocumentDefinitions,
+} from "pdfmake/interfaces";
 import QRCode from "qrcode";
 
 export type PaperSize = "A4" | "A5";
 export type PaperOrientation = "portrait" | "landscape";
 type HeaderVariant = "small" | "big";
+
+type BorderConfig = {
+  width?: number;
+  color?: string;
+  style?: "solid" | "dashed";
+};
+
+const getTableLayout = (
+  borderConfig: BorderConfig = {
+    width: 0.5,
+    color: "#222222",
+  },
+  tc: CustomTableLayout = {
+    paddingLeft: (i, node) => 0,
+    paddingRight: (i, node) => 0,
+    paddingTop: (i, node) => 0,
+    paddingBottom: (i, node) => 0,
+    fillColor: "#222222",
+    fillOpacity: 1,
+    defaultBorder: true,
+  },
+): TableLayout => ({
+  hLineWidth: (i, node) => borderConfig.width ?? 0.5,
+  vLineWidth: (i, node) => borderConfig.width ?? 0.5,
+  hLineColor: (i, node) => borderConfig.color ?? "#222222",
+  vLineColor: (i, node) => borderConfig.color ?? "#222222",
+  hLineStyle: (i, node) => (borderConfig.style === "dashed" ? { dash: { length: 4 } } : null),
+  vLineStyle: (i, node) => (borderConfig.style === "dashed" ? { dash: { length: 4 } } : null),
+  defaultBorder: tc.defaultBorder ?? false,
+  fillColor: tc.fillColor ?? "#000000",
+  fillOpacity: tc.fillOpacity ?? ((i, node) => 0),
+  paddingLeft: tc.paddingLeft ?? ((i, node) => 0),
+  paddingRight: tc.paddingRight ?? ((i, node) => 0),
+  paddingTop: tc.paddingTop ?? ((i, node) => 0),
+  paddingBottom: tc.paddingBottom ?? ((i, node) => 0),
+});
 
 export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
   effect: Effect.gen(function* (_) {
@@ -53,18 +97,19 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       },
     };
 
+    type PageTableCell = TableCell & {
+      border?: [boolean, boolean, boolean, boolean];
+      borderColor?: string[];
+    };
+
     const createBasePDF = ({
       paper,
-      title,
-      subtitle,
       showQR = true,
       product,
       organization,
       headerVariant = "big",
     }: {
       paper: { size: PaperSize; orientation: PaperOrientation };
-      title: string;
-      subtitle?: string;
       showQR?: boolean;
       product: { name: string; sku: string; description: string };
       organization: { name: string; address: string; contact: string; image?: string };
@@ -82,6 +127,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
               width: size,
               height: size,
               fit: [size, size],
+              margin: [5, 5, 5, 5],
             };
           }
           return {
@@ -94,112 +140,90 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                 h: size,
                 lineWidth: 0.5,
                 lineColor: "#222222",
+                fillColor: "#222222",
               },
             ],
             stack: [
               {
                 text: "LOGO",
                 style: "smallHeaderLogo",
-                margin: [0, 0, 0, 0],
-                // Apply border properties here, to the cell
-                borderColor: ["#222222", "#222222", "#222222", "#222222"],
-                border: [0, 0, 0, 1],
-                lineWidth: [0, 0, 0, 1],
+                margin: [5, 5, 5, 5],
               },
             ],
           };
         };
 
-        const getBigHeader = () => ({
-          columns: [
-            {
-              width: 50,
-              ...getLogoElement(50),
-            },
-            {
-              width: "*",
-              stack: [
-                { text: organization.name, style: "header" },
-                { text: organization.address, style: "subheader" },
-              ],
-            },
-            showQR
-              ? {
-                  width: 50,
-                  image: `data:image/png;base64,${qrCodeData}`,
-                  fit: [50, 50],
-                }
-              : null,
-          ].filter(Boolean),
-          margin: [0, 0, 0, 10],
-          borderColor: ["#222222"],
-          border: [0, 0, 0, 1],
-        });
-
-        const getSmallHeader = () => ({
-          columns: [
-            {
-              width: 30,
-              ...getLogoElement(30),
-            },
-            {
-              width: "*",
-              stack: [
-                { text: organization.name, style: "smallHeaderTitle" },
-                { text: organization.contact, style: "smallHeaderText" },
-              ],
-            },
-            showQR
-              ? {
-                  width: 30,
-                  image: `data:image/png;base64,${qrCodeData}`,
-                  fit: [30, 30],
-                }
-              : null,
-          ].filter(Boolean),
-          margin: [0, 0, 0, 10],
-          borderColor: ["#222222"],
-          border: [0, 0, 0, 1],
-        });
-
         return {
           pageSize: { width: pageWidth, height: pageHeight },
           pageOrientation: paper.orientation,
-          pageMargins: [margins, margins, margins, margins],
+          pageMargins: [margins / 2, margins / 2, margins / 2, margins / 2],
           content: [
-            // Border
+            // Outer border box
+            // {
+            //   canvas: [
+            //     {
+            //       type: "rect",
+            //       x: margins / 2,
+            //       y: margins / 2,
+            //       w: pageWidth - margins,
+            //       h: pageHeight - margins,
+            //       lineWidth: 0.5,
+            //       lineColor: "#222222",
+            //     },
+            //   ],
+            //   absolutePosition: { x: 0, y: 0 },
+            // },
+            // Main content table
             {
-              canvas: [
+              table: {
+                widths: ["*"],
+                heights: (row) => (row === 0 ? 80 : "auto"),
+                body: [
+                  // Header row
+                  [
+                    {
+                      columns: [
+                        {
+                          width: headerVariant === "big" ? 50 : 30,
+                          ...getLogoElement(headerVariant === "big" ? 50 : 30),
+                        },
+                        {
+                          width: "*",
+                          stack:
+                            headerVariant === "big"
+                              ? [
+                                  { text: organization.name, style: "header", margin: [5, 5, 5, 5] },
+                                  { text: organization.address, style: "subheader" },
+                                ]
+                              : [
+                                  { text: organization.name, style: "smallHeaderTitle", margin: [2, 2, 2, 2] },
+                                  { text: organization.contact, style: "smallHeaderText" },
+                                ],
+                        },
+                        showQR
+                          ? {
+                              width: headerVariant === "big" ? 50 : 30,
+                              image: `data:image/png;base64,${qrCodeData}`,
+                              fit: headerVariant === "big" ? [50, 50] : [30, 30],
+                            }
+                          : null,
+                      ].filter(Boolean),
+                      border: [true, true, true, true],
+                      borderColor: Array(4).fill("#222222"),
+                    },
+                  ],
+                ],
+              },
+              layout: getTableLayout(
                 {
-                  type: "rect",
-                  x: margins / 2,
-                  y: margins / 2,
-                  w: pageWidth - margins,
-                  h: pageHeight - margins,
-                  lineWidth: 0.5,
-                  lineColor: "#222222",
+                  width: 0.5,
                 },
-              ],
-              absolutePosition: { x: 0, y: 0 },
-            },
-            // Header based on variant
-            headerVariant === "big" ? getBigHeader() : getSmallHeader(),
-            {
-              canvas: [
                 {
-                  type: "line",
-                  x1: -(margins / 2),
-                  y1: 5,
-                  x2: pageWidth - margins * 1.5,
-                  y2: 5,
-                  lineWidth: 0.5,
-                  lineColor: "#222222",
+                  fillOpacity: (i, node) => 0,
                 },
-              ],
+              ),
             },
-            { text: title, style: "sectionHeader", margin: [0, margins / 2, 0, margins / 2] },
-            subtitle ? { text: subtitle, style: "normalText", margin: [0, margins / 2, 0, margins / 2] } : null,
-          ].filter(Boolean),
+          ],
           styles: {
             header: {
               fontSize: 14,
@@ -270,87 +294,115 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
         const basePdf = yield* createBasePDF({
           paper,
           headerVariant: "big",
-          title: "Product Information",
           organization,
           product,
         });
 
         const barcodeData = yield* generateBarcode(product.sku);
 
-        basePdf.content = [
-          ...(Array.isArray(basePdf.content) ? basePdf.content : [basePdf.content]),
+        // Update basePdf's content to include product info in table format
+        ((basePdf.content as Content[])[0] as ContentTable).table.body.push([
           {
             stack: [
-              { text: `Name: ${product.name}`, style: "normalText" },
-              { text: `SKU: ${product.sku}`, style: "normalText" },
-              { text: `Description: ${product.description}`, style: "normalText" },
-            ],
-            margin: [0, 0, 0, 20],
-          },
-          { text: "Suppliers Information", style: "sectionHeader", margin: [0, 0, 0, 8] },
-          {
-            stack: suppliers.map((s) => ({
-              text: `${s.name} (${s.contact})`,
-              style: "normalText",
-            })),
-            margin: [0, 0, 0, 20],
-          },
-          ...(conditions.length > 0
-            ? [
-                {
-                  text: "Conditions",
-                  style: "sectionHeader",
-                  margin: [0, 0, 0, 8] as [number, number, number, number],
-                },
-                ...conditions.map((condition) => ({
-                  table: {
-                    widths: ["*", "*"],
-                    headerRows: 1,
-                    body: [
-                      [
-                        { text: condition.name, style: "tableHeader", fillColor: "#f8f9fa" },
-                        { text: "Value", style: "tableHeader", fillColor: "#f8f9fa" },
-                      ],
-                      ...Object.entries(condition.values).map(([key, value]) => [
-                        { text: key, style: "tableCell" },
-                        { text: value, style: "tableCell" },
-                      ]),
+              {
+                table: {
+                  widths: ["*"],
+                  body: [
+                    // Title row
+                    [
+                      {
+                        stack: [
+                          { text: "Product Information", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          { text: `Name: ${product.name}`, style: "normalText" },
+                          { text: `SKU: ${product.sku}`, style: "normalText" },
+                          { text: `Description: ${product.description}`, style: "normalText" },
+                          // subtitle ? { text: subtitle, style: "normalText", margin: [0, 0, 0, 0] } : null,
+                        ].filter(Boolean),
+                        border: [false, false, false, true],
+                        borderColor: Array(4).fill("#222222"),
+                      },
                     ],
-                  },
-                  layout: {
-                    hLineWidth: () => 1,
-                    vLineWidth: () => 1,
-                    hLineColor: () => "#e9ecef",
-                    vLineColor: () => "#e9ecef",
-                    paddingLeft: () => 8,
-                    paddingRight: () => 8,
-                    paddingTop: () => 8,
-                    paddingBottom: () => 8,
-                  },
-                  margin: [0, 0, 0, 15] as [number, number, number, number],
-                })),
-              ]
-            : []),
-          ...(certificates.length > 0
-            ? [
-                {
-                  text: "Certificates",
-                  style: "sectionHeader",
-                  margin: [0, 20, 0, 8] as [number, number, number, number],
+                    [
+                      {
+                        stack: [
+                          { text: "Suppliers Information", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                          ...suppliers.map((s) => ({
+                            text: `${s.name} (${s.contact})`,
+                            style: "normalText",
+                          })),
+                        ],
+                        border: [false, false, false, true],
+                        borderColor: Array(4).fill("#222222"),
+                      },
+                    ],
+                    ...(conditions.length > 0
+                      ? [
+                          [
+                            {
+                              stack: [
+                                { text: "Conditions", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                ...conditions.map((condition) => ({
+                                  table: {
+                                    widths: ["*", "*"],
+                                    body: [
+                                      [
+                                        { text: condition.name, style: "tableHeader" },
+                                        { text: "Value", style: "tableHeader" },
+                                      ],
+                                      ...Object.entries(condition.values).map(([key, value]) => [
+                                        { text: key, style: "tableCell" },
+                                        { text: value, style: "tableCell" },
+                                      ]),
+                                    ],
+                                  },
+                                  layout: getTableLayout({ color: "#e9ecef" }),
+                                })),
+                              ],
+                              border: [false, false, false, true],
+                              borderColor: Array(4).fill("#222222"),
+                            },
+                          ],
+                        ]
+                      : []),
+                    ...(certificates.length > 0
+                      ? [
+                          [
+                            {
+                              stack: [
+                                { text: "Certificates", style: "sectionHeader", margin: [0, 0, 0, 5] },
+                                ...certificates.map((cert) => ({
+                                  text: `${cert.name}: ${cert.number}`,
+                                  style: "normalText",
+                                })),
+                              ],
+                              border: [false, false, false, true],
+                              borderColor: Array(4).fill("#222222"),
+                            },
+                          ],
+                        ]
+                      : []),
+                    [
+                      {
+                        image: barcodeData,
+                        width: 250,
+                        alignment: "center",
+                      },
+                    ],
+                  ],
                 },
-                ...certificates.map((cert) => ({
-                  text: `${cert.name}: ${cert.number}`,
-                  style: "normalText",
-                })),
-              ]
-            : []),
-          {
-            image: barcodeData,
-            width: 250,
-            alignment: "center",
-            margin: [0, 20, 0, 0],
+                layout: getTableLayout(undefined, {
+                  paddingBottom: (i, node) => 10,
+                  paddingLeft: (i, node) => 10,
+                  paddingRight: (i, node) => 10,
+                  paddingTop: (i, node) => 10,
+                  defaultBorder: false,
+                }),
+              },
+            ],
+            border: [true, false, true, true],
+            borderColor: Array(4).fill("#222222"),
           },
-        ];
+        ]);
 
         const pdf = yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
           const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
@@ -409,12 +461,12 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
               font: "Courier",
             },
             sectionHeader: {
-              fontSize: 12,
+              fontSize: 14,
               bold: true,
               font: "Courier",
             },
             normalText: {
-              fontSize: 10,
+              fontSize: 12,
               font: "Courier",
               lineHeight: 1.2,
             },
