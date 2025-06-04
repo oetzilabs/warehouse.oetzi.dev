@@ -497,7 +497,13 @@ export default function CustomerOrderPage() {
                       variant="outline"
                       class="bg-background w-full"
                       disabled={isDownloading()}
-                      onClick={() => downloadInvoice(orderInfo().id)}
+                      onClick={() =>
+                        toast.promise(downloadInvoice(orderInfo().id), {
+                          loading: "Downloading Invoice...",
+                          success: "Invoice Downloaded",
+                          error: "Error Downloading Invoice",
+                        })
+                      }
                     >
                       <Show when={isDownloading()} fallback={<Receipt class="size-6" />}>
                         <Loader2 class="size-6 animate-spin" />

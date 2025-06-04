@@ -348,7 +348,13 @@ export default function SaleIdPage() {
                       variant="outline"
                       class="bg-background w-full"
                       disabled={isDownloading()}
-                      onClick={() => downloadInvoice(saleInfo().id)}
+                      onClick={() =>
+                        toast.promise(downloadInvoice(saleInfo().id), {
+                          loading: "Downloading Invoice...",
+                          success: "Invoice Downloaded",
+                          error: "Error Downloading Invoice",
+                        })
+                      }
                     >
                       <Show when={isDownloading()} fallback={<Receipt class="size-6" />}>
                         <Loader2 class="size-6 animate-spin" />

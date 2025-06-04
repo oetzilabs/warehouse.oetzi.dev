@@ -122,6 +122,16 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                           schedule: true,
                         },
                       },
+                      oco: {
+                        with: {
+                          customer: true,
+                        },
+                      },
+                      oso: {
+                        with: {
+                          supplier: true,
+                        },
+                      },
                       prods: {
                         with: {
                           product: true,

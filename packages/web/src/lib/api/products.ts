@@ -267,3 +267,66 @@ export const reAddProduct = action(async (id: string) => {
     revalidate: [getProductById.keyFor(id), getProducts.key],
   });
 });
+
+export const addLabelsToProduct = action(async (id: string, labels: string[]) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session.current_organization_id) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(ProductService);
+      const product = yield* service.findById(id);
+      const prodlabels = product.labels.map((l) => l.label.id);
+      const toAdd = labels.filter((l) => !prodlabels.includes(l));
+      for (const label of toAdd) {
+        yield* service.addLabel(id, label);
+      }
+
+      const labelsToRemove = prodlabels.filter((l) => !labels.includes(l));
+      for (const label of labelsToRemove) {
+        yield* service.removeLabel(id, label);
+      }
+
+      return true;
+    }).pipe(Effect.provide(ProductLive)),
+  );
+  return json(result, {
+    revalidate: [getProductById.keyFor(id), getProducts.key],
+  });
+});
+
+export const removeLabelsFromProduct = action(async (id: string, labelId: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session.current_organization_id) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(ProductService);
+      const product = yield* service.findById(id);
+      if (!product) {
+        return yield* Effect.fail(new ProductNotFound({ id }));
+      }
+
+      yield* service.removeLabel(id, labelId);
+
+      return true;
+    }).pipe(Effect.provide(ProductLive)),
+  );
+  return json(result, {
+    revalidate: [getProductById.keyFor(id), getProducts.key],
+  });
+});

@@ -1,4 +1,4 @@
-import { CustomersOrdersList } from "@/components/orders-list";
+import { CustomersOrdersList } from "@/components/lists/orders/customers";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getCustomerById } from "@/lib/api/customers";

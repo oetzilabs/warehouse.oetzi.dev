@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
@@ -448,7 +448,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         const removed = yield* Effect.promise(() =>
           db
             .delete(TB_products_to_labels)
-            .where(eq(TB_products_to_labels.productId, parsedProductId.output))
+            .where(
+              and(
+                eq(TB_products_to_labels.productId, parsedProductId.output),
+                eq(TB_products_to_labels.labelId, parsedLabelId.output),
+              ),
+            )
             .returning(),
         );
 
