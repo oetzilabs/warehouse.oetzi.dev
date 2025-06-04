@@ -399,6 +399,32 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         };
       });
 
+    const getProducts = (catalogId: string) =>
+      Effect.gen(function* (_) {
+        const parsedCatalogId = safeParse(prefixed_cuid2, catalogId);
+        if (!parsedCatalogId.success) {
+          return yield* Effect.fail(new CatalogInvalidId({ id: catalogId }));
+        }
+        const catalog = yield* Effect.promise(() =>
+          db.query.TB_catalogs.findFirst({
+            where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          }),
+        );
+
+        if (!catalog) {
+          return yield* Effect.fail(new CatalogNotFound({ id: catalogId }));
+        }
+
+        return catalog.products.map((p) => p.product);
+      });
+
     return {
       create,
       findById,
@@ -408,6 +434,7 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       addProduct,
       removeProduct,
       findByOrganizationId,
+      getProducts,
       printSheet,
       downloadSheet,
     } as const;

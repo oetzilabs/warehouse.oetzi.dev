@@ -209,7 +209,26 @@
       "description": "Warehouses are used for storing goods and products."
     }
   ],
-  "brands": [],
+  "brands": [
+    {
+      "id": "brd_ybrgk9wddxc5ts5ux57c9sk5",
+      "code": "BRAND-001",
+      "name": "Brand 1",
+      "description": "This is a brand 1",
+      "status": "active",
+      "logo_url": null,
+      "website": null
+    },
+    {
+      "id": "brd_y9srnlagvntwbt1azhv37bd5",
+      "code": "BRAND-002",
+      "name": "Gazi",
+      "description": "This is a turkish brand",
+      "status": "active",
+      "logo_url": null,
+      "website": null
+    }
+  ],
   "document_storage_offers": [
     {
       "id": "dso_kfpl4k5nrei8b7tmnhw66o99",

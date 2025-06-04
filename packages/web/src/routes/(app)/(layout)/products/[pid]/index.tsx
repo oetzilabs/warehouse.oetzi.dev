@@ -20,12 +20,15 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices, printProductSheet } from "@/lib/api/devices";
 import {
   addLabelsToProduct,
+  assignBrand,
   deleteProduct,
   downloadProductSheet,
+  getProductBrands,
   getProductById,
   getProductLabels,
   reAddProduct,
@@ -34,8 +37,10 @@ import {
 import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
+import type { BrandInfo } from "@warehouseoetzidev/core/src/entities/brands";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import Fuse from "fuse.js";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 // import Barcode from "lucide-solid/icons/barcode";
 import ArrowRight from "lucide-solid/icons/arrow-right";
@@ -45,6 +50,7 @@ import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import Map from "lucide-solid/icons/map";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import Pencil from "lucide-solid/icons/pencil";
 import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import RulerDimensionLine from "lucide-solid/icons/ruler-dimension-line";
@@ -73,6 +79,7 @@ export default function ProductPage() {
   const product = createAsync(() => getProductById(params.pid), { deferStream: true });
   const printers = createAsync(() => getDevices(), { deferStream: true });
   const labels = createAsync(() => getProductLabels(), { deferStream: true });
+  const brands = createAsync(() => getProductBrands(), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
   const [addLabelDialogOpen, setAddLabelDialogOpen] = createSignal(false);
   const [selectedLabels, setSelectedLabels] = createSignal<string[]>([]);
@@ -85,6 +92,8 @@ export default function ProductPage() {
     labelId: null,
     labelName: null,
   });
+  const [brandDialogOpen, setBrandDialogOpen] = createSignal(false);
+  const [brandSearch, setBrandSearch] = createSignal("");
 
   const deleteProductAction = useAction(deleteProduct);
   const isDeletingProduct = useSubmission(deleteProduct);
@@ -103,6 +112,20 @@ export default function ProductPage() {
 
   const removeLabelsFromProductAction = useAction(removeLabelsFromProduct);
   const isRemovingLabelsFromProduct = useSubmission(removeLabelsFromProduct);
+
+  const assignBrandAction = useAction(assignBrand);
+  const isAssigningBrand = useSubmission(assignBrand);
+
+  const filteredBrands = (brands: BrandInfo[]) => {
+    if (!brandSearch()) return brands;
+
+    const fuse = new Fuse(brands, {
+      keys: ["name", "description"],
+      threshold: 0.3,
+    });
+
+    return fuse.search(brandSearch()).map((result) => result.item);
+  };
 
   const triggerDownload = (data: string, filename: string) => {
     const binaryString = atob(data);
@@ -385,13 +408,103 @@ export default function ProductPage() {
                   <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Brand</h2>
                     <div class="flex flex-row items-center gap-2">
-                      <Button variant="outline" size="sm" class="bg-background">
-                        <Plus class="size-4" />
-                        Assign Brand
-                      </Button>
+                      <Dialog open={brandDialogOpen()} onOpenChange={setBrandDialogOpen}>
+                        <DialogTrigger as={Button} variant="outline" size="sm" class="bg-background">
+                          <Show
+                            when={productInfo().brands}
+                            fallback={
+                              <>
+                                <Plus class="size-4" />
+                                Assign Brand
+                              </>
+                            }
+                          >
+                            <Pencil class="size-4" />
+                            Change Brand
+                          </Show>
+                        </DialogTrigger>
+                        <DialogContent class="sm:max-w-[600px]">
+                          <DialogHeader>
+                            <DialogTitle>Select Brand</DialogTitle>
+                            <DialogDescription>Search and select a brand for this product</DialogDescription>
+                          </DialogHeader>
+                          <div class="flex flex-col gap-4">
+                            <TextField value={brandSearch()} onChange={(value) => setBrandSearch(value)}>
+                              <TextFieldInput placeholder="Search brands..." />
+                            </TextField>
+                            <div class="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto">
+                              <Suspense
+                                fallback={
+                                  <div class="flex items-center justify-center py-4">
+                                    <Loader2 class="size-4 animate-spin" />
+                                  </div>
+                                }
+                              >
+                                <Show
+                                  when={brands()}
+                                  fallback={
+                                    <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                      No brands available
+                                    </div>
+                                  }
+                                >
+                                  {(list) => (
+                                    <For
+                                      each={filteredBrands(list())}
+                                      fallback={
+                                        <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                          No brands found
+                                        </div>
+                                      }
+                                    >
+                                      {(brand) => (
+                                        <div
+                                          class={cn(
+                                            "flex flex-col gap-1 p-4 rounded-lg border cursor-pointer hover:bg-muted-foreground/5",
+                                            {
+                                              "border-primary bg-primary/20": productInfo().brands?.id === brand.id,
+                                              "border-input": productInfo().brands?.id !== brand.id,
+                                            },
+                                          )}
+                                          onClick={() => {
+                                            toast.promise(assignBrandAction(productInfo().id, brand.id), {
+                                              loading: "Assigning brand...",
+                                              success: () => {
+                                                setBrandDialogOpen(false);
+                                                setBrandSearch("");
+                                                return "Brand assigned";
+                                              },
+                                              error: "Failed to assign brand",
+                                            });
+                                          }}
+                                        >
+                                          <span class="font-medium">{brand.name}</span>
+                                          <Show when={brand.description}>
+                                            <span class="text-sm text-muted-foreground">{brand.description}</span>
+                                          </Show>
+                                        </div>
+                                      )}
+                                    </For>
+                                  )}
+                                </Show>
+                              </Suspense>
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setBrandDialogOpen(false);
+                                setBrandSearch("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
-
                   <Show
                     when={productInfo().brands}
                     fallback={
@@ -827,20 +940,20 @@ export default function ProductPage() {
                   </div>
                   <div class="flex flex-col gap-1 p-4 border-b">
                     <div class="flex justify-between">
-                      <span class="text-sm text-muted-foreground">Stock:</span>
-                      <span class="text-sm text-muted-foreground">{productInfo().stock}</span>
+                      <span class="text-sm font-medium">Stock:</span>
+                      <span class="text-sm">{productInfo().stock}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-sm text-muted-foreground">Min Stock:</span>
-                      <span class="text-sm text-muted-foreground">{productInfo().minimumStock}</span>
+                      <span class="text-sm font-medium">Min Stock:</span>
+                      <span class="text-sm">{productInfo().minimumStock}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-sm text-muted-foreground">Max Stock:</span>
-                      <span class="text-sm text-muted-foreground">{productInfo().maximumStock ?? "N/A"}</span>
+                      <span class="text-sm font-medium">Max Stock:</span>
+                      <span class="text-sm">{productInfo().maximumStock ?? "N/A"}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-sm text-muted-foreground">Reordering At:</span>
-                      <span class="text-sm text-muted-foreground">{productInfo().reorderPoint ?? "N/A"}</span>
+                      <span class="text-sm font-medium">Reordering At:</span>
+                      <span class="text-sm">{productInfo().reorderPoint ?? "N/A"}</span>
                     </div>
                   </div>
                   <div class="flex flex-col p-4">

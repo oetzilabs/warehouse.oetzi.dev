@@ -474,14 +474,15 @@ const AddNoteDialog = (props: { id: string }) => {
             </form.Field>
             <form.Field name="type">
               {(field) => (
-                <Select
+                <Select<SupplierNoteInfo["type"]>
                   value={field().state.value}
-                  onChange={(value) => field().handleChange(value as SupplierNoteInfo["type"])}
+                  onChange={(value) => field().handleChange(value ?? "general")}
                   onOpenChange={field().handleBlur}
-                  options={["general", "payment", "delivery", "quality", "other"] as SupplierNoteInfo["type"][]}
+                  options={["general", "payment", "delivery", "quality", "other"]}
                   required
+                  itemComponent={(props) => <SelectItem item={props.item}>{props.item.rawValue}</SelectItem>}
                 >
-                  <SelectLabel>type</SelectLabel>
+                  <SelectLabel>Type</SelectLabel>
                   <SelectTrigger>
                     <SelectValue<SupplierNoteInfo["type"]>>
                       {(state) => state.selectedOption() || "Select type..."}

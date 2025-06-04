@@ -19,11 +19,16 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { deleteCatalog, downloadSheet, getCatalogById, printSheet } from "@/lib/api/catalogs";
+import { addProductsToCatalog, deleteCatalog, downloadSheet, getCatalogById, printSheet } from "@/lib/api/catalogs";
 import { getDevices } from "@/lib/api/devices";
+import { getProducts } from "@/lib/api/products";
+import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
+import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
+import Fuse from "fuse.js";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -47,9 +52,13 @@ export default function CatalogPage() {
   const params = useParams();
   const navigate = useNavigate();
   const catalog = createAsync(() => getCatalogById(params.cid), { deferStream: true });
+  const products = createAsync(() => getProducts(), { deferStream: true });
   const printers = createAsync(() => getDevices(), { deferStream: true });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
+  const [addProductDialogOpen, setAddProductDialogOpen] = createSignal(false);
+  const [productSearch, setProductSearch] = createSignal("");
+  const [selectedProducts, setSelectedProducts] = createSignal<string[]>([]);
 
   const printCatalogSheetAction = useAction(printSheet);
   const isPrintingCatalogSheet = useSubmission(printSheet);
@@ -59,6 +68,20 @@ export default function CatalogPage() {
 
   const deleteCatalogAction = useAction(deleteCatalog);
   const isDeletingCatalog = useSubmission(deleteCatalog);
+
+  const addProductsToCatalogAction = useAction(addProductsToCatalog);
+  const isAddingProductsToCatalog = useSubmission(addProductsToCatalog);
+
+  const filteredProducts = (products: ProductInfo[]) => {
+    if (!productSearch()) return products;
+
+    const fuse = new Fuse(products, {
+      keys: ["name", "sku", "description"],
+      threshold: 0.3,
+    });
+
+    return fuse.search(productSearch()).map((result) => result.item);
+  };
 
   return (
     <Suspense
@@ -217,10 +240,118 @@ export default function CatalogPage() {
             <div class="flex flex-col border rounded-lg">
               <div class="flex flex-row items-center gap-2 justify-between p-4 border-b bg-muted/30">
                 <h2 class="font-medium">Products</h2>
-                <Button size="sm">
-                  <Plus class="size-4" />
-                  Add Product
-                </Button>
+                <Dialog open={addProductDialogOpen()} onOpenChange={setAddProductDialogOpen}>
+                  <DialogTrigger as={Button} size="sm">
+                    <Plus class="size-4" />
+                    Add Product{selectedProducts().length > 0 && ` (${selectedProducts().length})`}
+                  </DialogTrigger>
+                  <DialogContent class="sm:max-w-[800px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Products</DialogTitle>
+                      <DialogDescription>Select products to add to this catalog</DialogDescription>
+                    </DialogHeader>
+                    <div class="flex flex-col gap-4">
+                      <TextField value={productSearch()} onChange={(value) => setProductSearch(value)}>
+                        <TextFieldInput placeholder="Search products..." />
+                      </TextField>
+                      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto">
+                        <Suspense
+                          fallback={
+                            <div class="flex items-center justify-center py-4">
+                              <Loader2 class="size-4 animate-spin" />
+                            </div>
+                          }
+                        >
+                          <Show
+                            when={products()}
+                            fallback={
+                              <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                No products available
+                              </div>
+                            }
+                          >
+                            {(productList) => {
+                              setSelectedProducts(catalogInfo().products.map((p) => p.product.id));
+                              return (
+                                <For
+                                  each={filteredProducts(
+                                    // @ts-ignore - TODO: fix this
+                                    productList().map((p) => p.product),
+                                  )}
+                                  fallback={
+                                    <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                      No products found
+                                    </div>
+                                  }
+                                >
+                                  {(product) => (
+                                    <div
+                                      class={cn(
+                                        "flex flex-col gap-2 p-4 rounded-lg border cursor-pointer hover:bg-muted-foreground/5",
+                                        {
+                                          "border-primary bg-primary/20 hover:bg-primary/30":
+                                            selectedProducts().includes(product.id),
+                                          "border-input": !selectedProducts().includes(product.id),
+                                        },
+                                      )}
+                                      onClick={() => {
+                                        setSelectedProducts((prev) => {
+                                          if (prev.includes(product.id)) {
+                                            return prev.filter((id) => id !== product.id);
+                                          }
+                                          return [...prev, product.id];
+                                        });
+                                      }}
+                                    >
+                                      <span class="font-medium">{product.name}</span>
+                                      <span class="text-sm text-muted-foreground">SKU: {product.sku}</span>
+                                      <span class="text-sm text-muted-foreground">
+                                        Price: {product.sellingPrice} {product.currency}
+                                      </span>
+                                    </div>
+                                  )}
+                                </For>
+                              );
+                            }}
+                          </Show>
+                        </Suspense>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setAddProductDialogOpen(false);
+                          setSelectedProducts([]);
+                          setProductSearch("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        disabled={selectedProducts().length === 0 || isAddingProductsToCatalog.pending}
+                        onClick={() => {
+                          toast.promise(addProductsToCatalogAction(catalogInfo().id, selectedProducts()), {
+                            loading: "Adding products...",
+                            success: () => {
+                              setAddProductDialogOpen(false);
+                              setSelectedProducts([]);
+                              setProductSearch("");
+                              return "Products added";
+                            },
+                            error: "Failed to add products",
+                          });
+                        }}
+                      >
+                        {isAddingProductsToCatalog.pending ? (
+                          <Loader2 class="size-4 animate-spin" />
+                        ) : (
+                          <>Add Products ({selectedProducts().length})</>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div class="flex flex-col gap-4 p-4">
                 <For

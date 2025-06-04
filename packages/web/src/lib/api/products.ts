@@ -1,4 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
+import { BrandLive, BrandService } from "@warehouseoetzidev/core/src/entities/brands";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import {
   OrganizationNotFound,
@@ -324,6 +325,61 @@ export const removeLabelsFromProduct = action(async (id: string, labelId: string
       yield* service.removeLabel(id, labelId);
 
       return true;
+    }).pipe(Effect.provide(ProductLive)),
+  );
+  return json(result, {
+    revalidate: [getProductById.keyFor(id), getProducts.key],
+  });
+});
+
+export const getProductBrands = query(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const brands = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const brandsService = yield* _(BrandService);
+      const brands = yield* brandsService.all();
+      return brands;
+    }).pipe(Effect.provide(BrandLive)),
+  );
+  return brands;
+}, "brands");
+
+export const assignBrand = action(async (id: string, brandId: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session.current_organization_id) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(ProductService);
+      const product = yield* service.findById(id);
+      if (!product) {
+        return yield* Effect.fail(new ProductNotFound({ id }));
+      }
+
+      return yield* service.update(product.id, { id: product.id, brand_id: brandId });
     }).pipe(Effect.provide(ProductLive)),
   );
   return json(result, {

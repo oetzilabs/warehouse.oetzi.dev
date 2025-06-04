@@ -164,3 +164,38 @@ export const downloadSheet = action(async (id: string) => {
     },
   });
 });
+
+export const addProductsToCatalog = action(async (id: string, products: string[]) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const [user, session] = auth;
+  if (!session.current_organization_id) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(CatalogService);
+      const catalog = yield* service.findById(id);
+      if (!catalog) {
+        return yield* Effect.fail(new CatalogNotFound({ id }));
+      }
+      const prods = yield* service.getProducts(catalog.id);
+      const toAdd = products.filter((p) => !prods.map((pp) => pp.id).includes(p));
+      for (const product of toAdd) {
+        yield* service.addProduct(catalog.id, product);
+      }
+      const productsToRemove = prods.map((pp) => pp.id).filter((p) => !products.includes(p));
+      for (const product of productsToRemove) {
+        yield* service.removeProduct(catalog.id, product);
+      }
+      return true;
+    }).pipe(Effect.provide(CatalogLive)),
+  );
+  return json(result, {
+    revalidate: [getCatalogById.keyFor(id), getCatalogs.key],
+  });
+});
