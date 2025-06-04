@@ -192,8 +192,8 @@ export default function SupplierPage() {
                   </div>
                 </div>
 
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
                     <h2 class="font-medium">Products</h2>
                     <div class="flex flex-row items-center">
                       <Button size="sm">
@@ -259,8 +259,8 @@ export default function SupplierPage() {
                   </div>
                 </div>
 
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
                     <h2 class="font-medium">Orders</h2>
                     <div class="flex flex-row items-center">
                       <Button size="sm">
@@ -333,8 +333,8 @@ export default function SupplierPage() {
                   </div>
                 </div>
 
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
                     <h2 class="font-medium">Notes</h2>
                     <div class="flex flex-row items-center">
                       <AddNoteDialog id={supplierInfo().supplier.id} />

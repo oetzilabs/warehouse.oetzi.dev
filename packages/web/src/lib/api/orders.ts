@@ -1,5 +1,7 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { OrderInfo, OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
@@ -257,4 +259,41 @@ export const convertToSale = action(async (id: string, cid: string) => {
   return json(order, {
     revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
   });
+});
+
+export const downloadOrderSheet = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const order = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const orderService = yield* _(OrderService);
+      const order = yield* orderService.findById(id);
+      const organizationService = yield* _(OrganizationService);
+      const org = yield* organizationService.findById(orgId);
+      if (!org) {
+        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
+      }
+      const pdf = yield* orderService.generatePDF(id, org, { page: { size: "A4", orientation: "portrait" } });
+      return yield* Effect.succeed({
+        pdf: pdf.toString("base64"),
+        name: order.barcode ?? order.createdAt.toISOString(),
+      });
+    }).pipe(Effect.provide(OrderLive), Effect.provide(OrganizationLive)),
+  );
+  return json(order);
 });

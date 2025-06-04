@@ -16,10 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getCustomers } from "@/lib/api/customers";
 import { getDevices } from "@/lib/api/devices";
 import { getDiscounts } from "@/lib/api/discounts";
-import { convertToSale, deleteOrder, getOrderById } from "@/lib/api/orders";
+import { convertToSale, deleteOrder, downloadOrderSheet, getOrderById } from "@/lib/api/orders";
 import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
@@ -63,7 +62,33 @@ export default function CustomerOrderPage() {
   const convertToSaleAction = useAction(convertToSale);
   const isConvertingToSale = useSubmission(convertToSale);
 
-  const customers = createAsync(() => getCustomers());
+  const downloadOrderSheetAction = useAction(downloadOrderSheet);
+  const isDownloadingOrderSheet = useSubmission(downloadOrderSheet);
+
+  const [isDownloading, setIsDownloading] = createSignal(false);
+
+  const downloadInvoice = async (orderId: string) => {
+    try {
+      setIsDownloading(true);
+      const response = await fetch(`/api/orders/${orderId}/download`);
+      if (!response.ok) throw new Error("Download failed");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `order-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Failed to download invoice");
+      console.error(error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <Suspense
@@ -85,19 +110,23 @@ export default function CustomerOrderPage() {
                 </Button>
                 <div class="flex flex-row items-baseline gap-2">
                   <h1 class="text-xl font-semibold">#{orderInfo().barcode ?? "N/A"}</h1>
-                  <span
-                    class={cn("text-xs font-semibold", {
-                      "text-yellow-500": orderInfo().status.toLowerCase() === "pending",
-                      "text-green-500": orderInfo().status.toLowerCase() === "completed",
-                      "text-red-500": orderInfo().status.toLowerCase() === "cancelled",
-                      "text-blue-500": orderInfo().status.toLowerCase() === "processing",
-                      "text-muted-foreground": !["pending", "completed", "cancelled", "processing"].includes(
-                        orderInfo().status.toLowerCase(),
-                      ),
-                    })}
-                  >
-                    {orderInfo().status}
-                  </span>
+                  <Show when={orderInfo().status}>
+                    {(status) => (
+                      <span
+                        class={cn("text-xs font-semibold", {
+                          "text-yellow-500": status().toLowerCase() === "pending",
+                          "text-green-500": status().toLowerCase() === "completed",
+                          "text-red-500": status().toLowerCase() === "cancelled",
+                          "text-blue-500": status().toLowerCase() === "processing",
+                          "text-muted-foreground": !["pending", "completed", "cancelled", "processing"].includes(
+                            status().toLowerCase(),
+                          ),
+                        })}
+                      >
+                        {status()}
+                      </span>
+                    )}
+                  </Show>
                 </div>
               </div>
               <div class="flex flex-row items-center gap-2">
@@ -179,8 +208,8 @@ export default function CustomerOrderPage() {
                   </div>
                 </div>
 
-                <div class="flex flex-col border rounded-lg">
-                  <div class="w-full p-4 border-b">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="w-full p-4 border-b bg-muted/30">
                     <h2 class="font-medium">Products</h2>
                   </div>
                   <div class="flex flex-col gap-0">
@@ -462,9 +491,17 @@ export default function CustomerOrderPage() {
                       Convert to Sale
                     </Button>
                   </div>
-                  <div class="flex flex-col md:flex-row gap-4 w-full">
-                    <Button size="lg" variant="outline" class="bg-background w-full">
-                      <Receipt class="size-6" />
+                  <div class="flex flex-col xl:flex-row gap-4 w-full">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      class="bg-background w-full"
+                      disabled={isDownloading()}
+                      onClick={() => downloadInvoice(orderInfo().id)}
+                    >
+                      <Show when={isDownloading()} fallback={<Receipt class="size-6" />}>
+                        <Loader2 class="size-6 animate-spin" />
+                      </Show>
                       Download Invoice
                     </Button>
                     <Button size="lg" variant="outline" class="bg-background w-full">

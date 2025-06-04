@@ -63,7 +63,7 @@ export function Footer() {
     <footer class="w-full">
       <div class="w-full p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
         <div class="container p-4">
-          <div class="flex flex-col md:flex-row gap-6 w-full">
+          <div class="flex flex-col xl:flex-row gap-6 w-full">
             <div class="flex flex-col gap-4 items-center justify-center md:items-start md:justify-start col-span-full sm:col-span-1 w-full">
               <h4 class="text-xs font-semibold text-neutral-900 uppercase dark:text-neutral-100">Newsletter</h4>
               <div class="flex flex-col gap-3 ">

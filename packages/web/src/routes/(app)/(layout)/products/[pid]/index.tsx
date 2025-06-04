@@ -273,8 +273,8 @@ export default function ProductPage() {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Images</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button variant="outline" size="sm" class="bg-background">
@@ -315,8 +315,8 @@ export default function ProductPage() {
                   </Show>
                 </div>
 
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Codes</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button
@@ -355,8 +355,8 @@ export default function ProductPage() {
                     />
                   </div>
                 </div>
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Brand</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button variant="outline" size="sm" class="bg-background">
@@ -383,8 +383,8 @@ export default function ProductPage() {
                     )}
                   </Show>
                 </div>
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Labels</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button variant="outline" size="sm" class="bg-background">
@@ -423,8 +423,8 @@ export default function ProductPage() {
                     )}
                   </For>
                 </div>
-                <div class="flex flex-col gap-2 border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                <div class="flex flex-col gap-2 border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Condition</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button variant="outline" size="sm" class="bg-background">
@@ -448,8 +448,8 @@ export default function ProductPage() {
                     )}
                   </For>
                 </div>
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted-foreground/20 p-4 ">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
                     <h2 class="font-medium">Suppliers</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Button variant="outline" size="sm" class="bg-background">
@@ -618,8 +618,8 @@ export default function ProductPage() {
                 </div>
               </div>
               <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                <div class="flex flex-col border rounded-lg overflow-clip">
+                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
                     <h2 class="font-medium p-4">Inventory</h2>
                   </div>
                   <div class="flex flex-col gap-1 p-4 border-b">
@@ -646,7 +646,7 @@ export default function ProductPage() {
                 </div>
 
                 <div class="flex flex-col border rounded-lg">
-                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted-foreground/20">
+                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
                     <h2 class="font-medium p-4">Actions</h2>
                   </div>
                   <div class="flex flex-col gap-2 p-4">

@@ -18,7 +18,9 @@ import {
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
+import { OrganizationInfo } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
 import { SaleNotCreated } from "../sales/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
@@ -94,6 +96,21 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
                       discount: true,
                     },
                   },
+                },
+              },
+              oco: {
+                with: {
+                  customer: {
+                    with: {
+                      pdt: true,
+                      ppt: true,
+                    },
+                  },
+                },
+              },
+              oso: {
+                with: {
+                  supplier: true,
                 },
               },
               users: {
@@ -727,6 +744,30 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
         return { sale, items };
       });
 
+    const generatePDF = (
+      id: string,
+      organization: OrganizationInfo,
+      options: {
+        page: {
+          size: PaperSize;
+          orientation: PaperOrientation;
+        };
+      },
+    ) =>
+      Effect.gen(function* (_) {
+        const order = yield* findById(id);
+        if (!order) {
+          return yield* Effect.fail(new OrderNotFound({ id }));
+        }
+
+        const pdfGenService = yield* _(PDFService);
+        let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.order(order, organization, {
+          page: options.page,
+        });
+
+        return generatedPdf;
+      }).pipe(Effect.provide(PDFLive));
+
     return {
       create,
       findById,
@@ -745,6 +786,7 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
       getPopularProductsChartData,
       getLastSoldProductsChartData,
       convertToSale,
+      generatePDF,
     } as const;
   }),
   dependencies: [DatabaseLive],

@@ -28,6 +28,11 @@ export const default_styles = {
     font: "Helvetica",
     lineHeight: 1.4,
   },
+  smallText: {
+    fontSize: 7,
+    font: "Helvetica",
+    lineHeight: 1.4,
+  },
   tableHeader: {
     fontSize: 10,
     bold: true,
@@ -89,14 +94,17 @@ export const Text = (
   config: {
     margin?: [number, number, number, number];
     lineHeight?: number;
+    colSpan?: number;
   } = {
     margin: undefined,
     lineHeight: undefined,
+    colSpan: undefined,
   },
 ) => {
   return {
     text,
     style,
+    colSpan: config.colSpan,
     ...config,
   };
 };
@@ -120,7 +128,7 @@ export const getTableLayout = (
     fillOpacity: 1,
     defaultBorder: true,
   },
-): TableLayout => ({
+): CustomTableLayout => ({
   hLineWidth: (i, node) => borderConfig.width ?? 0.5,
   vLineWidth: (i, node) => borderConfig.width ?? 0.5,
   hLineColor: (i, node) => borderConfig.color ?? "#222222",
@@ -140,11 +148,19 @@ export const Table = (
   contents: (TableCell | null)[],
   config: {
     widths: PdfMakeTable["widths"];
-    layout?: BorderConfig;
+    border?: BorderConfig;
+    layout?: CustomTableLayout;
   } = {
     widths: ["*"],
-    layout: {
+    border: {
       color: "#222222",
+    },
+    layout: {
+      paddingBottom: (i, node) => 10,
+      paddingLeft: (i, node) => 10,
+      paddingRight: (i, node) => 10,
+      paddingTop: (i, node) => 10,
+      defaultBorder: false,
     },
   },
 ) => {
@@ -154,13 +170,16 @@ export const Table = (
       widths: config.widths,
       body: rows,
     },
-    layout: getTableLayout(config.layout ?? undefined, {
-      paddingBottom: (i, node) => 10,
-      paddingLeft: (i, node) => 10,
-      paddingRight: (i, node) => 10,
-      paddingTop: (i, node) => 10,
-      defaultBorder: false,
-    }),
+    layout: getTableLayout(
+      config.border,
+      config.layout ?? {
+        paddingBottom: (i, node) => 10,
+        paddingLeft: (i, node) => 10,
+        paddingRight: (i, node) => 10,
+        paddingTop: (i, node) => 10,
+        defaultBorder: false,
+      },
+    ),
   };
 };
 
