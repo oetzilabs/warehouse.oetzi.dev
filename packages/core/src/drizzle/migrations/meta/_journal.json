@@ -176,6 +176,13 @@
       "when": 1748858144260,
       "tag": "0024_small_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1749045590163,
+      "tag": "0025_modern_archangel",
+      "breakpoints": true
     }
   ]
 }

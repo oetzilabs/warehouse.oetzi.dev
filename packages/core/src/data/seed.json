@@ -303,6 +303,7 @@
       "createdAt": "2025-03-01T10:00:00.000Z",
       "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
       "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
+      "barcode": "test-sale-barcode-001",
       "items": [
         {
           "productId": "prod_uzujt3nrndmn90yyslc61wqv",
@@ -328,6 +329,7 @@
       "id": "sale_pf0xvak0rwxcccpd9trgh9fa",
       "note": "This is a test sale 2",
       "status": "draft",
+      "barcode": "test-sale-barcode-002",
       "createdAt": "2025-05-28T10:00:00.000Z",
       "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
       "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
@@ -356,6 +358,7 @@
       "id": "sale_xfdt86ehwalmpa21fpea6p5d",
       "note": "This is a test sale 2, with storno and for mixed transactions. the last product needs to be a storno",
       "status": "draft",
+      "barcode": "test-sale-barcode-003",
       "createdAt": "2025-05-26T10:00:00.000Z",
       "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
       "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
@@ -384,6 +387,7 @@
       "id": "sale_snh8zs22qnvj4iyqm32tcj04",
       "note": "Storno for sale_yvqvzoet0tmx8fuq1r33m7df",
       "status": "created",
+      "barcode": "test-sale-barcode-004",
       "createdAt": "2025-03-01T11:00:00.000Z",
       "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
       "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",

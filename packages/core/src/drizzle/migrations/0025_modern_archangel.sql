@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."sales" ADD COLUMN "barcode" text;

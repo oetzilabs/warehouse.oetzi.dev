@@ -1000,14 +1000,7 @@
             ]
           },
           "currency": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
+            "type": "string"
           },
           "weight": {
             "anyOf": [
@@ -1136,6 +1129,7 @@
           "manufacturingDate",
           "expirationDate",
           "sellingPrice",
+          "currency",
           "id",
           "labels"
         ]
@@ -1657,10 +1651,21 @@
               "processing",
               "shipped",
               "delivered",
-              "cancelled"
+              "cancelled",
+              "deleted"
             ]
           },
           "note": {
+            "anyOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "barcode": {
             "anyOf": [
               {
                 "const": null

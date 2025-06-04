@@ -38,8 +38,32 @@ export default function SaleIdPage() {
   const sale = createAsync(() => getSaleById(params.salesid), { deferStream: true });
   const devices = createAsync(() => getDevices(), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
+  const [isDownloading, setIsDownloading] = createSignal(false);
 
   const deleteSaleAction = useAction(deleteSale);
+
+  const downloadInvoice = async (saleId: string) => {
+    try {
+      setIsDownloading(true);
+      const response = await fetch(`/api/sales/${saleId}/download`);
+      if (!response.ok) throw new Error("Download failed");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sale-${saleId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Failed to download invoice");
+      console.error(error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <Suspense
@@ -319,8 +343,16 @@ export default function SaleIdPage() {
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
                   <div class="flex flex-col xl:flex-row gap-4 w-full">
-                    <Button size="lg" variant="outline" class="bg-background w-full">
-                      <Receipt class="size-6" />
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      class="bg-background w-full"
+                      disabled={isDownloading()}
+                      onClick={() => downloadInvoice(saleInfo().id)}
+                    >
+                      <Show when={isDownloading()} fallback={<Receipt class="size-6" />}>
+                        <Loader2 class="size-6 animate-spin" />
+                      </Show>
                       Download Invoice
                     </Button>
                     <Button size="lg" variant="outline" class="bg-background w-full">

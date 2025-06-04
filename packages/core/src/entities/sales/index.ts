@@ -6,8 +6,10 @@ import { InferInput, number, object, parse, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import { OrganizationLive, OrganizationService } from "../organizations";
+import { OrderNotFound } from "../orders/errors";
+import { OrganizationInfo, OrganizationLive, OrganizationService } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
 import {
   SaleInvalidId,
   SaleNotCreated,
@@ -243,6 +245,29 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
 
         return deleted;
       });
+    const generatePDF = (
+      id: string,
+      organization: OrganizationInfo,
+      options: {
+        page: {
+          size: PaperSize;
+          orientation: PaperOrientation;
+        };
+      },
+    ) =>
+      Effect.gen(function* (_) {
+        const sale = yield* findById(id);
+        if (!sale) {
+          return yield* Effect.fail(new OrderNotFound({ id }));
+        }
+
+        const pdfGenService = yield* _(PDFService);
+        let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.sale(sale, organization, {
+          page: options.page,
+        });
+
+        return generatedPdf;
+      }).pipe(Effect.provide(PDFLive));
 
     return {
       create,
@@ -253,6 +278,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       calculateTotal,
       findWithinRange,
       findByOrganizationId,
+      generatePDF,
     } as const;
   }),
   dependencies: [DatabaseLive, OrganizationLive],
