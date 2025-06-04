@@ -81,11 +81,11 @@ export const CatalogsList = (props: CatalogsListProps) => {
           <ArrowUpRight class="size-4" />
         </Button>
       </div>
-      <div class="flex flex-col gap-1 w-full h-full p-4">
+      <div class="flex flex-col w-full h-full">
         <Show
           when={catalog.deletedAt === null}
           fallback={
-            <div class="text-sm text-muted-foreground flex flex-col items-center justify-center">
+            <div class="text-sm text-muted-foreground flex flex-col items-center justify-center p-8">
               This catalog has been deleted
             </div>
           }
@@ -99,7 +99,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
             }
           >
             {(product) => (
-              <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-4 border bg-background">
+              <div class="flex flex-col gap-4 items-center justify-center p-4 border-b last:border-b-0 bg-background">
                 <div class="flex flex-col gap-2 w-full h-full">
                   <span class="text-sm font-medium">{product.name}</span>
                   <span class="text-xs text-muted-foreground">

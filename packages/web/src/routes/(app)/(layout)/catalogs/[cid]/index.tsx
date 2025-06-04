@@ -353,7 +353,7 @@ export default function CatalogPage() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <div class="flex flex-col gap-4 p-4">
+              <div class="flex flex-col">
                 <For
                   each={catalogInfo().products}
                   fallback={
@@ -363,7 +363,7 @@ export default function CatalogPage() {
                   }
                 >
                   {(product) => (
-                    <div class="flex flex-col gap-2 p-4 border rounded-lg">
+                    <div class="flex flex-col gap-2 p-4 border-b last:border-b-0">
                       <span class="text-sm font-medium">{product.product.name}</span>
                       <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
                       <span class="text-sm text-muted-foreground">
