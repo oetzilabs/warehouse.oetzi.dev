@@ -26,7 +26,7 @@ export const FilterPopover = <T extends WithDates>(props: FilterPopoverProps<T>)
 
   return (
     <Popover placement="bottom-end">
-      <PopoverTrigger as={Button} size="lg" disabled={props.config.disabled()} class="h-10 px-5">
+      <PopoverTrigger as={Button} size="lg" disabled={props.config.disabled()} variant="secondary" class="h-10 px-5">
         Filters & Sort
       </PopoverTrigger>
       <PopoverContent class="w-[720px]">

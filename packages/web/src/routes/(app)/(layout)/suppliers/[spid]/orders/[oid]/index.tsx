@@ -330,7 +330,7 @@ export default function SupplierOrderPage() {
                 </div>
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
-                  <div class="flex flex-row gap-4 w-full">
+                  <div class="flex flex-col md:flex-row gap-4 w-full">
                     <Button size="lg" variant="outline" class="bg-background w-full">
                       <Receipt class="size-6" />
                       Download Invoice

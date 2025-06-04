@@ -13,7 +13,7 @@ type SimpleFilterPopoverProps<T extends WithSimpleDates> = {
 export const SimpleFilterPopover = <T extends WithSimpleDates>(props: SimpleFilterPopoverProps<T>) => {
   return (
     <Popover placement="bottom-end">
-      <PopoverTrigger as={Button} size="lg" disabled={props.config.disabled()} class="h-10 px-5">
+      <PopoverTrigger as={Button} size="lg" disabled={props.config.disabled()} variant="secondary" class="h-10 px-5">
         Simple Filters & Sort
       </PopoverTrigger>
       <PopoverContent class="w-[320px]">
@@ -119,6 +119,11 @@ export const SimpleFilterPopover = <T extends WithSimpleDates>(props: SimpleFilt
                   current: props.config.sort.default,
                   direction: "desc",
                   variants: props.config.sort.variants,
+                },
+                filter: {
+                  default: null,
+                  current: null,
+                  variants: [],
                 },
               });
             }}

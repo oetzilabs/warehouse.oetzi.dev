@@ -27,7 +27,7 @@ export const database = () => {
     schema,
   });
   if (Resource.DatabaseProvider.value === "local") {
-    const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
+    const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000, onnotice(notice) {} });
     globalClient = localDrizzle(localClient, { schema });
     global.globalClient = globalClient;
   }
@@ -43,7 +43,7 @@ export const migrate = async () => {
   };
   if (Resource.DatabaseProvider.value === "local") {
     console.log("Migrating local database: " + Resource.DatabaseUrl.value);
-    const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
+    const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000, onnotice(notice) {} });
     const db = localDrizzle(localClient, { schema });
     return localMigrate(db, config);
   } else {
@@ -64,7 +64,7 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
           return global.globalClient;
         }
         if (Resource.DatabaseProvider.value === "local") {
-          const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
+          const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000, onnotice(notice) {} });
           const db = localDrizzle(localClient, { schema });
           global.globalClient = db;
         } else {
@@ -82,7 +82,7 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
         };
         if (Resource.DatabaseProvider.value === "local") {
           console.log("Migrating local database: " + Resource.DatabaseUrl.value);
-          const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000 });
+          const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000, onnotice(notice) {} });
           const db = localDrizzle(localClient, { schema });
           return localMigrate(db, config);
         } else {

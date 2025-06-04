@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 // import Barcode from "lucide-solid/icons/barcode";
 import ArrowRight from "lucide-solid/icons/arrow-right";
@@ -43,6 +44,8 @@ import Weight from "lucide-solid/icons/weight";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
+
+dayjs.extend(relativeTime);
 
 const Barcode = clientOnly(() => import("@/components/barcode"));
 const QRCode = clientOnly(() => import("@/components/qrcode"));
@@ -489,15 +492,8 @@ export default function ProductPage() {
                             </Show>
                           </div>
                           <div class="flex items-center gap-2">
-                            <Button
-                              as={A}
-                              href={`/suppliers/${supplier.supplier.id}`}
-                              variant="outline"
-                              class="bg-background"
-                              size="sm"
-                            >
-                              View
-                              <ArrowUpRight class="size-4" />
+                            <Button size="icon" variant="outline" class="size-6 bg-background plce-self-start">
+                              <X class="!size-3" />
                             </Button>
                           </div>
                         </div>
@@ -527,7 +523,6 @@ export default function ProductPage() {
                               </Show>
                             </div>
                           </div>
-
                           <div class="flex flex-col gap-2">
                             <span class="text-xs font-medium">Payment Information</span>
                             <div class="flex flex-col gap-1">
@@ -599,6 +594,24 @@ export default function ProductPage() {
                             </div>
                           </div>
                         </Show>
+                        <div class="flex flex-row items-center justify-between gap-2">
+                          <div class="">
+                            <span class="text-xs text-muted-foreground">
+                              <Show
+                                when={supplier.supplier.updatedAt}
+                                fallback={`Created ${dayjs(supplier.supplier.createdAt).fromNow()}`}
+                              >
+                                Updated {dayjs(supplier.supplier.updatedAt).fromNow()}
+                              </Show>
+                            </span>
+                          </div>
+                          <div class="">
+                            <Button as={A} href={`/suppliers/${supplier.supplier.id}`} variant="secondary" size="sm">
+                              View
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </For>
