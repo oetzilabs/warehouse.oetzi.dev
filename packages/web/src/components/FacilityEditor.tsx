@@ -10,6 +10,7 @@ import { updateAreaBoundingBox } from "@/lib/api/areas";
 import { cn } from "@/lib/utils";
 import { useAction, useSubmission } from "@solidjs/router";
 import { type FacilityInfo } from "@warehouseoetzidev/core/src/entities/facilities";
+import { type OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MinimizeIcon from "lucide-solid/icons/minimize";
@@ -26,17 +27,17 @@ import { isServer } from "solid-js/web";
 import { toast } from "solid-sonner";
 
 // Remove or modify areaBoundingBox as we'll use the actual bounding box
-const calculateCombinedBoundingBox = (facility: FacilityInfo) => {
+const calculateCombinedBoundingBox = (facility: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]) => {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
 
-  facility.ars.forEach((area) => {
-    minX = Math.min(minX, area.bounding_box.x);
-    minY = Math.min(minY, area.bounding_box.y);
-    maxX = Math.max(maxX, area.bounding_box.x + area.bounding_box.width);
-    maxY = Math.max(maxY, area.bounding_box.y + area.bounding_box.height);
+  facility.areas.forEach((area) => {
+    minX = Math.min(minX, area.boundingBox.x);
+    minY = Math.min(minY, area.boundingBox.y);
+    maxX = Math.max(maxX, area.boundingBox.x + area.boundingBox.width);
+    maxY = Math.max(maxY, area.boundingBox.y + area.boundingBox.height);
   });
 
   const width = maxX - minX === -Infinity ? 0 : maxX - minX;
@@ -112,7 +113,7 @@ interface EditorState {
   resizingArea: string | null;
 }
 
-const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
+const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["warehouses"][0]["facilities"][0]> }) => {
   const padding = 20;
   const initialCenter = calculateCombinedBoundingBox(props.facility());
   let mapRef: HTMLDivElement | undefined;
@@ -149,17 +150,17 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
     toast.info("View has been reset");
   };
 
-  const tightenArea = (area: FacilityInfo["ars"][number]) => {
+  const tightenArea = (area: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][number]) => {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
 
-    area.strs.forEach((storage) => {
-      minX = Math.min(minX, storage.bounding_box.x);
-      minY = Math.min(minY, storage.bounding_box.y);
-      maxX = Math.max(maxX, storage.bounding_box.x + storage.bounding_box.width);
-      maxY = Math.max(maxY, storage.bounding_box.y + (storage.bounding_box.length ?? storage.bounding_box.height));
+    area.storages.forEach((storage) => {
+      minX = Math.min(minX, storage.boundingBox.x);
+      minY = Math.min(minY, storage.boundingBox.y);
+      maxX = Math.max(maxX, storage.boundingBox.x + storage.boundingBox.width);
+      maxY = Math.max(maxY, storage.boundingBox.y + (storage.boundingBox.length ?? storage.boundingBox.height));
     });
     const bb = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
     toast.promise(updateAreaBoundingBoxAction(props.facility().id, area.id, bb), {
@@ -211,31 +212,11 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
       setState("isDragging", false);
     };
 
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-
-      if (e.ctrlKey) {
-        const delta = e.deltaY < 0 ? 0.1 : -0.1;
-        setState("zoom", (prev) => Math.max(0.1, Math.min(10, prev + delta)));
-      } else if (e.shiftKey) {
-        setState("position", (prev) => ({
-          x: prev.x - e.deltaY,
-          y: prev.y,
-        }));
-      } else {
-        setState("position", (prev) => ({
-          x: prev.x,
-          y: prev.y - e.deltaY,
-        }));
-      }
-    };
-
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
     document.addEventListener("mousedown", handleMouseDown);
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -243,7 +224,6 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
       document.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("wheel", handleWheel);
     };
   });
 
@@ -259,8 +239,8 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                 setEditing(false);
               }}
             >
-                <span>Cancel</span>
-                <X class="size-4" />
+              <span>Cancel</span>
+              <X class="size-4" />
             </Button>
           </Show>
           <Button
@@ -279,7 +259,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                     loading: "Saving facility...",
                     success: "Facility saved",
                     error: "Failed to save facility",
-                  }
+                  },
                 );
                 setEditing(false);
               } else {
@@ -324,15 +304,15 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
           }}
         >
           <div class="relative">
-            <For each={props.facility().ars}>
+            <For each={props.facility().areas}>
               {(area) => (
                 <div
                   class="outline-1 outline-neutral-400 dark:outline-neutral-700 outline-dashed group absolute"
                   style={{
-                    top: `${area.bounding_box.y}px`,
-                    left: `${area.bounding_box.x}px`,
-                    width: `${area.bounding_box.width + 2 * padding}px`,
-                    height: `${area.bounding_box.height + 2 * padding}px`,
+                    top: `${area.boundingBox.y}px`,
+                    left: `${area.boundingBox.x}px`,
+                    width: `${area.boundingBox.width + 2 * padding}px`,
+                    height: `${area.boundingBox.height + 2 * padding}px`,
                   }}
                 >
                   <Show when={editing()}>
@@ -359,18 +339,18 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                     <div class="absolute -top-6 left-0 flex gap-2 items-center">
                       <span class="text-xs text-muted-foreground">{area.name}</span>
                       <span class="text-xs text-muted-foreground">
-                        ({area.bounding_box.width}cm × {area.bounding_box.height}cm)
+                        ({area.boundingBox.width}cm × {area.boundingBox.height}cm)
                       </span>
                     </div>
                   </Show>
                   <Show when={editing()}>
                     <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Ruler orientation="horizontal" length={area.bounding_box.width} offset={-20} padding={padding} />
-                      <Ruler orientation="vertical" length={area.bounding_box.height} offset={-20} padding={padding} />
+                      <Ruler orientation="horizontal" length={area.boundingBox.width} offset={-20} padding={padding} />
+                      <Ruler orientation="vertical" length={area.boundingBox.height} offset={-20} padding={padding} />
                     </div>
                   </Show>
                   <div class="w-full h-full relative">
-                    <For each={area.strs}>
+                    <For each={area.storages}>
                       {(storage) => (
                         <div
                           class={cn(
@@ -378,13 +358,13 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                             {
                               "flex-row": storage.variant === "vertical",
                               "flex-col": storage.variant === "horizontal",
-                            }
+                            },
                           )}
                           style={{
-                            top: `${storage.bounding_box.y + padding}px`,
-                            left: `${storage.bounding_box.x + padding}px`,
-                            width: `${storage.bounding_box.width}px`,
-                            height: `${storage.bounding_box.length ?? storage.bounding_box.height}px`,
+                            top: `${storage.boundingBox.y + padding}px`,
+                            left: `${storage.boundingBox.x + padding}px`,
+                            width: `${storage.boundingBox.width}px`,
+                            height: `${storage.boundingBox.length ?? storage.boundingBox.height}px`,
                           }}
                         >
                           <Show when={editing()}>
@@ -401,7 +381,7 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                             </div>
                           </Show>
 
-                          <For each={storage.invs}>
+                          <For each={storage.spaces}>
                             {(inventory) => (
                               <div
                                 class={cn(
@@ -411,16 +391,16 @@ const FacilityEditor = (props: { facility: Accessor<FacilityInfo> }) => {
                                       storage.variant === "vertical",
                                     "border-neutral-400 dark:border-neutral-500 border-b last:border-b-0":
                                       storage.variant === "horizontal",
-                                  }
+                                  },
                                 )}
                                 style={
                                   storage.variant === "horizontal"
                                     ? {
                                         width: "100%",
-                                        height: `calc(100%/${storage.invs.length})`,
+                                        height: `calc(100%/${storage.spaces.length})`,
                                       }
                                     : {
-                                        width: `${storage.bounding_box.width / storage.invs.length}px`,
+                                        width: `${storage.boundingBox.width / storage.spaces.length}px`,
                                         height: "100%",
                                       }
                                 }

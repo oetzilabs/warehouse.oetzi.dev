@@ -9,6 +9,7 @@ import { A } from "@solidjs/router";
 import { OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import FacilityEditor from "../../FacilityEditor";
 import { GenericList } from "../default";
 
 type InventoryListProps = {
@@ -114,45 +115,8 @@ export const InventoryList = (props: InventoryListProps) => {
                       </div>
                     </div>
 
-                    <div class="divide-y">
-                      <For each={facility.areas}>
-                        {(area) => (
-                          <div class="py-3">
-                            <div class="flex items-center justify-between mb-2">
-                              <div>
-                                <h5 class="font-medium">{area.name}</h5>
-                                <p class="text-sm text-muted-foreground">{area.description}</p>
-                              </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                              <For each={area.storages}>
-                                {(storage) => {
-                                  const occupancyPercentage =
-                                    ((storage.currentOccupancy || 0) / storage.capacity) * 100;
-                                  return (
-                                    <div class="border rounded p-2 space-y-2">
-                                      <div class="flex justify-between items-center">
-                                        <span class="text-sm font-medium">{storage.name}</span>
-                                        <Badge variant="secondary">{storage.type.name}</Badge>
-                                      </div>
-                                      <div class="space-y-1">
-                                        <div class="text-xs flex justify-between">
-                                          <span>Occupancy</span>
-                                          <span>
-                                            {storage.currentOccupancy}/{storage.capacity}
-                                          </span>
-                                        </div>
-                                        <Progress value={occupancyPercentage} class="h-1" />
-                                      </div>
-                                    </div>
-                                  );
-                                }}
-                              </For>
-                            </div>
-                          </div>
-                        )}
-                      </For>
+                    <div class="flex flex-col w-full aspect-video border rounded-lg">
+                      <FacilityEditor facility={() => facility} />
                     </div>
                   </div>
                 </div>
