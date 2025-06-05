@@ -3,6 +3,7 @@ import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
@@ -13,6 +14,7 @@ import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import ZoomReset from "lucide-solid/icons/redo";
+import X from "lucide-solid/icons/x";
 import ZoomIn from "lucide-solid/icons/zoom-in";
 import ZoomOut from "lucide-solid/icons/zoom-out";
 import { Accessor, createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
@@ -116,6 +118,11 @@ export const InventoryList = (props: InventoryListProps) => {
   const [expandedAreas, setExpandedAreas] = createSignal<Set<string>>(new Set());
   const [expandedStorages, setExpandedStorages] = createSignal<Set<string>>(new Set());
   const [areaZoomLevels, setAreaZoomLevels] = createStore<Record<string, number>>({});
+  const [hoveredStorage, setHoveredStorage] = createSignal<{
+    storage: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][0]["storages"][0];
+    x: number;
+    y: number;
+  } | null>(null);
 
   const toggleExpand = (set: Set<string>, setFn: (value: Set<string>) => void, id: string) => {
     const newSet = new Set(set);
@@ -528,7 +535,7 @@ export const InventoryList = (props: InventoryListProps) => {
   const renderFacilityMap = () => {
     if (!selectedWarehouseId()) {
       return (
-        <div class="w-full h-[600px] relative border rounded-lg bg-background flex items-center justify-center">
+        <div class="w-full aspect-video relative border rounded-lg bg-background flex items-center justify-center">
           <div class="text-muted-foreground text-center text-sm select-none">
             <span>Please select a warehouse first</span>
           </div>
@@ -536,31 +543,40 @@ export const InventoryList = (props: InventoryListProps) => {
       );
     }
 
-    return (
-      <div class="w-full h-[600px] relative border rounded-lg bg-background">
-        <div class="p-4 border-b flex gap-4">
-          <Select<WarehouseSelect>
-            value={
-              props
-                .inventory()
-                .warehouses.map((w) => ({ id: w.id, label: w.name, value: w.id }))
-                .find((w) => w.id === selectedWarehouseId()) ?? null
-            }
-            onChange={(option) => handleWarehouseSelect(option?.id ?? "")}
-            options={props.inventory().warehouses.map((w) => ({ id: w.id, label: w.name, value: w.id }))}
-            optionValue="value"
-            optionTextValue="label"
-            placeholder="Select warehouse..."
-            itemComponent={(props) => <SelectItem item={props.item}>{props.item.rawValue.label}</SelectItem>}
-          >
-            <SelectTrigger aria-label="Warehouse" class="w-[200px]">
-              <SelectValue<WarehouseSelect>>
-                {(state) => state.selectedOption()?.label || "Select warehouse..."}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent />
-          </Select>
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvasRef!.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / zoom();
+      const y = (e.clientY - rect.top) / zoom();
 
+      const selectedFacility = props
+        .inventory()
+        .warehouses.flatMap((w) => w.facilities)
+        .find((f) => f.id === selectedFacilityId());
+
+      if (!selectedFacility) return;
+
+      let found = false;
+      for (const area of selectedFacility.areas) {
+        for (const storage of area.storages) {
+          if (isPointInStorage(x, y, storage)) {
+            setHoveredStorage({ storage, x: e.clientX, y: e.clientY });
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (!found) {
+        setHoveredStorage(null);
+      }
+    };
+
+    return (
+      <div class="w-full aspect-video relative border rounded-lg bg-background">
+        <div class="border-b flex flex-row items-center text-sm">
+          <span class="px-4 border-r w-max">
+            {props.inventory().warehouses.find((w) => w.id === selectedWarehouseId())?.name}
+          </span>
           <Select<FacilitySelect>
             value={facilityOptions().find((f) => f.id === selectedFacilityId()) ?? null}
             onChange={(option) => setSelectedFacilityId(option?.id ?? "")}
@@ -570,18 +586,36 @@ export const InventoryList = (props: InventoryListProps) => {
             placeholder="Select facility..."
             itemComponent={(props) => <SelectItem item={props.item}>{props.item.rawValue.label}</SelectItem>}
           >
-            <SelectTrigger aria-label="Facility" class="w-[200px]">
+            <SelectTrigger aria-label="Facility" class="w-[200px] border-none rounded-none">
               <SelectValue<FacilitySelect>>
                 {(state) => state.selectedOption()?.label || "Select facility..."}
               </SelectValue>
             </SelectTrigger>
             <SelectContent />
           </Select>
+          <div class="flex flex-row gap-2 items-center justify-end flex-1 px-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="p-1"
+              onClick={() => {
+                setSelectedFacilityId(undefined);
+                setSelectedWarehouseId(undefined);
+              }}
+            >
+              <X class="size-4" />
+            </Button>
+          </div>
         </div>
 
         <div class="relative w-full h-[calc(100%-5rem)] p-4">
-          <canvas ref={canvasRef!} class="w-full h-full" />
-          <div class="absolute bottom-4 right-4 flex flex-col gap-2">
+          <canvas
+            ref={canvasRef!}
+            class="w-full aspect-video"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setHoveredStorage(null)}
+          />
+          <div class="absolute -bottom-4 right-4 flex flex-col gap-2">
             <Button
               variant="secondary"
               size="icon"
@@ -614,6 +648,28 @@ export const InventoryList = (props: InventoryListProps) => {
             </Button>
           </div>
         </div>
+
+        <Show when={hoveredStorage()}>
+          <div
+            class="fixed pointer-events-none bg-popover text-popover-foreground  rounded-lg shadow-lg text-sm border"
+            style={{
+              left: `${hoveredStorage()!.x}px`,
+              top: `${hoveredStorage()!.y}px`,
+              "max-width": "300px",
+            }}
+          >
+            <div class="font-medium p-2 px-3 border-b">{hoveredStorage()!.storage.name}</div>
+            <div class="text-xs space-y-1 p-2 px-3">
+              <div>
+                Capacity: {hoveredStorage()!.storage.currentOccupancy}/{hoveredStorage()!.storage.capacity}
+              </div>
+              <div>Spaces: {hoveredStorage()!.storage.spaces.length}</div>
+              <div>
+                Total Products: {hoveredStorage()!.storage.spaces.reduce((acc, s) => acc + s.products.length, 0)}
+              </div>
+            </div>
+          </div>
+        </Show>
       </div>
     );
   };
@@ -636,6 +692,20 @@ export const InventoryList = (props: InventoryListProps) => {
       { label: "Spaces", value: stats.totalSpaces },
       { label: "Products", value: stats.totalProducts },
     ];
+  };
+
+  // Add helper function to check if a point is inside a storage
+  const isPointInStorage = (
+    x: number,
+    y: number,
+    storage: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][0]["storages"][0],
+  ) => {
+    const sx = storage.boundingBox?.x ?? 0;
+    const sy = storage.boundingBox?.y ?? 0;
+    const sw = storage.boundingBox?.width ?? 100;
+    const sh = storage.boundingBox?.height ?? 100;
+
+    return x >= sx && x <= sx + sw && y >= sy && y <= sy + sh;
   };
 
   return (
