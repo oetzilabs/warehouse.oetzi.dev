@@ -31,6 +31,7 @@ import MapIcon from "lucide-solid/icons/map";
 import MessageSquare from "lucide-solid/icons/message-square";
 import Notebook from "lucide-solid/icons/notebook";
 import Package2 from "lucide-solid/icons/package-2";
+import PackageOpen from "lucide-solid/icons/package-open";
 import PackagePlus from "lucide-solid/icons/package-plus";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
@@ -102,9 +103,9 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     </SidebarMenuItem>
                     {/* <SidebarSeparator /> */}
                     <SidebarMenuItem>
-                      <Link href="/map">
-                        <MapIcon class="size-4" />
-                        Map
+                      <Link href="/inventory">
+                        <PackageOpen class="size-4" />
+                        Inventory
                         <SidebarMenuBadge class="mr-0.5">
                           <TriangleAlert class="size-4" />
                         </SidebarMenuBadge>
