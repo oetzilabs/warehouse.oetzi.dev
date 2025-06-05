@@ -681,7 +681,7 @@
                                   "productCapacity": 10,
                                   "barcode": "inv-test-2",
                                   "name": "inventory test 2",
-                                  "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
+                                  "products": ["prod_uzujt3nrndmn90yyslc61wqv", "prod_rljvumttoz3f2v122kw7bf4x"]
                                 }
                               ]
                             },

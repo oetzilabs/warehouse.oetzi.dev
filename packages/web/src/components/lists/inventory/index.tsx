@@ -1,17 +1,22 @@
+import { FilterPopover } from "@/components/filters/popover";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
-import { cn } from "@/lib/utils";
+import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
+import { A } from "@solidjs/router";
 import { OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
-import { createEffect, createSignal, For, onCleanup } from "solid-js";
+import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FacilityMap } from "./map";
-import { InventoryListProps } from "./types";
+import { GenericList } from "../default";
+
+type InventoryListProps = {
+  inventory: Accessor<OrganizationInventoryInfo>;
+};
 
 export const InventoryList = (props: InventoryListProps) => {
-  const [selectedFacilityId, setSelectedFacilityId] = createSignal<string | undefined>();
-  const [selectedWarehouseId, setSelectedWarehouseId] = createSignal<string | undefined>();
+  const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
   const defaultSort = {
@@ -66,10 +71,18 @@ export const InventoryList = (props: InventoryListProps) => {
     },
   });
 
+  const debouncedSearch = leadingAndTrailing(
+    debounce,
+    (text: string) => {
+      setDSearch(text);
+      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
+    },
+    500,
+  );
+
   const filteredData = useFilter(() => props.inventory().warehouses, filterConfig);
 
   const renderWarehouseCard = (warehouse: OrganizationInventoryInfo["warehouses"][0]) => {
-    const isSelected = () => selectedWarehouseId() === warehouse.id;
     const totalCapacity = warehouse.facilities.reduce(
       (acc, f) => acc + f.areas.reduce((acc2, ar) => acc2 + ar.storages.reduce((acc3, s) => acc3 + s.capacity, 0), 0),
       0,
@@ -83,61 +96,99 @@ export const InventoryList = (props: InventoryListProps) => {
     const occupancyPercentage = (currentOccupancy / totalCapacity) * 100;
 
     return (
-      <Card
-        class={cn("p-4 cursor-pointer transition-colors hover:bg-muted/50", isSelected() && "ring-1 ring-primary")}
-        onClick={() => handleWarehouseSelect(warehouse.id)}
-      >
-        <div class="flex flex-col gap-2">
-          <div class="flex justify-between items-center">
-            <h3 class="font-semibold">{warehouse.name}</h3>
-            <Badge variant="outline">{warehouse.facilities.length} Facilities</Badge>
-          </div>
-          <p class="text-sm text-muted-foreground">{warehouse.description}</p>
-          <div class="space-y-1">
-            <div class="text-sm flex justify-between">
-              <span>Occupancy</span>
-              <span>
-                {currentOccupancy}/{totalCapacity}
-              </span>
-            </div>
-            <Progress value={occupancyPercentage} class="h-2" />
+      <div class="flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h3 class="font-semibold">{warehouse.name}</h3>
+          <Badge variant="outline">{warehouse.facilities.length} Facilities</Badge>
+        </div>
+        <div class="">
+          <div class="">
+            <For each={warehouse.facilities}>
+              {(facility) => (
+                <div class="p-4 border-b border-dashed last:border-b-0">
+                  <div class="">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h4 class="font-medium">{facility.name}</h4>
+                        <p class="text-sm text-muted-foreground">{facility.description}</p>
+                      </div>
+                    </div>
+
+                    <div class="divide-y">
+                      <For each={facility.areas}>
+                        {(area) => (
+                          <div class="py-3">
+                            <div class="flex items-center justify-between mb-2">
+                              <div>
+                                <h5 class="font-medium">{area.name}</h5>
+                                <p class="text-sm text-muted-foreground">{area.description}</p>
+                              </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                              <For each={area.storages}>
+                                {(storage) => {
+                                  const occupancyPercentage =
+                                    ((storage.currentOccupancy || 0) / storage.capacity) * 100;
+                                  return (
+                                    <div class="border rounded p-2 space-y-2">
+                                      <div class="flex justify-between items-center">
+                                        <span class="text-sm font-medium">{storage.name}</span>
+                                        <Badge variant="secondary">{storage.type.name}</Badge>
+                                      </div>
+                                      <div class="space-y-1">
+                                        <div class="text-xs flex justify-between">
+                                          <span>Occupancy</span>
+                                          <span>
+                                            {storage.currentOccupancy}/{storage.capacity}
+                                          </span>
+                                        </div>
+                                        <Progress value={occupancyPercentage} class="h-1" />
+                                      </div>
+                                    </div>
+                                  );
+                                }}
+                              </For>
+                            </div>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </For>
           </div>
         </div>
-      </Card>
+      </div>
     );
   };
 
-  const handleWarehouseSelect = (warehouseId: string) => {
-    setSelectedWarehouseId(warehouseId);
-    const warehouse = props.inventory().warehouses.find((w) => w.id === warehouseId);
-    if (warehouse!.facilities.length > 0) {
-      setSelectedFacilityId(warehouse!.facilities[0].id);
-    }
-  };
-
-  createEffect(() => {
-    const escapeKeyHandler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSelectedWarehouseId(undefined);
-        setSelectedFacilityId(undefined);
-      }
-    };
-    document.addEventListener("keydown", escapeKeyHandler);
-    onCleanup(() => document.removeEventListener("keydown", escapeKeyHandler));
-  });
-
   return (
-    <div class="w-full flex flex-col gap-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <For each={filteredData()}>{renderWarehouseCard}</For>
+    <div class="w-full flex flex-col gap-4">
+      <div class="flex flex-row items-center justify-between gap-4">
+        <TextField
+          value={search()}
+          onChange={(e) => {
+            setSearch(e);
+            debouncedSearch(e);
+          }}
+          class="w-full max-w-full"
+        >
+          <TextFieldInput placeholder="Search warehouses" class="w-full max-w-full rounded-lg px-4" />
+        </TextField>
+        <div class="w-max">
+          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={() => props.inventory().warehouses} />
+        </div>
       </div>
 
-      <FacilityMap
-        inventory={props.inventory}
-        selectedWarehouseId={selectedWarehouseId}
-        selectedFacilityId={selectedFacilityId}
-        onWarehouseChange={setSelectedWarehouseId}
-        onFacilityChange={setSelectedFacilityId}
+      <GenericList
+        data={() => props.inventory().warehouses}
+        filteredData={filteredData}
+        renderItem={renderWarehouseCard}
+        emptyMessage="No warehouses have been added"
+        noResultsMessage="No warehouses have been found"
+        searchTerm={() => filterConfig.search.term}
       />
     </div>
   );
