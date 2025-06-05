@@ -6,9 +6,18 @@ import ZoomReset from "lucide-solid/icons/redo";
 import X from "lucide-solid/icons/x";
 import ZoomIn from "lucide-solid/icons/zoom-in";
 import ZoomOut from "lucide-solid/icons/zoom-out";
-import { Accessor, createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { Accessor, createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createStore } from "solid-js/store";
 import { drawGrid, isPointInStorage, setupCanvas } from "./canvas";
 import { FacilitySelect, StorageType } from "./types";
+
+type SpacePosition = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  relative: boolean;
+};
 
 export function FacilityMap(props: {
   inventory: Accessor<OrganizationInventoryInfo>;
@@ -21,9 +30,11 @@ export function FacilityMap(props: {
   const [zoom, setZoom] = createSignal(1);
   const [hoveredStorage, setHoveredStorage] = createSignal<{
     storage: StorageType;
+    space?: StorageType["spaces"][0];
     x: number;
     y: number;
   } | null>(null);
+  const [spacePositions, setSpacePositions] = createStore<Record<string, SpacePosition>>({});
 
   const storageBackgroundColor = useColorModeValue("hsla(220, 13%, 95%, 0.8)", "hsla(220, 13%, 25%, 0.8)");
   const progressBarColor = useColorModeValue("hsla(142, 76%, 36%, 0.8)", "hsla(142, 76%, 46%, 0.8)");
@@ -52,11 +63,39 @@ export function FacilityMap(props: {
 
     if (!selectedFacility) return;
 
+    // Calculate total bounds of all storages
+    const bounds = selectedFacility.areas.reduce(
+      (acc, area) => {
+        area.storages.forEach((storage) => {
+          const x = storage.boundingBox?.x ?? 0;
+          const y = storage.boundingBox?.y ?? 0;
+          const width = storage.boundingBox?.width ?? 100;
+          const height = storage.boundingBox?.height ?? 100;
+
+          acc.minX = Math.min(acc.minX, x);
+          acc.minY = Math.min(acc.minY, y);
+          acc.maxX = Math.max(acc.maxX, x + width);
+          acc.maxY = Math.max(acc.maxY, y + height);
+        });
+        return acc;
+      },
+      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
+    );
+
     const ctx = setupCanvas(canvasRef, canvasRef.offsetWidth, canvasRef.offsetHeight, zoom());
     if (!ctx) return;
 
+    const totalWidth = bounds.maxX - bounds.minX;
+    const totalHeight = bounds.maxY - bounds.minY;
+    const padding = 50;
+
     ctx.clearRect(0, 0, canvasRef.width / zoom(), canvasRef.height / zoom());
-    drawGrid(ctx, canvasRef.width / zoom(), canvasRef.height / zoom(), color2());
+
+    // Translate to center and account for minimum bounds
+    ctx.save();
+    ctx.translate(-bounds.minX + padding, -bounds.minY + padding);
+
+    drawGrid(ctx, totalWidth + padding * 2, totalHeight + padding * 2, color2());
 
     selectedFacility.areas.forEach((area) => {
       area.storages.forEach((storage: StorageType) => {
@@ -68,6 +107,8 @@ export function FacilityMap(props: {
         drawStorage(ctx, storage, x, y, width, height);
       });
     });
+
+    ctx.restore();
   };
 
   const drawStorage = (
@@ -79,8 +120,11 @@ export function FacilityMap(props: {
     height: number,
   ) => {
     const cornerRadius = 8;
+    const isWide = width > height;
+    const padding = 8;
+    const spaceGap = 4;
 
-    // Draw box
+    // Draw main box
     ctx.beginPath();
     ctx.moveTo(x + cornerRadius, y);
     ctx.lineTo(x + width - cornerRadius, y);
@@ -93,40 +137,69 @@ export function FacilityMap(props: {
     ctx.arcTo(x, y, x + cornerRadius, y, cornerRadius);
     ctx.closePath();
 
-    // Calculate occupancy
-    const currentOccupancy = storage.currentOccupancy ?? 0;
-    const capacity = storage.capacity || 1;
-    const occupancyPercentage = Math.min(Math.max(currentOccupancy / capacity, 0), 1);
-
-    // Fill and stroke
     ctx.fillStyle = storageBackgroundColor();
     ctx.fill();
     ctx.strokeStyle = color3();
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Draw text
+    // Draw storage name outside the box
     ctx.fillStyle = color4();
     ctx.font = "bold 12px system-ui";
-    ctx.fillText(storage.name, x + 12, y + 24);
+    ctx.fillText(storage.name, x, y - 8);
     ctx.font = "11px system-ui";
-    ctx.fillText(`${storage.currentOccupancy}/${storage.capacity}`, x + 12, y + 44);
+    ctx.fillText(`${storage.currentOccupancy}/${storage.capacity}`, x + ctx.measureText(storage.name).width + 8, y - 8);
 
-    // Draw progress bar
-    const barWidth = width - 24;
-    const barHeight = 6;
-    const barX = x + 12;
-    const barY = y + 52;
+    // Calculate space dimensions based on orientation
+    const availableWidth = width - padding * 2;
+    const availableHeight = height - padding * 2;
+    const count = storage.spaces.length;
 
-    ctx.fillStyle = color3();
-    ctx.fillRect(barX, barY, barWidth, barHeight);
-    ctx.fillStyle = progressBarColor();
-    ctx.fillRect(barX, barY, barWidth * occupancyPercentage, barHeight);
+    if (isWide) {
+      // Arrange horizontally
+      const spaceWidth = (availableWidth - spaceGap * (count - 1)) / count;
+      const spaceHeight = availableHeight;
 
-    // Draw spaces count
-    ctx.fillStyle = color5();
-    ctx.font = "11px system-ui";
-    ctx.fillText(`${storage.spaces.length} spaces`, x + 12, y + height - 12);
+      storage.spaces.forEach((space, i) => {
+        const spaceX = x + padding + i * (spaceWidth + spaceGap);
+        const spaceY = y + padding;
+
+        ctx.fillStyle = space.products.length > 0 ? progressBarColor() : color3();
+        ctx.fillRect(spaceX, spaceY, spaceWidth, spaceHeight);
+
+        setSpacePositions({
+          [space.id]: {
+            x: spaceX - x,
+            y: spaceY - y,
+            width: spaceWidth,
+            height: spaceHeight,
+            relative: true,
+          },
+        });
+      });
+    } else {
+      // Arrange vertically
+      const spaceWidth = availableWidth;
+      const spaceHeight = (availableHeight - spaceGap * (count - 1)) / count;
+
+      storage.spaces.forEach((space, i) => {
+        const spaceX = x + padding;
+        const spaceY = y + padding + i * (spaceHeight + spaceGap);
+
+        ctx.fillStyle = space.products.length > 0 ? progressBarColor() : color3();
+        ctx.fillRect(spaceX, spaceY, spaceWidth, spaceHeight);
+
+        setSpacePositions({
+          [space.id]: {
+            x: spaceX - x,
+            y: spaceY - y,
+            width: spaceWidth,
+            height: spaceHeight,
+            relative: true,
+          },
+        });
+      });
+    }
   };
 
   createEffect(() => {
@@ -145,21 +218,53 @@ export function FacilityMap(props: {
 
   const handleMouseMove = (e: MouseEvent) => {
     const rect = canvasRef!.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / zoom();
-    const y = (e.clientY - rect.top) / zoom();
-
     const selectedFacility = props
       .inventory()
-      .warehouses.flatMap((w: any) => w.facilities)
-      .find((f: any) => f.id === props.selectedFacilityId());
+      .warehouses.flatMap((w) => w.facilities)
+      .find((f) => f.id === props.selectedFacilityId());
 
     if (!selectedFacility) return;
+
+    // Calculate bounds to know our offset
+    const bounds = selectedFacility.areas.reduce(
+      (acc, area) => {
+        area.storages.forEach((storage) => {
+          const x = storage.boundingBox?.x ?? 0;
+          const y = storage.boundingBox?.y ?? 0;
+          acc.minX = Math.min(acc.minX, x);
+          acc.minY = Math.min(acc.minY, y);
+        });
+        return acc;
+      },
+      { minX: Infinity, minY: Infinity },
+    );
+
+    const padding = 50;
+    // Adjust mouse position to account for zoom, translation and padding
+    const x = (e.clientX - rect.left) / zoom() + bounds.minX - padding;
+    const y = (e.clientY - rect.top) / zoom() + bounds.minY - padding;
 
     let found = false;
     for (const area of selectedFacility.areas) {
       for (const storage of area.storages) {
         if (isPointInStorage(x, y, storage)) {
-          setHoveredStorage({ storage, x: e.clientX, y: e.clientY });
+          for (const space of storage.spaces) {
+            const pos = spacePositions[space.id];
+            if (!pos) continue;
+
+            const spaceX = (storage.boundingBox?.x ?? 0) + pos.x;
+            const spaceY = (storage.boundingBox?.y ?? 0) + pos.y;
+
+            if (x >= spaceX && x <= spaceX + pos.width && y >= spaceY && y <= spaceY + pos.height) {
+              setHoveredStorage({ storage, space, x: e.clientX, y: e.clientY });
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            setHoveredStorage({ storage, x: e.clientX, y: e.clientY });
+          }
           found = true;
           break;
         }
@@ -268,15 +373,40 @@ export function FacilityMap(props: {
               "max-width": "300px",
             }}
           >
-            <div class="font-medium p-2 px-3 border-b">{hoveredStorage()!.storage.name}</div>
+            <div class="font-medium p-2 px-3 border-b">
+              {hoveredStorage()!.space ? hoveredStorage()!.space!.name : hoveredStorage()!.storage.name}
+            </div>
             <div class="text-xs space-y-1 p-2 px-3">
-              <div>
-                Capacity: {hoveredStorage()!.storage.currentOccupancy}/{hoveredStorage()!.storage.capacity}
-              </div>
-              <div>Spaces: {hoveredStorage()!.storage.spaces.length}</div>
-              <div>
-                Total Products: {hoveredStorage()!.storage.spaces.reduce((acc, s) => acc + s.products.length, 0)}
-              </div>
+              <Show
+                when={hoveredStorage()!.space}
+                fallback={
+                  <>
+                    <div>
+                      Capacity: {hoveredStorage()!.storage.currentOccupancy}/{hoveredStorage()!.storage.capacity}
+                    </div>
+                    <div>Spaces: {hoveredStorage()!.storage.spaces.length}</div>
+                  </>
+                }
+              >
+                {(space) => (
+                  <div>
+                    <div>Barcode: {space().barcode}</div>
+                    <div>Products: {space().products.length}</div>
+                    <Show when={space().products.length > 0}>
+                      <div class="mt-2 grid gap-1">
+                        <For each={space().products}>
+                          {(product) => (
+                            <div class="bg-muted/50 rounded px-2 py-1">
+                              <div>{product.name}</div>
+                              <div class="text-muted-foreground">SKU: {product.sku}</div>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </div>
+                )}
+              </Show>
             </div>
           </div>
         </Show>
