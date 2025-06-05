@@ -17,6 +17,7 @@ import "./app.css";
 import { UserProvider } from "./components/providers/User";
 import { AppLayout } from "./layout";
 import "@fontsource/pacifico";
+import { Button } from "./components/ui/button";
 
 export default function App() {
   // const queryClient = new QueryClient({
@@ -61,13 +62,17 @@ export default function App() {
                 </Show>
               </div>
 
-              <div class="flex justify-end pt-2">
-                <button
-                  onClick={() => reset()}
-                  class="px-4 py-2 rounded-lg bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 hover:opacity-90 transition-opacity"
+              <div class="flex justify-end pt-2 gap-4">
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(String(error.stack));
+                  }}
+                  variant="outline"
+                  class="bg-background"
                 >
-                  Try again
-                </button>
+                  Copy Error
+                </Button>
+                <Button onClick={() => reset()}>Try again</Button>
               </div>
             </div>
           </div>

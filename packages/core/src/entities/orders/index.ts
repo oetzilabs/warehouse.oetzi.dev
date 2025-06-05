@@ -275,6 +275,16 @@ export class OrderService extends Effect.Service<OrderService>()("@warehouse/ord
               customer: true,
               order: {
                 with: {
+                  oco: {
+                    with: {
+                      customer: true,
+                    },
+                  },
+                  oso: {
+                    with: {
+                      supplier: true,
+                    },
+                  },
                   sale: {
                     with: {
                       discounts: {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
-import { getInventory } from "@/lib/api/inventory";
+import { getInventoryMetadata } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { getPendingSupplyOrders } from "@/lib/api/orders";
 import { getSchedules } from "@/lib/api/schedules";
@@ -34,7 +34,7 @@ export const route = {
 export default function DashboardPage() {
   const data = createAsync(async () => getDashboardData(), { deferStream: true });
   const notifications = createAsync(async () => getNotifications(), { deferStream: true });
-  const inventory = createAsync(async () => getInventory(), { deferStream: true });
+  const inventory = createAsync(async () => getInventoryMetadata(), { deferStream: true });
   const schedules = createAsync(async () => getSchedules(), { deferStream: true });
   const pendingSupplyOrders = createAsync(async () => getPendingSupplyOrders(), { deferStream: true });
 
@@ -56,7 +56,7 @@ export default function DashboardPage() {
                   revalidate([
                     getNotifications.key,
                     getDashboardData.key,
-                    getInventory.key,
+                    getInventoryMetadata.key,
                     getPendingSupplyOrders.key,
                   ]),
                   {

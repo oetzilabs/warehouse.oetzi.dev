@@ -450,6 +450,30 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return whProduct;
       });
 
+    const getInventoryInfo = (whId: string) =>
+      Effect.gen(function* (_) {
+        const wh = yield* findById(whId);
+        if (!wh) {
+          return yield* Effect.fail(new WarehouseNotFound({ id: whId }));
+        }
+        const facilites = wh.fcs;
+        const areas = facilites.map((fc) => fc.ars).flat();
+        const storages = areas.map((a) => a.strs).flat();
+
+        return yield* Effect.succeed({
+          amountOfFacilities: facilites.length,
+          amounOfStorages: storages.length,
+          totalCurrentOccupancy: storages
+            .map((s) => s.invs.map((i) => i.products.length))
+            .flat()
+            .reduce((a, b) => a + b, 0),
+          totalCapacity: storages
+            .map((s) => s.invs.map((i) => i.productCapacity))
+            .flat()
+            .reduce((a, b) => a + b, 0),
+        });
+      });
+
     return {
       create,
       findById,
@@ -463,6 +487,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       findLastCreatedFacility,
       findProductById,
       removeProduct,
+      getInventoryInfo,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -472,3 +497,6 @@ export const WarehouseLive = WarehouseService.Default;
 
 // Type exports
 export type WarehouseInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<WarehouseService["findById"]>>>>;
+export type WarehouseInventoryInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<WarehouseService["getInventoryInfo"]>>>
+>;

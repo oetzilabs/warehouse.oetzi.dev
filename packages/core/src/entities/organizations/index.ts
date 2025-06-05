@@ -854,6 +854,134 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    const getInventory = (organizationId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
+        const organization = yield* findById(organizationId);
+        if (!organization) {
+          return yield* Effect.fail(new OrganizationNotFound({ id: organizationId }));
+        }
+
+        const warehouseSummary = organization.whs.map((wh) => {
+          const warehouse = wh.warehouse;
+          return {
+            id: warehouse.id,
+            name: warehouse.name,
+            description: warehouse.description,
+            dimensions: warehouse.dimensions,
+            createdAt: warehouse.createdAt,
+            updatedAt: warehouse.updatedAt,
+            deletedAt: warehouse.deletedAt,
+            facilities: warehouse.fcs.map((facility) => ({
+              id: facility.id,
+              name: facility.name,
+              description: facility.description,
+              boundingBox: facility.bounding_box,
+              createdAt: facility.createdAt,
+              updatedAt: facility.updatedAt,
+              deletedAt: facility.deletedAt,
+              areas: facility.ars.map((area) => ({
+                id: area.id,
+                name: area.name,
+                description: area.description,
+                boundingBox: area.bounding_box,
+                createdAt: area.createdAt,
+                updatedAt: area.updatedAt,
+                deletedAt: area.deletedAt,
+                storages: area.strs.map((storage) => ({
+                  id: storage.id,
+                  name: storage.name,
+                  description: storage.description,
+                  type: storage.type,
+                  capacity: storage.capacity,
+                  currentOccupancy: storage.currentOccupancy,
+                  variant: storage.variant,
+                  boundingBox: storage.bounding_box,
+                  createdAt: storage.createdAt,
+                  updatedAt: storage.updatedAt,
+                  deletedAt: storage.deletedAt,
+                  spaces: storage.invs.map((space) => ({
+                    id: space.id,
+                    name: space.name,
+                    barcode: space.barcode,
+                    dimensions: space.dimensions,
+                    productCapacity: space.productCapacity,
+                    createdAt: space.createdAt,
+                    updatedAt: space.updatedAt,
+                    deletedAt: space.deletedAt,
+                    products: space.products.map((p) => ({
+                      id: p.product.id,
+                      name: p.product.name,
+                      sku: p.product.sku,
+                      barcode: p.product.barcode,
+                      createdAt: p.product.createdAt,
+                      updatedAt: p.product.updatedAt,
+                      deletedAt: p.product.deletedAt,
+                    })),
+                  })),
+                })),
+              })),
+            })),
+          };
+        });
+
+        const summary = {
+          id: organization.id,
+          name: organization.name,
+          totalWarehouses: organization.whs.length,
+          warehouses: warehouseSummary,
+          stats: {
+            totalFacilities: warehouseSummary.reduce((acc, wh) => acc + wh.facilities.length, 0),
+            totalAreas: warehouseSummary.reduce(
+              (acc, wh) => acc + wh.facilities.reduce((facc, f) => facc + f.areas.length, 0),
+              0,
+            ),
+            totalStorages: warehouseSummary.reduce(
+              (acc, wh) =>
+                acc +
+                wh.facilities.reduce((facc, f) => facc + f.areas.reduce((aacc, a) => aacc + a.storages.length, 0), 0),
+              0,
+            ),
+            totalSpaces: warehouseSummary.reduce(
+              (acc, wh) =>
+                acc +
+                wh.facilities.reduce(
+                  (facc, f) =>
+                    facc +
+                    f.areas.reduce((aacc, a) => aacc + a.storages.reduce((sacc, s) => sacc + s.spaces.length, 0), 0),
+                  0,
+                ),
+              0,
+            ),
+            totalProducts: warehouseSummary.reduce(
+              (acc, wh) =>
+                acc +
+                wh.facilities.reduce(
+                  (facc, f) =>
+                    facc +
+                    f.areas.reduce(
+                      (aacc, a) =>
+                        aacc +
+                        a.storages.reduce(
+                          (sacc, s) => sacc + s.spaces.reduce((spacc, sp) => spacc + sp.products.length, 0),
+                          0,
+                        ),
+                      0,
+                    ),
+                  0,
+                ),
+              0,
+            ),
+          },
+        };
+
+        return summary;
+      });
+
     return {
       create,
       findById,
@@ -872,6 +1000,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       findProductById,
       removeProduct,
       addProduct,
+      getInventory,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -881,3 +1010,6 @@ export const OrganizationLive = OrganizationService.Default;
 
 // Type exports
 export type OrganizationInfo = NonNullable<Effect.Effect.Success<Awaited<ReturnType<OrganizationService["findById"]>>>>;
+export type OrganizationInventoryInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<OrganizationService["getInventory"]>>>
+>;
