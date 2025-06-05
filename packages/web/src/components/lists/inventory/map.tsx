@@ -24,6 +24,7 @@ export function FacilityMap(props: {
     x: number;
     y: number;
   } | null>(null);
+
   const storageBackgroundColor = useColorModeValue("hsla(220, 13%, 95%, 0.8)", "hsla(220, 13%, 25%, 0.8)");
   const progressBarColor = useColorModeValue("hsla(142, 76%, 36%, 0.8)", "hsla(142, 76%, 46%, 0.8)");
   const color2 = useColorModeValue("#e0e0e0", "#222222");
@@ -46,8 +47,8 @@ export function FacilityMap(props: {
 
     const selectedFacility = props
       .inventory()
-      .warehouses.flatMap((w: any) => w.facilities)
-      .find((f: any) => f.id === props.selectedFacilityId());
+      .warehouses.flatMap((w) => w.facilities)
+      .find((f) => f.id === props.selectedFacilityId());
 
     if (!selectedFacility) return;
 
@@ -57,7 +58,7 @@ export function FacilityMap(props: {
     ctx.clearRect(0, 0, canvasRef.width / zoom(), canvasRef.height / zoom());
     drawGrid(ctx, canvasRef.width / zoom(), canvasRef.height / zoom(), color2());
 
-    selectedFacility.areas.forEach((area: any) => {
+    selectedFacility.areas.forEach((area) => {
       area.storages.forEach((storage: StorageType) => {
         const x = storage.boundingBox?.x ?? 0;
         const y = storage.boundingBox?.y ?? 0;
@@ -174,14 +175,14 @@ export function FacilityMap(props: {
     <Show
       when={props.selectedWarehouseId()}
       fallback={
-        <div class="w-full aspect-video relative border rounded-lg bg-background flex items-center justify-center">
+        <div class="w-full h-full aspect-square xl:h-auto xl:aspect-video relative border rounded-lg bg-background flex items-center justify-center">
           <div class="text-muted-foreground text-center text-sm select-none">
             <span>Please select a warehouse first</span>
           </div>
         </div>
       }
     >
-      <div class="w-full aspect-video relative border rounded-lg bg-background">
+      <div class="w-full h-full xl:h-auto aspect-square xl:aspect-video relative border rounded-lg bg-background">
         <div class="border-b flex flex-row items-center text-sm">
           <span class="px-4 border-r w-max">
             {props.inventory().warehouses.find((w: any) => w.id === props.selectedWarehouseId())?.name}
@@ -217,19 +218,19 @@ export function FacilityMap(props: {
           </div>
         </div>
 
-        <div class="relative w-full h-[calc(100%-5rem)] p-4">
+        <div class="w-full h-full p-4">
           <canvas
             ref={canvasRef!}
-            class="w-full aspect-video"
+            class="w-full h-full xl:h-auto xl:aspect-video"
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setHoveredStorage(null)}
           />
-          <div class="absolute -bottom-4 right-4 flex flex-col gap-2">
+          <div class="absolute bottom-4 right-4 flex flex-col gap-2 h-auto">
             <Button
               variant="secondary"
               size="icon"
               onClick={() => {
-                setZoom((prev) => Math.min(prev + 0.1, 3));
+                setZoom((prev) => Math.min(prev + 0.2, 3));
                 redrawFacilityMap();
               }}
             >
@@ -239,7 +240,7 @@ export function FacilityMap(props: {
               variant="secondary"
               size="icon"
               onClick={() => {
-                setZoom((prev) => Math.max(prev - 0.1, 0.5));
+                setZoom((prev) => Math.max(prev - 0.2, 0.5));
                 redrawFacilityMap();
               }}
             >
