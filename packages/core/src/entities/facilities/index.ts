@@ -62,7 +62,18 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                       area: true,
                       invs: {
                         with: {
-                          labels: true,
+                          products: {
+                            with: {
+                              product: {
+                                with: {
+                                  brands: true,
+                                  catalogs: true,
+                                  labels: true,
+                                  suppliers: true,
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                     },
@@ -77,7 +88,61 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           return yield* Effect.fail(new FacilityNotFound({ id }));
         }
 
-        return facility;
+        return {
+          id: facility.id,
+          name: facility.name,
+          description: facility.description,
+          boundingBox: facility.bounding_box,
+          createdAt: facility.createdAt,
+          updatedAt: facility.updatedAt,
+          deletedAt: facility.deletedAt,
+          areas: facility.ars.map((area) => ({
+            id: area.id,
+            name: area.name,
+            description: area.description,
+            boundingBox: area.bounding_box,
+            createdAt: area.createdAt,
+            updatedAt: area.updatedAt,
+            deletedAt: area.deletedAt,
+            storages: area.strs.map((storage) => ({
+              id: storage.id,
+              name: storage.name,
+              description: storage.description,
+              type: storage.type,
+              capacity: storage.capacity,
+              currentOccupancy: storage.currentOccupancy,
+              variant: storage.variant,
+              boundingBox: storage.bounding_box,
+              createdAt: storage.createdAt,
+              updatedAt: storage.updatedAt,
+              deletedAt: storage.deletedAt,
+              spaces: storage.invs.map((space) => ({
+                id: space.id,
+                name: space.name,
+                barcode: space.barcode,
+                dimensions: space.dimensions,
+                productCapacity: space.productCapacity,
+                createdAt: space.createdAt,
+                updatedAt: space.updatedAt,
+                deletedAt: space.deletedAt,
+                products: space.products.map((p) => ({
+                  id: p.product.id,
+                  name: p.product.name,
+                  sku: p.product.sku,
+                  barcode: p.product.barcode,
+                  createdAt: p.product.createdAt,
+                  updatedAt: p.product.updatedAt,
+                  deletedAt: p.product.deletedAt,
+                  stock: space.products.filter((p2) => p2.product.id === p.product.id).length,
+                  minStock: p.product.minimumStock,
+                  maxStock: p.product.maximumStock,
+                  reorderPoint: p.product.reorderPoint,
+                  safetyStock: p.product.safetyStock,
+                })),
+              })),
+            })),
+          })),
+        };
       });
 
     const update = (input: InferInput<typeof FacilityUpdateSchema>) =>

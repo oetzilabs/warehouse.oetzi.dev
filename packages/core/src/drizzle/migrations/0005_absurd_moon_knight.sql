@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."organizations_supplierorders" ADD COLUMN "createdAt" timestamp DEFAULT now() NOT NULL;

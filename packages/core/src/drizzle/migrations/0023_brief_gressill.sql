@@ -1,1 +1,0 @@
-ALTER TYPE "warehouse"."sale_status" ADD VALUE 'deleted';

@@ -1,5 +1,5 @@
 {
-  "id": "42393bb0-cce5-4b67-8546-e02be5b0cb48",
+  "id": "36ec2121-5913-43d8-87a7-3e97802d9f6e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -408,15 +408,100 @@
           "notNull": true,
           "default": "'unknown'"
         },
-        "type": {
-          "name": "type",
+        "type_id": {
+          "name": "type_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "devices_type_id_device_types_id_fk": {
+          "name": "devices_type_id_device_types_id_fk",
+          "tableFrom": "devices",
+          "tableTo": "device_types",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "devices_organization_id_organizations_id_fk": {
+          "name": "devices_organization_id_organizations_id_fk",
+          "tableFrom": "devices",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.device_types": {
+      "name": "device_types",
+      "schema": "warehouse",
+      "columns": {
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "facility_id": {
-          "name": "facility_id",
+        "code": {
+          "name": "code",
           "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -447,22 +532,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "devices_facility_id_warehouse_facilities_id_fk": {
-          "name": "devices_facility_id_warehouse_facilities_id_fk",
-          "tableFrom": "devices",
-          "tableTo": "warehouse_facilities",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "facility_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -686,38 +756,62 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.orders": {
-      "name": "orders",
+    "warehouse.tax_rates": {
+      "name": "tax_rates",
       "schema": "warehouse",
       "columns": {
-        "status": {
-          "name": "status",
-          "type": "order_status",
-          "typeSchema": "warehouse",
+        "rate": {
+          "name": "rate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pending'"
+          "default": "now()"
         },
-        "title": {
-          "name": "title",
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.tax_groups": {
+      "name": "tax_groups",
+      "schema": "warehouse",
+      "columns": {
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "description": {
           "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "customer_id": {
-          "name": "customer_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sale_id": {
-          "name": "sale_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -749,21 +843,158 @@
         }
       },
       "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.tax_group_coutryrates": {
+      "name": "tax_group_coutryrates",
+      "schema": "warehouse",
+      "columns": {
+        "country_code": {
+          "name": "country_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tax_group_id": {
+          "name": "tax_group_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tax_rate_id": {
+          "name": "tax_rate_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expiration_date": {
+          "name": "expiration_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
       "foreignKeys": {
-        "orders_customer_id_customers_id_fk": {
-          "name": "orders_customer_id_customers_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "customers",
+        "tax_group_coutryrates_tax_group_id_tax_groups_id_fk": {
+          "name": "tax_group_coutryrates_tax_group_id_tax_groups_id_fk",
+          "tableFrom": "tax_group_coutryrates",
+          "tableTo": "tax_groups",
           "schemaTo": "warehouse",
           "columnsFrom": [
-            "customer_id"
+            "tax_group_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
+        "tax_group_coutryrates_tax_rate_id_tax_rates_id_fk": {
+          "name": "tax_group_coutryrates_tax_rate_id_tax_rates_id_fk",
+          "tableFrom": "tax_group_coutryrates",
+          "tableTo": "tax_rates",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "tax_rate_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "tax_group_coutryrates_tax_group_id_tax_rate_id_pk": {
+          "name": "tax_group_coutryrates_tax_group_id_tax_rate_id_pk",
+          "columns": [
+            "tax_group_id",
+            "tax_rate_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.orders": {
+      "name": "orders",
+      "schema": "warehouse",
+      "columns": {
+        "status": {
+          "name": "status",
+          "type": "order_status",
+          "typeSchema": "warehouse",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "barcode": {
+          "name": "barcode",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sale_id": {
+          "name": "sale_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
         "orders_sale_id_sales_id_fk": {
           "name": "orders_sale_id_sales_id_fk",
           "tableFrom": "orders",
@@ -775,7 +1006,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -865,6 +1096,68 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.images": {
+      "name": "images",
+      "schema": "warehouse",
+      "columns": {
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alt": {
+          "name": "alt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -986,6 +1279,127 @@
         "certification_number": {
           "name": "certification_number",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.notifications": {
+      "name": "notifications",
+      "schema": "warehouse",
+      "columns": {
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.schedules": {
+      "name": "schedules",
+      "schema": "warehouse",
+      "columns": {
+        "schedule_start": {
+          "name": "schedule_start",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schedule_end": {
+          "name": "schedule_end",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reoccurrence": {
+          "name": "reoccurrence",
+          "type": "reoccurrence_type",
+          "typeSchema": "warehouse",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
+        },
+        "interval": {
+          "name": "interval",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "until": {
+          "name": "until",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
@@ -1266,8 +1680,7 @@
           "name": "currency",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'USD'"
+          "notNull": true
         },
         "weight": {
           "name": "weight",
@@ -1295,6 +1708,12 @@
         },
         "country_of_origin": {
           "name": "country_of_origin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_tax_group_id": {
+          "name": "default_tax_group_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1334,6 +1753,20 @@
           "schemaTo": "warehouse",
           "columnsFrom": [
             "brand_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "products_default_tax_group_id_tax_groups_id_fk": {
+          "name": "products_default_tax_group_id_tax_groups_id_fk",
+          "tableFrom": "products",
+          "tableTo": "tax_groups",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "default_tax_group_id"
           ],
           "columnsTo": [
             "id"
@@ -1597,6 +2030,68 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "warehouse.product_to_images": {
+      "name": "product_to_images",
+      "schema": "warehouse",
+      "columns": {
+        "product_id": {
+          "name": "product_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_id": {
+          "name": "image_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "product_to_images_product_id_products_id_fk": {
+          "name": "product_to_images_product_id_products_id_fk",
+          "tableFrom": "product_to_images",
+          "tableTo": "products",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "product_to_images_image_id_images_id_fk": {
+          "name": "product_to_images_image_id_images_id_fk",
+          "tableFrom": "product_to_images",
+          "tableTo": "images",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "image_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "product_to_images_product_id_image_id_pk": {
+          "name": "product_to_images_product_id_image_id_pk",
+          "columns": [
+            "product_id",
+            "image_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "warehouse.sales": {
       "name": "sales",
       "schema": "warehouse",
@@ -1623,6 +2118,12 @@
         },
         "note": {
           "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "barcode": {
+          "name": "barcode",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1715,6 +2216,12 @@
         "price": {
           "name": "price",
           "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -1917,6 +2424,312 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.customer_notes": {
+      "name": "customer_notes",
+      "schema": "warehouse",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "customer_notes_customer_id_customers_id_fk": {
+          "name": "customer_notes_customer_id_customers_id_fk",
+          "tableFrom": "customer_notes",
+          "tableTo": "customers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "customer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.customer_schedules": {
+      "name": "customer_schedules",
+      "schema": "warehouse",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "schedule_type",
+          "typeSchema": "warehouse",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "customer_schedules_customer_id_customers_id_fk": {
+          "name": "customer_schedules_customer_id_customers_id_fk",
+          "tableFrom": "customer_schedules",
+          "tableTo": "customers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "customer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "customer_schedules_schedule_id_schedules_id_fk": {
+          "name": "customer_schedules_schedule_id_schedules_id_fk",
+          "tableFrom": "customer_schedules",
+          "tableTo": "schedules",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "schedule_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "customer_schedules_order_id_orders_id_fk": {
+          "name": "customer_schedules_order_id_orders_id_fk",
+          "tableFrom": "customer_schedules",
+          "tableTo": "orders",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "order_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.customer_preferred_pickuptimes": {
+      "name": "customer_preferred_pickuptimes",
+      "schema": "warehouse",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "customer_preferred_pickuptimes_customer_id_customers_id_fk": {
+          "name": "customer_preferred_pickuptimes_customer_id_customers_id_fk",
+          "tableFrom": "customer_preferred_pickuptimes",
+          "tableTo": "customers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "customer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.customer_preferred_deliverytimes": {
+      "name": "customer_preferred_deliverytimes",
+      "schema": "warehouse",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "customer_preferred_deliverytimes_customer_id_customers_id_fk": {
+          "name": "customer_preferred_deliverytimes_customer_id_customers_id_fk",
+          "tableFrom": "customer_preferred_deliverytimes",
+          "tableTo": "customers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "customer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -3862,6 +4675,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "product_capacity": {
+          "name": "product_capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "id": {
           "name": "id",
           "type": "varchar",
@@ -4112,6 +4932,75 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.storage_space_to_products": {
+      "name": "storage_space_to_products",
+      "schema": "warehouse",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage_space_id": {
+          "name": "storage_space_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "storage_space_to_products_product_id_products_id_fk": {
+          "name": "storage_space_to_products_product_id_products_id_fk",
+          "tableFrom": "storage_space_to_products",
+          "tableTo": "products",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "storage_space_to_products_storage_space_id_storage_spaces_id_fk": {
+          "name": "storage_space_to_products_storage_space_id_storage_spaces_id_fk",
+          "tableFrom": "storage_space_to_products",
+          "tableTo": "storage_spaces",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "storage_space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "storage_space_to_products_id_product_id_storage_space_id_pk": {
+          "name": "storage_space_to_products_id_product_id_storage_space_id_pk",
+          "columns": [
+            "id",
+            "product_id",
+            "storage_space_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -4435,8 +5324,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.organization_discounts": {
-      "name": "organization_discounts",
+    "warehouse.org_discounts": {
+      "name": "org_discounts",
       "schema": "warehouse",
       "columns": {
         "organization_id": {
@@ -4454,9 +5343,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "organization_discounts_organization_id_organizations_id_fk": {
-          "name": "organization_discounts_organization_id_organizations_id_fk",
-          "tableFrom": "organization_discounts",
+        "org_discounts_organization_id_organizations_id_fk": {
+          "name": "org_discounts_organization_id_organizations_id_fk",
+          "tableFrom": "org_discounts",
           "tableTo": "organizations",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4468,9 +5357,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "organization_discounts_discount_id_discounts_v1_id_fk": {
-          "name": "organization_discounts_discount_id_discounts_v1_id_fk",
-          "tableFrom": "organization_discounts",
+        "org_discounts_discount_id_discounts_v1_id_fk": {
+          "name": "org_discounts_discount_id_discounts_v1_id_fk",
+          "tableFrom": "org_discounts",
           "tableTo": "discounts_v1",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4484,8 +5373,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "organization_discounts_organization_id_discount_id_pk": {
-          "name": "organization_discounts_organization_id_discount_id_pk",
+        "org_discounts_organization_id_discount_id_pk": {
+          "name": "org_discounts_organization_id_discount_id_pk",
           "columns": [
             "organization_id",
             "discount_id"
@@ -4497,8 +5386,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.organization_addresses": {
-      "name": "organization_addresses",
+    "warehouse.org_addresses": {
+      "name": "org_addresses",
       "schema": "warehouse",
       "columns": {
         "organization_id": {
@@ -4541,9 +5430,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "organization_addresses_organization_id_organizations_id_fk": {
-          "name": "organization_addresses_organization_id_organizations_id_fk",
-          "tableFrom": "organization_addresses",
+        "org_addresses_organization_id_organizations_id_fk": {
+          "name": "org_addresses_organization_id_organizations_id_fk",
+          "tableFrom": "org_addresses",
           "tableTo": "organizations",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4555,9 +5444,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "organization_addresses_address_id_addresses_id_fk": {
-          "name": "organization_addresses_address_id_addresses_id_fk",
-          "tableFrom": "organization_addresses",
+        "org_addresses_address_id_addresses_id_fk": {
+          "name": "org_addresses_address_id_addresses_id_fk",
+          "tableFrom": "org_addresses",
           "tableTo": "addresses",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4576,8 +5465,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.organization_users": {
-      "name": "organization_users",
+    "warehouse.org_users": {
+      "name": "org_users",
       "schema": "warehouse",
       "columns": {
         "organization_id": {
@@ -4602,9 +5491,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "organization_users_organization_id_organizations_id_fk": {
-          "name": "organization_users_organization_id_organizations_id_fk",
-          "tableFrom": "organization_users",
+        "org_users_organization_id_organizations_id_fk": {
+          "name": "org_users_organization_id_organizations_id_fk",
+          "tableFrom": "org_users",
           "tableTo": "organizations",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4616,9 +5505,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "organization_users_user_id_users_id_fk": {
-          "name": "organization_users_user_id_users_id_fk",
-          "tableFrom": "organization_users",
+        "org_users_user_id_users_id_fk": {
+          "name": "org_users_user_id_users_id_fk",
+          "tableFrom": "org_users",
           "tableTo": "users",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4632,8 +5521,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "organization_users_user_id_organization_id_pk": {
-          "name": "organization_users_user_id_organization_id_pk",
+        "org_users_user_id_organization_id_pk": {
+          "name": "org_users_user_id_organization_id_pk",
           "columns": [
             "user_id",
             "organization_id"
@@ -4722,6 +5611,12 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -4893,8 +5788,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.organization_suppliers": {
-      "name": "organization_suppliers",
+    "warehouse.org_suppliers": {
+      "name": "org_suppliers",
       "schema": "warehouse",
       "columns": {
         "organization_id": {
@@ -4912,9 +5807,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "organization_suppliers_organization_id_organizations_id_fk": {
-          "name": "organization_suppliers_organization_id_organizations_id_fk",
-          "tableFrom": "organization_suppliers",
+        "org_suppliers_organization_id_organizations_id_fk": {
+          "name": "org_suppliers_organization_id_organizations_id_fk",
+          "tableFrom": "org_suppliers",
           "tableTo": "organizations",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4926,9 +5821,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "organization_suppliers_supplier_id_suppliers_id_fk": {
-          "name": "organization_suppliers_supplier_id_suppliers_id_fk",
-          "tableFrom": "organization_suppliers",
+        "org_suppliers_supplier_id_suppliers_id_fk": {
+          "name": "org_suppliers_supplier_id_suppliers_id_fk",
+          "tableFrom": "org_suppliers",
           "tableTo": "suppliers",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4942,8 +5837,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "organization_suppliers_organization_id_supplier_id_pk": {
-          "name": "organization_suppliers_organization_id_supplier_id_pk",
+        "org_suppliers_organization_id_supplier_id_pk": {
+          "name": "org_suppliers_organization_id_supplier_id_pk",
           "columns": [
             "organization_id",
             "supplier_id"
@@ -4955,8 +5850,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.organization_customers": {
-      "name": "organization_customers",
+    "warehouse.org_customers": {
+      "name": "org_customers",
       "schema": "warehouse",
       "columns": {
         "organization_id": {
@@ -4974,9 +5869,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "organization_customers_organization_id_organizations_id_fk": {
-          "name": "organization_customers_organization_id_organizations_id_fk",
-          "tableFrom": "organization_customers",
+        "org_customers_organization_id_organizations_id_fk": {
+          "name": "org_customers_organization_id_organizations_id_fk",
+          "tableFrom": "org_customers",
           "tableTo": "organizations",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4988,9 +5883,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "organization_customers_customer_id_customers_id_fk": {
-          "name": "organization_customers_customer_id_customers_id_fk",
-          "tableFrom": "organization_customers",
+        "org_customers_customer_id_customers_id_fk": {
+          "name": "org_customers_customer_id_customers_id_fk",
+          "tableFrom": "org_customers",
           "tableTo": "customers",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -5004,8 +5899,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "organization_customers_organization_id_customer_id_pk": {
-          "name": "organization_customers_organization_id_customer_id_pk",
+        "org_customers_organization_id_customer_id_pk": {
+          "name": "org_customers_organization_id_customer_id_pk",
           "columns": [
             "organization_id",
             "customer_id"
@@ -5038,6 +5933,13 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -5121,6 +6023,13 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -5237,6 +6146,74 @@
           "columns": [
             "organization_id",
             "sale_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organizations_notifications": {
+      "name": "organizations_notifications",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notification_id": {
+          "name": "notification_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organizations_notifications_organization_id_organizations_id_fk": {
+          "name": "organizations_notifications_organization_id_organizations_id_fk",
+          "tableFrom": "organizations_notifications",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_notifications_notification_id_notifications_id_fk": {
+          "name": "organizations_notifications_notification_id_notifications_id_fk",
+          "tableFrom": "organizations_notifications",
+          "tableTo": "notifications",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "notification_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organizations_notifications_organization_id_notification_id_pk": {
+          "name": "organizations_notifications_organization_id_notification_id_pk",
+          "columns": [
+            "organization_id",
+            "notification_id"
           ]
         }
       },
@@ -5369,6 +6346,21 @@
         "physical"
       ]
     },
+    "warehouse.reoccurrence_type": {
+      "name": "reoccurrence_type",
+      "schema": "warehouse",
+      "values": [
+        "none",
+        "daily",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "semimonthly",
+        "quarterly",
+        "yearly",
+        "custom"
+      ]
+    },
     "warehouse.discount_target": {
       "name": "discount_target",
       "schema": "warehouse",
@@ -5420,7 +6412,8 @@
         "processing",
         "shipped",
         "delivered",
-        "cancelled"
+        "cancelled",
+        "deleted"
       ]
     },
     "warehouse.customer_status": {
@@ -5430,6 +6423,25 @@
         "active",
         "inactive",
         "blocked"
+      ]
+    },
+    "warehouse.schedule_status": {
+      "name": "schedule_status",
+      "schema": "warehouse",
+      "values": [
+        "scheduled",
+        "preparing",
+        "ready",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "warehouse.schedule_type": {
+      "name": "schedule_type",
+      "schema": "warehouse",
+      "values": [
+        "delivery",
+        "pickup"
       ]
     },
     "warehouse.supplier_status": {

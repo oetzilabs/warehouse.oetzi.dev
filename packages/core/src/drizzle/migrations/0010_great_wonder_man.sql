@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."storage_spaces" ADD COLUMN "product_capacity" integer DEFAULT 0 NOT NULL;

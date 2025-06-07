@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."sale_items" ADD COLUMN "currency" text NOT NULL;

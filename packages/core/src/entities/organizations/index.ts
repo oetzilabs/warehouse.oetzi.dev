@@ -867,16 +867,15 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         }
 
         const warehouseSummary = organization.whs.map((wh) => {
-          const warehouse = wh.warehouse;
           return {
-            id: warehouse.id,
-            name: warehouse.name,
-            description: warehouse.description,
-            dimensions: warehouse.dimensions,
-            createdAt: warehouse.createdAt,
-            updatedAt: warehouse.updatedAt,
-            deletedAt: warehouse.deletedAt,
-            facilities: warehouse.fcs.map((facility) => ({
+            id: wh.warehouse.id,
+            name: wh.warehouse.name,
+            description: wh.warehouse.description,
+            dimensions: wh.warehouse.dimensions,
+            createdAt: wh.warehouse.createdAt,
+            updatedAt: wh.warehouse.updatedAt,
+            deletedAt: wh.warehouse.deletedAt,
+            facilities: wh.warehouse.fcs.map((facility) => ({
               id: facility.id,
               name: facility.name,
               description: facility.description,
@@ -921,6 +920,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                       createdAt: p.product.createdAt,
                       updatedAt: p.product.updatedAt,
                       deletedAt: p.product.deletedAt,
+                      stock: space.products.filter((p2) => p2.product.id === p.product.id).length,
+                      minStock: p.product.minimumStock,
+                      maxStock: p.product.maximumStock,
+                      reorderPoint: p.product.reorderPoint,
+                      safetyStock: p.product.safetyStock,
                     })),
                   })),
                 })),

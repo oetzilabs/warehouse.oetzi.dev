@@ -105,16 +105,13 @@ const Ruler = (props: { orientation: "horizontal" | "vertical"; length: number; 
 
 interface EditorState {
   ready: boolean;
-  isSpacePressed: boolean;
-  isDragging: boolean;
-  dragStart: { x: number; y: number };
   position: { x: number; y: number };
   zoom: number;
   resizingArea: string | null;
 }
 
 const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["warehouses"][0]["facilities"][0]> }) => {
-  const padding = 20;
+  const padding = 10;
   const initialCenter = calculateCombinedBoundingBox(props.facility());
   let mapRef: HTMLDivElement | undefined;
   const [editing, setEditing] = createSignal(false);
@@ -129,9 +126,6 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
 
   const [state, setState] = createStore<EditorState>({
     ready: false,
-    isSpacePressed: false,
-    isDragging: false,
-    dragStart: { x: 0, y: 0 },
     position: { x: -initialCenter.centerX, y: -initialCenter.centerY },
     zoom: 1,
     resizingArea: null,
@@ -170,65 +164,8 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
     });
   };
 
-  createEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !e.repeat) {
-        e.preventDefault();
-        setState("isSpacePressed", true);
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        setState({
-          isSpacePressed: false,
-          isDragging: false,
-        });
-      }
-    };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      if (state.isSpacePressed) {
-        setState({
-          isDragging: true,
-          dragStart: {
-            x: e.clientX - state.position.x,
-            y: e.clientY - state.position.y,
-          },
-        });
-      }
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (state.isDragging) {
-        setState("position", {
-          x: e.clientX - state.dragStart.x,
-          y: e.clientY - state.dragStart.y,
-        });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setState("isDragging", false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
-    document.addEventListener("mousedown", handleMouseDown);
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keyup", handleKeyUp);
-      document.removeEventListener("mousedown", handleMouseDown);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  });
-
   return (
-    <div class="flex flex-col w-full grow relative" ref={mapRef!}>
+    <div class="flex flex-col w-full grow relative bg-muted-foreground/[0.02]" ref={mapRef!}>
       <div class="absolute top-0 z-50 bg-background border-b flex flex-row items-center gap-2 justify-end select-none w-full h-max">
         <div class="flex flex-row items-center gap-2 p-2">
           <Show when={editing()}>
@@ -298,16 +235,22 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
         <div
           class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]"
           style={{
-            cursor: state.isSpacePressed ? (state.isDragging ? "grabbing" : "grab") : "default",
             transform: `translate(-50%, -50%) translate(${state.position.x}px, ${state.position.y}px) scale(${state.zoom})`,
             "transform-origin": "center",
           }}
         >
           <div class="relative">
-            <For each={props.facility().areas}>
+            <For
+              each={props.facility().areas}
+              fallback={
+                <div class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col items-center justify-center gap-4">
+                  <span class="text-sm text-muted-foreground w-max">No areas added</span>
+                </div>
+              }
+            >
               {(area) => (
                 <div
-                  class="outline-1 outline-neutral-400 dark:outline-neutral-700 outline-dashed group absolute"
+                  class="outline-1 outline-neutral-400 dark:outline-neutral-700 outline-dashed group absolute rounded-sm"
                   style={{
                     top: `${area.boundingBox.y}px`,
                     left: `${area.boundingBox.x}px`,
@@ -316,9 +259,9 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                   }}
                 >
                   <Show when={editing()}>
-                    <div class="absolute -top-14 right-0 flex gap-2 items-center z-50">
+                    <div class="absolute -bottom-10 right-0 flex gap-2 items-center z-50">
                       <DropdownMenu>
-                        <DropdownMenuTrigger as={Button} size="sm" class="h-8">
+                        <DropdownMenuTrigger as={Button} size="sm" variant="outline" class="bg-background">
                           Area <ChevronDown class="size-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -345,8 +288,8 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                   </Show>
                   <Show when={editing()}>
                     <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Ruler orientation="horizontal" length={area.boundingBox.width} offset={-20} padding={padding} />
-                      <Ruler orientation="vertical" length={area.boundingBox.height} offset={-20} padding={padding} />
+                      <Ruler orientation="horizontal" length={area.boundingBox.width} offset={-45} padding={padding} />
+                      <Ruler orientation="vertical" length={area.boundingBox.height} offset={-25} padding={padding} />
                     </div>
                   </Show>
                   <div class="w-full h-full relative">
@@ -354,10 +297,12 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                       {(storage) => (
                         <div
                           class={cn(
-                            "absolute border border-neutral-400 dark:border-neutral-500 bg-muted group/storage flex",
+                            "absolute border border-neutral-400 dark:border-neutral-500 bg-muted group/storage flex rounded-sm  overflow-clip",
                             {
                               "flex-row": storage.variant === "vertical",
                               "flex-col": storage.variant === "horizontal",
+                              "border-neutral-200 dark:border-neutral-800":
+                                storage.capacity == 0 && storage.currentOccupancy === 0,
                             },
                           )}
                           style={{
@@ -372,11 +317,11 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                               <span class="text-xs text-muted-foreground">{storage.name}</span>
                             </div>
                             <div class="absolute -right-8 top-0 flex flex-col gap-1">
-                              <Button size="icon" class="size-6">
-                                <Plus class="size-3" />
+                              <Button size="icon" class="!size-6 bg-background" variant="outline">
+                                <Plus class="!size-3" />
                               </Button>
-                              <Button size="icon" class="size-6" variant="destructive">
-                                <Trash2 class="size-3 text-white" />
+                              <Button size="icon" class="!size-6" variant="destructive">
+                                <Trash2 class="!size-3 text-white" />
                               </Button>
                             </div>
                           </Show>
@@ -384,15 +329,24 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                           <For each={storage.spaces}>
                             {(inventory) => (
                               <div
-                                class={cn(
-                                  "hover:bg-indigo-200 dark:hover:bg-indigo-600 active:bg-indigo-300 dark:active:bg-indigo-500 group/inv relative cursor-pointer",
-                                  {
-                                    "border-neutral-400 dark:border-neutral-500 border-r last:border-r-0":
-                                      storage.variant === "vertical",
-                                    "border-neutral-400 dark:border-neutral-500 border-b last:border-b-0":
-                                      storage.variant === "horizontal",
-                                  },
-                                )}
+                                class={cn("group/inv relative border-neutral-400 dark:border-neutral-500", {
+                                  "border-r last:border-r-0": storage.variant === "vertical",
+                                  "border-b last:border-b-0": storage.variant === "horizontal",
+                                  "bg-rose-200 dark:bg-rose-600 text-rose-800 dark:text-rose-100":
+                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.1,
+                                  "bg-orange-200 dark:bg-orange-600 text-orange-800 dark:text-orange-100":
+                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.25,
+                                  "bg-amber-200 dark:bg-amber-600 text-amber-800 dark:text-amber-100":
+                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.5,
+                                  "bg-yellow-200 dark:bg-yellow-600 text-yellow-800 dark:text-yellow-100":
+                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.75,
+                                  "bg-lime-200 dark:bg-lime-600 text-lime-800 dark:text-lime-100":
+                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.9,
+                                  "bg-emerald-200 dark:bg-emerald-600 text-emerald-800 dark:text-emerald-100":
+                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity >= 0.9,
+                                  "bg-background text-muted-foreground border-neutral-200 dark:border-neutral-800":
+                                    storage.capacity == 0 && storage.currentOccupancy === 0,
+                                })}
                                 style={
                                   storage.variant === "horizontal"
                                     ? {

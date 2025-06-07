@@ -17,5 +17,13 @@ export default function MapPage() {
   const params = useParams();
   const facility = createAsync(() => getFacilityByWarehouseId(params.whid, params.fcid));
 
-  return <Show when={facility()}>{(fc) => <div class=""></div>}</Show>;
+  return (
+    <Show when={facility()}>
+      {(fc) => (
+        <div class="flex flex-col gap-4 w-full h-full relative">
+          <FacilityEditor facility={fc} />
+        </div>
+      )}
+    </Show>
+  );
 }

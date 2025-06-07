@@ -1,3 +1,4 @@
+import FacilityImage from "@/components/FacilityImage";
 import { FilterPopover } from "@/components/filters/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,10 +8,15 @@ import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import Package from "lucide-solid/icons/package";
+import TriangleAlert from "lucide-solid/icons/triangle-alert";
+import { Warning } from "postcss";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import FacilityEditor from "../../FacilityEditor";
 import { GenericList } from "../default";
+import "@fontsource-variable/geist-mono";
 
 type InventoryListProps = {
   inventory: Accessor<OrganizationInventoryInfo>;
@@ -96,33 +102,99 @@ export const InventoryList = (props: InventoryListProps) => {
     );
     const occupancyPercentage = (currentOccupancy / totalCapacity) * 100;
 
+    const facilityAlerts = (facility: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]) => {
+      // TODO!: get all the products in the facility's areas and inventories that are low on stock
+      // for now we return a empty array
+      // we need a Set to remove duplicates of the same product
+      const lowStockProducts = new Map<
+        string,
+        {
+          product: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][number]["storages"][0]["spaces"][number]["products"][number];
+          count: number;
+        }
+      >();
+      facility.areas
+        .flatMap((area) =>
+          area.storages.flatMap((storage) =>
+            storage.spaces.flatMap((space) => space.products.filter((product) => product.stock < product.minStock)),
+          ),
+        )
+        .forEach((product) => {
+          if (lowStockProducts.has(product.id)) {
+            lowStockProducts.get(product.id)!.count++;
+          } else {
+            lowStockProducts.set(product.id, { product, count: 1 });
+          }
+        });
+      return Array.from(lowStockProducts.values());
+    };
+
     return (
       <div class="flex flex-col">
-        <div class="flex justify-between items-center p-4 border-b">
+        <div class="flex justify-between items-center p-4 bg-muted-foreground/5 border-b">
           <h3 class="font-semibold">{warehouse.name}</h3>
           <Badge variant="outline">{warehouse.facilities.length} Facilities</Badge>
         </div>
-        <div class="">
-          <div class="">
-            <For each={warehouse.facilities}>
-              {(facility) => (
-                <div class="p-4 border-b border-dashed last:border-b-0">
-                  <div class="">
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <h4 class="font-medium">{facility.name}</h4>
-                        <p class="text-sm text-muted-foreground">{facility.description}</p>
-                      </div>
-                    </div>
-
-                    <div class="flex flex-col w-full aspect-video border rounded-lg">
-                      <FacilityEditor facility={() => facility} />
-                    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <For each={warehouse.facilities}>
+            {(facility) => (
+              <div class="border rounded-md flex flex-col">
+                <div class="flex flex-row items-center justify-between p-4 border-b gap-1">
+                  <div class="flex flex-col gap-2">
+                    <h4 class="font-medium">{facility.name}</h4>
+                    <p class="text-sm text-muted-foreground">{facility.description}</p>
+                  </div>
+                  <div class="flex flewx-row gap-2 h-full">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="bg-background place-self-start"
+                      as={A}
+                      href={`/warehouse/${warehouse.id}/facility/${facility.id}/inventory`}
+                    >
+                      Open
+                      <ArrowUpRight class="size-4" />
+                    </Button>
                   </div>
                 </div>
-              )}
-            </For>
-          </div>
+                <div class="flex flex-col w-full aspect-video overflow-clip bg-muted-foreground/5 border-b">
+                  <FacilityImage facility={() => facility} />
+                </div>
+                <Show when={facilityAlerts(facility).length > 0 && facilityAlerts(facility)}>
+                  {(alerts) => (
+                    <div class="flex flex-col p-4 gap-2">
+                      <div class="flex flex-col gap-2">
+                        <div class="flex flex-row gap-1 items-center justify-between text-sm">
+                          <div class="flex flex-row items-center gap-2  text-red-500">
+                            <TriangleAlert class="size-4" />
+                            <span class="font-medium">Low Stock</span>
+                          </div>
+                        </div>
+                        <div class="flex flex-col w-full border rounded-lg overflow-clip">
+                          <For each={alerts()}>
+                            {(alert) => (
+                              <A
+                                href={`/products/${alert.product.id}`}
+                                class="flex flex-row gap-1 items-center justify-between text-sm px-4 py-3 hover:bg-muted-foreground/10 border-b last:border-b-0"
+                              >
+                                <div class="flex flex-row gap-2 items-center w-[calc(100%-2rem)]">
+                                  <Package class="!size-4 shrink-0" />
+                                  <span class="truncate">{alert.product.name}</span>
+                                </div>
+                                <span class="font-['Geist_Mono_Variable'] text-muted-foreground w-min">
+                                  {alert.count}
+                                </span>
+                              </A>
+                            )}
+                          </For>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Show>
+              </div>
+            )}
+          </For>
         </div>
       </div>
     );
