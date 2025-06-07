@@ -11,6 +11,7 @@ import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
+import "@fontsource-variable/geist-mono";
 
 type ProductsListProps = {
   data: Accessor<OrganizationProductInfo[]>;
@@ -70,14 +71,20 @@ export const ProductsList = (props: ProductsListProps) => {
   );
 
   const filteredData = useFilter(props.data, filterConfig);
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
 
   const renderProductItem = (item: OrganizationProductInfo) => (
     <>
-      <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
-        <div class="flex flex-row gap-4 items-center">
+      <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30 w-full">
+        <div class="flex flex-row items-center">
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row items-center gap-2">
-              <span class="text-sm font-medium">{item.product.name}</span>
+              <span class="text-sm font-medium truncate">{truncateText(item.product.name, 40)}</span>
               <Show when={item.deletedAt}>
                 <Badge variant="outline" class="bg-rose-500 border-0 text-white">
                   Not in Sortiment
@@ -94,10 +101,12 @@ export const ProductsList = (props: ProductsListProps) => {
             </span>
           </div>
         </div>
-        <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2">
-          Open
-          <ArrowUpRight class="size-4" />
-        </Button>
+        <div class="flex flex-row gap-2 w-max">
+          <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2">
+            Open
+            <ArrowUpRight class="size-4" />
+          </Button>
+        </div>
       </div>
 
       <div class="flex flex-col p-4 gap-4">
@@ -120,7 +129,7 @@ export const ProductsList = (props: ProductsListProps) => {
             </Show>
           </div>
           <div class="flex flex-col items-end">
-            <span class="text-sm font-medium">
+            <span class="text-sm font-medium font-['Geist_Mono_Variable']">
               {item.product.sellingPrice.toFixed(2)} {item.product.currency}
             </span>
           </div>
@@ -154,6 +163,7 @@ export const ProductsList = (props: ProductsListProps) => {
         emptyMessage="No products have been added"
         noResultsMessage="No products have been found"
         searchTerm={() => filterConfig.search.term}
+        variant="grid"
       />
     </div>
   );

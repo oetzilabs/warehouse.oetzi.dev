@@ -258,7 +258,39 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           db.query.TB_organizations_warehouses.findMany({
             where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
             with: {
-              warehouse: true,
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
+                    },
+                  },
+                  owner: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                  fcs: {
+                    with: {
+                      ars: {
+                        with: {
+                          strs: {
+                            with: {
+                              type: true,
+                              area: true,
+                              invs: {
+                                with: {
+                                  labels: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
           }),
         );

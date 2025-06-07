@@ -10,6 +10,7 @@ import { A } from "@solidjs/router";
 import { OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Package from "lucide-solid/icons/package";
+import Plus from "lucide-solid/icons/plus";
 import TriangleAlert from "lucide-solid/icons/triangle-alert";
 import { Warning } from "postcss";
 import { Accessor, createSignal, For, Show } from "solid-js";
@@ -153,7 +154,18 @@ export const InventoryList = (props: InventoryListProps) => {
       <div class="flex flex-col">
         <div class="flex justify-between items-center p-4 bg-muted-foreground/5 border-b">
           <h3 class="font-semibold">{warehouse.name}</h3>
-          <Badge variant="outline">{warehouse.facilities.length} Facilities</Badge>
+          <div class="flex flex-row gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              class="bg-background place-self-start"
+              as={A}
+              href={`/warehouse/${warehouse.id}/facility/new`}
+            >
+              <Plus class="size-4" />
+              Add Facility
+            </Button>
+          </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
           <For each={warehouse.facilities}>

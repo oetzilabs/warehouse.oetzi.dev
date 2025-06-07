@@ -27,10 +27,18 @@ export const getWarehouses = query(async () => {
   if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const warehouses = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(WarehouseService);
-      return yield* service.findByUserId(user.id);
+      return yield* service.findByOrganizationId(orgId);
     }).pipe(Effect.provide(WarehouseLive)),
   );
   return warehouses;

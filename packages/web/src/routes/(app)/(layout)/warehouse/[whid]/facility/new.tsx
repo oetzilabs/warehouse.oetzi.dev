@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { createFacility } from "@/lib/api/facilities";
-import { useAction, useParams, useSubmission, type RouteDefinition } from "@solidjs/router";
+import { A, useAction, useParams, useSubmission, type RouteDefinition } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import { type FacilityCreate } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/warehouses/warehouse_facility";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Loader2 from "lucide-solid/icons/loader-2";
 import Plus from "lucide-solid/icons/plus";
 import { Show } from "solid-js";
@@ -43,9 +44,15 @@ export default function NewFacilityPage() {
 
   return (
     <div class="container flex flex-row grow py-4">
-      <div class="w-full py-4 flex flex-col gap-4 border rounded-lg">
-        <div class="flex px-4 items-center gap-4 justify-between w-full">
-          <h1 class="text-sm font-semibold leading-none text-muted-foreground">New Facility</h1>
+      <div class="w-full flex flex-col gap-4">
+        <div class="flex items-center gap-4 justify-between w-full">
+          <div class="flex flex-row items-center gap-4">
+            <Button as={A} href={`/warehouse/${params.whid}`} variant="outline" class="bg-background" size="sm">
+              <ArrowLeft class="size-4" />
+              Back
+            </Button>
+            <h1 class="text-sm font-semibold leading-none">New Facility</h1>
+          </div>
           <div class="flex items-center gap-4">
             <Button
               size="sm"
@@ -64,7 +71,7 @@ export default function NewFacilityPage() {
             </Button>
           </div>
         </div>
-        <form class="w-full flex flex-col gap-4 px-4">
+        <form class="w-full flex flex-col gap-4">
           <form.Field name="name">
             {(field) => (
               <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">

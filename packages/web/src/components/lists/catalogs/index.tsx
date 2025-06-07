@@ -140,6 +140,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
         emptyMessage="No catalogs have been added"
         noResultsMessage="No catalogs have been found"
         searchTerm={() => filterConfig.search.term}
+        variant="grid"
       />
     </div>
   );

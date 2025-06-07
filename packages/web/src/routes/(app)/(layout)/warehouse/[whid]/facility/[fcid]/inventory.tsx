@@ -1,8 +1,10 @@
-import FacilityEditor from "@/components/FacilityEditor";
-import { useUser } from "@/components/providers/User";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getFacilityByWarehouseId } from "@/lib/api/facilities";
-import { createAsync, RouteDefinition, useParams } from "@solidjs/router";
+import { A, createAsync, RouteDefinition, useParams } from "@solidjs/router";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Plus from "lucide-solid/icons/plus";
 import { createSignal, For, Show } from "solid-js";
 
 export const route = {
@@ -37,15 +39,31 @@ export default function InventoryPage() {
     <Show when={facility()}>
       {(fc) => (
         <div class="flex flex-col gap-4 container w-full grow py-4">
+          <div class="flex flex-row items-center justify-between gap-4">
+            <div class="flex flex-row items-center gap-4">
+              <Button variant="outline" as={A} href={`/warehouse/${params.whid}`} size="sm" class="bg-background">
+                <ArrowLeft class="size-4" />
+                Back
+              </Button>
+              <h1 class="text-sm font-semibold leading-none">Facility {fc().name}</h1>
+            </div>
+            <div class="flex items-center gap-4">
+              <Button size="sm">
+                <Plus class="size-4" />
+                Add Storage Space
+              </Button>
+            </div>
+          </div>
           <For each={fc().areas}>
             {(area) => (
               <div class="flex flex-col gap-4">
                 <For each={area.storages}>
                   {(storage) => (
                     <div class="flex flex-col gap-2">
-                      <span class="font-semibold">
-                        {storage.name} ({storage.type.name})
-                      </span>
+                      <div class="flex flex-row items-center gap-2">
+                        <span class="font-semibold uppercase">{storage.name}</span>
+                        <Badge variant="outline">{storage.type.name}</Badge>
+                      </div>
                       <div
                         class="flex flex-row border w-full"
                         style={{
