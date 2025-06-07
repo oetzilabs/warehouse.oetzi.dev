@@ -713,22 +713,6 @@
                               "dimensions": null,
                               "labels": [],
                               "inventories": []
-                            },
-                            {
-                              "id": "storagespace_azxh00m2eq13nc62mipgpah2",
-                              "name": "dfgh",
-                              "barcode": "dfgh",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
-                            },
-                            {
-                              "id": "storagespace_zwz1gmr4neb3pqusfwbt02oa",
-                              "name": "tyui",
-                              "barcode": "tyui",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
                             }
                           ]
                         },
