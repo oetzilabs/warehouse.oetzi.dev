@@ -20,7 +20,14 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TextField, TextFieldInput } from "@/components/ui/text-field";
+import {
+  NumberField,
+  NumberFieldDecrementTrigger,
+  NumberFieldGroup,
+  NumberFieldIncrementTrigger,
+  NumberFieldInput,
+} from "@/components/ui/number-field";
+import { TextField, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices, printProductSheet } from "@/lib/api/devices";
 import {
@@ -33,6 +40,7 @@ import {
   getProductLabels,
   reAddProduct,
   removeLabelsFromProduct,
+  updateProductStock,
 } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
@@ -54,9 +62,11 @@ import Pencil from "lucide-solid/icons/pencil";
 import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import RulerDimensionLine from "lucide-solid/icons/ruler-dimension-line";
+import Settings from "lucide-solid/icons/settings-2";
 import Weight from "lucide-solid/icons/weight";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
+import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 
 dayjs.extend(relativeTime);
@@ -82,6 +92,7 @@ export default function ProductPage() {
   const brands = createAsync(() => getProductBrands(), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
   const [addLabelDialogOpen, setAddLabelDialogOpen] = createSignal(false);
+
   const [selectedLabels, setSelectedLabels] = createSignal<string[]>([]);
   const [deleteLabelDialogOpen, setDeleteLabelDialogOpen] = createSignal<{
     isOpen: boolean;
@@ -935,8 +946,14 @@ export default function ProductPage() {
               </div>
               <div class="col-span-full md:col-span-1 flex flex-col gap-4">
                 <div class="flex flex-col border rounded-lg overflow-clip">
-                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
-                    <h2 class="font-medium p-4">Inventory</h2>
+                  <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted/30 p-4">
+                    <h2 class="font-medium ">Inventory</h2>
+                    <StockDialog
+                      id={productInfo().id}
+                      minimumStock={productInfo().minimumStock ?? 0}
+                      maximumStock={productInfo().maximumStock ?? 0}
+                      reorderPoint={productInfo().reorderPoint ?? 0}
+                    />
                   </div>
                   <div class="flex flex-col gap-1 p-4 border-b">
                     <div class="flex justify-between">
@@ -1238,3 +1255,104 @@ export default function ProductPage() {
     </Suspense>
   );
 }
+
+type StockDialogProps = {
+  minimumStock: number;
+  maximumStock: number;
+  reorderPoint: number;
+  id: string;
+};
+
+const StockDialog = (props: StockDialogProps) => {
+  const [stockDialogOpen, setStockDialogOpen] = createSignal(false);
+  const [stockSettings, setStockSettings] = createStore({
+    minimumStock: props.minimumStock,
+    maximumStock: props.maximumStock,
+    reorderPoint: props.reorderPoint,
+  });
+
+  const updateProductStockAction = useAction(updateProductStock);
+  const isUpdatingProductStock = useSubmission(updateProductStock);
+
+  return (
+    <Dialog open={stockDialogOpen()} onOpenChange={setStockDialogOpen}>
+      <DialogTrigger as={Button} variant="outline" size="sm" class="bg-background">
+        <Settings class="!size-4" />
+        Change Stock
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Stock Settings</DialogTitle>
+          <DialogDescription>Adjust stock levels and reorder points for this product</DialogDescription>
+        </DialogHeader>
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium">Minimum Stock</span>
+            <NumberField
+              value={stockSettings.minimumStock}
+              onRawValueChange={(value) => setStockSettings("minimumStock", value)}
+            >
+              <NumberFieldGroup>
+                <NumberFieldInput />
+                <NumberFieldIncrementTrigger />
+                <NumberFieldDecrementTrigger />
+              </NumberFieldGroup>
+            </NumberField>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium">Maximum Stock</span>
+            <NumberField
+              value={stockSettings.maximumStock}
+              onRawValueChange={(value) => setStockSettings("maximumStock", value)}
+            >
+              <NumberFieldGroup>
+                <NumberFieldInput />
+                <NumberFieldIncrementTrigger />
+                <NumberFieldDecrementTrigger />
+              </NumberFieldGroup>
+            </NumberField>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium">Reorder Point</span>
+            <NumberField
+              value={stockSettings.reorderPoint}
+              onRawValueChange={(value) => setStockSettings("reorderPoint", value)}
+            >
+              <NumberFieldGroup>
+                <NumberFieldInput />
+                <NumberFieldIncrementTrigger />
+                <NumberFieldDecrementTrigger />
+              </NumberFieldGroup>
+            </NumberField>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setStockDialogOpen(false)} size="sm">
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            disabled={isUpdatingProductStock.pending}
+            onClick={() => {
+              // TODO: Implement update stock settings API call
+              toast.promise(updateProductStockAction(props.id, stockSettings), {
+                loading: "Updating stock settings...",
+                success: () => {
+                  setStockDialogOpen(false);
+                  return "Stock settings updated";
+                },
+                error: "Failed to update stock settings",
+              });
+            }}
+          >
+            <Show when={isUpdatingProductStock.pending} fallback={<span>Save Changes</span>}>
+              Saving Changes...
+            </Show>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

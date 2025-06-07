@@ -111,7 +111,7 @@ interface EditorState {
 }
 
 const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["warehouses"][0]["facilities"][0]> }) => {
-  const padding = 10;
+  const padding = 20;
   const initialCenter = calculateCombinedBoundingBox(props.facility());
   let mapRef: HTMLDivElement | undefined;
   const [editing, setEditing] = createSignal(false);
@@ -297,12 +297,10 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                       {(storage) => (
                         <div
                           class={cn(
-                            "absolute border border-neutral-400 dark:border-neutral-500 bg-muted group/storage flex rounded-sm  overflow-clip",
+                            "absolute border border-neutral-400 dark:border-neutral-500 bg-muted group/storage flex rounded-sm",
                             {
                               "flex-row": storage.variant === "vertical",
                               "flex-col": storage.variant === "horizontal",
-                              "border-neutral-200 dark:border-neutral-800":
-                                storage.capacity == 0 && storage.currentOccupancy === 0,
                             },
                           )}
                           style={{
@@ -313,10 +311,10 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                           }}
                         >
                           <Show when={editing()}>
-                            <div class="absolute -top-6 left-0">
+                            <div class="absolute -top-6 left-0 z-20">
                               <span class="text-xs text-muted-foreground">{storage.name}</span>
                             </div>
-                            <div class="absolute -right-8 top-0 flex flex-col gap-1">
+                            <div class="absolute -right-8 top-0 flex flex-col gap-1 z-50">
                               <Button size="icon" class="!size-6 bg-background" variant="outline">
                                 <Plus class="!size-3" />
                               </Button>
@@ -327,25 +325,32 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                           </Show>
 
                           <For each={storage.spaces}>
-                            {(inventory) => (
+                            {(space) => (
                               <div
                                 class={cn("group/inv relative border-neutral-400 dark:border-neutral-500", {
                                   "border-r last:border-r-0": storage.variant === "vertical",
                                   "border-b last:border-b-0": storage.variant === "horizontal",
-                                  "bg-rose-200 dark:bg-rose-600 text-rose-800 dark:text-rose-100":
-                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.1,
-                                  "bg-orange-200 dark:bg-orange-600 text-orange-800 dark:text-orange-100":
-                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.25,
-                                  "bg-amber-200 dark:bg-amber-600 text-amber-800 dark:text-amber-100":
-                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.5,
-                                  "bg-yellow-200 dark:bg-yellow-600 text-yellow-800 dark:text-yellow-100":
-                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.75,
-                                  "bg-lime-200 dark:bg-lime-600 text-lime-800 dark:text-lime-100":
-                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity <= 0.9,
-                                  "bg-emerald-200 dark:bg-emerald-600 text-emerald-800 dark:text-emerald-100":
-                                    storage.capacity > 0 && (storage.currentOccupancy ?? 0) / storage.capacity >= 0.9,
-                                  "bg-background text-muted-foreground border-neutral-200 dark:border-neutral-800":
-                                    storage.capacity == 0 && storage.currentOccupancy === 0,
+                                  // Red for spaces with products below minimum stock
+                                  "bg-rose-200 dark:bg-rose-600": space.products.some((p) => p.stock < p.minStock),
+                                  // Orange for spaces with products near minimum stock
+                                  "bg-orange-200 dark:bg-orange-600":
+                                    !space.products.some((p) => p.stock < p.minStock) &&
+                                    space.products.some((p) => p.stock < p.minStock * 1.5),
+                                  // Yellow for spaces with products below reorder point
+                                  "bg-yellow-200 dark:bg-yellow-600":
+                                    !space.products.some((p) => p.stock < p.minStock * 1.5) &&
+                                    space.products.some((p) => p.stock < (p.reorderPoint ?? 0)),
+                                  // Lime for spaces with products above reorder point but below max
+                                  "bg-lime-200 dark:bg-lime-600":
+                                    space.products.length > 0 &&
+                                    space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)) &&
+                                    space.products.some((p) => p.stock < (p.maxStock ?? Infinity)),
+                                  // Emerald for spaces with optimal stock levels
+                                  "bg-emerald-200 dark:bg-emerald-600":
+                                    space.products.length > 0 &&
+                                    space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
+                                  // Default color for empty spaces
+                                  "bg-muted-foreground/[0.05] text-muted-foreground": space.products.length === 0,
                                 })}
                                 style={
                                   storage.variant === "horizontal"
@@ -363,7 +368,7 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                                   <Button
                                     size="icon"
                                     variant="destructive"
-                                    class="absolute -top-2 -right-2 size-6 opacity-0 group-hover/inv:opacity-100"
+                                    class="absolute -top-2 -right-2 size-6 opacity-0 group-hover/inv:opacity-100 z-50"
                                   >
                                     <Trash2 class="size-2 text-white" />
                                   </Button>

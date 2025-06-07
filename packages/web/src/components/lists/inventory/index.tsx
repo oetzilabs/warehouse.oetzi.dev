@@ -2,7 +2,7 @@ import FacilityImage from "@/components/FacilityImage";
 import { FilterPopover } from "@/components/filters/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Progress, ProgressValueLabel } from "@/components/ui/progress";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
@@ -126,7 +126,27 @@ export const InventoryList = (props: InventoryListProps) => {
             lowStockProducts.set(product.id, { product, count: 1 });
           }
         });
-      return Array.from(lowStockProducts.values());
+      // Sort by count in descending order
+      return Array.from(lowStockProducts.values()).sort((a, b) => b.count - a.count);
+    };
+
+    const progressColor = (value: number, maxValue: number) => {
+      const ratio = value / maxValue;
+      const colors = [
+        [0, 0, "bg-black dark:bg-white"],
+        [0, 0.25, "bg-rose-400 dark:bg-rose-600"],
+        [0.25, 0.5, "bg-orange-400 dark:bg-orange-600"],
+        [0.5, 0.75, "bg-yellow-400 dark:bg-yellow-600"],
+        [0.75, 1, "bg-lime-400 dark:bg-lime-600"],
+        [1, Infinity, "bg-emerald-400 dark:bg-emerald-600"],
+      ] as const;
+
+      for (const [min, max, color] of colors) {
+        if (ratio >= min && ratio <= max) {
+          return color;
+        }
+      }
+      return "bg-muted-foreground";
     };
 
     return (
@@ -138,7 +158,7 @@ export const InventoryList = (props: InventoryListProps) => {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
           <For each={warehouse.facilities}>
             {(facility) => (
-              <div class="border rounded-md flex flex-col">
+              <div class="border rounded-lg flex flex-col overflow-clip">
                 <div class="flex flex-row items-center justify-between p-4 border-b gap-1">
                   <div class="flex flex-col gap-2">
                     <h4 class="font-medium">{facility.name}</h4>
@@ -152,7 +172,7 @@ export const InventoryList = (props: InventoryListProps) => {
                       as={A}
                       href={`/warehouse/${warehouse.id}/facility/${facility.id}/inventory`}
                     >
-                      Open
+                      Show Map
                       <ArrowUpRight class="size-4" />
                     </Button>
                   </div>
@@ -160,33 +180,55 @@ export const InventoryList = (props: InventoryListProps) => {
                 <div class="flex flex-col w-full aspect-video overflow-clip bg-muted-foreground/5 border-b">
                   <FacilityImage facility={() => facility} />
                 </div>
-                <Show when={facilityAlerts(facility).length > 0 && facilityAlerts(facility)}>
+                <Show
+                  when={facilityAlerts(facility).length > 0 && facilityAlerts(facility)}
+                  fallback={<div class="w-full flex flex-col p-4"></div>}
+                >
                   {(alerts) => (
-                    <div class="flex flex-col p-4 gap-2">
-                      <div class="flex flex-col gap-2">
-                        <div class="flex flex-row gap-1 items-center justify-between text-sm">
-                          <div class="flex flex-row items-center gap-2  text-red-500">
+                    <div class="flex flex-col gap-4">
+                      <div class="flex flex-col">
+                        <div class="flex flex-row gap-1 items-center justify-between text-sm border-b p-4">
+                          <div class="flex flex-row items-center gap-2 text-red-500">
                             <TriangleAlert class="size-4" />
                             <span class="font-medium">Low Stock</span>
                           </div>
                         </div>
-                        <div class="flex flex-col w-full border rounded-lg overflow-clip">
-                          <For each={alerts()}>
-                            {(alert) => (
-                              <A
-                                href={`/products/${alert.product.id}`}
-                                class="flex flex-row gap-1 items-center justify-between text-sm px-4 py-3 hover:bg-muted-foreground/10 border-b last:border-b-0"
-                              >
-                                <div class="flex flex-row gap-2 items-center w-[calc(100%-2rem)]">
+                        <div class="w-full flex flex-col">
+                          <div class="flex flex-col w-full">
+                            <For each={alerts().slice(0, 3)}>
+                              {(alert) => (
+                                <A
+                                  href={`/products/${alert.product.id}`}
+                                  class="flex flex-col gap-4 items-center justify-between text-sm p-4 hover:bg-muted-foreground/5 border-b last:border-b-0"
+                                >
+                                  <div class="flex flex-row gap-2 items-center w-full">
+                                    <Package class="!size-4 shrink-0" />
+                                    <span class="truncate w-full">{alert.product.name}</span>
+                                    <span class="font-['Geist_Mono_Variable'] w-min">
+                                      {alert.count}/{alert.product.maxStock ?? 0}
+                                    </span>
+                                  </div>
+                                  <div class="w-full flex flex-col gap-2">
+                                    <Progress
+                                      value={alert.count}
+                                      maxValue={alert.product.maxStock ?? 0}
+                                      color={progressColor(alert.count, alert.product.maxStock ?? 0)}
+                                    />
+                                  </div>
+                                </A>
+                              )}
+                            </For>
+                            <Show when={alerts().length > 3}>
+                              <div class="flex flex-col gap-4 items-center justify-between text-sm p-4 hover:bg-muted-foreground/5 border-b last:border-b-0">
+                                <div class="flex flex-row gap-2 items-center w-full">
                                   <Package class="!size-4 shrink-0" />
-                                  <span class="truncate">{alert.product.name}</span>
+                                  <span class="truncate w-full">
+                                    {alerts().length - 3} more products with low stock
+                                  </span>
                                 </div>
-                                <span class="font-['Geist_Mono_Variable'] text-muted-foreground w-min">
-                                  {alert.count}
-                                </span>
-                              </A>
-                            )}
-                          </For>
+                              </div>
+                            </Show>
+                          </div>
                         </div>
                       </div>
                     </div>

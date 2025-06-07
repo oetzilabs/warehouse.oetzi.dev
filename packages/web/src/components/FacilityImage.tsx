@@ -124,15 +124,16 @@ const FacilityImage = (props: { facility: Accessor<OrganizationInventoryInfo["wa
                                 // Yellow for spaces with products below reorder point
                                 "bg-yellow-200 dark:bg-yellow-600":
                                   !space.products.some((p) => p.stock < p.minStock * 1.5) &&
-                                  space.products.some((p) => p.stock < p.reorderPoint),
+                                  space.products.some((p) => p.stock < (p.reorderPoint ?? 0)),
                                 // Lime for spaces with products above reorder point but below max
                                 "bg-lime-200 dark:bg-lime-600":
                                   space.products.length > 0 &&
-                                  space.products.every((p) => p.stock >= p.reorderPoint) &&
-                                  space.products.some((p) => p.stock < p.maxStock),
+                                  space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)) &&
+                                  space.products.some((p) => p.stock < (p.maxStock ?? Infinity)),
                                 // Emerald for spaces with optimal stock levels
                                 "bg-emerald-200 dark:bg-emerald-600":
-                                  space.products.length > 0 && space.products.every((p) => p.stock >= p.reorderPoint),
+                                  space.products.length > 0 &&
+                                  space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
                                 // Default color for empty spaces
                                 "bg-muted-foreground/[0.05] text-muted-foreground": space.products.length === 0,
                               })}

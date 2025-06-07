@@ -1,19 +1,24 @@
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import type { PolymorphicProps } from "@kobalte/core/polymorphic";
 import * as ProgressPrimitive from "@kobalte/core/progress";
 import { splitProps, type Component, type JSX, type ValidComponent } from "solid-js";
 
 type ProgressRootProps<T extends ValidComponent = "div"> = ProgressPrimitive.ProgressRootProps<T> & {
   children?: JSX.Element;
+  color?: string;
 };
 
 const Progress = <T extends ValidComponent = "div">(props: PolymorphicProps<T, ProgressRootProps<T>>) => {
-  const [local, others] = splitProps(props as ProgressRootProps, ["children"]);
+  const [local, others] = splitProps(props as ProgressRootProps, ["children", "color"]);
+  local.color ??= "bg-primary";
   return (
     <ProgressPrimitive.Root {...others}>
       {local.children}
       <ProgressPrimitive.Track class="relative h-2 w-full overflow-hidden rounded-full bg-secondary outline outline-1 outline-border dark:outline-neutral-700">
-        <ProgressPrimitive.Fill class="h-full w-[var(--kb-progress-fill-width)] flex-1 bg-primary transition-all" />
+        <ProgressPrimitive.Fill
+          class={cn("h-full w-[var(--kb-progress-fill-width)] flex-1 bg-primary transition-all", local.color)}
+        />
       </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
   );

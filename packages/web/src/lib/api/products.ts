@@ -386,3 +386,43 @@ export const assignBrand = action(async (id: string, brandId: string) => {
     revalidate: [getProductById.keyFor(id), getProducts.key],
   });
 });
+
+export const updateProductStock = action(
+  async (
+    id: string,
+    {
+      minimumStock,
+      maximumStock,
+      reorderPoint,
+    }: {
+      minimumStock: number;
+      maximumStock: number;
+      reorderPoint: number;
+    },
+  ) => {
+    "use server";
+    const auth = await withSession();
+    if (!auth) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const [user, session] = auth;
+    if (!session.current_organization_id) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+
+    const result = await Effect.runPromise(
+      Effect.gen(function* (_) {
+        const service = yield* _(ProductService);
+        const product = yield* service.findById(id);
+        if (!product) {
+          return yield* Effect.fail(new ProductNotFound({ id }));
+        }
+
+        return yield* service.update(product.id, { id: product.id, minimumStock, maximumStock, reorderPoint });
+      }).pipe(Effect.provide(ProductLive)),
+    );
+    return json(result, {
+      revalidate: [getProductById.keyFor(id), getProducts.key],
+    });
+  },
+);
