@@ -230,7 +230,7 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
       if (!fc) {
         return yield* Effect.fail(new Error("Facility not found"));
       }
-      if (!wh.fcs.find((f) => f.id === fc.id)) {
+      if (!wh.facilities.find((f) => f.id === fc.id)) {
         return yield* Effect.fail(new Error("Facility not found"));
       }
       const switched = yield* sessionService.update({

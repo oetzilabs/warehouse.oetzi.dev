@@ -251,9 +251,20 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         if (entries.length === 0) {
           return yield* Effect.fail(new WarehouseNotFoundForOrganization({ organizationId }));
         }
+        const whs = entries.map((entry) => entry.warehouse);
+        const facilityService = yield* _(FacilityService);
+        const newWhsList = [];
+        for (const entry of whs) {
+          const facilities = yield* facilityService.findByWarehouseId(entry.id);
+          const wh = {
+            ...entry,
+            facilities,
+          };
+          newWhsList.push(wh);
+        }
 
-        return entries.map((entry) => entry.warehouse);
-      });
+        return newWhsList;
+      }).pipe(Effect.provide(FacilityLive));
 
     const safeRemove = (id: string) =>
       Effect.gen(function* (_) {
