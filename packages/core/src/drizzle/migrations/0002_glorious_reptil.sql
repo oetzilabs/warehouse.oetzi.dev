@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."storage_sections" DROP COLUMN "product_capacity";

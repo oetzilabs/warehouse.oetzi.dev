@@ -46,9 +46,18 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
               strs: {
                 with: {
                   type: true,
-                  invs: {
+                  secs: {
                     with: {
-                      labels: true,
+                      spaces: {
+                        with: {
+                          labels: true,
+                          prs: {
+                            with: {
+                              pr: true,
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -118,9 +127,18 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
               strs: {
                 with: {
                   type: true,
-                  invs: {
+                  secs: {
                     with: {
-                      labels: true,
+                      spaces: {
+                        with: {
+                          labels: true,
+                          prs: {
+                            with: {
+                              pr: true,
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -138,9 +156,18 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
               strs: {
                 with: {
                   type: true,
-                  invs: {
+                  secs: {
                     with: {
-                      labels: true,
+                      spaces: {
+                        with: {
+                          labels: true,
+                          prs: {
+                            with: {
+                              pr: true,
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },

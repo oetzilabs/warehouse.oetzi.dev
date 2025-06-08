@@ -652,67 +652,123 @@
                             "length": 500,
                             "height": 300
                           },
-                          "spaces": [
+                          "sections": [
                             {
-                              "id": "storagespace_neui9x4uhdc3ov5zbog3z4xx",
-                              "name": "asdf",
-                              "barcode": "asdf",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": [
+                              "id": "storagesection_qt76w1w619k4z2jdh4n2fb1v",
+                              "name": "A1",
+                              "barcode": "A1",
+                              "dimensions": {
+                                "width": 100,
+                                "height": 500,
+                                "length": 500
+                              },
+                              "spaces": [
                                 {
-                                  "id": "inv_m21cs2a1ia2ebvdovsag66jy",
-                                  "productCapacity": 10,
-                                  "name": "inventory test 1",
-                                  "barcode": "inv-test-1",
-                                  "products": ["prod_uzujt3nrndmn90yyslc61wqv"]
-                                }
-                              ]
-                            },
-                            {
-                              "id": "storagespace_jvfl0b6lpn360rwotw5r9mjv",
-                              "name": "qwerty",
-                              "barcode": "qwerty",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": [
-                                {
-                                  "id": "inv_zsv150vhw66k0mrk2ui6zzl9",
-                                  "productCapacity": 10,
-                                  "barcode": "inv-test-2",
-                                  "name": "inventory test 2",
+                                  "id": "storagespace_neui9x4uhdc3ov5zbog3z4xx",
+                                  "name": "A1-1",
+                                  "barcode": "A1-1",
+                                  "dimensions": null,
+                                  "labels": [],
                                   "products": [
-                                    "prod_uzujt3nrndmn90yyslc61wqv",
-                                    "prod_uzujt3nrndmn90yyslc61wqv",
-                                    "prod_uzujt3nrndmn90yyslc61wqv",
-                                    "prod_rljvumttoz3f2v122kw7bf4x"
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_vbs3ktvuvu04rpnxso79apfu"
+                                    }
                                   ]
+                                },
+                                {
+                                  "id": "storagespace_jvfl0b6lpn360rwotw5r9mjv",
+                                  "name": "A1-2",
+                                  "barcode": "A1-2",
+                                  "dimensions": null,
+                                  "labels": [],
+                                  "products": [
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
+                                    },
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_gqhktb7avcu3vckbmaf7v9kw"
+                                    },
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_vp0lrhh4eotudd2zddrr286p"
+                                    },
+                                    {
+                                      "product_id": "prod_rljvumttoz3f2v122kw7bf4x",
+                                      "id": "sspp_jgckb7jbaq6il8na7rap7uq8"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "storagespace_pz51twfrepl2afomq4s0e0nh",
+                                  "name": "A1-3",
+                                  "barcode": "A1-3",
+                                  "dimensions": null,
+                                  "labels": [],
+                                  "products": []
                                 }
                               ]
                             },
                             {
-                              "id": "storagespace_pz51twfrepl2afomq4s0e0nh",
-                              "name": "hjkl",
-                              "barcode": "hjkl",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
-                            },
-                            {
-                              "id": "storagespace_nd9jl7eo0419cz2smyx3n23g",
-                              "name": "uiop",
-                              "barcode": "uiop",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
-                            },
-                            {
-                              "id": "storagespace_clx2zp2x5akbr078kkitibvp",
-                              "name": "zxcv",
-                              "barcode": "zxcv",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
+                              "id": "storagesection_cjtblse49zdy752tf042ockf",
+                              "name": "A2",
+                              "barcode": "A2",
+                              "dimensions": {
+                                "width": 100,
+                                "height": 500,
+                                "length": 500
+                              },
+                              "spaces": [
+                                {
+                                  "id": "storagespace_gf7uf3shhsg2lmg976vdaf01",
+                                  "name": "A2-1",
+                                  "barcode": "A2-1",
+                                  "dimensions": null,
+                                  "labels": [],
+                                  "products": [
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "storagespace_z78dfv6zz5hmp2urkaf72fbd",
+                                  "name": "A2-2",
+                                  "barcode": "A2-2",
+                                  "dimensions": null,
+                                  "labels": [],
+                                  "products": [
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "storagespace_bq9ysqxfue1svga4teud6s6m",
+                                  "name": "A2-3",
+                                  "barcode": "A2-3",
+                                  "dimensions": null,
+                                  "labels": [],
+                                  "products": [
+                                    {
+                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "storagespace_xlfqidm2rr9h2qsap3rnu1vw",
+                                  "name": "A2-4",
+                                  "barcode": "A2-4",
+                                  "dimensions": null,
+                                  "labels": [],
+                                  "products": []
+                                }
+                              ]
                             }
                           ]
                         },
@@ -729,32 +785,128 @@
                             "y": 0,
                             "width": 300,
                             "length": 80,
-                            "height": 100
+                            "height": 300
                           },
-                          "spaces": [
+                          "sections": [
                             {
-                              "id": "storagespace_udlsmd605kn8rw6l411m9lyq",
-                              "name": "123123",
-                              "barcode": "123123",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
+                              "id": "storagesection_l0zkkq9cyecnynt8st6mezt1",
+                              "name": "B1",
+                              "barcode": "B1",
+                              "dimensions": {
+                                "width": 500,
+                                "height": 300,
+                                "length": 100
+                              },
+                              "spaces": [
+                                {
+                                  "id": "storagespace_udlsmd605kn8rw6l411m9lyq",
+                                  "name": "B1-1",
+                                  "barcode": "B1-1",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                },
+                                {
+                                  "id": "storagespace_i2f47adado0smzbl3qd27ald",
+                                  "name": "B1-2",
+                                  "barcode": "B1-2",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                },
+                                {
+                                  "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
+                                  "name": "B1-3",
+                                  "barcode": "B1-3",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                },
+                                {
+                                  "id": "storagespace_cvb5x753wxmsqke7ea5cjd0j",
+                                  "name": "B1-4",
+                                  "barcode": "B1-4",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                }
+                              ]
                             },
                             {
-                              "id": "storagespace_i2f47adado0smzbl3qd27ald",
-                              "name": "a123a",
-                              "barcode": "a123a",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
-                            },
-                            {
-                              "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
-                              "name": "testtest",
-                              "barcode": "testtest",
-                              "dimensions": null,
-                              "labels": [],
-                              "inventories": []
+                              "id": "storagesection_yiz8qx17w5g1lah5cb9dd1ss",
+                              "name": "B2",
+                              "barcode": "B2",
+                              "dimensions": {
+                                "width": 500,
+                                "height": 300,
+                                "length": 100
+                              },
+                              "spaces": [
+                                {
+                                  "id": "storagespace_nuebzcl1tazrph0kc900do7s",
+                                  "name": "B2-1",
+                                  "barcode": "B2-1",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                },
+                                {
+                                  "id": "storagespace_o38732moogtlfazxodmnnwyi",
+                                  "name": "B2-2",
+                                  "barcode": "B2-2",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                },
+                                {
+                                  "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
+                                  "name": "B2-3",
+                                  "barcode": "B2-3",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                },
+                                {
+                                  "id": "storagespace_xhja2yrxnecpnrshvxfq3fk2",
+                                  "name": "B2-4",
+                                  "barcode": "B2-4",
+                                  "dimensions": {
+                                    "width": 100,
+                                    "height": 125,
+                                    "length": 500
+                                  },
+                                  "labels": [],
+                                  "products": []
+                                }
+                              ]
                             }
                           ]
                         }

@@ -1,56 +1,80 @@
-import { WarehouseList } from "@/components/lists/warehouses";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getWarehouses } from "@/lib/api/warehouses";
-import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
+import { getWarehouseById } from "@/lib/api/warehouses";
+import { A, createAsync, RouteDefinition, useParams } from "@solidjs/router";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
-import RotateCw from "lucide-solid/icons/rotate-cw";
-import { Show } from "solid-js";
-import { toast } from "solid-sonner";
+import Warehouse from "lucide-solid/icons/warehouse";
+import { For, Show } from "solid-js";
 
 export const route = {
-  preload: (props) => {
+  preload: () => {
     const user = getAuthenticatedUser({ skipOnboarding: true });
     const sessionToken = getSessionToken();
-    const warehouses = getWarehouses();
-    return { user, sessionToken, warehouses };
+    return { user, sessionToken };
   },
 } as RouteDefinition;
 
 export default function WarehousePage() {
-  const data = createAsync(() => getWarehouses(), { deferStream: true });
+  const params = useParams();
+  const warehouse = createAsync(() => getWarehouseById(params.whid));
 
   return (
-    <Show when={data()}>
-      {(warehouseList) => (
-        <div class="container flex flex-col grow py-4">
-          <div class="w-full flex flex-row h-full">
-            <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="font-semibold leading-none">Warehouses</h1>
-                <div class="flex items-center gap-0">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    class="w-9 rounded-r-none bg-background"
-                    onClick={() => {
-                      toast.promise(revalidate(getWarehouses.key), {
-                        loading: "Refreshing warehouses...",
-                        success: "Warehouses refreshed",
-                        error: "Failed to refresh warehouses",
-                      });
-                    }}
-                  >
-                    <RotateCw class="size-4" />
-                  </Button>
-                  <Button as={A} href="/warehouse/new" size="sm" class="pl-2.5 rounded-l-none">
-                    <Plus class="size-4" />
-                    Add Warehouse
-                  </Button>
-                </div>
-              </div>
-              <WarehouseList data={warehouseList} />
+    <Show when={warehouse()}>
+      {(wh) => (
+        <div class="flex flex-col gap-4 container w-full grow py-4">
+          <div class="flex flex-row items-center justify-between gap-4">
+            <div class="flex flex-row items-center gap-4">
+              <Button variant="outline" as={A} href="/warehouse" size="sm" class="bg-background">
+                <ArrowLeft class="size-4" />
+                Back
+              </Button>
+              <h1 class="text-sm font-semibold leading-none">Warehouse {wh().name}</h1>
             </div>
+            <div class="flex items-center gap-4">
+              <Button size="sm">
+                <Plus class="size-4" />
+                Add Facility
+              </Button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <For each={wh().facilities}>
+              {(facility) => (
+                <div class="flex flex-col border rounded-lg">
+                  <div class="flex flex-row items-center gap-2 p-4 border-b bg-muted-foreground/5 dark:bg-muted/30 justify-between">
+                    <div class="flex flex-row items-center gap-4">
+                      <Warehouse class="size-4" />
+                      <span class="font-semibold">{facility.name}</span>
+                    </div>
+                  </div>
+                  <div class="p-4">
+                    <div class="flex flex-col gap-2">
+                      <div class="flex justify-between text-sm">
+                        <span>Total Areas:</span>
+                        <span>{facility.ars.length}</span>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <span>Total Storage Units:</span>
+                        <span>{facility.ars.reduce((acc, area) => acc + area.strs.length, 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="p-4 border-t mt-auto">
+                    <Button
+                      as={A}
+                      href={`/warehouse/${wh().id}/facility/${facility.id}/inventory`}
+                      variant="outline"
+                      class="w-full"
+                    >
+                      View Inventory
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </For>
           </div>
         </div>
       )}

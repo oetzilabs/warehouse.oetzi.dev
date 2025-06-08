@@ -218,52 +218,54 @@ export default function DashboardPage() {
                           }
                         >
                           <>
-                            <div class="h-[200px]">
+                            <div class="h-[200px] p-4">
                               <LineChart
-                                height={200}
+                                height={180}
                                 data={{
                                   labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
                                   datasets: [
                                     {
                                       label: "Orders",
                                       data: d().orders.customers.chartData || [],
-                                      fill: true,
+                                      fill: false,
+                                      pointRadius: 0,
                                       backgroundColor: "rgba(59, 130, 246, 0.1)",
                                       borderColor: "rgb(59, 130, 246)",
-                                      tension: 0.4,
+                                      tension: 0.3,
                                     },
                                   ],
                                 }}
                                 options={{
                                   responsive: true,
                                   maintainAspectRatio: false,
+                                  plugins: {
+                                    legend: {
+                                      display: false,
+                                    },
+                                  },
                                   scales: {
                                     x: {
                                       grid: {
-                                        display: false,
+                                        display: false, // Hide vertical grid lines entirely
                                       },
                                       border: {
-                                        display: false,
+                                        display: false, // Hide x-axis line
                                       },
                                       ticks: {
-                                        color: "rgb(163, 163, 163)", // neutral-400
+                                        display: false,
                                       },
                                     },
                                     y: {
                                       border: {
-                                        dash: [4, 4],
+                                        dash: [4, 4], // Keep dashed grid lines
+                                        display: false, // Hide y-axis line (vertical line on the left)
                                       },
                                       grid: {
-                                        color: "rgba(163, 163, 163, 0.2)", // neutral-400 with opacity
+                                        display: false,
                                       },
                                       ticks: {
-                                        color: "rgb(163, 163, 163)", // neutral-400
+                                        display: false,
                                       },
-                                    },
-                                  },
-                                  plugins: {
-                                    legend: {
-                                      display: false,
                                     },
                                   },
                                 }}
@@ -329,38 +331,56 @@ export default function DashboardPage() {
                           }
                         >
                           <>
-                            <div class="h-[200px]">
+                            <div class="h-[200px] p-4">
                               <LineChart
-                                height={200}
+                                height={180}
                                 data={{
                                   labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
                                   datasets: [
                                     {
                                       label: "Supplier Orders",
                                       data: d().orders.suppliers.chartData || [],
-                                      fill: true,
+                                      fill: false,
+                                      pointRadius: 0,
                                       backgroundColor: "rgba(236, 72, 153, 0.1)",
                                       borderColor: "rgb(236, 72, 153)",
-                                      tension: 0.4,
+                                      tension: 0.3,
                                     },
                                   ],
                                 }}
                                 options={{
                                   responsive: true,
                                   maintainAspectRatio: false,
-                                  scales: {
-                                    x: {
-                                      grid: { display: false },
-                                      border: { display: false },
-                                      ticks: { color: "rgb(163, 163, 163)" },
-                                    },
-                                    y: {
-                                      border: { dash: [4, 4] },
-                                      grid: { color: "rgba(163, 163, 163, 0.2)" },
-                                      ticks: { color: "rgb(163, 163, 163)" },
+                                  plugins: {
+                                    legend: {
+                                      display: false,
                                     },
                                   },
-                                  plugins: { legend: { display: false } },
+                                  scales: {
+                                    x: {
+                                      grid: {
+                                        display: false, // Hide vertical grid lines entirely
+                                      },
+                                      border: {
+                                        display: false, // Hide x-axis line
+                                      },
+                                      ticks: {
+                                        display: false,
+                                      },
+                                    },
+                                    y: {
+                                      border: {
+                                        dash: [4, 4], // Keep dashed grid lines
+                                        display: false, // Hide y-axis line (vertical line on the left)
+                                      },
+                                      grid: {
+                                        display: false,
+                                      },
+                                      ticks: {
+                                        display: false,
+                                      },
+                                    },
+                                  },
                                 }}
                               />
                             </div>

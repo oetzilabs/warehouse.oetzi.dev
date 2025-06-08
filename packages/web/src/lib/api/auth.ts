@@ -9,6 +9,15 @@ export const logout = action(async () => {
   const sessionToken = getCookie("session_token");
 
   if (sessionToken) {
+    // TODO: Remove session from cookie
+    setCookie("session_token", "", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 0,
+    });
+
+    // TODO: Remove session from database
     await Effect.runPromise(
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
@@ -19,9 +28,6 @@ export const logout = action(async () => {
 
   return redirect("/", {
     revalidate: [getAuthenticatedUser.key],
-    headers: {
-      "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
-    },
   });
 });
 

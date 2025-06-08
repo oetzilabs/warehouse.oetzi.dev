@@ -104,20 +104,20 @@ export const InventoryList = (props: InventoryListProps) => {
     const occupancyPercentage = (currentOccupancy / totalCapacity) * 100;
 
     const facilityAlerts = (facility: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]) => {
-      // TODO!: get all the products in the facility's areas and inventories that are low on stock
-      // for now we return a empty array
-      // we need a Set to remove duplicates of the same product
       const lowStockProducts = new Map<
         string,
         {
-          product: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][number]["storages"][0]["spaces"][number]["products"][number];
+          product: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][number]["storages"][number]["sections"][number]["spaces"][number]["products"][number];
           count: number;
         }
       >();
+
       facility.areas
         .flatMap((area) =>
           area.storages.flatMap((storage) =>
-            storage.spaces.flatMap((space) => space.products.filter((product) => product.stock < product.minStock)),
+            storage.sections.flatMap((section) =>
+              section.spaces.flatMap((space) => space.products.filter((product) => product.stock < product.minStock)),
+            ),
           ),
         )
         .forEach((product) => {
@@ -127,7 +127,7 @@ export const InventoryList = (props: InventoryListProps) => {
             lowStockProducts.set(product.id, { product, count: 1 });
           }
         });
-      // Sort by count in descending order
+
       return Array.from(lowStockProducts.values()).sort((a, b) => b.count - a.count);
     };
 

@@ -60,16 +60,21 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                     with: {
                       type: true,
                       area: true,
-                      invs: {
+                      secs: {
                         with: {
-                          products: {
+                          spaces: {
                             with: {
-                              product: {
+                              labels: true,
+                              prs: {
                                 with: {
-                                  brands: true,
-                                  catalogs: true,
-                                  labels: true,
-                                  suppliers: true,
+                                  pr: {
+                                    with: {
+                                      brands: true,
+                                      catalogs: true,
+                                      labels: true,
+                                      suppliers: true,
+                                    },
+                                  },
                                 },
                               },
                             },
@@ -116,28 +121,34 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
               createdAt: storage.createdAt,
               updatedAt: storage.updatedAt,
               deletedAt: storage.deletedAt,
-              spaces: storage.invs.map((space) => ({
-                id: space.id,
-                name: space.name,
-                barcode: space.barcode,
-                dimensions: space.dimensions,
-                productCapacity: space.productCapacity,
-                createdAt: space.createdAt,
-                updatedAt: space.updatedAt,
-                deletedAt: space.deletedAt,
-                products: space.products.map((p) => ({
-                  id: p.product.id,
-                  name: p.product.name,
-                  sku: p.product.sku,
-                  barcode: p.product.barcode,
-                  createdAt: p.product.createdAt,
-                  updatedAt: p.product.updatedAt,
-                  deletedAt: p.product.deletedAt,
-                  stock: space.products.filter((p2) => p2.product.id === p.product.id).length,
-                  minStock: p.product.minimumStock,
-                  maxStock: p.product.maximumStock,
-                  reorderPoint: p.product.reorderPoint,
-                  safetyStock: p.product.safetyStock,
+              sections: storage.secs.map((section) => ({
+                id: section.id,
+                name: section.name,
+                barcode: section.barcode,
+                dimensions: section.dimensions,
+                spaces: section.spaces.map((space) => ({
+                  id: space.id,
+                  name: space.name,
+                  barcode: space.barcode,
+                  dimensions: space.dimensions,
+                  productCapacity: space.productCapacity,
+                  createdAt: space.createdAt,
+                  updatedAt: space.updatedAt,
+                  deletedAt: space.deletedAt,
+                  products: space.prs.map((p) => ({
+                    id: p.pr.id,
+                    name: p.pr.name,
+                    sku: p.pr.sku,
+                    barcode: p.pr.barcode,
+                    createdAt: p.pr.createdAt,
+                    updatedAt: p.pr.updatedAt,
+                    deletedAt: p.pr.deletedAt,
+                    stock: space.prs.filter((p2) => p2.pr.id === p.pr.id).length,
+                    minStock: p.pr.minimumStock,
+                    maxStock: p.pr.maximumStock,
+                    reorderPoint: p.pr.reorderPoint,
+                    safetyStock: p.pr.safetyStock,
+                  })),
                 })),
               })),
             })),
@@ -196,9 +207,25 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                     with: {
                       type: true,
                       area: true,
-                      invs: {
+                      secs: {
                         with: {
-                          labels: true,
+                          spaces: {
+                            with: {
+                              labels: true,
+                              prs: {
+                                with: {
+                                  pr: {
+                                    with: {
+                                      brands: true,
+                                      catalogs: true,
+                                      labels: true,
+                                      suppliers: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                     },
@@ -227,9 +254,64 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                     with: {
                       type: true,
                       area: true,
-                      invs: {
+                      secs: {
                         with: {
-                          labels: true,
+                          spaces: {
+                            with: {
+                              labels: true,
+                              prs: {
+                                with: {
+                                  pr: {
+                                    with: {
+                                      brands: true,
+                                      catalogs: true,
+                                      labels: true,
+                                      suppliers: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+      });
+
+    const findByWarehouseId = (warehouseId: string) =>
+      Effect.gen(function* (_) {
+        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
+        if (!parsedWarehouseId.success) {
+          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+        }
+        return yield* Effect.promise(() =>
+          db.query.TB_warehouse_facilities.findMany({
+            where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
+            with: {
+              ars: {
+                with: {
+                  strs: {
+                    with: {
+                      type: true,
+                      area: true,
+                      secs: {
+                        with: {
+                          spaces: {
+                            with: {
+                              labels: true,
+                              prs: {
+                                with: {
+                                  pr: true,
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                     },
@@ -245,6 +327,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
       create,
       findById,
       findByUserId,
+      findByWarehouseId,
       update,
       remove,
       all,

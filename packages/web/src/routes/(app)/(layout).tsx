@@ -3,23 +3,16 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { changeFacility } from "@/lib/api/facilities";
-import { changeWarehouse } from "@/lib/api/warehouses";
 import { cn } from "@/lib/utils";
-import { A, useAction, useLocation, useNavigate, useResolvedPath, useSubmission } from "@solidjs/router";
+import { A, useLocation, useNavigate, useResolvedPath } from "@solidjs/router";
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import BookOpenText from "lucide-solid/icons/book-open-text";
 import Cpu from "lucide-solid/icons/cpu";
@@ -27,21 +20,15 @@ import Forklift from "lucide-solid/icons/forklift";
 import Support from "lucide-solid/icons/heart-plus";
 import LayoutDashboard from "lucide-solid/icons/layout-dashboard";
 import Loader2 from "lucide-solid/icons/loader-2";
-import MapIcon from "lucide-solid/icons/map";
 import MessageSquare from "lucide-solid/icons/message-square";
 import Notebook from "lucide-solid/icons/notebook";
-import Package2 from "lucide-solid/icons/package-2";
 import PackageOpen from "lucide-solid/icons/package-open";
-import PackagePlus from "lucide-solid/icons/package-plus";
 import PackageSearch from "lucide-solid/icons/package-search";
-import Plus from "lucide-solid/icons/plus";
 import Search from "lucide-solid/icons/search";
 import Tags from "lucide-solid/icons/tags";
 import TriangleAlert from "lucide-solid/icons/triangle-alert";
 import UsersRound from "lucide-solid/icons/users-round";
-import Warehouse from "lucide-solid/icons/warehouse";
-import { For, JSXElement, ParentProps, Show, Suspense } from "solid-js";
-import { toast } from "solid-sonner";
+import { JSXElement, ParentProps, Show, Suspense } from "solid-js";
 
 const Link = (
   props: ParentProps<{
@@ -70,11 +57,6 @@ const Link = (
 
 export default function DashboardLayout(props: { children: JSXElement }) {
   const user = useUser();
-  const changeWarehouseAction = useAction(changeWarehouse);
-  const isChangingWarehouse = useSubmission(changeWarehouse);
-
-  const changeFacilityAction = useAction(changeFacility);
-  const isChangingFacility = useSubmission(changeFacility);
 
   const location = useLocation();
   const relativePath = useResolvedPath(() => location.pathname);

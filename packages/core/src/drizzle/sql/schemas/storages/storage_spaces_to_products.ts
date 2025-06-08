@@ -1,11 +1,9 @@
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
-import { primaryKey, text } from "drizzle-orm/pg-core";
-import { TB_certificates } from "../certificates/certificates";
+import { primaryKey } from "drizzle-orm/pg-core";
 import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_storage_spaces } from "./storage_space";
-import { TB_storages } from "./storages";
 
 export const TB_storage_spaces_to_products = schema.table(
   "storage_space_to_products",
@@ -27,7 +25,7 @@ export const TB_storage_spaces_to_products = schema.table(
 );
 
 export const storage_products_relations = relations(TB_storage_spaces_to_products, ({ one }) => ({
-  product: one(TB_products, {
+  pr: one(TB_products, {
     fields: [TB_storage_spaces_to_products.productId],
     references: [TB_products.id],
   }),

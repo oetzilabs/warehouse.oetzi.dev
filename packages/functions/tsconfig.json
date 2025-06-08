@@ -6,6 +6,11 @@
     "jsxImportSource": "solid-js",
     "moduleResolution": "bundler",
     "baseUrl": ".",
-    "paths": {}
+    "paths": {},
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ]
   }
 }

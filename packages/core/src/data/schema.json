@@ -471,7 +471,7 @@
                                             }
                                           ]
                                         },
-                                        "spaces": {
+                                        "sections": {
                                           "type": "array",
                                           "items": {
                                             "type": "object",
@@ -518,11 +518,6 @@
                                                   }
                                                 ]
                                               },
-                                              "productCapacity": {
-                                                "type": "integer",
-                                                "minimum": -2147483648,
-                                                "maximum": 2147483647
-                                              },
                                               "id": {},
                                               "deletedAt": {
                                                 "anyOf": [
@@ -535,13 +530,7 @@
                                                   }
                                                 ]
                                               },
-                                              "labels": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "string"
-                                                }
-                                              },
-                                              "inventories": {
+                                              "spaces": {
                                                 "type": "array",
                                                 "items": {
                                                   "type": "object",
@@ -605,10 +594,27 @@
                                                         }
                                                       ]
                                                     },
-                                                    "products": {
+                                                    "labels": {
                                                       "type": "array",
                                                       "items": {
                                                         "type": "string"
+                                                      }
+                                                    },
+                                                    "products": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "product_id": {
+                                                            "type": "string"
+                                                          },
+                                                          "id": {}
+                                                        },
+                                                        "additionalProperties": false,
+                                                        "required": [
+                                                          "product_id",
+                                                          "id"
+                                                        ]
                                                       }
                                                     }
                                                   },
@@ -617,6 +623,7 @@
                                                     "name",
                                                     "barcode",
                                                     "id",
+                                                    "labels",
                                                     "products"
                                                   ]
                                                 }
@@ -627,8 +634,7 @@
                                               "name",
                                               "barcode",
                                               "id",
-                                              "labels",
-                                              "inventories"
+                                              "spaces"
                                             ]
                                           }
                                         }
@@ -640,7 +646,7 @@
                                         "capacity",
                                         "bounding_box",
                                         "id",
-                                        "spaces"
+                                        "sections"
                                       ]
                                     }
                                   }

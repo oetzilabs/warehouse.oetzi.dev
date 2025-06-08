@@ -22,6 +22,7 @@ import {
   OrderProductCreateSchema,
   OrganizationCustomerOrderCreateSchema,
   OrganizationSupplierOrderCreateSchema,
+  StorageSectionCreateSchema,
   SupplierCreateSchema,
   TaxGroupCountryRatesCreateSchema,
   TaxGroupCreateSchema,
@@ -39,7 +40,7 @@ import { ProductLabelCreateSchema } from "../../drizzle/sql/schemas/products/pro
 import { ProductCreateWithDateTransformSchema } from "../../drizzle/sql/schemas/products/products";
 import { SaleCreateSchema } from "../../drizzle/sql/schemas/sales/sales";
 import { SaleItemCreateSchema } from "../../drizzle/sql/schemas/sales/sales_items";
-import { StorageInventoryCreateSchema } from "../../drizzle/sql/schemas/storages/storage_space";
+import { StorageSpaceCreateSchema } from "../../drizzle/sql/schemas/storages/storage_space";
 import { StorageTypeCreateSchema } from "../../drizzle/sql/schemas/storages/storage_types";
 import { StorageCreateSchema } from "../../drizzle/sql/schemas/storages/storages";
 import { UserCreateSchema } from "../../drizzle/sql/schemas/users/users";
@@ -72,23 +73,28 @@ export const WeightSchema = object({
   unit: string(),
 });
 
-export const InventorySchema = object({
-  ...omit(StorageInventoryCreateSchema, ["storageId"]).entries,
+export const StorageSpaceProductSchema = object({
+  product_id: string(),
   id: prefixed_cuid2,
-  products: array(string()), // references to product IDs
 });
 
 export const StorageSpaceSchema = object({
-  ...omit(StorageInventoryCreateSchema, ["storageId"]).entries,
+  ...omit(StorageSpaceCreateSchema, ["sectionId"]).entries,
   id: prefixed_cuid2,
   labels: array(string()), // references to label IDs
-  inventories: array(InventorySchema), // references to product IDs
+  products: array(StorageSpaceProductSchema), // references to product IDs
+});
+
+export const StorageSectionSchema = object({
+  ...omit(StorageSectionCreateSchema, ["storageId"]).entries,
+  id: prefixed_cuid2,
+  spaces: array(StorageSpaceSchema),
 });
 
 export const StorageSchema = object({
   ...omit(StorageCreateSchema, ["warehouseAreaId"]).entries,
   id: prefixed_cuid2,
-  spaces: array(StorageSpaceSchema),
+  sections: array(StorageSectionSchema),
 });
 
 export const WarehouseAreaSchema = object({

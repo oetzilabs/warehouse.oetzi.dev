@@ -11,6 +11,7 @@ import {
   WarehouseUpdateSchema,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { FacilityLive, FacilityService } from "../facilities";
 import { FacilityNotFound } from "../facilities/errors";
 import { ProductInvalidId, ProductNotDeleted, ProductNotFound } from "../products/errors";
 import {
@@ -48,24 +49,6 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         products: {
           with: {
             product: true,
-          },
-        },
-        fcs: {
-          with: {
-            ars: {
-              with: {
-                strs: {
-                  with: {
-                    type: true,
-                    invs: {
-                      with: {
-                        labels: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
           },
         },
       };
@@ -153,29 +136,6 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                   product: true,
                 },
               },
-              fcs: {
-                with: {
-                  ars: {
-                    with: {
-                      strs: {
-                        with: {
-                          type: true,
-                          invs: {
-                            with: {
-                              labels: true,
-                              products: {
-                                with: {
-                                  product: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
             },
           }),
         );
@@ -184,8 +144,15 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           return yield* Effect.fail(new WarehouseNotFound({ id }));
         }
 
-        return warehouse;
-      });
+        const facilityService = yield* _(FacilityService);
+        const facilities = yield* facilityService.findByWarehouseId(warehouse.id);
+        const wh = {
+          ...warehouse,
+          facilities,
+        };
+
+        return wh;
+      }).pipe(Effect.provide(FacilityLive));
 
     const update = (input: InferInput<typeof WarehouseUpdateSchema>) =>
       Effect.gen(function* (_) {
@@ -270,23 +237,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                       hashed_password: false,
                     },
                   },
-                  fcs: {
+                  products: {
                     with: {
-                      ars: {
-                        with: {
-                          strs: {
-                            with: {
-                              type: true,
-                              area: true,
-                              invs: {
-                                with: {
-                                  labels: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      product: true,
                     },
                   },
                 },
@@ -385,9 +338,18 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                     with: {
                       type: true,
                       area: true,
-                      invs: {
+                      secs: {
                         with: {
-                          labels: true,
+                          spaces: {
+                            with: {
+                              labels: true,
+                              prs: {
+                                with: {
+                                  pr: true,
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                     },
@@ -488,20 +450,31 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         if (!wh) {
           return yield* Effect.fail(new WarehouseNotFound({ id: whId }));
         }
-        const facilites = wh.fcs;
+        const facilites = wh.facilities;
         const areas = facilites.map((fc) => fc.ars).flat();
         const storages = areas.map((a) => a.strs).flat();
 
         return yield* Effect.succeed({
           amountOfFacilities: facilites.length,
           amounOfStorages: storages.length,
-          totalCurrentOccupancy: storages
-            .map((s) => s.invs.map((i) => i.products.length))
+          amountOfSections: storages.map((s) => s.secs.length).reduce((a, b) => a + b, 0),
+          amountOfSpaces: storages
+            .map((s) => s.secs.map((sec) => sec.spaces.length))
             .flat()
             .reduce((a, b) => a + b, 0),
+          totalCurrentOccupancy: storages
+            .map((s) =>
+              s.secs
+                .map((sec) => sec.spaces.map((space) => space.prs.length).reduce((a, b) => a + b, 0))
+                .reduce((a, b) => a + b, 0),
+            )
+            .reduce((a, b) => a + b, 0),
           totalCapacity: storages
-            .map((s) => s.invs.map((i) => i.productCapacity))
-            .flat()
+            .map((s) =>
+              s.secs
+                .map((sec) => sec.spaces.map((space) => space.productCapacity).reduce((a, b) => a + b, 0))
+                .reduce((a, b) => a + b, 0),
+            )
             .reduce((a, b) => a + b, 0),
         });
       });

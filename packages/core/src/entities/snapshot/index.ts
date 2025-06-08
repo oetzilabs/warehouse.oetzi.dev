@@ -126,6 +126,8 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                       with: {
                         org: {
                           with: {
+                            devices: true,
+                            sales: true,
                             products: {
                               with: {
                                 product: true,
@@ -145,10 +147,25 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                                           with: {
                                             strs: {
                                               with: {
-                                                products: true,
-                                                invs: {
+                                                secs: {
                                                   with: {
-                                                    labels: true,
+                                                    spaces: {
+                                                      with: {
+                                                        labels: true,
+                                                        prs: {
+                                                          with: {
+                                                            pr: {
+                                                              with: {
+                                                                brands: true,
+                                                                catalogs: true,
+                                                                labels: true,
+                                                                suppliers: true,
+                                                              },
+                                                            },
+                                                          },
+                                                        },
+                                                      },
+                                                    },
                                                   },
                                                 },
                                               },
@@ -186,10 +203,13 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                             ...ar,
                             storages: ar.strs.map((str) => ({
                               ...str,
-                              spaces: str.invs.map((i) => ({
-                                ...i,
-                                labels: i.labels.map((l) => l.labelId),
-                                products: str.products.map((p) => p.productId),
+                              sections: str.secs.map((sec) => ({
+                                ...sec,
+                                spaces: sec.spaces.map((i) => ({
+                                  ...i,
+                                  labels: i.labels.map((l) => l.labelId),
+                                  products: i.prs.map((p) => p.productId),
+                                })),
                               })),
                             })),
                           })),
@@ -199,6 +219,8 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                         customers: org.org.customerOrders,
                         suppliers: org.org.purchases,
                       },
+                      devices: org.org.devices,
+                      sales: org.org.sales.map((s) => s.saleId),
                     })),
                   })),
                 ),
@@ -210,6 +232,14 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
               createdAt: dayjs().unix().toString(),
               type,
               data: {
+                // TODO!: Add missing data
+                device_types: [],
+                notifications: [],
+                tax_rates: [],
+                tax_groups: [],
+                tax_group_countryrates: [],
+                orders: [],
+                sales,
                 users, // Query users
                 products,
                 labels,
@@ -219,7 +249,6 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                 storage_types,
                 brands,
                 suppliers,
-                sales,
                 customers,
               },
             } satisfies SnapshotDataOutput;

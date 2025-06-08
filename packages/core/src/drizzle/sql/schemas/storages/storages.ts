@@ -3,7 +3,7 @@ import { integer, json, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_warehouse_areas } from "../../schema";
+import { TB_storage_sections, TB_warehouse_areas } from "../../schema";
 import { commonTable } from "../entity";
 import { schema } from "../utils";
 import { TB_storage_spaces } from "./storage_space";
@@ -49,7 +49,7 @@ export const storage_relations = relations(TB_storages, ({ one, many }) => ({
     fields: [TB_storages.typeId],
     references: [TB_storage_types.id],
   }),
-  invs: many(TB_storage_spaces),
+  secs: many(TB_storage_sections),
 }));
 
 export type StorageSelect = typeof TB_storages.$inferSelect;

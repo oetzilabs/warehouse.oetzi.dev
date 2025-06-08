@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getFacilityByWarehouseId } from "@/lib/api/facilities";
 import { A, createAsync, RouteDefinition, useParams } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Container from "lucide-solid/icons/container";
 import Plus from "lucide-solid/icons/plus";
 import { createSignal, For, Show } from "solid-js";
 
@@ -19,17 +20,18 @@ export default function InventoryPage() {
   const params = useParams();
   const facility = createAsync(() => getFacilityByWarehouseId(params.whid, params.fcid));
 
-  const cleanupProductsListNoDuplciates = (
+  const cleanupProductsListNoDuplicates = (
     products: NonNullable<
       Awaited<ReturnType<typeof getFacilityByWarehouseId>>
-    >["areas"][number]["storages"][number]["spaces"][number]["products"],
+    >["areas"][number]["storages"][number]["sections"][number]["spaces"][number]["products"],
   ): Array<(typeof products)[number] & { count: number }> => {
     const result: Array<(typeof products)[number] & { count: number }> = [];
     for (const p of products) {
-      if (!result.find((r) => r.id === p.id)) {
+      const existing = result.find((r) => r.id === p.id);
+      if (!existing) {
         result.push({ ...p, count: 1 });
       } else {
-        result.find((r) => r.id === p.id)!.count++;
+        existing.count++;
       }
     }
     return result;
@@ -59,38 +61,54 @@ export default function InventoryPage() {
               <div class="flex flex-col gap-4">
                 <For each={area.storages}>
                   {(storage) => (
-                    <div class="flex flex-col gap-2">
-                      <div class="flex flex-row items-center gap-2">
-                        <span class="font-semibold uppercase">{storage.name}</span>
+                    <div class="flex flex-col border rounded-lg">
+                      <div class="flex flex-row items-center gap-2 p-4 border-b bg-muted-foreground/5 dark:bg-muted/30 justify-between">
+                        <div class="flex flex-row items-center gap-4">
+                          <Container class="size-4" />
+                          <span class="font-semibold uppercase">{storage.name}</span>
+                        </div>
                         <Badge variant="outline">{storage.type.name}</Badge>
                       </div>
-                      <div
-                        class="flex flex-row border w-full"
-                        style={{
-                          height: `${storage.boundingBox[storage.variant === "vertical" ? "width" : "height"]}px`,
-                        }}
-                      >
-                        <For each={storage.spaces}>
-                          {(inv) => (
-                            <div
-                              class="flex gap-2 border-r last:border-r-0 h-full"
-                              style={{
-                                width: `calc(100% / ${storage.spaces.length})`,
-                              }}
-                            >
-                              <div class="flex flex-col w-full">
-                                <For each={cleanupProductsListNoDuplciates(inv.products)}>
-                                  {(p) => (
-                                    <div class="flex flex-row gap-2 w-full p-4 select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 border-b last:border-b-0">
-                                      <span>{p.count}x</span>
-                                      <span class="font-medium truncate">{p.name}</span>
-                                    </div>
-                                  )}
-                                </For>
+                      <div class="w-full h-content p-4">
+                        <div
+                          class="flex flex-row border w-full"
+                          style={{
+                            height: `${storage.boundingBox[storage.variant === "vertical" ? "width" : "height"]}px`,
+                          }}
+                        >
+                          <For each={storage.sections}>
+                            {(section) => (
+                              <div
+                                class="flex gap-2 border-r last:border-r-0 h-full"
+                                style={{
+                                  width: `calc(100% / ${storage.sections.length})`,
+                                }}
+                              >
+                                <div class="flex flex-col w-full">
+                                  <For each={section.spaces}>
+                                    {(space) => (
+                                      <div
+                                        class="flex flex-col w-full select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 border-b last:border-b-0"
+                                        style={{
+                                          height: space.dimensions ? `${space.dimensions.height}px` : "100%",
+                                        }}
+                                      >
+                                        <For each={cleanupProductsListNoDuplicates(space.products)}>
+                                          {(p) => (
+                                            <div class="flex flex-row gap-2 w-full p-4 select-none hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                                              <span>{p.count}x</span>
+                                              <span class="font-medium truncate">{p.name}</span>
+                                            </div>
+                                          )}
+                                        </For>
+                                      </div>
+                                    )}
+                                  </For>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </For>
+                            )}
+                          </For>
+                        </div>
                       </div>
                     </div>
                   )}

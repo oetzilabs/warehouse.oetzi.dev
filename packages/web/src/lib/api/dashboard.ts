@@ -41,7 +41,7 @@ export const getDashboardData = query(async () => {
       const orderService = yield* _(OrderService);
       const notificationService = yield* _(NotificationService);
 
-      const organization = yield* organizationService.findById(orgId);
+      const organization = yield* organizationService.getDashboardData(orgId);
       if (!organization) {
         throw new Error("Organization not found");
       }
@@ -51,6 +51,7 @@ export const getDashboardData = query(async () => {
         .map((co) => ({ order: co.order, customerId: co.customer_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
+
       const purchases = organization.purchases
         .map((so) => ({ order: so.order, supplierId: so.supplier_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())

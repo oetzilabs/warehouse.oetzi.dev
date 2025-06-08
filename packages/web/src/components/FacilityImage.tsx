@@ -109,42 +109,58 @@ const FacilityImage = (props: { facility: Accessor<OrganizationInventoryInfo["wa
                           height: `${storage.boundingBox.length ?? storage.boundingBox.height}px`,
                         }}
                       >
-                        <For each={storage.spaces}>
-                          {(space) => (
+                        <For each={storage.sections}>
+                          {(section) => (
                             <div
-                              class={cn("relative border-neutral-400 dark:border-neutral-500", {
+                              class={cn("group/inv relative border-neutral-400 dark:border-neutral-500", {
                                 "border-r last:border-r-0": storage.variant === "vertical",
                                 "border-b last:border-b-0": storage.variant === "horizontal",
                                 // Red for spaces with products below minimum stock
-                                "bg-rose-200 dark:bg-rose-600": space.products.some((p) => p.stock < p.minStock),
+                                "bg-rose-200 dark:bg-rose-600": section.spaces.some((space) =>
+                                  space.products.some((p) => p.stock < p.minStock),
+                                ),
                                 // Orange for spaces with products near minimum stock
                                 "bg-orange-200 dark:bg-orange-600":
-                                  !space.products.some((p) => p.stock < p.minStock) &&
-                                  space.products.some((p) => p.stock < p.minStock * 1.5),
+                                  !section.spaces.some((space) => space.products.some((p) => p.stock < p.minStock)) &&
+                                  section.spaces.some((space) =>
+                                    space.products.some((p) => p.stock < p.minStock * 1.5),
+                                  ),
                                 // Yellow for spaces with products below reorder point
                                 "bg-yellow-200 dark:bg-yellow-600":
-                                  !space.products.some((p) => p.stock < p.minStock * 1.5) &&
-                                  space.products.some((p) => p.stock < (p.reorderPoint ?? 0)),
+                                  !section.spaces.some((space) =>
+                                    space.products.some((p) => p.stock < p.minStock * 1.5),
+                                  ) &&
+                                  section.spaces.some((space) =>
+                                    space.products.some((p) => p.stock < (p.reorderPoint ?? 0)),
+                                  ),
                                 // Lime for spaces with products above reorder point but below max
                                 "bg-lime-200 dark:bg-lime-600":
-                                  space.products.length > 0 &&
-                                  space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)) &&
-                                  space.products.some((p) => p.stock < (p.maxStock ?? Infinity)),
+                                  section.spaces.some((space) => space.products.length > 0) &&
+                                  section.spaces.every((space) =>
+                                    space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
+                                  ) &&
+                                  section.spaces.some((space) =>
+                                    space.products.some((p) => p.stock < (p.maxStock ?? Infinity)),
+                                  ),
                                 // Emerald for spaces with optimal stock levels
                                 "bg-emerald-200 dark:bg-emerald-600":
-                                  space.products.length > 0 &&
-                                  space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
-                                // Default color for empty spaces
-                                "bg-muted-foreground/[0.05] text-muted-foreground": space.products.length === 0,
+                                  section.spaces.some((space) => space.products.length > 0) &&
+                                  section.spaces.every((space) =>
+                                    space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
+                                  ),
+                                // Default color for empty spaces or sections
+                                "bg-muted-foreground/[0.05] text-muted-foreground": section.spaces.every(
+                                  (space) => space.products.length === 0,
+                                ),
                               })}
                               style={
                                 storage.variant === "horizontal"
                                   ? {
                                       width: "100%",
-                                      height: `calc(100%/${storage.spaces.length})`,
+                                      height: `calc(100%/${storage.sections.length})`,
                                     }
                                   : {
-                                      width: `${storage.boundingBox.width / storage.spaces.length}px`,
+                                      width: `${storage.boundingBox.width / storage.sections.length}px`,
                                       height: "100%",
                                     }
                               }

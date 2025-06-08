@@ -15,6 +15,20 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
       area: true,
       type: true,
+      secs: {
+        with: {
+          spaces: {
+            with: {
+              prs: {
+                with: {
+                  pr: true,
+                },
+              },
+              labels: true,
+            },
+          },
+        },
+      },
     });
 
     const create = (input: InferInput<typeof StorageCreateSchema>) =>

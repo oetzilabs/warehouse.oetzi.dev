@@ -10,16 +10,12 @@ import { Accessor, createContext, createMemo, createSignal, onMount, ParentProps
 export const UserContext = createContext<{
   user: Accessor<UserInfo | null>;
   session: Accessor<SessionInfo | null>;
-  currentOrganization: Accessor<OrganizationInfo | null>;
-  currentWarehouse: Accessor<WarehouseInfo | null>;
-  currentFacility: Accessor<FacilityInfo | null>;
+  currentOrganization: Accessor<SessionInfo["org"] | null>;
   ready: Accessor<boolean>;
 }>({
   user: () => null,
   session: () => null,
   currentOrganization: () => null,
-  currentWarehouse: () => null,
-  currentFacility: () => null,
   ready: () => false,
 });
 
@@ -62,22 +58,6 @@ export function UserProvider(props: ParentProps) {
     return session.org;
   });
 
-  const currentWarehouse = createMemo(() => {
-    const session = currentSession();
-    if (!session) {
-      return null;
-    }
-    return session.wh;
-  });
-
-  const currentFacility = createMemo(() => {
-    const session = currentSession();
-    if (!session) {
-      return null;
-    }
-    return session.fc;
-  });
-
   const [ready, setReady] = createSignal(false);
 
   onMount(() => {
@@ -88,9 +68,7 @@ export function UserProvider(props: ParentProps) {
     <UserContext.Provider
       value={{
         user,
-        currentFacility,
         currentOrganization,
-        currentWarehouse,
         session: currentSession,
         ready,
       }}

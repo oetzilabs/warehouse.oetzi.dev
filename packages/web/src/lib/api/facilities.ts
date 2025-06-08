@@ -73,7 +73,7 @@ export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
       if (!wh) {
         return yield* Effect.fail(new Error("Warehouse not found"));
       }
-      if (!wh.fcs.find((f) => f.id === fcid)) {
+      if (!wh.facilities.find((f) => f.id === fcid)) {
         return yield* Effect.fail(new WarehouseDoesNotContainFacility({ id: whid, fcid }));
       }
       return yield* fcService.findById(fcid);
