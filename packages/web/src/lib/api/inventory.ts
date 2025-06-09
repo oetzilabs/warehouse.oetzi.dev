@@ -1,4 +1,5 @@
 import { query, redirect } from "@solidjs/router";
+import { InventoryLive, InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Effect } from "effect";
@@ -27,10 +28,10 @@ export const getInventory = query(async () => {
   }
   const inventory = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
-      const info = yield* service.getInventory(orgId);
+      const service = yield* _(InventoryService);
+      const info = yield* service.statistics(orgId);
       return info;
-    }).pipe(Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(InventoryLive)),
   );
   return inventory;
 }, "organization-inventory");
