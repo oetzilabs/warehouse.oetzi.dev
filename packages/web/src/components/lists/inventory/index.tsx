@@ -8,6 +8,8 @@ import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
+import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
+import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
@@ -35,20 +37,26 @@ export const InventoryList = (props: InventoryListProps) => {
       {
         field: "name",
         label: "Name",
-        fn: (a: OrganizationInventoryInfo["warehouses"][0], b: OrganizationInventoryInfo["warehouses"][0]) => {
-          return a.name.localeCompare(b.name);
+        fn: (
+          a: OrganizationInventoryInfo["warehouses"][number],
+          b: OrganizationInventoryInfo["warehouses"][number],
+        ) => {
+          return a.warehouse.name.localeCompare(b.warehouse.name);
         },
       },
       {
         field: "capacity",
         label: "Total Capacity",
-        fn: (a: OrganizationInventoryInfo["warehouses"][0], b: OrganizationInventoryInfo["warehouses"][0]) => {
-          const aCapacity = a.facilities.reduce(
+        fn: (
+          a: OrganizationInventoryInfo["warehouses"][number],
+          b: OrganizationInventoryInfo["warehouses"][number],
+        ) => {
+          const aCapacity = a.warehouse.facilities.reduce(
             (acc, f) =>
               acc + f.areas.reduce((acc2, ar) => acc2 + ar.storages.reduce((acc3, s) => acc3 + s.capacity, 0), 0),
             0,
           );
-          const bCapacity = b.facilities.reduce(
+          const bCapacity = b.warehouse.facilities.reduce(
             (acc, f) =>
               acc + f.areas.reduce((acc2, ar) => acc2 + ar.storages.reduce((acc3, s) => acc3 + s.capacity, 0), 0),
             0,
@@ -57,9 +65,9 @@ export const InventoryList = (props: InventoryListProps) => {
         },
       },
     ],
-  } as FilterConfig<OrganizationInventoryInfo["warehouses"][0]>["sort"];
+  } as FilterConfig<OrganizationInventoryInfo["warehouses"][number]>["sort"];
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<OrganizationInventoryInfo["warehouses"][0]>>({
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<OrganizationInventoryInfo["warehouses"][number]>>({
     disabled: () => props.inventory().warehouses.length === 0,
     dateRange: {
       start: new Date(),
@@ -68,8 +76,8 @@ export const InventoryList = (props: InventoryListProps) => {
     },
     search: {
       term: dsearch(),
-      fields: ["name", "description"],
-      fuseOptions: { keys: ["name", "description"] },
+      fields: ["warehouse.name", "warehouse.description"],
+      fuseOptions: { keys: ["warehouse.name", "warehouse.description"] },
     },
     sort: defaultSort,
     filter: {
@@ -90,46 +98,99 @@ export const InventoryList = (props: InventoryListProps) => {
 
   const filteredData = useFilter(() => props.inventory().warehouses, filterConfig);
 
-  const renderWarehouseCard = (warehouse: OrganizationInventoryInfo["warehouses"][0]) => {
-    const totalCapacity = warehouse.facilities.reduce(
-      (acc, f) => acc + f.areas.reduce((acc2, ar) => acc2 + ar.storages.reduce((acc3, s) => acc3 + s.capacity, 0), 0),
-      0,
-    );
-    const currentOccupancy = warehouse.facilities.reduce(
-      (acc, f) =>
-        acc +
-        f.areas.reduce((acc2, ar) => acc2 + ar.storages.reduce((acc3, s) => acc3 + (s.currentOccupancy || 0), 0), 0),
-      0,
-    );
-    const occupancyPercentage = (currentOccupancy / totalCapacity) * 100;
+  const calculateStorageCapacity = (storage: StorageInfo): number => {
+    let capacity = storage.capacity || 0;
+    if (storage.children && storage.children.length > 0) {
+      capacity += storage.children.reduce((acc: number, child: any) => acc + calculateStorageCapacity(child), 0);
+    }
+    return capacity;
+  };
 
-    const facilityAlerts = (facility: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]) => {
-      const lowStockProducts = new Map<
-        string,
-        {
-          product: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][number]["storages"][number]["sections"][number]["spaces"][number]["products"][number];
-          count: number;
-        }
-      >();
+  const calculateStorageOccupancy = (storage: StorageInfo): number => {
+    let occupancy = storage.products?.length ?? 0;
+    if (storage.children && storage.children.length > 0) {
+      occupancy += (storage.children as StorageInfo[]).reduce((acc: number, child) => {
+        if (!child) return acc;
+        return acc + calculateStorageOccupancy(child as StorageInfo);
+      }, 0);
+    }
+    return occupancy;
+  };
 
-      facility.areas
-        .flatMap((area) =>
-          area.storages.flatMap((storage) =>
-            storage.sections.flatMap((section) =>
-              section.spaces.flatMap((space) => space.products.filter((product) => product.stock < product.minStock)),
-            ),
-          ),
-        )
-        .forEach((product) => {
-          if (lowStockProducts.has(product.id)) {
-            lowStockProducts.get(product.id)!.count++;
+  const calculateProductStock = (storage: StorageInfo, productId: string): number => {
+    // Count occurrences in current storage
+    const currentCount = storage.products?.filter((p) => p.product.id === productId).length ?? 0;
+
+    // Add counts from children storages recursively
+    const childrenCount =
+      storage.children?.reduce((acc, child) => {
+        return acc + calculateProductStock(child as StorageInfo, productId);
+      }, 0) ?? 0;
+
+    return currentCount + childrenCount;
+  };
+
+  const facilityAlerts = (
+    facility: OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number],
+  ) => {
+    const lowStockProducts = new Map<
+      string,
+      {
+        product: ProductInfo;
+        count: number;
+      }
+    >();
+
+    const processStorage = (storage: StorageInfo) => {
+      // Process current storage's products
+      storage.products?.forEach((p) => {
+        const totalStock = calculateProductStock(storage, p.product.id);
+        if (totalStock < p.product.minimumStock) {
+          const existing = lowStockProducts.get(p.product.id);
+          if (existing) {
+            existing.count = totalStock; // Update with total stock count
           } else {
-            lowStockProducts.set(product.id, { product, count: 1 });
+            lowStockProducts.set(p.product.id, { product: p.product, count: totalStock });
           }
-        });
+        }
+      });
 
-      return Array.from(lowStockProducts.values()).sort((a, b) => b.count - a.count);
+      // Recursively process children
+      storage.children?.forEach(processStorage);
     };
+
+    // Process each storage in each area
+    facility.areas.forEach((area) => {
+      area.storages.forEach(processStorage);
+    });
+
+    return Array.from(lowStockProducts.values()).sort((a, b) => a.count - b.count);
+  };
+
+  const renderWarehouseCard = (warehouse: OrganizationInventoryInfo["warehouses"][number]) => {
+    const totalCapacity =
+      warehouse.warehouse.facilities?.reduce(
+        (acc, f) =>
+          acc +
+          (f.areas?.reduce(
+            (acc2, ar) =>
+              acc2 + (ar.storages?.reduce((acc3, s) => acc3 + (s ? calculateStorageCapacity(s) : 0), 0) ?? 0),
+            0,
+          ) ?? 0),
+        0,
+      ) ?? 0;
+
+    const currentOccupancy =
+      warehouse.warehouse.facilities?.reduce(
+        (acc, f) =>
+          acc +
+          (f.areas?.reduce(
+            (acc2, ar) =>
+              acc2 + (ar.storages?.reduce((acc3, s) => acc3 + (s ? calculateStorageOccupancy(s) : 0), 0) ?? 0),
+            0,
+          ) ?? 0),
+        0,
+      ) ?? 0;
 
     const progressColor = (value: number, maxValue: number) => {
       const ratio = value / maxValue;
@@ -150,17 +211,70 @@ export const InventoryList = (props: InventoryListProps) => {
       return "bg-muted-foreground";
     };
 
+    const renderProductStats = () => {
+      const productStats = Array.from(props.inventory().stats.productCounts.values())
+        .filter((product) => {
+          // Filter products that are in this warehouse's storages
+          return warehouse.warehouse.facilities.some((f) =>
+            f.areas.some((a) => a.storages.some((s) => s.products.some((p) => p.product.id === product.id))),
+          );
+        })
+        .map((product) => {
+          // Calculate total stock for this product in this warehouse
+          const totalStock = warehouse.warehouse.facilities.reduce(
+            (warehouseAcc, f) =>
+              warehouseAcc +
+              f.areas.reduce(
+                (facilityAcc, a) =>
+                  facilityAcc + a.storages.reduce((areaAcc, s) => areaAcc + calculateProductStock(s, product.id), 0),
+                0,
+              ),
+            0,
+          );
+
+          return {
+            ...product,
+            count: totalStock,
+          };
+        })
+        .sort((a, b) => b.count - a.count);
+
+      return (
+        <div class="flex flex-col gap-2 p-4 border-t">
+          <div class="flex flex-row items-center justify-between">
+            <h5 class="text-sm font-medium">Product Inventory</h5>
+            <Badge variant="outline">{productStats.length} products</Badge>
+          </div>
+          <div class="flex flex-col gap-2">
+            <For each={productStats.slice(0, 5)}>
+              {(product) => (
+                <div class="flex flex-row items-center justify-between gap-2">
+                  <span class="text-sm truncate">{product.name}</span>
+                  <span class="text-sm font-['Geist_Mono_Variable'] tabular-nums">{product.count}</span>
+                </div>
+              )}
+            </For>
+            <Show when={productStats.length > 5}>
+              <Button variant="ghost" size="sm" as={A} href={`/warehouse/${warehouse.warehouse.id}/inventory`}>
+                Show all {productStats.length} products
+              </Button>
+            </Show>
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div class="flex flex-col">
         <div class="flex justify-between items-center p-4 bg-muted-foreground/5 border-b">
-          <h3 class="font-semibold">{warehouse.name}</h3>
+          <h3 class="font-semibold">{warehouse.warehouse.name}</h3>
           <div class="flex flex-row gap-2">
             <Button
               size="sm"
               variant="outline"
               class="bg-background place-self-start"
               as={A}
-              href={`/warehouse/${warehouse.id}/facility/new`}
+              href={`/warehouse/${warehouse.warehouse.id}/facility/new`}
             >
               <Plus class="size-4" />
               Add Facility
@@ -168,7 +282,7 @@ export const InventoryList = (props: InventoryListProps) => {
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          <For each={warehouse.facilities}>
+          <For each={warehouse.warehouse.facilities}>
             {(facility) => (
               <div class="border rounded-lg flex flex-col overflow-clip">
                 <div class="flex flex-row items-center justify-between p-4 border-b gap-1">
@@ -182,7 +296,7 @@ export const InventoryList = (props: InventoryListProps) => {
                       variant="outline"
                       class="bg-background place-self-start"
                       as={A}
-                      href={`/warehouse/${warehouse.id}/facility/${facility.id}/inventory`}
+                      href={`/warehouse/${warehouse.warehouse.id}/facility/${facility.id}/inventory`}
                     >
                       Show Map
                       <ArrowUpRight class="size-4" />
@@ -192,6 +306,7 @@ export const InventoryList = (props: InventoryListProps) => {
                 <div class="flex flex-col w-full aspect-video overflow-clip bg-muted-foreground/5 border-b">
                   <FacilityImage facility={() => facility} />
                 </div>
+                {renderProductStats()}
                 <Show
                   when={facilityAlerts(facility).length > 0 && facilityAlerts(facility)}
                   fallback={<div class="w-full flex flex-col p-4"></div>}
@@ -217,14 +332,14 @@ export const InventoryList = (props: InventoryListProps) => {
                                     <Package class="!size-4 shrink-0" />
                                     <span class="truncate w-full">{alert.product.name}</span>
                                     <span class="font-['Geist_Mono_Variable'] w-min">
-                                      {alert.count}/{alert.product.maxStock ?? 0}
+                                      {alert.count}/{alert.product.maximumStock ?? 0}
                                     </span>
                                   </div>
                                   <div class="w-full flex flex-col gap-2">
                                     <Progress
                                       value={alert.count}
-                                      maxValue={alert.product.maxStock ?? 0}
-                                      color={progressColor(alert.count, alert.product.maxStock ?? 0)}
+                                      maxValue={alert.product.maximumStock ?? 0}
+                                      color={progressColor(alert.count, alert.product.maximumStock ?? 0)}
                                     />
                                   </div>
                                 </A>

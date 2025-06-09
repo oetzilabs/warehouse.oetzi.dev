@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import Fuse, { IFuseOptions } from "fuse.js"; // Import Fuse
 import { Accessor, createMemo } from "solid-js";
+import { Paths } from "./utils";
 
 dayjs.extend(isBetween);
 
@@ -40,7 +41,7 @@ export type FilterConfig<T> = {
   };
   search: {
     term: string;
-    fields?: (keyof T)[];
+    fields?: Paths<T>[];
     // Add Fuse.js options here
     fuseOptions?: IFuseOptions<T>;
   };
@@ -174,6 +175,7 @@ export function useSimpleDateFilter<T extends WithSimpleDates>(data: Accessor<T[
       // distance: 100, // Max distance from location
       // maxPatternLength: 32,
       minMatchCharLength: 1,
+      // @ts-ignore
       keys: config.search.fields ? config.search.fields.map(String) : Object.keys(list[0] || {}), // Use specified fields or all keys
       ...config.search.fuseOptions, // Allow overriding options
     };

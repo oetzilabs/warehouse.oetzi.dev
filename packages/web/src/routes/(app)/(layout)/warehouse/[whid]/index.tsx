@@ -54,11 +54,11 @@ export default function WarehousePage() {
                     <div class="flex flex-col gap-2">
                       <div class="flex justify-between text-sm">
                         <span>Total Areas:</span>
-                        <span>{facility.ars.length}</span>
+                        <span>{facility.areas.length}</span>
                       </div>
                       <div class="flex justify-between text-sm">
                         <span>Total Storage Units:</span>
-                        <span>{facility.ars.reduce((acc, area) => acc + area.strs.length, 0)}</span>
+                        <span>{facility.areas.reduce((acc, area) => acc + area.storages.length, 0)}</span>
                       </div>
                     </div>
                   </div>

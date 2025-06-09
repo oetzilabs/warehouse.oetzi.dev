@@ -31,7 +31,7 @@ export const warehouse_area_relations = relations(TB_warehouse_areas, ({ one, ma
     fields: [TB_warehouse_areas.warehouse_facility_id],
     references: [TB_warehouse_facilities.id],
   }),
-  strs: many(TB_storages),
+  storages: many(TB_storages),
 }));
 
 export type WarehouseAreaSelect = typeof TB_warehouse_areas.$inferSelect;

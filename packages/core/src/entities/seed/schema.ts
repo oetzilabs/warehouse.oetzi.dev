@@ -3,6 +3,9 @@ import {
   array,
   boolean,
   date,
+  GenericSchema,
+  InferInput,
+  lazy,
   literal,
   nullable,
   number,
@@ -22,7 +25,6 @@ import {
   OrderProductCreateSchema,
   OrganizationCustomerOrderCreateSchema,
   OrganizationSupplierOrderCreateSchema,
-  StorageSectionCreateSchema,
   SupplierCreateSchema,
   TaxGroupCountryRatesCreateSchema,
   TaxGroupCreateSchema,
@@ -40,7 +42,6 @@ import { ProductLabelCreateSchema } from "../../drizzle/sql/schemas/products/pro
 import { ProductCreateWithDateTransformSchema } from "../../drizzle/sql/schemas/products/products";
 import { SaleCreateSchema } from "../../drizzle/sql/schemas/sales/sales";
 import { SaleItemCreateSchema } from "../../drizzle/sql/schemas/sales/sales_items";
-import { StorageSpaceCreateSchema } from "../../drizzle/sql/schemas/storages/storage_space";
 import { StorageTypeCreateSchema } from "../../drizzle/sql/schemas/storages/storage_types";
 import { StorageCreateSchema } from "../../drizzle/sql/schemas/storages/storages";
 import { UserCreateSchema } from "../../drizzle/sql/schemas/users/users";
@@ -73,28 +74,31 @@ export const WeightSchema = object({
   unit: string(),
 });
 
-export const StorageSpaceProductSchema = object({
+export const StorageProductSchema = object({
   product_id: string(),
   id: prefixed_cuid2,
 });
 
-export const StorageSpaceSchema = object({
-  ...omit(StorageSpaceCreateSchema, ["sectionId"]).entries,
+const strschema = object({
+  ...omit(StorageCreateSchema, ["warehouseAreaId", "parentId"]).entries,
+});
+
+type Storage = InferInput<typeof strschema> & {
+  id: string;
+  products: InferInput<typeof StorageProductSchema>[];
+  labels: string[];
+  children: Storage[];
+  parentId: string | null;
+};
+
+// Replace StorageSpaceSchema and StorageSectionSchema with recursive StorageSchema
+export const StorageSchema: GenericSchema<Storage> = object({
+  ...omit(StorageCreateSchema, ["warehouseAreaId", "parentId"]).entries,
   id: prefixed_cuid2,
+  products: array(StorageProductSchema),
+  parentId: nullable(prefixed_cuid2), // recursive reference to parent storage
   labels: array(string()), // references to label IDs
-  products: array(StorageSpaceProductSchema), // references to product IDs
-});
-
-export const StorageSectionSchema = object({
-  ...omit(StorageSectionCreateSchema, ["storageId"]).entries,
-  id: prefixed_cuid2,
-  spaces: array(StorageSpaceSchema),
-});
-
-export const StorageSchema = object({
-  ...omit(StorageCreateSchema, ["warehouseAreaId"]).entries,
-  id: prefixed_cuid2,
-  sections: array(StorageSectionSchema),
+  children: array(lazy(() => StorageSchema)), // recursive reference to child storages
 });
 
 export const WarehouseAreaSchema = object({

@@ -641,272 +641,78 @@
                         {
                           "id": "storage_cpdcggmd0amupzy8iaqcobzj",
                           "typeId": "storagetype_js2e1ykdt9738djzm7v9v3k8",
-                          "name": "storage 1",
-                          "description": "this is storage 1",
-                          "capacity": 0,
-                          "currentOccupancy": 0,
+                          "name": "A1",
+                          "description": "Rack A1",
+                          "capacity": 1000,
+                          "parentId": null,
+                          "deletedAt": null,
+                          "variant": "horizontal",
+                          "barcode": "A1",
                           "bounding_box": {
                             "x": 0,
                             "y": 0,
                             "width": 100,
-                            "length": 500,
-                            "height": 300
+                            "height": 300,
+                            "length": 500
                           },
-                          "sections": [
+                          "labels": [],
+                          "products": [],
+                          "children": [
                             {
-                              "id": "storagesection_qt76w1w619k4z2jdh4n2fb1v",
-                              "name": "A1",
-                              "barcode": "A1",
-                              "dimensions": {
+                              "id": "storage_neui9x4uhdc3ov5zbog3z4xx",
+                              "typeId": "storagetype_m2semzowvyisprcl0rrp5fgd",
+                              "name": "A1-1",
+                              "description": "Bin A1-1",
+                              "capacity": 100,
+                              "variant": "horizontal",
+                              "bounding_box": {
+                                "x": 0,
+                                "y": 0,
                                 "width": 100,
-                                "height": 500,
-                                "length": 500
+                                "height": 300
                               },
-                              "spaces": [
+                              "barcode": "A1-1",
+                              "parentId": "storage_cpdcggmd0amupzy8iaqcobzj",
+                              "labels": [],
+                              "products": [
                                 {
-                                  "id": "storagespace_neui9x4uhdc3ov5zbog3z4xx",
-                                  "name": "A1-1",
-                                  "barcode": "A1-1",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": [
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_vbs3ktvuvu04rpnxso79apfu"
-                                    }
-                                  ]
+                                  "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                  "id": "sspp_x2h0raiptix3h3ulcboosxn7"
                                 },
                                 {
-                                  "id": "storagespace_jvfl0b6lpn360rwotw5r9mjv",
-                                  "name": "A1-2",
-                                  "barcode": "A1-2",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": [
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
-                                    },
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_gqhktb7avcu3vckbmaf7v9kw"
-                                    },
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_vp0lrhh4eotudd2zddrr286p"
-                                    },
-                                    {
-                                      "product_id": "prod_rljvumttoz3f2v122kw7bf4x",
-                                      "id": "sspp_jgckb7jbaq6il8na7rap7uq8"
-                                    }
-                                  ]
+                                  "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                  "id": "sspp_qel1yxrtdfxkm6aqgnsqlzsp"
                                 },
                                 {
-                                  "id": "storagespace_pz51twfrepl2afomq4s0e0nh",
-                                  "name": "A1-3",
-                                  "barcode": "A1-3",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": []
+                                  "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
+                                  "id": "sspp_rfajj5wfekpzibmgi60zgv1o"
                                 }
-                              ]
+                              ],
+                              "children": []
                             },
                             {
-                              "id": "storagesection_cjtblse49zdy752tf042ockf",
-                              "name": "A2",
-                              "barcode": "A2",
-                              "dimensions": {
+                              "id": "storage_jvfl0b6lpn360rwotw5r9mjv",
+                              "typeId": "storagetype_m2semzowvyisprcl0rrp5fgd",
+                              "name": "A1-2",
+                              "description": "Bin A1-2",
+                              "capacity": 100,
+                              "variant": "horizontal",
+                              "barcode": "A1-2",
+                              "parentId": "storage_cpdcggmd0amupzy8iaqcobzj",
+                              "labels": [],
+                              "bounding_box": {
+                                "x": 0,
+                                "y": 0,
                                 "width": 100,
-                                "height": 500,
-                                "length": 500
+                                "height": 300
                               },
-                              "spaces": [
+                              "products": [
                                 {
-                                  "id": "storagespace_gf7uf3shhsg2lmg976vdaf01",
-                                  "name": "A2-1",
-                                  "barcode": "A2-1",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": [
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "id": "storagespace_z78dfv6zz5hmp2urkaf72fbd",
-                                  "name": "A2-2",
-                                  "barcode": "A2-2",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": [
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "id": "storagespace_bq9ysqxfue1svga4teud6s6m",
-                                  "name": "A2-3",
-                                  "barcode": "A2-3",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": [
-                                    {
-                                      "product_id": "prod_uzujt3nrndmn90yyslc61wqv",
-                                      "id": "sspp_x2h0raiptix3h3ulcboosxn7"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "id": "storagespace_xlfqidm2rr9h2qsap3rnu1vw",
-                                  "name": "A2-4",
-                                  "barcode": "A2-4",
-                                  "dimensions": null,
-                                  "labels": [],
-                                  "products": []
+                                  "product_id": "prod_rljvumttoz3f2v122kw7bf4x",
+                                  "id": "sspp_jgckb7jbaq6il8na7rap7uq8"
                                 }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "id": "storage_s2ryhzlo7tm52thrrku9bai4",
-                          "typeId": "storagetype_js2e1ykdt9738djzm7v9v3k8",
-                          "variant": "vertical",
-                          "name": "storage 2",
-                          "description": "this is storage 2",
-                          "capacity": 0,
-                          "currentOccupancy": 0,
-                          "bounding_box": {
-                            "x": 200,
-                            "y": 0,
-                            "width": 300,
-                            "length": 80,
-                            "height": 300
-                          },
-                          "sections": [
-                            {
-                              "id": "storagesection_l0zkkq9cyecnynt8st6mezt1",
-                              "name": "B1",
-                              "barcode": "B1",
-                              "dimensions": {
-                                "width": 500,
-                                "height": 300,
-                                "length": 100
-                              },
-                              "spaces": [
-                                {
-                                  "id": "storagespace_udlsmd605kn8rw6l411m9lyq",
-                                  "name": "B1-1",
-                                  "barcode": "B1-1",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                },
-                                {
-                                  "id": "storagespace_i2f47adado0smzbl3qd27ald",
-                                  "name": "B1-2",
-                                  "barcode": "B1-2",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                },
-                                {
-                                  "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
-                                  "name": "B1-3",
-                                  "barcode": "B1-3",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                },
-                                {
-                                  "id": "storagespace_cvb5x753wxmsqke7ea5cjd0j",
-                                  "name": "B1-4",
-                                  "barcode": "B1-4",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "storagesection_yiz8qx17w5g1lah5cb9dd1ss",
-                              "name": "B2",
-                              "barcode": "B2",
-                              "dimensions": {
-                                "width": 500,
-                                "height": 300,
-                                "length": 100
-                              },
-                              "spaces": [
-                                {
-                                  "id": "storagespace_nuebzcl1tazrph0kc900do7s",
-                                  "name": "B2-1",
-                                  "barcode": "B2-1",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                },
-                                {
-                                  "id": "storagespace_o38732moogtlfazxodmnnwyi",
-                                  "name": "B2-2",
-                                  "barcode": "B2-2",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                },
-                                {
-                                  "id": "storagespace_mqzvrukgogah2vwey9x9mrdf",
-                                  "name": "B2-3",
-                                  "barcode": "B2-3",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                },
-                                {
-                                  "id": "storagespace_xhja2yrxnecpnrshvxfq3fk2",
-                                  "name": "B2-4",
-                                  "barcode": "B2-4",
-                                  "dimensions": {
-                                    "width": 100,
-                                    "height": 125,
-                                    "length": 500
-                                  },
-                                  "labels": [],
-                                  "products": []
-                                }
-                              ]
+                              ],
+                              "children": []
                             }
                           ]
                         }

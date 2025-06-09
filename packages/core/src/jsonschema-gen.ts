@@ -3,7 +3,7 @@ import { BunContext, BunFileSystem, BunRuntime } from "@effect/platform-bun";
 import { toJSONSchema, ToJSONSchemaOptions } from "@gcornut/valibot-json-schema";
 import { Cause, Chunk, Console, Effect, Exit } from "effect";
 import { object, string } from "valibot";
-import { SeedDataSchema } from "./entities/seed/schema";
+import { SeedDataSchema, StorageSchema } from "./entities/seed/schema";
 
 const program2 = Effect.gen(function* (_) {
   const fs = yield* _(FileSystem.FileSystem);
@@ -17,6 +17,11 @@ const program2 = Effect.gen(function* (_) {
       instance: () => ({}),
       file: () => ({}),
       blob: () => ({}),
+      // lazy: (x) => x,
+    },
+    definitions: {
+      // @ts-ignore
+      StorageSchema,
     },
   } satisfies ToJSONSchemaOptions;
   const schema = toJSONSchema({

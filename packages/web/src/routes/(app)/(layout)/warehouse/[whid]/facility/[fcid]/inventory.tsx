@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getFacilityByWarehouseId } from "@/lib/api/facilities";
 import { A, createAsync, RouteDefinition, useParams } from "@solidjs/router";
+import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
+import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Container from "lucide-solid/icons/container";
 import Plus from "lucide-solid/icons/plus";
@@ -21,20 +23,44 @@ export default function InventoryPage() {
   const facility = createAsync(() => getFacilityByWarehouseId(params.whid, params.fcid));
 
   const cleanupProductsListNoDuplicates = (
-    products: NonNullable<
-      Awaited<ReturnType<typeof getFacilityByWarehouseId>>
-    >["areas"][number]["storages"][number]["sections"][number]["spaces"][number]["products"],
-  ): Array<(typeof products)[number] & { count: number }> => {
-    const result: Array<(typeof products)[number] & { count: number }> = [];
+    products: StorageInfo["products"],
+  ): Array<(typeof products)[number]["product"] & { count: number }> => {
+    const result: Array<(typeof products)[number]["product"] & { count: number }> = [];
     for (const p of products) {
-      const existing = result.find((r) => r.id === p.id);
+      const existing = result.find((r) => r.id === p.product.id);
       if (!existing) {
-        result.push({ ...p, count: 1 });
+        result.push({ ...p.product, count: 1 });
       } else {
         existing.count++;
       }
     }
     return result;
+  };
+
+  const renderStorageContent = (storage: StorageInfo) => {
+    return (
+      <div class="flex flex-row border-r last:border-r-0 h-full w-full">
+        <div class="flex flex-row w-full">
+          <Show
+            when={storage.children?.length > 0}
+            fallback={
+              <div class="flex flex-col w-full select-none">
+                <For each={cleanupProductsListNoDuplicates(storage.products || [])}>
+                  {(p) => (
+                    <div class="flex flex-row gap-2 w-full p-4 select-none hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                      <span>{p.count}x</span>
+                      <span class="font-medium truncate">{p.name}</span>
+                    </div>
+                  )}
+                </For>
+              </div>
+            }
+          >
+            <For each={storage.children}>{renderStorageContent}</For>
+          </Show>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -73,41 +99,10 @@ export default function InventoryPage() {
                         <div
                           class="flex flex-row border w-full"
                           style={{
-                            height: `${storage.boundingBox[storage.variant === "vertical" ? "width" : "height"]}px`,
+                            height: `${storage.bounding_box[storage.variant === "vertical" ? "width" : "height"]}px`,
                           }}
                         >
-                          <For each={storage.sections}>
-                            {(section) => (
-                              <div
-                                class="flex gap-2 border-r last:border-r-0 h-full"
-                                style={{
-                                  width: `calc(100% / ${storage.sections.length})`,
-                                }}
-                              >
-                                <div class="flex flex-col w-full">
-                                  <For each={section.spaces}>
-                                    {(space) => (
-                                      <div
-                                        class="flex flex-col w-full select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 border-b last:border-b-0"
-                                        style={{
-                                          height: space.dimensions ? `${space.dimensions.height}px` : "100%",
-                                        }}
-                                      >
-                                        <For each={cleanupProductsListNoDuplicates(space.products)}>
-                                          {(p) => (
-                                            <div class="flex flex-row gap-2 w-full p-4 select-none hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                              <span>{p.count}x</span>
-                                              <span class="font-medium truncate">{p.name}</span>
-                                            </div>
-                                          )}
-                                        </For>
-                                      </div>
-                                    )}
-                                  </For>
-                                </div>
-                              </div>
-                            )}
-                          </For>
+                          {renderStorageContent(storage)}
                         </div>
                       </div>
                     </div>

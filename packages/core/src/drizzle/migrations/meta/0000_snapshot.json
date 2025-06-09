@@ -1,5 +1,5 @@
 {
-  "id": "36ec2121-5913-43d8-87a7-3e97802d9f6e",
+  "id": "dc37f4d5-468a-420a-8ffc-13e7ec36d659",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -4477,11 +4477,17 @@
       "name": "storages",
       "schema": "warehouse",
       "columns": {
+        "parent_id": {
+          "name": "parent_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "warehouse_area_id": {
           "name": "warehouse_area_id",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "type_id": {
           "name": "type_id",
@@ -4515,18 +4521,17 @@
           "notNull": true,
           "default": "'horizontal'"
         },
-        "current_occupancy": {
-          "name": "current_occupancy",
-          "type": "integer",
+        "barcode": {
+          "name": "barcode",
+          "type": "varchar(128)",
           "primaryKey": false,
-          "notNull": false,
-          "default": 0
+          "notNull": false
         },
         "bounding_box": {
           "name": "bounding_box",
           "type": "json",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "id": {
           "name": "id",
@@ -4556,6 +4561,20 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "storages_parent_id_storages_id_fk": {
+          "name": "storages_parent_id_storages_id_fk",
+          "tableFrom": "storages",
+          "tableTo": "storages",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "storages_warehouse_area_id_warehouse_areas_id_fk": {
           "name": "storages_warehouse_area_id_warehouse_areas_id_fk",
           "tableFrom": "storages",
@@ -4586,7 +4605,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "storages_barcode_unique": {
+          "name": "storages_barcode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "barcode"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4647,104 +4674,12 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.storage_spaces": {
-      "name": "storage_spaces",
-      "schema": "warehouse",
-      "columns": {
-        "storage_id": {
-          "name": "storage_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "barcode": {
-          "name": "barcode",
-          "type": "varchar(128)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "dimensions": {
-          "name": "dimensions",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "product_capacity": {
-          "name": "product_capacity",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "storage_spaces_storage_id_storages_id_fk": {
-          "name": "storage_spaces_storage_id_storages_id_fk",
-          "tableFrom": "storage_spaces",
-          "tableTo": "storages",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "storage_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "storage_spaces_barcode_unique": {
-          "name": "storage_spaces_barcode_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "barcode"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "warehouse.storage_spaces_to_labels": {
       "name": "storage_spaces_to_labels",
       "schema": "warehouse",
       "columns": {
-        "storage_space_id": {
-          "name": "storage_space_id",
+        "storage_id": {
+          "name": "storage_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -4758,13 +4693,13 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "storage_spaces_to_labels_storage_space_id_storage_spaces_id_fk": {
-          "name": "storage_spaces_to_labels_storage_space_id_storage_spaces_id_fk",
+        "storage_spaces_to_labels_storage_id_storages_id_fk": {
+          "name": "storage_spaces_to_labels_storage_id_storages_id_fk",
           "tableFrom": "storage_spaces_to_labels",
-          "tableTo": "storage_spaces",
+          "tableTo": "storages",
           "schemaTo": "warehouse",
           "columnsFrom": [
-            "storage_space_id"
+            "storage_id"
           ],
           "columnsTo": [
             "id"
@@ -4788,10 +4723,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "storage_spaces_to_labels_storage_space_id_label_id_pk": {
-          "name": "storage_spaces_to_labels_storage_space_id_label_id_pk",
+        "storage_spaces_to_labels_storage_id_label_id_pk": {
+          "name": "storage_spaces_to_labels_storage_id_label_id_pk",
           "columns": [
-            "storage_space_id",
+            "storage_id",
             "label_id"
           ]
         }
@@ -4937,8 +4872,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "warehouse.storage_space_to_products": {
-      "name": "storage_space_to_products",
+    "warehouse.storage_to_products": {
+      "name": "storage_to_products",
       "schema": "warehouse",
       "columns": {
         "id": {
@@ -4953,8 +4888,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "storage_space_id": {
-          "name": "storage_space_id",
+        "storage_id": {
+          "name": "storage_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -4962,9 +4897,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "storage_space_to_products_product_id_products_id_fk": {
-          "name": "storage_space_to_products_product_id_products_id_fk",
-          "tableFrom": "storage_space_to_products",
+        "storage_to_products_product_id_products_id_fk": {
+          "name": "storage_to_products_product_id_products_id_fk",
+          "tableFrom": "storage_to_products",
           "tableTo": "products",
           "schemaTo": "warehouse",
           "columnsFrom": [
@@ -4976,13 +4911,13 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "storage_space_to_products_storage_space_id_storage_spaces_id_fk": {
-          "name": "storage_space_to_products_storage_space_id_storage_spaces_id_fk",
-          "tableFrom": "storage_space_to_products",
-          "tableTo": "storage_spaces",
+        "storage_to_products_storage_id_storages_id_fk": {
+          "name": "storage_to_products_storage_id_storages_id_fk",
+          "tableFrom": "storage_to_products",
+          "tableTo": "storages",
           "schemaTo": "warehouse",
           "columnsFrom": [
-            "storage_space_id"
+            "storage_id"
           ],
           "columnsTo": [
             "id"
@@ -4992,12 +4927,12 @@
         }
       },
       "compositePrimaryKeys": {
-        "storage_space_to_products_id_product_id_storage_space_id_pk": {
-          "name": "storage_space_to_products_id_product_id_storage_space_id_pk",
+        "storage_to_products_id_product_id_storage_id_pk": {
+          "name": "storage_to_products_id_product_id_storage_id_pk",
           "columns": [
             "id",
             "product_id",
-            "storage_space_id"
+            "storage_id"
           ]
         }
       },

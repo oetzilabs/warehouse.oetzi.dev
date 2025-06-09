@@ -1,12 +1,11 @@
 import { relations } from "drizzle-orm";
-import { integer, json, text, varchar } from "drizzle-orm/pg-core";
+import { AnyPgColumn, integer, json, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_storage_sections, TB_warehouse_areas } from "../../schema";
+import { TB_storage_to_labels, TB_storage_to_products, TB_warehouse_areas } from "../../schema";
 import { commonTable } from "../entity";
 import { schema } from "../utils";
-import { TB_storage_spaces } from "./storage_space";
 import { TB_storage_types } from "./storage_types";
 
 export const storage_variant = schema.enum("storage_variant", ["horizontal", "vertical"]);
@@ -14,9 +13,8 @@ export const storage_variant = schema.enum("storage_variant", ["horizontal", "ve
 export const TB_storages = commonTable(
   "storages",
   {
-    warehouseAreaId: varchar("warehouse_area_id")
-      .references(() => TB_warehouse_areas.id, { onDelete: "cascade" })
-      .notNull(),
+    parentId: varchar("parent_id").references((): AnyPgColumn => TB_storages.id, { onDelete: "cascade" }),
+    warehouseAreaId: varchar("warehouse_area_id").references(() => TB_warehouse_areas.id, { onDelete: "cascade" }),
     typeId: varchar("type_id")
       .references(() => TB_storage_types.id, { onDelete: "cascade" })
       .notNull(),
@@ -25,22 +23,27 @@ export const TB_storages = commonTable(
     description: text("description"),
     capacity: integer("capacity").notNull(),
     variant: storage_variant("variant").notNull().default("horizontal"),
-    currentOccupancy: integer("current_occupancy").default(0),
+    barcode: varchar("barcode", { length: 128 }).unique(),
     bounding_box: json("bounding_box").notNull().$type<{
       x: number;
       y: number;
-      // px
       width: number;
-      // px
       height: number;
-      // cm
-      length: number;
+      depth: number;
     }>(),
   },
   "storage",
 );
 
 export const storage_relations = relations(TB_storages, ({ one, many }) => ({
+  parent: one(TB_storages, {
+    fields: [TB_storages.parentId],
+    references: [TB_storages.id],
+    relationName: "storages",
+  }),
+  children: many(TB_storages, {
+    relationName: "storages",
+  }),
   area: one(TB_warehouse_areas, {
     fields: [TB_storages.warehouseAreaId],
     references: [TB_warehouse_areas.id],
@@ -49,7 +52,8 @@ export const storage_relations = relations(TB_storages, ({ one, many }) => ({
     fields: [TB_storages.typeId],
     references: [TB_storage_types.id],
   }),
-  secs: many(TB_storage_sections),
+  labels: many(TB_storage_to_labels),
+  products: many(TB_storage_to_products),
 }));
 
 export type StorageSelect = typeof TB_storages.$inferSelect;

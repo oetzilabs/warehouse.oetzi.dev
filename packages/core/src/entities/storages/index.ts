@@ -15,18 +15,10 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
     const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
       area: true,
       type: true,
-      secs: {
+      parent: true,
+      children: {
         with: {
-          spaces: {
-            with: {
-              prs: {
-                with: {
-                  pr: true,
-                },
-              },
-              labels: true,
-            },
-          },
+          type: true,
         },
       },
     });
@@ -40,9 +32,8 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return findById(storage.id);
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new StorageInvalidId({ id }));
@@ -51,7 +42,76 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         const storage = yield* Effect.promise(() =>
           db.query.TB_storages.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: rels,
+            with: {
+              type: true,
+              area: true,
+              products: {
+                with: {
+                  product: {
+                    with: {
+                      stcs: {
+                        with: {
+                          condition: true,
+                        },
+                      },
+                      certs: {
+                        with: {
+                          cert: true,
+                        },
+                      },
+                      images: {
+                        with: {
+                          image: true,
+                        },
+                      },
+                      space: {
+                        with: {
+                          storage: true,
+                        },
+                      },
+                      brands: true,
+                      saleItems: {
+                        with: {
+                          sale: {
+                            with: {
+                              customer: true,
+                            },
+                          },
+                        },
+                      },
+                      orders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      labels: {
+                        with: {
+                          label: true,
+                        },
+                      },
+                      stco: {
+                        with: {
+                          condition: true,
+                        },
+                      },
+                      suppliers: {
+                        with: {
+                          supplier: {
+                            with: {
+                              contacts: true,
+                              notes: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              children: true,
+              labels: true,
+              parent: true,
+            },
           }),
         );
 
@@ -127,7 +187,58 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return storages;
       });
 
-    return { create, findById, update, remove, safeRemove, findByAreaId } as const;
+    const findChildren = (parentId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, parentId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new StorageInvalidId({ id: parentId }));
+        }
+
+        const storages = yield* Effect.promise(() =>
+          db.query.TB_storages.findMany({
+            where: (fields, operations) => operations.eq(fields.parentId, parsedId.output),
+            with: {
+              type: true,
+              area: true,
+              products: true,
+              children: true,
+              labels: true,
+              parent: true,
+            },
+          }),
+        );
+
+        return storages;
+      });
+
+    const findParent = (childId: string) =>
+      Effect.gen(function* (_) {
+        const storage = yield* findById(childId);
+        if (!storage.parentId) return null;
+        return yield* findById(storage.parentId);
+      });
+
+    const findRoot = (
+      storageId: string,
+    ): Effect.Effect<Effect.Effect.Success<ReturnType<typeof findById>>, StorageNotFound | StorageInvalidId> =>
+      Effect.gen(function* (_) {
+        const storage = yield* findById(storageId);
+        const parentId = storage.parentId;
+        if (!parentId) return storage;
+        return yield* Effect.suspend(() => findRoot(parentId));
+      });
+
+    return {
+      create,
+      findById,
+      update,
+      remove,
+      safeRemove,
+      findByAreaId,
+      findChildren,
+      findParent,
+      findRoot,
+    } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

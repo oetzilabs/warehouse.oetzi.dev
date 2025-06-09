@@ -141,33 +141,16 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                               with: {
                                 warehouse: {
                                   with: {
-                                    fcs: {
+                                    facilities: {
                                       with: {
-                                        ars: {
+                                        areas: {
                                           with: {
-                                            strs: {
+                                            storages: {
                                               with: {
-                                                secs: {
-                                                  with: {
-                                                    spaces: {
-                                                      with: {
-                                                        labels: true,
-                                                        prs: {
-                                                          with: {
-                                                            pr: {
-                                                              with: {
-                                                                brands: true,
-                                                                catalogs: true,
-                                                                labels: true,
-                                                                suppliers: true,
-                                                              },
-                                                            },
-                                                          },
-                                                        },
-                                                      },
-                                                    },
-                                                  },
-                                                },
+                                                type: true,
+                                                area: true,
+                                                products: true,
+                                                children: true,
                                               },
                                             },
                                           },
@@ -197,23 +180,7 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                       warehouses: org.org.whs.map((wh) => ({
                         ...wh.warehouse,
                         products: wh.warehouse.products.map((prod) => prod.productId),
-                        facilities: wh.warehouse.fcs.map((fc) => ({
-                          ...fc,
-                          areas: fc.ars.map((ar) => ({
-                            ...ar,
-                            storages: ar.strs.map((str) => ({
-                              ...str,
-                              sections: str.secs.map((sec) => ({
-                                ...sec,
-                                spaces: sec.spaces.map((i) => ({
-                                  ...i,
-                                  labels: i.labels.map((l) => l.labelId),
-                                  products: i.prs.map((p) => p.productId),
-                                })),
-                              })),
-                            })),
-                          })),
-                        })),
+                        facilities: wh.warehouse.facilities,
                       })),
                       orders: {
                         customers: org.org.customerOrders,

@@ -4,12 +4,7 @@ import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { date, InferInput, nullable, object, omit, optional, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import {
-  TB_order_products,
-  TB_product_to_images,
-  TB_storage_spaces_to_products,
-  TB_supplier_products,
-} from "../../schema";
+import { TB_order_products, TB_product_to_images, TB_storage_to_products, TB_supplier_products } from "../../schema";
 import { TB_brands } from "../brands/brands";
 import { TB_catalog_products } from "../catalogs/catalog_products";
 import { commonTable } from "../entity";
@@ -106,7 +101,7 @@ export const product_relations = relations(TB_products, ({ many, one }) => ({
   certs: many(TB_products_to_certifications),
   stco: many(TB_products_to_storage_conditions),
   catalogs: many(TB_catalog_products),
-  space: many(TB_storage_spaces_to_products),
+  space: many(TB_storage_to_products),
   tg: one(TB_tax_groups, {
     fields: [TB_products.default_tax_group_id],
     references: [TB_tax_groups.id],
