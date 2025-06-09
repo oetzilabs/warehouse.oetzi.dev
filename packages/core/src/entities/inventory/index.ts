@@ -272,7 +272,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         };
       });
 
-    return { storageStatistics, statistics, alerts } as const;
+    return { storageStatistics, statistics, alerts, storageCapacity, productCount } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}
