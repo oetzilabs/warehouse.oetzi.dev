@@ -61,10 +61,7 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
                 <div class="border rounded-lg flex flex-col overflow-hidden bg-card">
                   <div class="flex flex-row items-center justify-between p-4 border-b bg-muted-foreground/10 dark:bg-muted/30">
                     <div class="flex flex-col gap-1">
-                      <Show
-                        when={storage.parentId && storage.parent}
-                        fallback={<h4 class="font-medium">{storage.name}</h4>}
-                      >
+                      <Show when={storage.parent} fallback={<h4 class="font-medium">{storage.name}</h4>}>
                         {(parent) => (
                           <h4 class="font-medium">
                             {storage.name} via {parent().name}
