@@ -1,30 +1,20 @@
-import FacilityImage from "@/components/FacilityImage";
-import { FilterPopover } from "@/components/filters/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressValueLabel } from "@/components/ui/progress";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter } from "@/lib/filtering";
+import "@fontsource-variable/geist-mono";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
-import { InventoryInfo } from "@warehouseoetzidev/core/src/entities/inventory";
-import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
-import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages";
+import { type StorageStatisticsInfo } from "@warehouseoetzidev/core/src/entities/inventory";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Package from "lucide-solid/icons/package";
-import Plus from "lucide-solid/icons/plus";
-import TriangleAlert from "lucide-solid/icons/triangle-alert";
-import { Warning } from "postcss";
 import { Accessor, createSignal, For, Show } from "solid-js";
-import { createStore } from "solid-js/store";
-import FacilityEditor from "../../FacilityEditor";
-import "@fontsource-variable/geist-mono";
 
-type InventoryListProps = {
-  inventory: Accessor<InventoryInfo>;
+type StorageStatisticsListProps = {
+  storages: Accessor<StorageStatisticsInfo>;
 };
 
-export const InventoryList = (props: InventoryListProps) => {
+export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
   const [search, setSearch] = createSignal("");
   const [dsearch, setDSearch] = createSignal("");
 
@@ -63,15 +53,18 @@ export const InventoryList = (props: InventoryListProps) => {
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Show
-            when={props.inventory().storages.length > 0}
+            when={props.storages().storages.length > 0}
             fallback={<div class="col-span-full p-8 text-center text-muted-foreground">No storages found</div>}
           >
-            <For each={props.inventory().storages}>
+            <For each={props.storages().storages}>
               {(storage) => (
                 <div class="border rounded-lg flex flex-col overflow-hidden bg-card">
                   <div class="flex flex-row items-center justify-between p-4 border-b bg-muted-foreground/10 dark:bg-muted/30">
                     <div class="flex flex-col gap-1">
-                      <Show when={storage.parent} fallback={<h4 class="font-medium">{storage.name}</h4>}>
+                      <Show
+                        when={storage.parentId && storage.parent}
+                        fallback={<h4 class="font-medium">{storage.name}</h4>}
+                      >
                         {(parent) => (
                           <h4 class="font-medium">
                             {storage.name} via {parent().name}
@@ -82,10 +75,12 @@ export const InventoryList = (props: InventoryListProps) => {
                         <p class="text-sm text-muted-foreground">{storage.description}</p>
                       </Show>
                     </div>
-                    <Button size="sm" variant="outline" as={A} href={`/inventory/storages/${storage.id}`}>
-                      View
-                      <ArrowUpRight class="size-4 ml-2" />
-                    </Button>
+                    <Show when={storage.children.length > 0}>
+                      <Button size="sm" variant="outline" as={A} href={`/storages/${storage.id}`}>
+                        View
+                        <ArrowUpRight class="size-4 ml-2" />
+                      </Button>
+                    </Show>
                   </div>
 
                   <div class="p-4 border-b">
@@ -126,11 +121,6 @@ export const InventoryList = (props: InventoryListProps) => {
                             </div>
                           )}
                         </For>
-                        <Show when={storage.products.length > 3}>
-                          <Button variant="ghost" size="sm" as={A} href={`/inventory/storage/${storage.id}`}>
-                            View all {summarizeProducts(storage.products).length} products
-                          </Button>
-                        </Show>
                       </div>
                     </Show>
                   </div>
