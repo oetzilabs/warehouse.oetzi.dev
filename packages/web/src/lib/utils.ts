@@ -5,13 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export type Join<K, P> = K extends string | number ? (P extends string | number ? `${K}.${P}` : never) : never;
+export type Paths<T> = PathImpl<T, keyof T>;
 
-export type Paths<T> = T extends object
-  ? {
-      [K in keyof T]-?: K extends string | number ? `${K}` | Join<K, Paths<T[K]>> : never;
-    }[keyof T]
-  : "";
+type PathImpl<T, K extends keyof T> = K extends string | number
+  ? T[K] extends object
+    ? T[K] extends ReadonlyArray<infer E> // Handle arrays: paths are for the element type
+      ? `${K}` | Join<K, Paths<E>>
+      : `${K}` | Join<K, Paths<T[K]>> // Handle objects: recursive call
+    : `${K}` // Handle primitives: just the key
+  : never;
+
+type Join<K, P> = K extends string | number ? (P extends string | number ? `${K}.${P}` : never) : never;
 
 export const getStorageStockStatus = (storage: any) => {
   let hasLowStock = false;
