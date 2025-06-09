@@ -4,6 +4,7 @@ import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   TB_organizations_warehouses,
+  TB_storages,
   TB_users_warehouses,
   TB_warehouse_products,
   TB_warehouses,
@@ -14,6 +15,8 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { FacilityLive, FacilityService } from "../facilities";
 import { FacilityNotFound } from "../facilities/errors";
 import { ProductInvalidId, ProductNotDeleted, ProductNotFound } from "../products/errors";
+import { StorageInfo, StorageLive, StorageService } from "../storages";
+import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 import {
   WarehouseInvalidId,
   WarehouseNotCreated,
@@ -126,6 +129,22 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                   address: true,
                 },
               },
+              facilities: {
+                with: {
+                  areas: {
+                    with: {
+                      storages: {
+                        with: {
+                          type: true,
+                          area: true,
+                          products: true,
+                          children: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
               owner: {
                 columns: {
                   hashed_password: false,
@@ -144,15 +163,8 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           return yield* Effect.fail(new WarehouseNotFound({ id }));
         }
 
-        const facilityService = yield* _(FacilityService);
-        const facilities = yield* facilityService.findByWarehouseId(warehouse.id);
-        const wh = {
-          ...warehouse,
-          facilities,
-        };
-
-        return wh;
-      }).pipe(Effect.provide(FacilityLive));
+        return warehouse;
+      });
 
     const update = (input: InferInput<typeof WarehouseUpdateSchema>) =>
       Effect.gen(function* (_) {
@@ -305,7 +317,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             where: (fields, operations) => operations.eq(fields.userId, parsedUserId.output),
             with: {
               warehouse: {
-                with: relations,
+                with: {
+                  facilities: true,
+                },
               },
             },
           }),
@@ -343,26 +357,14 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
             where: (fields, operations) => operations.eq(fields.ownerId, parsedId.output),
             orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
             with: {
-              ars: {
+              areas: {
                 with: {
-                  strs: {
+                  storages: {
                     with: {
                       type: true,
                       area: true,
-                      secs: {
-                        with: {
-                          spaces: {
-                            with: {
-                              labels: true,
-                              prs: {
-                                with: {
-                                  pr: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      products: true,
+                      children: true,
                     },
                   },
                 },
@@ -455,6 +457,63 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return whProduct;
       });
 
+    const deepStorageChildren = (
+      storage: StorageInfo,
+    ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId> =>
+      Effect.gen(function* (_) {
+        const storageService = yield* _(StorageService);
+        const s = yield* storageService.findById(storage.id);
+        if (!s) {
+          return storage;
+        }
+
+        if (!s.children || s.children.length === 0) {
+          return s;
+        }
+
+        const c_children = yield* Effect.all(
+          s.children.map((child) => Effect.suspend(() => deepStorageChildren(child as StorageInfo))),
+        );
+
+        return {
+          ...s,
+          children: c_children,
+        } satisfies StorageInfo;
+      }).pipe(Effect.provide(StorageLive));
+
+    const countStorageStats = (
+      storage: StorageInfo,
+    ): Effect.Effect<
+      { storageCount: number; currentOccupancy: number; totalCapacity: number },
+      StorageNotFound | StorageInvalidId
+    > =>
+      Effect.gen(function* (_) {
+        const fullStorage = yield* deepStorageChildren(storage);
+
+        const calculateStats = (
+          s: StorageInfo,
+        ): { storageCount: number; currentOccupancy: number; totalCapacity: number } => {
+          let stats = {
+            storageCount: 1,
+            currentOccupancy: s.products?.length ?? 0,
+            totalCapacity: s.capacity ?? 0,
+          };
+
+          if (s.children && s.children.length > 0) {
+            const childStats = s.children.map((c) => calculateStats(c as StorageInfo));
+            childStats.forEach((cs) => {
+              stats.storageCount += cs.storageCount;
+              stats.currentOccupancy += cs.currentOccupancy;
+              stats.totalCapacity += cs.totalCapacity;
+            });
+          }
+
+          return stats;
+        };
+
+        return calculateStats(fullStorage);
+      });
+
     const getInventoryInfo = (whId: string) =>
       Effect.gen(function* (_) {
         const wh = yield* findById(whId);
@@ -462,31 +521,88 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           return yield* Effect.fail(new WarehouseNotFound({ id: whId }));
         }
         const facilites = wh.facilities;
-        const areas = facilites.map((fc) => fc.ars).flat();
-        const storages = areas.map((a) => a.strs).flat();
+        const areas = facilites.flatMap((fc) => fc.areas);
+        const storages = areas.flatMap((a) => a.storages);
+
+        const strs = yield* Effect.promise(() =>
+          db.query.TB_storages.findMany({
+            where: (fields, operations) =>
+              operations.inArray(
+                fields.id,
+                storages.map((f) => f.id),
+              ),
+            with: {
+              type: true,
+              area: true,
+              products: {
+                with: {
+                  product: {
+                    with: {
+                      images: {
+                        with: {
+                          image: true,
+                        },
+                      },
+                      brands: true,
+                      saleItems: {
+                        with: {
+                          sale: {
+                            with: {
+                              customer: true,
+                            },
+                          },
+                        },
+                      },
+                      orders: {
+                        with: {
+                          order: true,
+                        },
+                      },
+                      labels: {
+                        with: {
+                          label: true,
+                        },
+                      },
+                      stco: {
+                        with: {
+                          condition: true,
+                        },
+                      },
+                      suppliers: {
+                        with: {
+                          supplier: {
+                            with: {
+                              contacts: true,
+                              notes: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              children: true,
+              labels: true,
+              parent: true,
+            },
+          }),
+        );
+
+        const stats = yield* Effect.all(strs.map((storage) => countStorageStats(storage)));
+        const totals = stats.reduce(
+          (acc, stat) => ({
+            storageCount: acc.storageCount + stat.storageCount,
+            currentOccupancy: acc.currentOccupancy + stat.currentOccupancy,
+            totalCapacity: acc.totalCapacity + stat.totalCapacity,
+          }),
+          { storageCount: 0, currentOccupancy: 0, totalCapacity: 0 },
+        );
 
         return yield* Effect.succeed({
-          amountOfFacilities: facilites.length,
-          amounOfStorages: storages.length,
-          amountOfSections: storages.map((s) => s.secs.length).reduce((a, b) => a + b, 0),
-          amountOfSpaces: storages
-            .map((s) => s.secs.map((sec) => sec.spaces.length))
-            .flat()
-            .reduce((a, b) => a + b, 0),
-          totalCurrentOccupancy: storages
-            .map((s) =>
-              s.secs
-                .map((sec) => sec.spaces.map((space) => space.prs.length).reduce((a, b) => a + b, 0))
-                .reduce((a, b) => a + b, 0),
-            )
-            .reduce((a, b) => a + b, 0),
-          totalCapacity: storages
-            .map((s) =>
-              s.secs
-                .map((sec) => sec.spaces.map((space) => space.productCapacity).reduce((a, b) => a + b, 0))
-                .reduce((a, b) => a + b, 0),
-            )
-            .reduce((a, b) => a + b, 0),
+          amountOfStorages: totals.storageCount,
+          totalCurrentOccupancy: totals.currentOccupancy,
+          totalCapacity: totals.totalCapacity,
         });
       });
 

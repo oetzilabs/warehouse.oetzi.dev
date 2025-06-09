@@ -2,7 +2,7 @@ import { toJsonSchema } from "@valibot/to-json-schema";
 import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
 import { Console, Effect } from "effect";
-import { safeParse } from "valibot";
+import { InferInput, safeParse } from "valibot";
 import data from "../../data/seed.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
@@ -31,10 +31,8 @@ import {
   TB_products_to_labels,
   TB_sale_items,
   TB_sales,
-  TB_storage_sections,
-  TB_storage_spaces,
-  TB_storage_spaces_to_labels,
-  TB_storage_spaces_to_products,
+  TB_storage_to_labels,
+  TB_storage_to_products,
   TB_storage_types,
   TB_storages,
   TB_supplier_products,
@@ -50,13 +48,89 @@ import {
   TB_warehouse_types,
   TB_warehouses,
 } from "../../drizzle/sql/schema";
+import { StorageInvalidId, StorageNotCreated, StorageNotFound, StorageNotUpdated } from "../storages/errors";
 import { SeedingFailed } from "./errors";
-import { SeedDataSchema } from "./schema";
+import { SeedDataSchema, StorageSchema } from "./schema";
 
 export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed", {
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
+
+    const createStorage = (storage: InferInput<typeof StorageSchema>, areaId: string | null) =>
+      Effect.gen(function* (_) {
+        const { children, labels, products, ...storageData } = storage;
+        const [created] = yield* Effect.promise(() =>
+          db
+            .insert(TB_storages)
+            .values({ ...storageData, warehouseAreaId: areaId })
+            .onConflictDoUpdate({
+              target: TB_storages.id,
+              set: { ...storageData, warehouseAreaId: areaId },
+            })
+            .returning(),
+        );
+        return created;
+      });
+
+    const seedStorage = (
+      storage: InferInput<typeof StorageSchema>,
+      areaId: string | null,
+    ): Effect.Effect<Effect.Effect.Success<ReturnType<typeof createStorage>>, StorageNotCreated> =>
+      Effect.gen(function* (_) {
+        // Insert storage
+        const created = yield* createStorage(storage, areaId);
+        if (!created) {
+          return yield* Effect.fail(new StorageNotCreated());
+        }
+        yield* Console.log(`storage ${storage.id} added to area ${areaId}`);
+
+        const labels = storage.labels ?? [];
+        // Add labels
+        for (const labelId of labels) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_storage_to_labels)
+              .values({ labelId, storageId: created.id })
+              .onConflictDoUpdate({
+                target: [TB_storage_to_labels.labelId, TB_storage_to_labels.storageId],
+                set: { labelId, storageId: created.id },
+              })
+              .returning(),
+          );
+        }
+
+        const products = storage.products ?? [];
+        // Add products
+        for (const product of products) {
+          yield* Effect.promise(() =>
+            db
+              .insert(TB_storage_to_products)
+              .values({
+                productId: product.product_id,
+                id: product.id,
+                storageId: created.id,
+              })
+              .onConflictDoUpdate({
+                target: [TB_storage_to_products.id, TB_storage_to_products.productId, TB_storage_to_products.storageId],
+                set: {
+                  productId: product.product_id,
+                  id: product.id,
+                  storageId: created.id,
+                },
+              })
+              .returning(),
+          );
+        }
+
+        // Recursively handle children
+        if (storage.children.length > 0) {
+          for (const child of storage.children) {
+            yield* Effect.suspend(() => seedStorage({ ...child, parentId: created.id }, null));
+          }
+        }
+        return created;
+      });
 
     const seed = () =>
       Effect.gen(function* (_) {
@@ -456,97 +530,9 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   );
                   yield* Console.log(`area ${area.id} added to facility ${facility.id}`);
 
-                  // Process storages
+                  // Process storages recursively
                   for (const storage of storages) {
-                    const { sections, ...storageData } = storage;
-
-                    // Insert storage
-                    yield* Effect.promise(() =>
-                      db
-                        .insert(TB_storages)
-                        .values({ ...storageData, warehouseAreaId: area.id })
-                        .onConflictDoUpdate({
-                          target: TB_storages.id,
-                          set: storageData,
-                        })
-                        .returning(),
-                    );
-                    yield* Console.log(`storage ${storage.id} added to area ${area.id}`);
-
-                    // Process sections
-                    for (const section of sections) {
-                      const { spaces, ...sectionData } = section;
-
-                      // Insert section
-                      yield* Effect.promise(() =>
-                        db
-                          .insert(TB_storage_sections)
-                          .values({ ...sectionData, storageId: storage.id })
-                          .onConflictDoUpdate({
-                            target: TB_storage_sections.id,
-                            set: { ...sectionData, storageId: storage.id },
-                          })
-                          .returning(),
-                      );
-                      yield* Console.log(`section ${section.id} added to storage ${storage.id}`);
-
-                      // Process spaces
-                      for (const space of spaces) {
-                        const { labels, products, ...spaceData } = space;
-                        // Insert space
-                        yield* Effect.promise(() =>
-                          db
-                            .insert(TB_storage_spaces)
-                            .values({ ...spaceData, sectionId: section.id })
-                            .onConflictDoUpdate({
-                              target: TB_storage_spaces.id,
-                              set: { ...spaceData, sectionId: section.id },
-                            })
-                            .returning(),
-                        );
-                        yield* Console.log(`space ${space.id} added to section ${section.id}`);
-
-                        yield* Console.log(`ADDING LABELS TO SPACE ${space.id}`);
-                        // Add labels to space
-                        for (const labelId of labels) {
-                          yield* Effect.promise(() =>
-                            db
-                              .insert(TB_storage_spaces_to_labels)
-                              .values({ labelId, storageSpaceId: space.id })
-                              .onConflictDoUpdate({
-                                target: [
-                                  TB_storage_spaces_to_labels.labelId,
-                                  TB_storage_spaces_to_labels.storageSpaceId,
-                                ],
-                                set: { labelId, storageSpaceId: space.id },
-                              })
-                              .returning(),
-                          );
-                          yield* Console.log(`label ${labelId} added to space ${space.id}`);
-                        }
-                        yield* Console.log(`DONE`);
-
-                        yield* Console.log(`ADDING PRODUCTS TO SPACE ${space.id}`);
-                        for (const product of products) {
-                          yield* Effect.promise(() =>
-                            db
-                              .insert(TB_storage_spaces_to_products)
-                              .values({ productId: product.product_id, id: product.id, storageSpaceId: spaceData.id })
-                              .onConflictDoUpdate({
-                                target: [
-                                  TB_storage_spaces_to_products.id,
-                                  TB_storage_spaces_to_products.productId,
-                                  TB_storage_spaces_to_products.storageSpaceId,
-                                ],
-                                set: { productId: product.product_id, id: product.id, storageSpaceId: spaceData.id },
-                              })
-                              .returning(),
-                          );
-                          yield* Console.log(`product ${product.product_id} added to space ${space.id}`);
-                        }
-                        yield* Console.log(`DONE`);
-                      }
-                    }
+                    yield* seedStorage(storage, area.id);
                   }
                 }
               }

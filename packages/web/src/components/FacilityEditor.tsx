@@ -7,10 +7,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { updateAreaBoundingBox } from "@/lib/api/areas";
-import { cn } from "@/lib/utils";
+import { cn, getStorageStockStatus } from "@/lib/utils";
 import { useAction, useSubmission } from "@solidjs/router";
 import { type FacilityInfo } from "@warehouseoetzidev/core/src/entities/facilities";
 import { type OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
+import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MinimizeIcon from "lucide-solid/icons/minimize";
@@ -27,17 +28,19 @@ import { isServer } from "solid-js/web";
 import { toast } from "solid-sonner";
 
 // Remove or modify areaBoundingBox as we'll use the actual bounding box
-const calculateCombinedBoundingBox = (facility: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]) => {
+const calculateCombinedBoundingBox = (
+  facility: OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number],
+) => {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
 
   facility.areas.forEach((area) => {
-    minX = Math.min(minX, area.boundingBox.x);
-    minY = Math.min(minY, area.boundingBox.y);
-    maxX = Math.max(maxX, area.boundingBox.x + area.boundingBox.width);
-    maxY = Math.max(maxY, area.boundingBox.y + area.boundingBox.height);
+    minX = Math.min(minX, area.bounding_box.x);
+    minY = Math.min(minY, area.bounding_box.y);
+    maxX = Math.max(maxX, area.bounding_box.x + area.bounding_box.width);
+    maxY = Math.max(maxY, area.bounding_box.y + area.bounding_box.height);
   });
 
   const width = maxX - minX === -Infinity ? 0 : maxX - minX;
@@ -48,13 +51,13 @@ const calculateCombinedBoundingBox = (facility: OrganizationInventoryInfo["wareh
   return { centerX, centerY, width, height };
 };
 
-const calculateInitialZoom = (w: number, h: number, boundingBox: ReturnType<typeof calculateCombinedBoundingBox>) => {
+const calculateInitialZoom = (w: number, h: number, bounding_box: ReturnType<typeof calculateCombinedBoundingBox>) => {
   const padding = 20; // Extra padding around the view
   const viewportWidth = w - padding;
   const viewportHeight = h - padding;
 
-  const scaleX = w / boundingBox.width;
-  const scaleY = h / boundingBox.height;
+  const scaleX = w / bounding_box.width;
+  const scaleY = h / bounding_box.height;
   console.log(scaleX, scaleY);
   // Use the smaller scale to ensure everything fits
   return Math.min(scaleX, scaleY, 1); // Cap at 1 to prevent too much zoom
@@ -110,7 +113,9 @@ interface EditorState {
   resizingArea: string | null;
 }
 
-const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["warehouses"][0]["facilities"][0]> }) => {
+const FacilityEditor = (props: {
+  facility: Accessor<OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number]>;
+}) => {
   const padding = 20;
   const initialCenter = calculateCombinedBoundingBox(props.facility());
   let mapRef: HTMLDivElement | undefined;
@@ -144,17 +149,19 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
     toast.info("View has been reset");
   };
 
-  const tightenArea = (area: OrganizationInventoryInfo["warehouses"][0]["facilities"][0]["areas"][number]) => {
+  const tightenArea = (
+    area: OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number]["areas"][number],
+  ) => {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
 
     area.storages.forEach((storage) => {
-      minX = Math.min(minX, storage.boundingBox.x);
-      minY = Math.min(minY, storage.boundingBox.y);
-      maxX = Math.max(maxX, storage.boundingBox.x + storage.boundingBox.width);
-      maxY = Math.max(maxY, storage.boundingBox.y + (storage.boundingBox.length ?? storage.boundingBox.height));
+      minX = Math.min(minX, storage.bounding_box.x);
+      minY = Math.min(minY, storage.bounding_box.y);
+      maxX = Math.max(maxX, storage.bounding_box.x + storage.bounding_box.width);
+      maxY = Math.max(maxY, storage.bounding_box.y + (storage.bounding_box.depth ?? storage.bounding_box.height));
     });
     const bb = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
     toast.promise(updateAreaBoundingBoxAction(props.facility().id, area.id, bb), {
@@ -162,6 +169,55 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
       success: "Area bounding box updated",
       error: "Failed to update area bounding box",
     });
+  };
+
+  const renderEditableStorage = (storage: StorageInfo) => {
+    const status = getStorageStockStatus(storage);
+    const statusColors = {
+      low: "bg-rose-200 dark:bg-rose-600",
+      "near-min": "bg-orange-200 dark:bg-orange-600",
+      "below-reorder": "bg-yellow-200 dark:bg-yellow-600",
+      optimal: "bg-emerald-200 dark:bg-emerald-600",
+      "has-products": "bg-lime-200 dark:bg-lime-600",
+      empty: "bg-muted-foreground/[0.05]",
+    };
+
+    return (
+      <div
+        class={cn(
+          "absolute border border-neutral-400 dark:border-neutral-500 flex rounded-sm",
+          {
+            "flex-row": storage.variant === "vertical",
+            "flex-col": storage.variant === "horizontal",
+          },
+          statusColors[status],
+        )}
+        style={{
+          top: `${storage.bounding_box.y + padding}px`,
+          left: `${storage.bounding_box.x + padding}px`,
+          width: `${storage.bounding_box.width}px`,
+          height: `${storage.bounding_box.depth ?? storage.bounding_box.height}px`,
+        }}
+      >
+        <Show when={editing()}>
+          <div class="absolute -top-6 left-0 z-20">
+            <span class="text-xs text-muted-foreground">{storage.name}</span>
+          </div>
+          <div class="absolute -right-8 top-0 flex flex-col gap-1 z-50">
+            <Button size="icon" class="!size-6 bg-background" variant="outline">
+              <Plus class="!size-3" />
+            </Button>
+            <Button size="icon" class="!size-6" variant="destructive">
+              <Trash2 class="!size-3 text-white" />
+            </Button>
+          </div>
+        </Show>
+
+        <Show when={storage.children?.length > 0}>
+          <For each={storage.children}>{renderEditableStorage}</For>
+        </Show>
+      </div>
+    );
   };
 
   return (
@@ -252,10 +308,10 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                 <div
                   class="outline-1 outline-neutral-400 dark:outline-neutral-700 outline-dashed group absolute rounded-sm"
                   style={{
-                    top: `${area.boundingBox.y}px`,
-                    left: `${area.boundingBox.x}px`,
-                    width: `${area.boundingBox.width + 2 * padding}px`,
-                    height: `${area.boundingBox.height + 2 * padding}px`,
+                    top: `${area.bounding_box.y}px`,
+                    left: `${area.bounding_box.x}px`,
+                    width: `${area.bounding_box.width + 2 * padding}px`,
+                    height: `${area.bounding_box.height + 2 * padding}px`,
                   }}
                 >
                   <Show when={editing()}>
@@ -282,14 +338,14 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                     <div class="absolute -top-6 left-0 flex gap-2 items-center">
                       <span class="text-xs text-muted-foreground">{area.name}</span>
                       <span class="text-xs text-muted-foreground">
-                        ({area.boundingBox.width}cm × {area.boundingBox.height}cm)
+                        ({area.bounding_box.width}cm × {area.bounding_box.height}cm)
                       </span>
                     </div>
                   </Show>
                   <Show when={editing()}>
                     <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Ruler orientation="horizontal" length={area.boundingBox.width} offset={-45} padding={padding} />
-                      <Ruler orientation="vertical" length={area.boundingBox.height} offset={-25} padding={padding} />
+                      <Ruler orientation="horizontal" length={area.bounding_box.width} offset={-45} padding={padding} />
+                      <Ruler orientation="vertical" length={area.bounding_box.height} offset={-25} padding={padding} />
                     </div>
                   </Show>
                   <div class="w-full h-full relative">
@@ -304,10 +360,10 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                             },
                           )}
                           style={{
-                            top: `${storage.boundingBox.y + padding}px`,
-                            left: `${storage.boundingBox.x + padding}px`,
-                            width: `${storage.boundingBox.width}px`,
-                            height: `${storage.boundingBox.length ?? storage.boundingBox.height}px`,
+                            top: `${storage.bounding_box.y + padding}px`,
+                            left: `${storage.bounding_box.x + padding}px`,
+                            width: `${storage.bounding_box.width}px`,
+                            height: `${storage.bounding_box.depth ?? storage.bounding_box.height}px`,
                           }}
                         >
                           <Show when={editing()}>
@@ -323,73 +379,56 @@ const FacilityEditor = (props: { facility: Accessor<OrganizationInventoryInfo["w
                               </Button>
                             </div>
                           </Show>
-                          <For each={storage.sections}>
-                            {(section) => (
-                              <div
-                                class={cn("group/inv relative border-neutral-400 dark:border-neutral-500", {
-                                  "border-r last:border-r-0": storage.variant === "vertical",
-                                  "border-b last:border-b-0": storage.variant === "horizontal",
-                                  // Red for spaces with products below minimum stock
-                                  "bg-rose-200 dark:bg-rose-600": section.spaces.some((space) =>
-                                    space.products.some((p) => p.stock < p.minStock),
-                                  ),
-                                  // Orange for spaces with products near minimum stock
-                                  "bg-orange-200 dark:bg-orange-600":
-                                    !section.spaces.some((space) => space.products.some((p) => p.stock < p.minStock)) &&
-                                    section.spaces.some((space) =>
-                                      space.products.some((p) => p.stock < p.minStock * 1.5),
-                                    ),
-                                  // Yellow for spaces with products below reorder point
-                                  "bg-yellow-200 dark:bg-yellow-600":
-                                    !section.spaces.some((space) =>
-                                      space.products.some((p) => p.stock < p.minStock * 1.5),
-                                    ) &&
-                                    section.spaces.some((space) =>
-                                      space.products.some((p) => p.stock < (p.reorderPoint ?? 0)),
-                                    ),
-                                  // Lime for spaces with products above reorder point but below max
-                                  "bg-lime-200 dark:bg-lime-600":
-                                    section.spaces.some((space) => space.products.length > 0) &&
-                                    section.spaces.every((space) =>
-                                      space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
-                                    ) &&
-                                    section.spaces.some((space) =>
-                                      space.products.some((p) => p.stock < (p.maxStock ?? Infinity)),
-                                    ),
-                                  // Emerald for spaces with optimal stock levels
-                                  "bg-emerald-200 dark:bg-emerald-600":
-                                    section.spaces.some((space) => space.products.length > 0) &&
-                                    section.spaces.every((space) =>
-                                      space.products.every((p) => p.stock >= (p.reorderPoint ?? 0)),
-                                    ),
-                                  // Default color for empty spaces or sections
-                                  "bg-muted-foreground/[0.05] text-muted-foreground": section.spaces.every(
-                                    (space) => space.products.length === 0,
-                                  ),
-                                })}
-                                style={
-                                  storage.variant === "horizontal"
-                                    ? {
-                                        width: "100%",
-                                        height: `calc(100%/${storage.sections.length})`,
-                                      }
-                                    : {
-                                        width: `${storage.boundingBox.width / storage.sections.length}px`,
-                                        height: "100%",
-                                      }
-                                }
-                              >
-                                <Show when={editing()}>
-                                  <Button
-                                    size="icon"
-                                    variant="destructive"
-                                    class="absolute -top-2 -right-2 size-6 opacity-0 group-hover/inv:opacity-100 z-50"
-                                  >
-                                    <Trash2 class="size-2 text-white" />
-                                  </Button>
-                                </Show>
-                              </div>
-                            )}
+                          <For each={storage.children}>
+                            {(child) => {
+                              const status = getStorageStockStatus(child);
+                              const statusColors = {
+                                low: "bg-rose-200 dark:bg-rose-600",
+                                "near-min": "bg-orange-200 dark:bg-orange-600",
+                                "below-reorder": "bg-yellow-200 dark:bg-yellow-600",
+                                optimal: "bg-emerald-200 dark:bg-emerald-600",
+                                "has-products": "bg-lime-200 dark:bg-lime-600",
+                                empty: "bg-muted-foreground/[0.05]",
+                              };
+
+                              return (
+                                <div
+                                  class={cn(
+                                    "group/inv relative border-neutral-400 dark:border-neutral-500",
+                                    {
+                                      "border-r last:border-r-0": storage.variant === "vertical",
+                                      "border-b last:border-b-0": storage.variant === "horizontal",
+                                    },
+                                    statusColors[status],
+                                  )}
+                                  style={
+                                    storage.variant === "horizontal"
+                                      ? {
+                                          width: "100%",
+                                          height: `calc(100%/${storage.children.length})`,
+                                        }
+                                      : {
+                                          width: `${storage.bounding_box.width / storage.children.length}px`,
+                                          height: "100%",
+                                        }
+                                  }
+                                >
+                                  <Show when={editing()}>
+                                    <Button
+                                      size="icon"
+                                      variant="destructive"
+                                      class="absolute -top-2 -right-2 size-6 opacity-0 group-hover/inv:opacity-100 z-50"
+                                    >
+                                      <Trash2 class="size-2 text-white" />
+                                    </Button>
+                                  </Show>
+
+                                  <Show when={child.children?.length > 0}>
+                                    <For each={child.children}>{renderEditableStorage}</For>
+                                  </Show>
+                                </div>
+                              );
+                            }}
                           </For>
                         </div>
                       )}

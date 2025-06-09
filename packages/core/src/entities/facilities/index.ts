@@ -12,6 +12,8 @@ import {
   WarehouseAreaUpdateSchema,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { StorageInfo, StorageLive, StorageService } from "../storages";
+import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 import { UserInvalidId } from "../users/errors";
 import { WarehouseInvalidId, WarehouseNotFound, WarehouseNotUpdated } from "../warehouses/errors";
 import {
@@ -54,33 +56,20 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           db.query.TB_warehouse_facilities.findFirst({
             where: (facilities, operations) => operations.eq(facilities.id, parsedId.output),
             with: {
-              ars: {
+              areas: {
                 with: {
-                  strs: {
+                  storages: {
                     with: {
                       type: true,
                       area: true,
-                      secs: {
+                      products: {
                         with: {
-                          spaces: {
-                            with: {
-                              labels: true,
-                              prs: {
-                                with: {
-                                  pr: {
-                                    with: {
-                                      brands: true,
-                                      catalogs: true,
-                                      labels: true,
-                                      suppliers: true,
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
+                          product: true,
                         },
                       },
+                      labels: true,
+                      parent: true,
+                      children: true,
                     },
                   },
                 },
@@ -93,66 +82,42 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           return yield* Effect.fail(new FacilityNotFound({ id }));
         }
 
+        const deepStorageChildren = (
+          storage: StorageInfo,
+        ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId> =>
+          Effect.gen(function* (_) {
+            const storageService = yield* _(StorageService);
+            const s = yield* storageService.findById(storage.id);
+            if (!s) {
+              return storage;
+            }
+
+            if (!s.children || s.children.length === 0) {
+              return s;
+            }
+
+            const c_children = yield* Effect.all(
+              s.children.map((child) => Effect.suspend(() => deepStorageChildren(child as StorageInfo))),
+            );
+
+            return {
+              ...s,
+              children: c_children,
+            } satisfies StorageInfo;
+          }).pipe(Effect.provide(StorageLive));
+
         return {
-          id: facility.id,
-          name: facility.name,
-          description: facility.description,
-          boundingBox: facility.bounding_box,
-          createdAt: facility.createdAt,
-          updatedAt: facility.updatedAt,
-          deletedAt: facility.deletedAt,
-          areas: facility.ars.map((area) => ({
-            id: area.id,
-            name: area.name,
-            description: area.description,
-            boundingBox: area.bounding_box,
-            createdAt: area.createdAt,
-            updatedAt: area.updatedAt,
-            deletedAt: area.deletedAt,
-            storages: area.strs.map((storage) => ({
-              id: storage.id,
-              name: storage.name,
-              description: storage.description,
-              type: storage.type,
-              capacity: storage.capacity,
-              currentOccupancy: storage.currentOccupancy,
-              variant: storage.variant,
-              boundingBox: storage.bounding_box,
-              createdAt: storage.createdAt,
-              updatedAt: storage.updatedAt,
-              deletedAt: storage.deletedAt,
-              sections: storage.secs.map((section) => ({
-                id: section.id,
-                name: section.name,
-                barcode: section.barcode,
-                dimensions: section.dimensions,
-                spaces: section.spaces.map((space) => ({
-                  id: space.id,
-                  name: space.name,
-                  barcode: space.barcode,
-                  dimensions: space.dimensions,
-                  productCapacity: space.productCapacity,
-                  createdAt: space.createdAt,
-                  updatedAt: space.updatedAt,
-                  deletedAt: space.deletedAt,
-                  products: space.prs.map((p) => ({
-                    id: p.pr.id,
-                    name: p.pr.name,
-                    sku: p.pr.sku,
-                    barcode: p.pr.barcode,
-                    createdAt: p.pr.createdAt,
-                    updatedAt: p.pr.updatedAt,
-                    deletedAt: p.pr.deletedAt,
-                    stock: space.prs.filter((p2) => p2.pr.id === p.pr.id).length,
-                    minStock: p.pr.minimumStock,
-                    maxStock: p.pr.maximumStock,
-                    reorderPoint: p.pr.reorderPoint,
-                    safetyStock: p.pr.safetyStock,
-                  })),
-                })),
-              })),
-            })),
-          })),
+          ...facility,
+          areas: yield* Effect.all(
+            facility.areas.map((a) =>
+              Effect.gen(function* (_) {
+                return {
+                  ...a,
+                  storages: yield* Effect.all(a.storages.map((s) => Effect.suspend(() => deepStorageChildren(s)))),
+                };
+              }),
+            ),
+          ),
         };
       });
 
@@ -201,33 +166,14 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.promise(() =>
           db.query.TB_warehouse_facilities.findMany({
             with: {
-              ars: {
+              areas: {
                 with: {
-                  strs: {
+                  storages: {
                     with: {
                       type: true,
                       area: true,
-                      secs: {
-                        with: {
-                          spaces: {
-                            with: {
-                              labels: true,
-                              prs: {
-                                with: {
-                                  pr: {
-                                    with: {
-                                      brands: true,
-                                      catalogs: true,
-                                      labels: true,
-                                      suppliers: true,
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      products: true,
+                      children: true,
                     },
                   },
                 },
@@ -248,33 +194,14 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           db.query.TB_warehouse_facilities.findMany({
             where: (facilities, operations) => operations.eq(facilities.ownerId, parsedId.output),
             with: {
-              ars: {
+              areas: {
                 with: {
-                  strs: {
+                  storages: {
                     with: {
                       type: true,
                       area: true,
-                      secs: {
-                        with: {
-                          spaces: {
-                            with: {
-                              labels: true,
-                              prs: {
-                                with: {
-                                  pr: {
-                                    with: {
-                                      brands: true,
-                                      catalogs: true,
-                                      labels: true,
-                                      suppliers: true,
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      products: true,
+                      children: true,
                     },
                   },
                 },
@@ -294,26 +221,14 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
           db.query.TB_warehouse_facilities.findMany({
             where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
             with: {
-              ars: {
+              areas: {
                 with: {
-                  strs: {
+                  storages: {
                     with: {
                       type: true,
                       area: true,
-                      secs: {
-                        with: {
-                          spaces: {
-                            with: {
-                              labels: true,
-                              prs: {
-                                with: {
-                                  pr: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      products: true,
+                      children: true,
                     },
                   },
                 },

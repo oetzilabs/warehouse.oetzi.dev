@@ -216,16 +216,19 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
-                  space: {
-                    with: {
-                      storage: true,
-                    },
-                  },
                   images: {
                     with: {
                       image: true,
                     },
                   },
+                  certs: {
+                    with: {
+                      cert: true,
+                    },
+                  },
+                  space: true,
+                  stcs: true,
+                  catalogs: true,
                   brands: true,
                   saleItems: {
                     with: {
@@ -287,9 +290,24 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
+                  stcs: {
+                    with: {
+                      condition: true,
+                    },
+                  },
+                  certs: {
+                    with: {
+                      cert: true,
+                    },
+                  },
                   images: {
                     with: {
                       image: true,
+                    },
+                  },
+                  space: {
+                    with: {
+                      storage: true,
                     },
                   },
                   brands: true,
@@ -549,11 +567,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               warehouse: {
                 with: {
-                  fcs: {
+                  facilities: {
                     with: {
-                      ars: {
+                      areas: {
                         with: {
-                          strs: true,
+                          storages: true,
                         },
                       },
                     },
@@ -566,24 +584,22 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
         // Get all storage spaces containing this product
         const productSpaces = yield* Effect.promise(() =>
-          db.query.TB_storage_spaces_to_products.findMany({
+          db.query.TB_storage_to_products.findMany({
             where: (products, { eq }) => eq(products.productId, parsedProductId.output),
             with: {
-              storage: {
-                with: {
-                  storage: true,
-                },
-              },
+              storage: true,
             },
           }),
         );
 
         // Count only products in storage spaces that belong to organization's warehouses
         const storageIds = new Set(
-          orgWarehouses.flatMap((ow) => ow.warehouse.fcs.flatMap((f) => f.ars.flatMap((a) => a.strs.map((s) => s.id)))),
+          orgWarehouses.flatMap((ow) =>
+            ow.warehouse.facilities.flatMap((f) => f.areas.flatMap((a) => a.storages.map((s) => s.id))),
+          ),
         );
 
-        const count = productSpaces.filter((ps) => storageIds.has(ps.storage.storage.id)).length;
+        const count = productSpaces.filter((ps) => storageIds.has(ps.storage.id)).length;
 
         return count;
       });

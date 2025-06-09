@@ -15,7 +15,10 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
 import { FacilityInfo, FacilityLive, FacilityService } from "../facilities";
 import { OrderInvalidId } from "../orders/errors";
+import { ProductInfo } from "../products";
 import { ProductInvalidId } from "../products/errors";
+import { StorageInfo, StorageLive, StorageService } from "../storages";
+import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 import { SupplierInvalidId } from "../suppliers/errors";
 import {
   OrganizationAlreadyExists,
@@ -121,27 +124,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                     address: true,
                   },
                 },
-                fcs: {
+                facilities: {
                   with: {
-                    ars: {
+                    areas: {
                       with: {
-                        strs: {
+                        storages: {
                           with: {
                             type: true,
-                            secs: {
-                              with: {
-                                spaces: {
-                                  with: {
-                                    labels: true,
-                                    prs: {
-                                      with: {
-                                        pr: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            },
+                            area: true,
+                            products: true,
+                            children: true,
                           },
                         },
                       },
@@ -306,6 +298,22 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                           address: true,
                         },
                       },
+                      facilities: {
+                        with: {
+                          areas: {
+                            with: {
+                              storages: {
+                                with: {
+                                  type: true,
+                                  area: true,
+                                  products: true,
+                                  children: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -316,25 +324,8 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         if (!org) {
           return yield* Effect.fail(new OrganizationNotFound({ id }));
         }
-        const whs = [];
-        for (const wh of org.whs) {
-          const facilityService = yield* _(FacilityService);
-          const facilities = yield* facilityService.findByWarehouseId(wh.warehouseId);
-          const warehouse = {
-            ...wh,
-            warehouse: {
-              ...wh.warehouse,
-              fcs: facilities,
-            },
-          };
-          whs.push(warehouse);
-        }
-        org.whs = whs;
-
-        return org as typeof org & {
-          whs: (typeof org)["whs"] & { warehouse: (typeof org)["whs"] & { fcs: FacilityInfo[] } }[];
-        };
-      }).pipe(Effect.provide(FacilityLive));
+        return org;
+      });
 
     const findBySlug = (slug: string, relations: FindManyParams["with"] = withRelations()) =>
       Effect.gen(function* (_) {
@@ -404,27 +395,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                           address: true,
                         },
                       },
-                      fcs: {
+                      facilities: {
                         with: {
-                          ars: {
+                          areas: {
                             with: {
-                              strs: {
+                              storages: {
                                 with: {
                                   type: true,
-                                  secs: {
-                                    with: {
-                                      spaces: {
-                                        with: {
-                                          labels: true,
-                                          prs: {
-                                            with: {
-                                              pr: true,
-                                            },
-                                          },
-                                        },
-                                      },
-                                    },
-                                  },
+                                  area: true,
+                                  products: true,
+                                  children: true,
                                 },
                               },
                             },
@@ -850,6 +830,96 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    type Storage = Effect.Effect.Success<
+      ReturnType<typeof findById>
+    >["whs"][number]["warehouse"]["facilities"][number]["areas"][number]["storages"][number];
+
+    type InventoryStats = {
+      totalFacilities: number;
+      totalAreas: number;
+      totalStorages: number;
+      totalLeafStorages: number;
+      totalProducts: number;
+      productCounts: Map<string, { id: string; count: number; name: string }>;
+    };
+
+    const countLeafStorages = (storage: Storage): Effect.Effect<number, StorageInvalidId | StorageNotFound> =>
+      Effect.gen(function* (_) {
+        const storageService = yield* _(StorageService);
+        if (!storage.children || storage.children.length === 0) {
+          return 1;
+        }
+        const childCounts = yield* Effect.all(
+          storage.children.map((child) =>
+            Effect.suspend(() =>
+              Effect.gen(function* (_) {
+                const c = yield* storageService.findById(child.id);
+                return yield* countLeafStorages(c);
+              }),
+            ),
+          ),
+        );
+        // return 1;
+        return childCounts.reduce((sum, count) => sum + count, 0);
+      }).pipe(Effect.provide(StorageLive));
+
+    const calculateInventoryStats = (
+      org: Effect.Effect.Success<ReturnType<typeof findById>>,
+    ): Effect.Effect<InventoryStats, StorageInvalidId | StorageNotFound> =>
+      Effect.gen(function* (_) {
+        const stats: InventoryStats = {
+          totalFacilities: 0,
+          totalAreas: 0,
+          totalStorages: 0,
+          totalLeafStorages: 0,
+          totalProducts: 0,
+          productCounts: new Map(),
+        };
+
+        const countStorageProducts = (storage: StorageInfo) => {
+          // Count products in current storage - each entry in products array represents one unit
+          for (const prod of storage.products ?? []) {
+            const existing = stats.productCounts.get(prod.product.id);
+            if (existing) {
+              existing.count += 1; // Each entry represents one unit
+            } else {
+              stats.productCounts.set(prod.product.id, {
+                id: prod.product.id,
+                count: 1,
+                name: prod.product.name,
+              });
+            }
+          }
+
+          // Recursively count products in child storages
+          for (const child of storage.children ?? []) {
+            countStorageProducts(child as StorageInfo);
+          }
+        };
+
+        for (const wh of org.whs) {
+          stats.totalFacilities += wh.warehouse.facilities?.length ?? 0;
+
+          for (const facility of wh.warehouse.facilities ?? []) {
+            stats.totalAreas += facility.areas?.length ?? 0;
+
+            for (const area of facility.areas ?? []) {
+              stats.totalStorages += area.storages?.length ?? 0;
+
+              for (const storage of area.storages ?? []) {
+                stats.totalLeafStorages += yield* countLeafStorages(storage);
+                countStorageProducts(storage as StorageInfo);
+              }
+            }
+          }
+        }
+
+        // Calculate total products by summing all quantities
+        stats.totalProducts = Array.from(stats.productCounts.values()).reduce((sum, p) => sum + p.count, 0);
+
+        return stats;
+      });
+
     const getInventory = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
@@ -962,6 +1032,24 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
                           address: true,
                         },
                       },
+                      facilities: {
+                        with: {
+                          areas: {
+                            with: {
+                              storages: {
+                                with: {
+                                  area: true,
+                                  products: true,
+                                  children: true,
+                                  type: true,
+                                  labels: true,
+                                  parent: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -972,182 +1060,74 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         if (!org) {
           return yield* Effect.fail(new OrganizationNotFound({ id: parsedOrgId.output }));
         }
-        const whs = [];
-        for (const wh of org.whs) {
-          const facilityService = yield* _(FacilityService);
-          const facilities = yield* facilityService.findByWarehouseId(wh.warehouseId);
-          const warehouse = {
-            ...wh,
-            warehouse: {
-              ...wh.warehouse,
-              fcs: facilities,
-            },
-          };
-          whs.push(warehouse);
-        }
-        // org.whs = whs;
-        // type Org = typeof org;
-        // type Whs = (typeof org)["whs"];
-        // type Wh = Whs[number] & { warehouse: Whs[number]["warehouse"] & { fcs: FacilityInfo[] } };
-        // const organization = org as Org & {
-        //   whs: Wh[];
-        // };
 
-        const warehouseSummary = whs.map((wh) => {
-          return {
-            id: wh.warehouse.id,
-            name: wh.warehouse.name,
-            description: wh.warehouse.description,
-            dimensions: wh.warehouse.dimensions,
-            createdAt: wh.warehouse.createdAt,
-            updatedAt: wh.warehouse.updatedAt,
-            deletedAt: wh.warehouse.deletedAt,
-            facilities: wh.warehouse.fcs.map((facility) => ({
-              id: facility.id,
-              name: facility.name,
-              description: facility.description,
-              boundingBox: facility.bounding_box,
-              createdAt: facility.createdAt,
-              updatedAt: facility.updatedAt,
-              deletedAt: facility.deletedAt,
-              areas: facility.ars.map((area) => ({
-                id: area.id,
-                name: area.name,
-                description: area.description,
-                boundingBox: area.bounding_box,
-                createdAt: area.createdAt,
-                updatedAt: area.updatedAt,
-                deletedAt: area.deletedAt,
-                storages: area.strs.map((storage) => ({
-                  id: storage.id,
-                  name: storage.name,
-                  description: storage.description,
-                  type: storage.type,
-                  capacity: storage.capacity,
-                  currentOccupancy: storage.currentOccupancy,
-                  variant: storage.variant,
-                  boundingBox: storage.bounding_box,
-                  createdAt: storage.createdAt,
-                  updatedAt: storage.updatedAt,
-                  deletedAt: storage.deletedAt,
-                  sections: storage.secs.map((section) => ({
-                    id: section.id,
-                    name: section.name,
-                    barcode: section.barcode,
-                    dimensions: section.dimensions,
-                    spaces: section.spaces.map((space) => ({
-                      id: space.id,
-                      name: space.name,
-                      barcode: space.barcode,
-                      dimensions: space.dimensions,
-                      productCapacity: space.productCapacity,
-                      products: space.prs.map((p) => ({
-                        id: p.pr.id,
-                        name: p.pr.name,
-                        sku: p.pr.sku,
-                        barcode: p.pr.barcode,
-                        createdAt: p.pr.createdAt,
-                        updatedAt: p.pr.updatedAt,
-                        deletedAt: p.pr.deletedAt,
-                        stock: space.prs.filter((p2) => p2.pr.id === p.pr.id).length,
-                        minStock: p.pr.minimumStock,
-                        maxStock: p.pr.maximumStock,
-                        reorderPoint: p.pr.reorderPoint,
-                        safetyStock: p.pr.safetyStock,
-                      })),
-                    })),
-                  })),
-                })),
-              })),
-            })),
-          };
-        });
+        const stats = yield* calculateInventoryStats(org);
 
-        const summary = {
+        const deepStorageChildren = (
+          storage: StorageInfo,
+        ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId> =>
+          Effect.gen(function* (_) {
+            const storageService = yield* _(StorageService);
+            const s = yield* storageService.findById(storage.id);
+            if (!s) {
+              return storage;
+            }
+
+            if (!s.children || s.children.length === 0) {
+              return s;
+            }
+
+            const c_children = yield* Effect.all(
+              s.children.map((child) => Effect.suspend(() => deepStorageChildren(child as StorageInfo))),
+            );
+
+            return {
+              ...s,
+              products: s.products,
+              children: c_children,
+            } satisfies StorageInfo;
+          }).pipe(Effect.provide(StorageLive));
+
+        return {
           id: org.id,
           name: org.name,
-          totalWarehouses: whs?.length ?? 0,
-          warehouses: warehouseSummary,
-          stats: {
-            totalFacilities: warehouseSummary.reduce((acc, wh) => acc + (wh.facilities?.length ?? 0), 0),
-            totalAreas: warehouseSummary.reduce(
-              (acc, wh) => acc + (wh.facilities?.reduce((facc, f) => facc + (f.areas?.length ?? 0), 0) ?? 0),
-              0,
+          totalWarehouses: org.whs.length,
+          warehouses: yield* Effect.all(
+            org.whs.map((ow) =>
+              Effect.gen(function* (_) {
+                return {
+                  ...ow,
+                  createdAt: ow.warehouse.createdAt,
+                  updatedAt: ow.warehouse.updatedAt,
+                  deletedAt: ow.warehouse.deletedAt,
+                  facilities: yield* Effect.all(
+                    ow.warehouse.facilities.map((f) =>
+                      Effect.gen(function* (_) {
+                        return {
+                          ...f,
+                          areas: yield* Effect.all(
+                            f.areas.map((a) =>
+                              Effect.gen(function* (_) {
+                                return {
+                                  ...a,
+                                  storages: yield* Effect.all(
+                                    a.storages.map((s) => Effect.suspend(() => deepStorageChildren(s as StorageInfo))),
+                                  ),
+                                };
+                              }),
+                            ),
+                          ),
+                        };
+                      }),
+                    ),
+                  ),
+                };
+              }),
             ),
-            totalStorages: warehouseSummary.reduce(
-              (acc, wh) =>
-                acc +
-                (wh.facilities?.reduce(
-                  (facc, f) => facc + (f.areas?.reduce((aacc, a) => aacc + (a.storages?.length ?? 0), 0) ?? 0),
-                  0,
-                ) ?? 0),
-              0,
-            ),
-            totalSections: warehouseSummary.reduce(
-              (acc, wh) =>
-                acc +
-                (wh.facilities?.reduce(
-                  (facc, f) =>
-                    facc +
-                    (f.areas?.reduce(
-                      (aacc, a) => aacc + (a.storages?.reduce((sacc, s) => sacc + (s.sections?.length ?? 0), 0) ?? 0),
-                      0,
-                    ) ?? 0),
-                  0,
-                ) ?? 0),
-              0,
-            ),
-            totalSpaces: warehouseSummary.reduce(
-              (acc, wh) =>
-                acc +
-                (wh.facilities?.reduce(
-                  (facc, f) =>
-                    facc +
-                    (f.areas?.reduce(
-                      (aacc, a) =>
-                        aacc +
-                        (a.storages?.reduce(
-                          (sacc, s) =>
-                            sacc + (s.sections?.reduce((secacc, sec) => secacc + (sec.spaces?.length ?? 0), 0) ?? 0),
-                          0,
-                        ) ?? 0),
-                      0,
-                    ) ?? 0),
-                  0,
-                ) ?? 0),
-              0,
-            ),
-            totalProducts: warehouseSummary.reduce(
-              (acc, wh) =>
-                acc +
-                (wh.facilities?.reduce(
-                  (facc, f) =>
-                    facc +
-                    (f.areas?.reduce(
-                      (aacc, a) =>
-                        aacc +
-                        (a.storages?.reduce(
-                          (sacc, s) =>
-                            sacc +
-                            (s.sections?.reduce(
-                              (secacc, sec) =>
-                                secacc +
-                                (sec.spaces?.reduce((spacc, sp) => spacc + (sp.products?.length ?? 0), 0) ?? 0),
-                              0,
-                            ) ?? 0),
-                          0,
-                        ) ?? 0),
-                      0,
-                    ) ?? 0),
-                  0,
-                ) ?? 0),
-              0,
-            ),
-          },
+          ),
+          stats,
         };
-
-        return summary;
-      }).pipe(Effect.provide(FacilityLive));
+      });
 
     const getDashboardData = (organizationId: string) =>
       Effect.gen(function* (_) {

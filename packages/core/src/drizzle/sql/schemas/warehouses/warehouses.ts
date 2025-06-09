@@ -39,7 +39,7 @@ export const warehouse_relation = relations(TB_warehouses, ({ one, many }) => ({
     references: [TB_users.id],
   }),
   addresses: many(TB_warehouse_addresses),
-  fcs: many(TB_warehouse_facilities),
+  facilities: many(TB_warehouse_facilities),
   sessions: many(TB_sessions),
   products: many(TB_warehouse_products),
   organization: many(TB_organizations_warehouses),

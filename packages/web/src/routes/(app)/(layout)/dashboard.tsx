@@ -129,10 +129,10 @@ export default function DashboardPage() {
                         </span>
                         <div
                           class="flex flex-row items-center gap-2 bg-muted-foreground/10 dark:bg-neutral-900 rounded-full px-2 py-0.5 border"
-                          title={`${inv().amounOfStorages} Storages`}
+                          title={`${inv().amountOfStorages} Storages`}
                         >
                           <span class="text-xs text-muted-foreground font-['Geist_Mono_Variable']">
-                            {inv().amounOfStorages}
+                            {inv().amountOfStorages}
                           </span>
                           <div class="size-2 bg-muted-foreground rounded-full" />
                         </div>

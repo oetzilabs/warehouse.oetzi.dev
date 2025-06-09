@@ -149,28 +149,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             product: true,
                           },
                         },
-                        fcs: {
+                        facilities: {
                           with: {
-                            ars: {
+                            areas: {
                               with: {
-                                strs: {
+                                storages: {
                                   with: {
                                     type: true,
                                     area: true,
-                                    secs: {
-                                      with: {
-                                        spaces: {
-                                          with: {
-                                            labels: true,
-                                            prs: {
-                                              with: {
-                                                pr: true,
-                                              },
-                                            },
-                                          },
-                                        },
-                                      },
-                                    },
+                                    products: true,
+                                    children: true,
                                   },
                                 },
                               },
@@ -204,28 +192,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     product: true,
                   },
                 },
-                fcs: {
+                facilities: {
                   with: {
-                    ars: {
+                    areas: {
                       with: {
-                        strs: {
+                        storages: {
                           with: {
                             type: true,
                             area: true,
-                            secs: {
-                              with: {
-                                spaces: {
-                                  with: {
-                                    labels: true,
-                                    prs: {
-                                      with: {
-                                        pr: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            },
+                            products: true,
+                            children: true,
                           },
                         },
                       },
@@ -322,28 +298,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                             product: true,
                           },
                         },
-                        fcs: {
+                        facilities: {
                           with: {
-                            ars: {
+                            areas: {
                               with: {
-                                strs: {
+                                storages: {
                                   with: {
                                     type: true,
                                     area: true,
-                                    secs: {
-                                      with: {
-                                        spaces: {
-                                          with: {
-                                            labels: true,
-                                            prs: {
-                                              with: {
-                                                pr: true,
-                                              },
-                                            },
-                                          },
-                                        },
-                                      },
-                                    },
+                                    products: true,
+                                    children: true,
                                   },
                                 },
                               },
@@ -373,28 +337,16 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                     product: true,
                   },
                 },
-                fcs: {
+                facilities: {
                   with: {
-                    ars: {
+                    areas: {
                       with: {
-                        strs: {
+                        storages: {
                           with: {
                             type: true,
                             area: true,
-                            secs: {
-                              with: {
-                                spaces: {
-                                  with: {
-                                    labels: true,
-                                    prs: {
-                                      with: {
-                                        pr: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            },
+                            products: true,
+                            children: true,
                           },
                         },
                       },
@@ -405,26 +357,14 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             },
             fc: {
               with: {
-                ars: {
+                areas: {
                   with: {
-                    strs: {
+                    storages: {
                       with: {
                         type: true,
                         area: true,
-                        secs: {
-                          with: {
-                            spaces: {
-                              with: {
-                                labels: true,
-                                prs: {
-                                  with: {
-                                    pr: true,
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
+                        products: true,
+                        children: true,
                       },
                     },
                   },
@@ -491,174 +431,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   paymentMethod: true,
                 },
               },
-              // orgs: {
-              //   with: {
-              //     org: {
-              //       with: {
-              //         products: {
-              //           with: {
-              //             product: true,
-              //           },
-              //         },
-              //         supps: {
-              //           with: {
-              //             supplier: {
-              //               with: {
-              //                 products: {
-              //                   with: {
-              //                     product: true,
-              //                   },
-              //                 },
-              //               },
-              //             },
-              //           },
-              //         },
-              //         customers: {
-              //           with: {
-              //             customer: {
-              //               with: {
-              //                 sales: {
-              //                   with: {
-              //                     items: {
-              //                       with: {
-              //                         product: true,
-              //                       },
-              //                     },
-              //                   },
-              //                 },
-              //               },
-              //             },
-              //           },
-              //         },
-              //         catalogs: {
-              //           with: {
-              //             products: {
-              //               with: {
-              //                 product: true,
-              //               },
-              //             },
-              //           },
-              //         },
-              //         owner: {
-              //           columns: {
-              //             hashed_password: false,
-              //           },
-              //         },
-              //         users: {
-              //           with: {
-              //             user: {
-              //               columns: {
-              //                 hashed_password: false,
-              //               },
-              //             },
-              //           },
-              //         },
-              //         whs: {
-              //           with: {
-              //             warehouse: {
-              //               with: {
-              //                 addresses: {
-              //                   with: {
-              //                     address: true,
-              //                   },
-              //                 },
-              //                 owner: {
-              //                   columns: {
-              //                     hashed_password: false,
-              //                   },
-              //                 },
-              //                 products: {
-              //                   with: {
-              //                     product: true,
-              //                   },
-              //                 },
-              //                 fcs: {
-              //                   with: {
-              //                     ars: {
-              //                       with: {
-              //                         strs: {
-              //                           with: {
-              //                             type: true,
-              //                             area: true,
-              //                             secs: {
-              //                               with: {
-              //                                 spaces: {
-              //                                   with: {
-              //                                     labels: true,
-              //                                     prs: {
-              //                                       with: {
-              //                                         pr: true,
-              //                                       },
-              //                                     },
-              //                                   },
-              //                                 },
-              //                               },
-              //                             },
-              //                           },
-              //                         },
-              //                       },
-              //                     },
-              //                   },
-              //                 },
-              //               },
-              //             },
-              //           },
-              //         },
-              //       },
-              //     },
-              //   },
-              // },
-              // whs: {
-              //   with: {
-              //     warehouse: {
-              //       with: {
-              //         addresses: {
-              //           with: {
-              //             address: true,
-              //           },
-              //         },
-              //         owner: {
-              //           columns: {
-              //             hashed_password: false,
-              //           },
-              //         },
-              //         products: {
-              //           with: {
-              //             product: true,
-              //           },
-              //         },
-              //         fcs: {
-              //           with: {
-              //             ars: {
-              //               with: {
-              //                 strs: {
-              //                   with: {
-              //                     type: true,
-              //                     area: true,
-              //                     secs: {
-              //                       with: {
-              //                         spaces: {
-              //                           with: {
-              //                             labels: true,
-              //                             prs: {
-              //                               with: {
-              //                                 pr: true,
-              //                               },
-              //                             },
-              //                           },
-              //                         },
-              //                       },
-              //                     },
-              //                   },
-              //                 },
-              //               },
-              //             },
-              //           },
-              //         },
-              //       },
-              //     },
-              //   },
-              // },
               sessions: {
                 with: {
                   user: {
@@ -774,452 +546,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         const user = yield* Effect.promise(() =>
           db.query.TB_users.findFirst({
             where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
-            // with: {
-            //   payment_methods: {
-            //     with: {
-            //       payment_method: true,
-            //     },
-            //   },
-            //   payment_history: {
-            //     with: {
-            //       paymentMethod: true,
-            //     },
-            //   },
-            //   orgs: {
-            //     with: {
-            //       org: {
-            //         with: {
-            //           products: {
-            //             with: {
-            //               product: true,
-            //             },
-            //           },
-            //           supps: {
-            //             with: {
-            //               supplier: {
-            //                 with: {
-            //                   products: {
-            //                     with: {
-            //                       product: true,
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           customerOrders: {
-            //             with: {
-            //               order: {
-            //                 with: {
-            //                   custSched: {
-            //                     with: {
-            //                       schedule: true,
-            //                       customer: true,
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           purchases: {
-            //             with: {
-            //               order: true,
-            //             },
-            //           },
-            //           devices: {
-            //             with: {
-            //               type: true,
-            //             },
-            //           },
-            //           sales: {
-            //             with: {
-            //               sale: true,
-            //             },
-            //           },
-            //           customers: {
-            //             with: {
-            //               customer: {
-            //                 with: {
-            //                   sales: {
-            //                     with: {
-            //                       items: {
-            //                         with: {
-            //                           product: true,
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           catalogs: {
-            //             with: {
-            //               products: {
-            //                 with: {
-            //                   product: true,
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           owner: {
-            //             columns: {
-            //               hashed_password: false,
-            //             },
-            //           },
-            //           users: {
-            //             with: {
-            //               user: {
-            //                 columns: {
-            //                   hashed_password: false,
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           whs: {
-            //             with: {
-            //               warehouse: {
-            //                 with: {
-            //                   addresses: {
-            //                     with: {
-            //                       address: true,
-            //                     },
-            //                   },
-            //                   owner: {
-            //                     columns: {
-            //                       hashed_password: false,
-            //                     },
-            //                   },
-            //                   products: {
-            //                     with: {
-            //                       product: true,
-            //                     },
-            //                   },
-            //                   fcs: {
-            //                     with: {
-            //                       ars: {
-            //                         with: {
-            //                           strs: {
-            //                             with: {
-            //                               type: true,
-            //                               area: true,
-            //                               secs: {
-            //                                 with: {
-            //                                   spaces: {
-            //                                     with: {
-            //                                       labels: true,
-            //                                       prs: {
-            //                                         with: {
-            //                                           pr: true,
-            //                                         },
-            //                                       },
-            //                                     },
-            //                                   },
-            //                                 },
-            //                               },
-            //                             },
-            //                           },
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //         },
-            //       },
-            //     },
-            //   },
-            //   whs: {
-            //     with: {
-            //       warehouse: {
-            //         with: {
-            //           addresses: {
-            //             with: {
-            //               address: true,
-            //             },
-            //           },
-            //           owner: {
-            //             columns: {
-            //               hashed_password: false,
-            //             },
-            //           },
-            //           products: {
-            //             with: {
-            //               product: true,
-            //             },
-            //           },
-            //           fcs: {
-            //             with: {
-            //               ars: {
-            //                 with: {
-            //                   strs: {
-            //                     with: {
-            //                       type: true,
-            //                       area: true,
-            //                       secs: {
-            //                         with: {
-            //                           spaces: {
-            //                             with: {
-            //                               labels: true,
-            //                               prs: {
-            //                                 with: {
-            //                                   pr: true,
-            //                                 },
-            //                               },
-            //                             },
-            //                           },
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //         },
-            //       },
-            //     },
-            //   },
-            //   sessions: {
-            //     with: {
-            //       user: {
-            //         columns: {
-            //           hashed_password: false,
-            //         },
-            //         with: {
-            //           sessions: {
-            //             with: {
-            //               user: {
-            //                 columns: {
-            //                   hashed_password: false,
-            //                 },
-            //               },
-            //             },
-            //           },
-            //         },
-            //       },
-            //       org: {
-            //         with: {
-            //           products: {
-            //             with: {
-            //               product: true,
-            //             },
-            //           },
-            //           supps: {
-            //             with: {
-            //               supplier: {
-            //                 with: {
-            //                   products: {
-            //                     with: {
-            //                       product: true,
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           customerOrders: {
-            //             with: {
-            //               order: {
-            //                 with: {
-            //                   custSched: {
-            //                     with: {
-            //                       schedule: true,
-            //                       customer: true,
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           purchases: {
-            //             with: {
-            //               order: true,
-            //             },
-            //           },
-            //           devices: {
-            //             with: {
-            //               type: true,
-            //             },
-            //           },
-            //           sales: {
-            //             with: {
-            //               sale: true,
-            //             },
-            //           },
-            //           customers: {
-            //             with: {
-            //               customer: {
-            //                 with: {
-            //                   sales: {
-            //                     with: {
-            //                       items: {
-            //                         with: {
-            //                           product: true,
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           catalogs: {
-            //             with: {
-            //               products: {
-            //                 with: {
-            //                   product: true,
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           owner: {
-            //             columns: {
-            //               hashed_password: false,
-            //             },
-            //           },
-            //           users: {
-            //             with: {
-            //               user: {
-            //                 columns: {
-            //                   hashed_password: false,
-            //                 },
-            //               },
-            //             },
-            //           },
-            //           whs: {
-            //             with: {
-            //               warehouse: {
-            //                 with: {
-            //                   addresses: {
-            //                     with: {
-            //                       address: true,
-            //                     },
-            //                   },
-            //                   owner: {
-            //                     columns: {
-            //                       hashed_password: false,
-            //                     },
-            //                   },
-            //                   products: {
-            //                     with: {
-            //                       product: true,
-            //                     },
-            //                   },
-            //                   fcs: {
-            //                     with: {
-            //                       ars: {
-            //                         with: {
-            //                           strs: {
-            //                             with: {
-            //                               type: true,
-            //                               area: true,
-            //                               secs: {
-            //                                 with: {
-            //                                   spaces: {
-            //                                     with: {
-            //                                       labels: true,
-            //                                       prs: {
-            //                                         with: {
-            //                                           pr: true,
-            //                                         },
-            //                                       },
-            //                                     },
-            //                                   },
-            //                                 },
-            //                               },
-            //                             },
-            //                           },
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //         },
-            //       },
-            //       wh: {
-            //         with: {
-            //           addresses: {
-            //             with: {
-            //               address: true,
-            //             },
-            //           },
-            //           owner: {
-            //             columns: {
-            //               hashed_password: false,
-            //             },
-            //           },
-            //           products: {
-            //             with: {
-            //               product: true,
-            //             },
-            //           },
-            //           fcs: {
-            //             with: {
-            //               ars: {
-            //                 with: {
-            //                   strs: {
-            //                     with: {
-            //                       type: true,
-            //                       area: true,
-            //                       secs: {
-            //                         with: {
-            //                           spaces: {
-            //                             with: {
-            //                               labels: true,
-            //                               prs: {
-            //                                 with: {
-            //                                   pr: true,
-            //                                 },
-            //                               },
-            //                             },
-            //                           },
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //         },
-            //       },
-            //       fc: {
-            //         with: {
-            //           ars: {
-            //             with: {
-            //               strs: {
-            //                 with: {
-            //                   type: true,
-            //                   area: true,
-            //                   secs: {
-            //                     with: {
-            //                       spaces: {
-            //                         with: {
-            //                           labels: true,
-            //                           prs: {
-            //                             with: {
-            //                               pr: true,
-            //                             },
-            //                           },
-            //                         },
-            //                       },
-            //                     },
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //           },
-            //         },
-            //       },
-            //     },
-            //   },
-            // },
             columns: {
               hashed_password: false,
             },

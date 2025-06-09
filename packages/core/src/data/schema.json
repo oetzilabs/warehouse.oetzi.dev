@@ -390,264 +390,7 @@
                                   "storages": {
                                     "type": "array",
                                     "items": {
-                                      "type": "object",
-                                      "properties": {
-                                        "typeId": {
-                                          "type": "string"
-                                        },
-                                        "name": {
-                                          "type": "string"
-                                        },
-                                        "description": {
-                                          "anyOf": [
-                                            {
-                                              "const": null
-                                            },
-                                            {
-                                              "type": "string"
-                                            }
-                                          ]
-                                        },
-                                        "capacity": {
-                                          "type": "integer",
-                                          "minimum": -2147483648,
-                                          "maximum": 2147483647
-                                        },
-                                        "variant": {
-                                          "enum": [
-                                            "horizontal",
-                                            "vertical"
-                                          ]
-                                        },
-                                        "currentOccupancy": {
-                                          "anyOf": [
-                                            {
-                                              "const": null
-                                            },
-                                            {
-                                              "type": "integer",
-                                              "minimum": -2147483648,
-                                              "maximum": 2147483647
-                                            }
-                                          ]
-                                        },
-                                        "bounding_box": {
-                                          "anyOf": [
-                                            {
-                                              "anyOf": [
-                                                {
-                                                  "type": "string"
-                                                },
-                                                {
-                                                  "type": "number"
-                                                },
-                                                {
-                                                  "type": "boolean"
-                                                },
-                                                {
-                                                  "const": null
-                                                }
-                                              ]
-                                            },
-                                            {
-                                              "type": "array",
-                                              "items": {}
-                                            },
-                                            {
-                                              "type": "object",
-                                              "additionalProperties": {}
-                                            }
-                                          ]
-                                        },
-                                        "id": {},
-                                        "deletedAt": {
-                                          "anyOf": [
-                                            {
-                                              "const": null
-                                            },
-                                            {
-                                              "type": "string",
-                                              "format": "date-time"
-                                            }
-                                          ]
-                                        },
-                                        "sections": {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "properties": {
-                                              "name": {
-                                                "type": "string"
-                                              },
-                                              "barcode": {
-                                                "type": "string",
-                                                "maxLength": 128
-                                              },
-                                              "dimensions": {
-                                                "anyOf": [
-                                                  {
-                                                    "const": null
-                                                  },
-                                                  {
-                                                    "anyOf": [
-                                                      {
-                                                        "anyOf": [
-                                                          {
-                                                            "type": "string"
-                                                          },
-                                                          {
-                                                            "type": "number"
-                                                          },
-                                                          {
-                                                            "type": "boolean"
-                                                          },
-                                                          {
-                                                            "const": null
-                                                          }
-                                                        ]
-                                                      },
-                                                      {
-                                                        "type": "array",
-                                                        "items": {}
-                                                      },
-                                                      {
-                                                        "type": "object",
-                                                        "additionalProperties": {}
-                                                      }
-                                                    ]
-                                                  }
-                                                ]
-                                              },
-                                              "id": {},
-                                              "deletedAt": {
-                                                "anyOf": [
-                                                  {
-                                                    "const": null
-                                                  },
-                                                  {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                  }
-                                                ]
-                                              },
-                                              "spaces": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "name": {
-                                                      "type": "string"
-                                                    },
-                                                    "barcode": {
-                                                      "type": "string",
-                                                      "maxLength": 128
-                                                    },
-                                                    "dimensions": {
-                                                      "anyOf": [
-                                                        {
-                                                          "const": null
-                                                        },
-                                                        {
-                                                          "anyOf": [
-                                                            {
-                                                              "anyOf": [
-                                                                {
-                                                                  "type": "string"
-                                                                },
-                                                                {
-                                                                  "type": "number"
-                                                                },
-                                                                {
-                                                                  "type": "boolean"
-                                                                },
-                                                                {
-                                                                  "const": null
-                                                                }
-                                                              ]
-                                                            },
-                                                            {
-                                                              "type": "array",
-                                                              "items": {}
-                                                            },
-                                                            {
-                                                              "type": "object",
-                                                              "additionalProperties": {}
-                                                            }
-                                                          ]
-                                                        }
-                                                      ]
-                                                    },
-                                                    "productCapacity": {
-                                                      "type": "integer",
-                                                      "minimum": -2147483648,
-                                                      "maximum": 2147483647
-                                                    },
-                                                    "id": {},
-                                                    "deletedAt": {
-                                                      "anyOf": [
-                                                        {
-                                                          "const": null
-                                                        },
-                                                        {
-                                                          "type": "string",
-                                                          "format": "date-time"
-                                                        }
-                                                      ]
-                                                    },
-                                                    "labels": {
-                                                      "type": "array",
-                                                      "items": {
-                                                        "type": "string"
-                                                      }
-                                                    },
-                                                    "products": {
-                                                      "type": "array",
-                                                      "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "product_id": {
-                                                            "type": "string"
-                                                          },
-                                                          "id": {}
-                                                        },
-                                                        "additionalProperties": false,
-                                                        "required": [
-                                                          "product_id",
-                                                          "id"
-                                                        ]
-                                                      }
-                                                    }
-                                                  },
-                                                  "additionalProperties": false,
-                                                  "required": [
-                                                    "name",
-                                                    "barcode",
-                                                    "id",
-                                                    "labels",
-                                                    "products"
-                                                  ]
-                                                }
-                                              }
-                                            },
-                                            "additionalProperties": false,
-                                            "required": [
-                                              "name",
-                                              "barcode",
-                                              "id",
-                                              "spaces"
-                                            ]
-                                          }
-                                        }
-                                      },
-                                      "additionalProperties": false,
-                                      "required": [
-                                        "typeId",
-                                        "name",
-                                        "capacity",
-                                        "bounding_box",
-                                        "id",
-                                        "sections"
-                                      ]
+                                      "$ref": "#/definitions/StorageSchema"
                                     }
                                   }
                                 },
@@ -1952,5 +1695,139 @@
     "tax_group_countryrates",
     "device_types",
     "$schema"
-  ]
+  ],
+  "definitions": {
+    "StorageSchema": {
+      "type": "object",
+      "properties": {
+        "typeId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "const": null
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "variant": {
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "barcode": {
+          "anyOf": [
+            {
+              "const": null
+            },
+            {
+              "type": "string",
+              "maxLength": 128
+            }
+          ]
+        },
+        "bounding_box": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "const": null
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "items": {}
+            },
+            {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          ]
+        },
+        "id": {},
+        "deletedAt": {
+          "anyOf": [
+            {
+              "const": null
+            },
+            {
+              "type": "string",
+              "format": "date-time"
+            }
+          ]
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "product_id": {
+                "type": "string"
+              },
+              "id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "product_id",
+              "id"
+            ]
+          }
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "const": null
+            },
+            {}
+          ]
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StorageSchema"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "typeId",
+        "name",
+        "capacity",
+        "bounding_box",
+        "id",
+        "products",
+        "parentId",
+        "labels",
+        "children"
+      ]
+    }
+  }
 }

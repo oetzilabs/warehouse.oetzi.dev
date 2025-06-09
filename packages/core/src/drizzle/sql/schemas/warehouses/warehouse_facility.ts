@@ -36,7 +36,7 @@ export const warehouse_facilities_relations = relations(TB_warehouse_facilities,
     fields: [TB_warehouse_facilities.warehouse_id],
     references: [TB_warehouses.id],
   }),
-  ars: many(TB_warehouse_areas),
+  areas: many(TB_warehouse_areas),
   user: one(TB_users, {
     fields: [TB_warehouse_facilities.ownerId],
     references: [TB_users.id],
