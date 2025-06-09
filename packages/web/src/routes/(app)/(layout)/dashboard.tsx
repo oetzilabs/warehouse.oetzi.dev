@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
-import { getInventoryMetadata } from "@/lib/api/inventory";
+import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { getPendingSupplyOrders } from "@/lib/api/orders";
 import { getSchedules } from "@/lib/api/schedules";
@@ -34,7 +34,7 @@ export const route = {
 export default function DashboardPage() {
   const data = createAsync(async () => getDashboardData(), { deferStream: true });
   const notifications = createAsync(async () => getNotifications(), { deferStream: true });
-  const inventory = createAsync(async () => getInventoryMetadata(), { deferStream: true });
+  const inventory = createAsync(async () => getInventory(), { deferStream: true });
   const schedules = createAsync(async () => getSchedules(), { deferStream: true });
   const pendingSupplyOrders = createAsync(async () => getPendingSupplyOrders(), { deferStream: true });
 
@@ -56,7 +56,7 @@ export default function DashboardPage() {
                   revalidate([
                     getNotifications.key,
                     getDashboardData.key,
-                    getInventoryMetadata.key,
+                    getInventory.key,
                     getPendingSupplyOrders.key,
                   ]),
                   {
@@ -125,17 +125,11 @@ export default function DashboardPage() {
                       <div class="flex grow"></div>
                       <div class="flex flex-row gap-2 items-center justify-between">
                         <span class="text-2xl text-neutral-500 dark:text-neutral-400 font-['Geist_Mono_Variable']">
-                          {inv().totalCurrentOccupancy}/{inv().totalCapacity}
+                          {inv()
+                            .products.map((p) => p.count)
+                            .reduce((acc, curr) => acc + curr, 0)}
+                          /{inv().capacity}
                         </span>
-                        <div
-                          class="flex flex-row items-center gap-2 bg-muted-foreground/10 dark:bg-neutral-900 rounded-full px-2 py-0.5 border"
-                          title={`${inv().amountOfStorages} Storages`}
-                        >
-                          <span class="text-xs text-muted-foreground font-['Geist_Mono_Variable']">
-                            {inv().amountOfStorages}
-                          </span>
-                          <div class="size-2 bg-muted-foreground rounded-full" />
-                        </div>
                       </div>
                     </A>
                   )}
