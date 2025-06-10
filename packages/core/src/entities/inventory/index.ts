@@ -80,6 +80,11 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
                       with: {
                         supplier: {
                           with: {
+                            schedules: {
+                              with: {
+                                schedule: true,
+                              },
+                            },
                             contacts: true,
                           },
                         },
@@ -293,11 +298,14 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
             ...p,
             product: {
               ...p.product,
-              orders: p.product.orders.filter((o) => {
-                const ocoMatch = o.order.oco?.some((co) => co.organization.id === organizationId);
-                const osoMatch = o.order.oso?.some((so) => so.organization.id === organizationId);
-                return ocoMatch || osoMatch;
-              }),
+              orders: p.product.orders
+                .filter(
+                  (o) =>
+                    o.order.status === "completed" &&
+                    o.order.oso?.length > 0 &&
+                    o.order.oso?.some((so) => so.organization.id === organizationId),
+                )
+                .sort((a, b) => a.order.oso[0].createdAt.getTime() - b.order.oso[0].createdAt.getTime()),
             },
           }));
 
