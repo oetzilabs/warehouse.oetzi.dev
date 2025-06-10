@@ -82,7 +82,13 @@ export const InventoryList = (props: InventoryListProps) => {
                         <p class="text-sm text-muted-foreground">{storage.description}</p>
                       </Show>
                     </div>
-                    <Button size="sm" variant="outline" as={A} href={`/inventory/storages/${storage.id}`}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="bg-background"
+                      as={A}
+                      href={`/inventory/storages/${storage.id}`}
+                    >
                       View
                       <ArrowUpRight class="size-4 ml-2" />
                     </Button>
