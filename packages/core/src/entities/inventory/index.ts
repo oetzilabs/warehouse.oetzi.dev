@@ -49,6 +49,38 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
               const product = yield* Effect.promise(() =>
                 db.query.TB_products.findFirst({
                   where: (fields, operations) => operations.eq(fields.id, p.productId),
+                  with: {
+                    brands: true,
+                    orders: {
+                      with: {
+                        order: {
+                          with: {
+                            oco: {
+                              with: {
+                                customer: true,
+                                organization: true,
+                              },
+                            },
+                            oso: {
+                              with: {
+                                supplier: true,
+                                organization: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                    suppliers: {
+                      with: {
+                        supplier: {
+                          with: {
+                            contacts: true,
+                          },
+                        },
+                      },
+                    },
+                  },
                 }),
               );
               return {
@@ -251,7 +283,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         const { products } = yield* statistics(organizationId);
 
         // check if the storage where the product count is less then the products minimumStock, by checking if the capacity of the storage is less than the product count too.
-        const productsWithAlerts = products.filter((p) => p.count < p.product.minimumStock);
+        const productsWithAlerts = products.filter((p) => p.count < (p.product.reorderPoint ?? p.product.minimumStock));
 
         return productsWithAlerts;
       });
