@@ -5,7 +5,7 @@ import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
-import { type OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
+import { type CustomerOrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
@@ -13,7 +13,7 @@ import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
 type CustomersOrdersListProps = {
-  data: Accessor<{ customer_id: string; order: OrderInfo; createdAt: Date }[]>;
+  data: Accessor<CustomerOrderInfo[]>;
 };
 
 export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
@@ -29,33 +29,30 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         field: "date",
         label: "Date",
         fn: (a, b) => {
-          return dayjs(a.order.createdAt).diff(dayjs(b.order.createdAt));
+          return dayjs(a.createdAt).diff(dayjs(b.createdAt));
         },
       },
       {
         field: "price",
         label: "Price",
         fn: (a, b) => {
-          const aTotal = a.order.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-          const bTotal = b.order.prods.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+          const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+          const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
           return aTotal - bTotal;
         },
       },
     ],
-  } as FilterConfig<{ customer_id: string; order: OrderInfo; createdAt: Date }>["sort"];
+  } as FilterConfig<CustomerOrderInfo>["sort"];
 
-  const [filterConfig, setFilterConfig] = createStore<
-    FilterConfig<{ customer_id: string; order: OrderInfo; createdAt: Date }>
-  >({
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CustomerOrderInfo>>({
     disabled: () => props.data().length === 0,
     dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].order.createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].order.createdAt,
+      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
+      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
       preset: "clear",
     },
     search: { term: dsearch() },
     sort: defaultSort,
-    itemKey: "order", // Add this line
     filter: {
       default: null,
       current: null,
@@ -79,21 +76,21 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
 
   const filteredData = useFilter(props.data, filterConfig);
 
-  const renderCustomerOrderItem = (item: { customer_id: string; order: OrderInfo; createdAt: Date }) => (
+  const renderCustomerOrderItem = (item: CustomerOrderInfo) => (
     <>
       <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
         <div class="flex flex-row gap-4 items-center">
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row gap-2">
-              <span class="text-sm font-medium">{item.order.title}</span>
-              <OrderStatusBadge status={item.order.status} />
+              <span class="text-sm font-medium">{item.title}</span>
+              <OrderStatusBadge status={item.status} />
             </div>
             <span class="text-xs text-muted-foreground">
-              {dayjs(item.order.updatedAt ?? item.order.createdAt).format("MMM DD, YYYY - h:mm A")}
+              {dayjs(item.updatedAt ?? item.createdAt).format("MMM DD, YYYY - h:mm A")}
             </span>
           </div>
         </div>
-        <Button as={A} href={`/customers/${item.customer_id}/orders/${item.order.id}`} size="sm" class="gap-2">
+        <Button as={A} href={`/customers/${item.customer_id}/orders/${item.id}`} size="sm" class="gap-2">
           Open
           <ArrowUpRight class="size-4" />
         </Button>
@@ -101,7 +98,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
 
       <div class="flex flex-col">
         <For
-          each={item.order.prods.slice(0, 5)}
+          each={item.products.slice(0, 5)}
           fallback={
             <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">No products added</div>
           }
@@ -133,15 +130,15 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
             </div>
           )}
         </For>
-        <Show when={item.order.prods.length > 5}>
+        <Show when={item.products.length > 5}>
           <div class="flex flex-row items-center justify-between p-4 border-t bg-muted/30">
-            <span class="text-sm text-muted-foreground">+ {item.order.prods.length - 5} more products</span>
+            <span class="text-sm text-muted-foreground">+ {item.products.length - 5} more products</span>
             <span class="text-sm text-muted-foreground">
-              {item.order.prods
+              {item.products
                 .slice(5)
                 .reduce((acc, p) => acc + p.product.sellingPrice * p.quantity, 0)
                 .toFixed(2)}{" "}
-              {item.order.prods[0].product.currency}
+              {item.products[0].product.currency}
             </span>
           </div>
         </Show>
@@ -163,7 +160,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
           <TextFieldInput placeholder="Search orders" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
         <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} itemKey="order" />
+          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
         </div>
       </div>
 

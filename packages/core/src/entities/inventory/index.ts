@@ -51,35 +51,19 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
                   where: (fields, operations) => operations.eq(fields.id, p.productId),
                   with: {
                     brands: true,
-                    orders: {
-                      with: {
-                        order: {
-                          with: {
-                            prods: {
-                              with: {
-                                product: true,
-                              },
-                            },
-                            oco: {
-                              with: {
-                                customer: true,
-                                organization: true,
-                              },
-                            },
-                            oso: {
-                              with: {
-                                supplier: true,
-                                organization: true,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
                     suppliers: {
                       with: {
                         supplier: {
                           with: {
+                            purchases: {
+                              with: {
+                                products: {
+                                  with: {
+                                    product: true,
+                                  },
+                                },
+                              },
+                            },
                             schedules: {
                               with: {
                                 schedule: true,
@@ -298,14 +282,14 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
             ...p,
             product: {
               ...p.product,
-              orders: p.product.orders
-                .filter(
-                  (o) =>
-                    o.order.status === "completed" &&
-                    o.order.oso?.length > 0 &&
-                    o.order.oso?.some((so) => so.organization.id === organizationId),
-                )
-                .sort((a, b) => a.order.oso[0].createdAt.getTime() - b.order.oso[0].createdAt.getTime()),
+              lastPurchase: p.product.suppliers
+                .flatMap((s) => s.supplier.purchases)
+                // First get purchases for this organization
+                .filter((po) => po.organization_id === organizationId)
+                // Then filter completed ones
+                .filter((po) => po.status === "completed")
+                // Sort by date descending (most recent first)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0], // Get the most recent one
             },
           }));
 

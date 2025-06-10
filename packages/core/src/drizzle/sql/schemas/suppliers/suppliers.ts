@@ -5,8 +5,8 @@ import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { TB_organization_suppliers } from "../organizations/organization_suppliers";
-import { TB_organizations_supplierorders } from "../organizations/organizations_orders";
 import { schema } from "../utils";
+import { TB_supplier_purchases } from "./supplier_purchases";
 import { TB_supplier_contacts } from "./suppliers_contacts";
 import { TB_supplier_notes } from "./suppliers_notes";
 import { TB_supplier_products } from "./suppliers_products";
@@ -35,7 +35,7 @@ export const supplier_relations = relations(TB_suppliers, ({ many }) => ({
   notes: many(TB_supplier_notes),
   contacts: many(TB_supplier_contacts),
   organizations: many(TB_organization_suppliers),
-  orgOrders: many(TB_organizations_supplierorders),
+  purchases: many(TB_supplier_purchases),
   schedules: many(TB_supplier_schedules),
 }));
 

@@ -45,7 +45,7 @@ export const route = {
 export default function SupplierOrderPage() {
   const params = useParams();
   const navigate = useNavigate();
-  const order = createAsync(() => getOrderById(params.oid), { deferStream: true });
+  const order = createAsync(() => getOrderById(params.pid), { deferStream: true });
   const devices = createAsync(() => getDevices(), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
 

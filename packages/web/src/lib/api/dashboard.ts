@@ -4,7 +4,7 @@ import {
   NotificationLive,
   NotificationService,
 } from "@warehouseoetzidev/core/src/entities/notifications";
-import { OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import {
   OrganizationInfo,
   OrganizationLive,
@@ -26,7 +26,6 @@ export const getDashboardData = query(async () => {
   if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
   const session = auth[1];
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
@@ -35,10 +34,11 @@ export const getDashboardData = query(async () => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+
   const dashboardDataExit = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const organizationService = yield* _(OrganizationService);
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       const notificationService = yield* _(NotificationService);
 
       const organization = yield* organizationService.getDashboardData(orgId);
@@ -46,28 +46,32 @@ export const getDashboardData = query(async () => {
         throw new Error("Organization not found");
       }
 
-      // we gotta get the customerOrders, purchases, and other notifications
+      // Get recent data
       const customerOrders = organization.customerOrders
-        .map((co) => ({ order: co.order, customerId: co.customer_id }))
+        .filter((co) => !co.deletedAt)
+        .map((co) => ({ order: co, customerId: co.customer_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
 
       const purchases = organization.purchases
-        .map((so) => ({ order: so.order, supplierId: so.supplier_id }))
+        .filter((p) => !p.deletedAt)
+        .map((so) => ({ order: so, supplierId: so.supplier_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
 
       const lastUsedProductsFromCustomers = customerOrders
-        .map((co) => co.order.prods)
+        .map((co) => co.order.products)
         .flat()
         .sort((a, b) => dayjs(b.updatedAt).unix() - dayjs(a.updatedAt).unix())
-        .slice(0, 3);
+        .slice(0, 3)
+        .map((p) => p.product);
 
+      // Get analytics data
       const customerOrdersPercentageLastWeek = yield* orderService.percentageCustomerOrdersLastWeekByOrganizationId(
         organization.id,
       );
 
-      const purchasesPercentageLastWeek = yield* orderService.percentageSupplierOrdersLastWeekByOrganizationId(
+      const purchasesPercentageLastWeek = yield* orderService.percentageSupplierPurchasesLastWeekByOrganizationId(
         organization.id,
       );
 
@@ -75,13 +79,13 @@ export const getDashboardData = query(async () => {
         organization.id,
       );
 
+      // Get chart data
       const customerOrdersChartData = yield* orderService.getCustomerOrdersChartData(organization.id);
-      const purchasesChartData = yield* orderService.getSupplierOrdersChartData(organization.id);
+      const purchasesChartData = yield* orderService.getSupplierPurchaseChartData(organization.id);
       const popularProductsChartData = yield* orderService.getPopularProductsChartData(organization.id);
       const lastSoldProductsChartData = yield* orderService.getLastSoldProductsChartData(organization.id);
 
-      // const syncNotifications = yield* notificationService.sync();
-
+      // Get notifications
       const notifications = yield* notificationService.findByOrganizationId(organization.id);
 
       return {
@@ -103,46 +107,41 @@ export const getDashboardData = query(async () => {
         popularProductsChartData,
         notifications,
       };
-    }).pipe(Effect.provide(OrganizationLive), Effect.provide(OrderLive), Effect.provide(NotificationLive)),
+    }).pipe(Effect.provide(OrganizationLive), Effect.provide(CustomerOrderLive), Effect.provide(NotificationLive)),
   );
+
   return Exit.match(dashboardDataExit, {
-    onSuccess: (data) => {
-      return json(data);
-    },
+    onSuccess: (data) => json(data),
     onFailure: (cause) => {
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      console.log(errors);
+      const errors = Chunk.toReadonlyArray(Cause.failures(cause)).map((c) => c.message);
+      console.error("Dashboard data errors:", errors);
+
+      // Return empty data structure on error
       return json({
         orders: {
           customers: {
-            values: [] as { customerId: string; order: OrganizationInfo["customerOrders"][number]["order"] }[],
+            values: [],
             deltaPercentageLastWeek: 0,
             chartData: [],
           },
           suppliers: {
-            values: [] as { supplierId: string; order: OrganizationInfo["purchases"][number]["order"] }[],
+            values: [],
             deltaPercentageLastWeek: 0,
             chartData: [],
           },
         },
-        lastUsedProductsFromCustomers: [] as OrganizationInfo["customerOrders"][number]["order"]["prods"],
+        lastUsedProductsFromCustomers: [],
         lastSoldProductsChartData: {
           labels: [],
           data: [],
         },
-        mostPopularProductsFromOrders: [] as Effect.Effect.Success<
-          ReturnType<OrderService["findMostPopularProductsByOrganizationId"]>
-        >,
+        mostPopularProductsFromOrders: [],
         popularProductsChartData: {
           labels: [],
           data: [],
         },
-        notifications: [] as NotificationInfo[],
+        notifications: [],
       });
-      // throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
     },
   });
 }, "dashboard-data");

@@ -21,34 +21,6 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_catalogs.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        organization: true,
-        products: {
-          with: {
-            product: {
-              with: {
-                labels: true,
-                suppliers: {
-                  with: {
-                    supplier: true,
-                  },
-                },
-                brands: true,
-              },
-            },
-          },
-        },
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
-
     const slugify = (text: string) => {
       return text
         .toLowerCase()
@@ -103,7 +75,7 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return catalog;
       });
 
-    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -302,11 +274,8 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
                           },
                         },
                       },
-                      orders: {
-                        with: {
-                          order: true,
-                        },
-                      },
+                      orders: true,
+                      purchases: true,
                       labels: {
                         with: {
                           label: true,

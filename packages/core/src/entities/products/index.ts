@@ -27,45 +27,6 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_products.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
-      brands: true,
-      saleItems: {
-        with: {
-          sale: {
-            with: {
-              customer: true,
-            },
-          },
-        },
-      },
-      orders: {
-        with: {
-          order: true,
-        },
-      },
-      labels: {
-        with: {
-          label: true,
-        },
-      },
-      stco: {
-        with: {
-          condition: true,
-        },
-      },
-      suppliers: {
-        with: {
-          supplier: {
-            with: {
-              contacts: true,
-              notes: true,
-            },
-          },
-        },
-      },
-    });
 
     const create = (input: InferInput<typeof ProductCreateSchema>) =>
       Effect.gen(function* (_) {
@@ -76,9 +37,8 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return findById(product.id);
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new ProductInvalidId({ id }));
@@ -120,7 +80,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
               },
               orders: {
                 with: {
-                  order: true,
+                  customerOrder: true,
                 },
               },
               labels: {
@@ -241,7 +201,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   },
                   orders: {
                     with: {
-                      order: true,
+                      customerOrder: true,
                     },
                   },
                   labels: {
@@ -322,7 +282,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   },
                   orders: {
                     with: {
-                      order: true,
+                      customerOrder: true,
                     },
                   },
                   labels: {

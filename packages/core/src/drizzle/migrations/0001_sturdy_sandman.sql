@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."storages" ALTER COLUMN "bounding_box" SET NOT NULL;

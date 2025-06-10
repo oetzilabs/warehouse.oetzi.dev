@@ -33,41 +33,6 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_suppliers.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        products: {
-          with: {
-            product: {
-              with: {
-                labels: true,
-              },
-            },
-          },
-        },
-        contacts: true,
-        notes: true,
-        organizations: true,
-        orgOrders: {
-          with: {
-            order: {
-              with: {
-                prods: {
-                  with: {
-                    product: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
 
     const create = (input: InferInput<typeof SupplierCreateSchema>, orgId: string) =>
       Effect.gen(function* (_) {
@@ -81,9 +46,8 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return yield* findById(supplier.id);
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new SupplierInvalidId({ id }));
@@ -108,15 +72,11 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                 orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
               },
               organizations: true,
-              orgOrders: {
+              purchases: {
                 with: {
-                  order: {
+                  products: {
                     with: {
-                      prods: {
-                        with: {
-                          product: true,
-                        },
-                      },
+                      product: true,
                     },
                   },
                 },
@@ -213,15 +173,11 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                   contacts: true,
                   notes: true,
                   organizations: true,
-                  orgOrders: {
+                  purchases: {
                     with: {
-                      order: {
+                      products: {
                         with: {
-                          prods: {
-                            with: {
-                              product: true,
-                            },
-                          },
+                          product: true,
                         },
                       },
                     },
@@ -234,7 +190,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return orgSuppliers.map((orgSupplier) => orgSupplier.supplier);
       });
 
-    const getOrdersBySupplierIdAndOrganizationId = (supplierId: string, organizationId: string) =>
+    const getPurchasesBySupplierIdAndOrganizationId = (supplierId: string, organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedSupplierId = safeParse(prefixed_cuid2, supplierId);
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
@@ -245,22 +201,18 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
           return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
         return yield* Effect.promise(() =>
-          db.query.TB_organizations_supplierorders.findMany({
+          db.query.TB_supplier_purchases.findMany({
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.supplier_id, parsedSupplierId.output),
                 operations.eq(fields.organization_id, parsedOrganizationId.output),
               ),
             with: {
-              order: {
+              products: {
                 with: {
-                  prods: {
+                  product: {
                     with: {
-                      product: {
-                        with: {
-                          labels: true,
-                        },
-                      },
+                      labels: true,
                     },
                   },
                 },
@@ -378,7 +330,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       findByOrganizationId,
       remove,
       safeRemove,
-      getOrdersBySupplierIdAndOrganizationId,
+      getPurchasesBySupplierIdAndOrganizationId,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -386,7 +338,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
 
 export const SupplierLive = SupplierService.Default;
 export type SupplierInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findById"]>>>>;
-export type SupplierOrderInfo = NonNullable<
-  Awaited<Effect.Effect.Success<ReturnType<SupplierService["getOrdersBySupplierIdAndOrganizationId"]>>>
->[number]["order"];
+export type SupplierPurchaseInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<SupplierService["getPurchasesBySupplierIdAndOrganizationId"]>>>
+>[number];
 export type SupplierNoteInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findNoteById"]>>>>;

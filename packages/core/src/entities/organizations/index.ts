@@ -3,13 +3,16 @@ import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
+  CustomerOrderCreate,
+  CustomerOrderCreateSchema,
   OrganizationCreateSchema,
   OrganizationUpdateSchema,
+  SupplierPurchaseCreateSchema,
+  TB_customer_orders,
   TB_organization_users,
   TB_organizations,
-  TB_organizations_customerorders,
   TB_organizations_products,
-  TB_organizations_supplierorders,
+  TB_supplier_purchases,
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
@@ -19,7 +22,7 @@ import { ProductInfo } from "../products";
 import { ProductInvalidId } from "../products/errors";
 import { StorageInfo, StorageLive, StorageService } from "../storages";
 import { StorageInvalidId, StorageNotFound } from "../storages/errors";
-import { SupplierInvalidId } from "../suppliers/errors";
+import { SupplierInvalidId, SupplierPurchaseInvalidId, SupplierPurchaseNotCreated } from "../suppliers/errors";
 import {
   OrganizationAlreadyExists,
   OrganizationInvalidId,
@@ -82,12 +85,23 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         },
         customerOrders: {
           with: {
-            order: true,
+            customer: true,
+            products: {
+              with: {
+                product: true,
+              },
+            },
+            sale: true,
           },
         },
         purchases: {
           with: {
-            order: true,
+            supplier: true,
+            products: {
+              with: {
+                product: true,
+              },
+            },
           },
         },
         devices: {
@@ -204,44 +218,21 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               },
               customerOrders: {
                 with: {
-                  order: {
+                  customer: true,
+                  products: {
                     with: {
-                      prods: {
-                        with: {
-                          product: {
-                            with: {
-                              brands: true,
-                              warehouses: {
-                                with: {
-                                  warehouse: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      product: true,
                     },
                   },
+                  sale: true,
                 },
               },
               purchases: {
                 with: {
-                  order: {
+                  supplier: true,
+                  products: {
                     with: {
-                      prods: {
-                        with: {
-                          product: {
-                            with: {
-                              brands: true,
-                              warehouses: {
-                                with: {
-                                  warehouse: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      product: true,
                     },
                   },
                 },
@@ -335,12 +326,23 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
             with: {
               customerOrders: {
                 with: {
-                  order: true,
+                  customer: true,
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                  sale: true,
                 },
               },
               purchases: {
                 with: {
-                  order: true,
+                  supplier: true,
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
                 },
               },
               devices: {
@@ -604,7 +606,12 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
-    const addCustomerOrder = (organizationId: string, orderId: string, customerId: string) =>
+    const addCustomerOrder = (
+      data: InferInput<typeof CustomerOrderCreateSchema>,
+      organizationId: string,
+      orderId: string,
+      customerId: string,
+    ) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
         const parsedOrderId = safeParse(prefixed_cuid2, orderId);
@@ -622,11 +629,12 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
         return yield* Effect.promise(() =>
           db
-            .insert(TB_organizations_customerorders)
+            .insert(TB_customer_orders)
             .values({
+              ...data,
               organization_id: parsedOrgId.output,
-              order_id: parsedOrderId.output,
               customer_id: parsedCustomerId.output,
+              id: parsedOrderId.output,
             })
             .returning(),
         );
@@ -650,70 +658,70 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
         return yield* Effect.promise(() =>
           db
-            .delete(TB_organizations_customerorders)
+            .delete(TB_customer_orders)
             .where(
               and(
-                eq(TB_organizations_customerorders.organization_id, parsedOrgId.output),
-                eq(TB_organizations_customerorders.order_id, parsedOrderId.output),
-                eq(TB_organizations_customerorders.customer_id, parsedCustomerId.output),
+                eq(TB_customer_orders.organization_id, parsedOrgId.output),
+                eq(TB_customer_orders.id, parsedOrderId.output),
+                eq(TB_customer_orders.customer_id, parsedCustomerId.output),
               ),
             )
             .returning(),
         );
       });
 
-    const addSupplierOrder = (organizationId: string, orderId: string, supplierId: string) =>
+    const addSupplierPurchase = (
+      data: InferInput<typeof SupplierPurchaseCreateSchema>,
+      organizationId: string,
+      supplierId: string,
+    ) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        const parsedOrderId = safeParse(prefixed_cuid2, orderId);
         const parsedSupplierId = safeParse(prefixed_cuid2, supplierId);
 
         if (!parsedOrgId.success) {
           return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
-        if (!parsedOrderId.success) {
-          return yield* Effect.fail(new OrderInvalidId({ id: orderId }));
-        }
         if (!parsedSupplierId.success) {
           return yield* Effect.fail(new SupplierInvalidId({ id: supplierId }));
         }
 
-        return yield* Effect.promise(() =>
+        const [purchase] = yield* Effect.promise(() =>
           db
-            .insert(TB_organizations_supplierorders)
+            .insert(TB_supplier_purchases)
             .values({
+              ...data,
               organization_id: parsedOrgId.output,
-              order_id: parsedOrderId.output,
-              supplier_id: parsedSupplierId.output,
             })
             .returning(),
         );
+
+        if (!purchase) {
+          return yield* Effect.fail(new SupplierPurchaseNotCreated({}));
+        }
+        return purchase;
       });
 
-    const removeSupplierOrder = (organizationId: string, orderId: string, supplierId: string) =>
+    const removeSupplierPurchase = (organizationId: string, supplierPurchaseId: string) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        const parsedOrderId = safeParse(prefixed_cuid2, orderId);
-        const parsedSupplierId = safeParse(prefixed_cuid2, supplierId);
+        const parsedSupplierPurchaseId = safeParse(prefixed_cuid2, supplierPurchaseId);
 
         if (!parsedOrgId.success) {
           return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
-        if (!parsedOrderId.success) {
-          return yield* Effect.fail(new OrderInvalidId({ id: orderId }));
-        }
-        if (!parsedSupplierId.success) {
-          return yield* Effect.fail(new SupplierInvalidId({ id: supplierId }));
+        if (!parsedSupplierPurchaseId.success) {
+          return yield* Effect.fail(new SupplierPurchaseInvalidId({ id: supplierPurchaseId }));
         }
 
         return yield* Effect.promise(() =>
           db
-            .delete(TB_organizations_supplierorders)
+            .update(TB_supplier_purchases)
+            .set({ deletedAt: new Date() })
             .where(
               and(
-                eq(TB_organizations_supplierorders.organization_id, parsedOrgId.output),
-                eq(TB_organizations_supplierorders.order_id, parsedOrderId.output),
-                eq(TB_organizations_supplierorders.supplier_id, parsedSupplierId.output),
+                eq(TB_supplier_purchases.organization_id, parsedOrgId.output),
+                eq(TB_supplier_purchases.id, parsedSupplierPurchaseId.output),
               ),
             )
             .returning(),
@@ -830,305 +838,6 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
-    type Storage = Effect.Effect.Success<
-      ReturnType<typeof findById>
-    >["whs"][number]["warehouse"]["facilities"][number]["areas"][number]["storages"][number];
-
-    type InventoryStats = {
-      totalFacilities: number;
-      totalAreas: number;
-      totalStorages: number;
-      totalLeafStorages: number;
-      totalProducts: number;
-      productCounts: Map<string, { id: string; count: number; name: string }>;
-    };
-
-    const countLeafStorages = (storage: Storage): Effect.Effect<number, StorageInvalidId | StorageNotFound> =>
-      Effect.gen(function* (_) {
-        const storageService = yield* _(StorageService);
-        if (!storage.children || storage.children.length === 0) {
-          return 1;
-        }
-        const childCounts = yield* Effect.all(
-          storage.children.map((child) =>
-            Effect.suspend(() =>
-              Effect.gen(function* (_) {
-                const c = yield* storageService.findById(child.id);
-                return yield* countLeafStorages(c);
-              }),
-            ),
-          ),
-        );
-        // return 1;
-        return childCounts.reduce((sum, count) => sum + count, 0);
-      }).pipe(Effect.provide(StorageLive));
-
-    const calculateInventoryStats = (
-      org: Effect.Effect.Success<ReturnType<typeof findById>>,
-    ): Effect.Effect<InventoryStats, StorageInvalidId | StorageNotFound> =>
-      Effect.gen(function* (_) {
-        const stats: InventoryStats = {
-          totalFacilities: 0,
-          totalAreas: 0,
-          totalStorages: 0,
-          totalLeafStorages: 0,
-          totalProducts: 0,
-          productCounts: new Map(),
-        };
-
-        const countStorageProducts = (storage: StorageInfo) => {
-          // Count products in current storage - each entry in products array represents one unit
-          for (const prod of storage.products ?? []) {
-            const existing = stats.productCounts.get(prod.product.id);
-            if (existing) {
-              existing.count += 1; // Each entry represents one unit
-            } else {
-              stats.productCounts.set(prod.product.id, {
-                id: prod.product.id,
-                count: 1,
-                name: prod.product.name,
-              });
-            }
-          }
-
-          // Recursively count products in child storages
-          for (const child of storage.children ?? []) {
-            countStorageProducts(child as StorageInfo);
-          }
-        };
-
-        for (const wh of org.whs) {
-          stats.totalFacilities += wh.warehouse.facilities?.length ?? 0;
-
-          for (const facility of wh.warehouse.facilities ?? []) {
-            stats.totalAreas += facility.areas?.length ?? 0;
-
-            for (const area of facility.areas ?? []) {
-              stats.totalStorages += area.storages?.length ?? 0;
-
-              for (const storage of area.storages ?? []) {
-                stats.totalLeafStorages += yield* countLeafStorages(storage);
-                countStorageProducts(storage as StorageInfo);
-              }
-            }
-          }
-        }
-
-        // Calculate total products by summing all quantities
-        stats.totalProducts = Array.from(stats.productCounts.values()).reduce((sum, p) => sum + p.count, 0);
-
-        return stats;
-      });
-
-    const getInventory = (organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
-
-        const org = yield* Effect.promise(() =>
-          db.query.TB_organizations.findFirst({
-            where: (organizations, operations) => operations.eq(organizations.id, parsedOrgId.output),
-            with: {
-              products: {
-                with: {
-                  product: true,
-                },
-              },
-              customerOrders: {
-                with: {
-                  order: {
-                    with: {
-                      prods: {
-                        with: {
-                          product: {
-                            with: {
-                              brands: true,
-                              warehouses: {
-                                with: {
-                                  warehouse: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              purchases: {
-                with: {
-                  order: {
-                    with: {
-                      prods: {
-                        with: {
-                          product: {
-                            with: {
-                              brands: true,
-                              warehouses: {
-                                with: {
-                                  warehouse: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              devices: {
-                with: {
-                  type: true,
-                },
-              },
-              sales: {
-                with: {
-                  sale: true,
-                },
-              },
-              supps: {
-                with: {
-                  supplier: true,
-                },
-              },
-              customers: {
-                with: {
-                  customer: true,
-                },
-              },
-              catalogs: {
-                with: {
-                  products: {
-                    with: {
-                      product: true,
-                    },
-                  },
-                },
-              },
-              users: {
-                with: {
-                  user: {
-                    columns: {
-                      hashed_password: false,
-                    },
-                  },
-                },
-              },
-              owner: {
-                columns: {
-                  hashed_password: false,
-                },
-              },
-              whs: {
-                with: {
-                  warehouse: {
-                    with: {
-                      addresses: {
-                        with: {
-                          address: true,
-                        },
-                      },
-                      facilities: {
-                        with: {
-                          areas: {
-                            with: {
-                              storages: {
-                                with: {
-                                  area: true,
-                                  products: true,
-                                  children: true,
-                                  type: true,
-                                  labels: true,
-                                  parent: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        );
-        if (!org) {
-          return yield* Effect.fail(new OrganizationNotFound({ id: parsedOrgId.output }));
-        }
-
-        const stats = yield* calculateInventoryStats(org);
-
-        const deepStorageChildren = (
-          storage: StorageInfo,
-        ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId> =>
-          Effect.gen(function* (_) {
-            const storageService = yield* _(StorageService);
-            const s = yield* storageService.findById(storage.id);
-            if (!s) {
-              return storage;
-            }
-
-            if (!s.children || s.children.length === 0) {
-              return s;
-            }
-
-            const c_children = yield* Effect.all(
-              s.children.map((child) => Effect.suspend(() => deepStorageChildren(child as StorageInfo))),
-            );
-
-            return {
-              ...s,
-              products: s.products,
-              children: c_children,
-            } satisfies StorageInfo;
-          }).pipe(Effect.provide(StorageLive));
-
-        return {
-          id: org.id,
-          name: org.name,
-          totalWarehouses: org.whs.length,
-          warehouses: yield* Effect.all(
-            org.whs.map((ow) =>
-              Effect.gen(function* (_) {
-                return {
-                  ...ow,
-                  createdAt: ow.warehouse.createdAt,
-                  updatedAt: ow.warehouse.updatedAt,
-                  deletedAt: ow.warehouse.deletedAt,
-                  facilities: yield* Effect.all(
-                    ow.warehouse.facilities.map((f) =>
-                      Effect.gen(function* (_) {
-                        return {
-                          ...f,
-                          areas: yield* Effect.all(
-                            f.areas.map((a) =>
-                              Effect.gen(function* (_) {
-                                return {
-                                  ...a,
-                                  storages: yield* Effect.all(
-                                    a.storages.map((s) => Effect.suspend(() => deepStorageChildren(s as StorageInfo))),
-                                  ),
-                                };
-                              }),
-                            ),
-                          ),
-                        };
-                      }),
-                    ),
-                  ),
-                };
-              }),
-            ),
-          ),
-          stats,
-        };
-      });
-
     const getDashboardData = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
@@ -1156,26 +865,23 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               },
               customerOrders: {
                 with: {
-                  order: {
+                  customer: true,
+                  products: {
                     with: {
-                      prods: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                      custSched: {
-                        with: {
-                          schedule: true,
-                          customer: true,
-                        },
-                      },
+                      product: true,
                     },
                   },
+                  sale: true,
                 },
               },
               purchases: {
                 with: {
-                  order: true,
+                  supplier: true,
+                  products: {
+                    with: {
+                      product: true,
+                    },
+                  },
                 },
               },
               devices: {
@@ -1225,12 +931,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       users,
       addCustomerOrder,
       removeCustomerOrder,
-      addSupplierOrder,
-      removeSupplierOrder,
+      addSupplierPurchase,
+      removeSupplierPurchase,
       findProductById,
       removeProduct,
       addProduct,
-      getInventory,
       getDashboardData,
     } as const;
   }),
@@ -1241,6 +946,3 @@ export const OrganizationLive = OrganizationService.Default;
 
 // Type exports
 export type OrganizationInfo = NonNullable<Effect.Effect.Success<Awaited<ReturnType<OrganizationService["findById"]>>>>;
-export type OrganizationInventoryInfo = NonNullable<
-  Awaited<Effect.Effect.Success<ReturnType<OrganizationService["getInventory"]>>>
->;

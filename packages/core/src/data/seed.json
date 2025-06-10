@@ -314,112 +314,6 @@
       "content": "This is a test notification 2"
     }
   ],
-  "sales": [
-    {
-      "id": "sale_yvqvzoet0tmx8fuq1r33m7df",
-      "note": "This is a test sale",
-      "status": "created",
-      "createdAt": "2025-03-01T10:00:00.000Z",
-      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
-      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
-      "barcode": "test-sale-barcode-001",
-      "items": [
-        {
-          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
-          "currency": "EUR",
-          "price": 10.0,
-          "quantity": 22
-        },
-        {
-          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
-          "currency": "CHF",
-          "price": 10.0,
-          "quantity": 5
-        },
-        {
-          "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
-          "currency": "EUR",
-          "price": 15.0,
-          "quantity": 100
-        }
-      ]
-    },
-    {
-      "id": "sale_pf0xvak0rwxcccpd9trgh9fa",
-      "note": "This is a test sale 2",
-      "status": "draft",
-      "barcode": "test-sale-barcode-002",
-      "createdAt": "2025-05-28T10:00:00.000Z",
-      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
-      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
-      "items": [
-        {
-          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
-          "currency": "EUR",
-          "price": 10.0,
-          "quantity": 2
-        },
-        {
-          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
-          "currency": "CHF",
-          "price": 10.0,
-          "quantity": 2
-        },
-        {
-          "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
-          "currency": "EUR",
-          "price": 15.0,
-          "quantity": 10
-        }
-      ]
-    },
-    {
-      "id": "sale_xfdt86ehwalmpa21fpea6p5d",
-      "note": "This is a test sale 2, with storno and for mixed transactions. the last product needs to be a storno",
-      "status": "draft",
-      "barcode": "test-sale-barcode-003",
-      "createdAt": "2025-05-26T10:00:00.000Z",
-      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
-      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
-      "items": [
-        {
-          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
-          "currency": "EUR",
-          "price": 10.0,
-          "quantity": 2
-        },
-        {
-          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
-          "currency": "CHF",
-          "price": 10.0,
-          "quantity": 2
-        },
-        {
-          "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
-          "currency": "EUR",
-          "price": 15.0,
-          "quantity": -2
-        }
-      ]
-    },
-    {
-      "id": "sale_snh8zs22qnvj4iyqm32tcj04",
-      "note": "Storno for sale_yvqvzoet0tmx8fuq1r33m7df",
-      "status": "created",
-      "barcode": "test-sale-barcode-004",
-      "createdAt": "2025-03-01T11:00:00.000Z",
-      "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
-      "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
-      "items": [
-        {
-          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
-          "currency": "EUR",
-          "price": 10.0,
-          "quantity": -2
-        }
-      ]
-    }
-  ],
   "customers": [
     {
       "id": "cust_gfy165rp4mmpzrq5muc838qn",
@@ -444,71 +338,6 @@
       "code": "",
       "payment_terms": null,
       "products": ["prod_uzujt3nrndmn90yyslc61wqv", "prod_rljvumttoz3f2v122kw7bf4x", "prod_qgjolvdci0g8f0g6dq851dtf"]
-    }
-  ],
-  "orders": [
-    {
-      "id": "ord_mluhzjoc0ofr6xh53au78w3d",
-      "barcode": "ORD-TEST-001",
-      "status": "completed",
-      "title": "Test Order",
-      "createdAt": "2025-05-25T10:00:00.000Z",
-      "description": "This is a test order",
-      "products": [
-        { "id": "ordprod_d683xr2dlzdkwrdru1u42ckb", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 22 },
-        {
-          "id": "ordprod_yltrkzqyzhcy34edm7jg18hd",
-          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
-          "quantity": 5
-        }
-      ]
-    },
-    {
-      "id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
-      "barcode": "ORD-TEST-002",
-      "status": "pending",
-      "createdAt": "2025-05-26T10:00:00.000Z",
-      "title": "Test Order 2",
-      "description": "This is a test order",
-      "products": [
-        { "id": "ordprod_fyyct49m0dkfoymc8qjvk4v9", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 12 },
-        {
-          "id": "ordprod_za1ga7qrxvo2vsmrqdcyvmlj",
-          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
-          "quantity": 8
-        }
-      ]
-    },
-    {
-      "id": "ord_a11be407877wogmtub8lx9sd",
-      "barcode": "ORD-TEST-003",
-      "createdAt": "2025-05-27T10:00:00.000Z",
-      "status": "processing",
-      "title": "Test Order 3",
-      "description": "This is a test order",
-      "products": [
-        { "id": "ordprod_zcdnmf5hhzhe9uq7vaojrzay", "productId": "prod_uzujt3nrndmn90yyslc61wqv", "quantity": 80 },
-        {
-          "id": "ordprod_o1ji3fn6973ms4q8pu67ceuh",
-          "productId": "prod_rljvumttoz3f2v122kw7bf4x",
-          "quantity": 100
-        }
-      ]
-    },
-    {
-      "id": "ord_l30oshk08tc89p0bs4i76hqs",
-      "barcode": "ORD-STORNO-001",
-      "status": "completed",
-      "title": "Storno Order",
-      "createdAt": "2025-05-25T11:00:00.000Z",
-      "description": "This is a storno order for ord_mluhzjoc0ofr6xh53au78w3d",
-      "products": [
-        {
-          "id": "ordprod_bqsg93dervf47mevd10wdjpd",
-          "productId": "prod_uzujt3nrndmn90yyslc61wqv",
-          "quantity": -5
-        }
-      ]
     }
   ],
   "tax_rates": [
@@ -583,32 +412,92 @@
               "type_id": "devicetype_nnq8rvwbfqn3wkumzkkh4wbv"
             }
           ],
-          "orders": {
-            "customers": [
-              {
-                "customer_id": "cust_gfy165rp4mmpzrq5muc838qn",
-                "order_id": "ord_a11be407877wogmtub8lx9sd"
-              },
-              {
-                "customer_id": "cust_gfy165rp4mmpzrq5muc838qn",
-                "order_id": "ord_l30oshk08tc89p0bs4i76hqs"
-              }
-            ],
-            "suppliers": [
-              {
-                "order_id": "ord_mluhzjoc0ofr6xh53au78w3d",
-                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
-              },
-              {
-                "order_id": "ord_lcx7q4e5fmfv4iv079s6v8ww",
-                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
-              },
-              {
-                "order_id": "ord_a11be407877wogmtub8lx9sd",
-                "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w"
-              }
-            ]
-          },
+          "purchases": [
+            {
+              "id": "spurch_y5619add3hpowl0xgmgkiv19",
+              "status": "completed",
+              "barcode": "test-purchase-barcode-001",
+              "title": "Test Purchase Order",
+              "description": "This is a test order",
+              "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w",
+              "products": [
+                {
+                  "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+                  "quantity": 22,
+                  "id": "ordprod_d683xr2dlzdkwrdru1u42ckb"
+                },
+                {
+                  "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+                  "quantity": 5,
+                  "id": "ordprod_yltrkzqyzhcy34edm7jg18hd"
+                }
+              ]
+            },
+            {
+              "id": "spurch_qbvnuek6eij9zesoq4gycf0w",
+              "status": "completed",
+              "barcode": "test-purchase-barcode-001",
+              "title": "Test Purchase Order",
+              "description": "This is a test order",
+              "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w",
+              "createdAt": "2025-05-26T10:00:00.000Z",
+              "products": [
+                {
+                  "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+                  "quantity": 10,
+                  "id": "ordprod_a7patto9bgvsordky9juzfr1"
+                }
+              ]
+            }
+          ],
+          "sales": [
+            {
+              "id": "sale_kbh52t3cgfh7cth0cf0zcaox",
+              "customerId": "cust_gfy165rp4mmpzrq5muc838qn",
+              "organizationId": "org_zet3syhuqvmx5gtqc57hu9kv",
+              "status": "created",
+              "note": "This is a test sale",
+              "barcode": "test-sale-barcode-001",
+              "items": [
+                {
+                  "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+                  "quantity": 12,
+                  "price": 3.5,
+                  "currency": "EUR"
+                },
+                {
+                  "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+                  "quantity": 4,
+                  "price": 6.99,
+                  "currency": "EUR"
+                }
+              ]
+            }
+          ],
+          "orders": [
+            {
+              "id": "cord_rkjh10awrwlwyuz0i34ky5nj",
+              "barcode": "test-order-barcode-001",
+              "status": "completed",
+              "title": "Test Order",
+              "description": "This is a test order",
+              "products": [
+                {
+                  "productId": "prod_uzujt3nrndmn90yyslc61wqv",
+                  "quantity": 22,
+                  "id": "ordprod_d683xr2dlzdkwrdru1u42ckb"
+                },
+                {
+                  "productId": "prod_rljvumttoz3f2v122kw7bf4x",
+                  "quantity": 5,
+                  "id": "ordprod_yltrkzqyzhcy34edm7jg18hd"
+                }
+              ],
+              "saleId": null,
+              "customer_id": "cust_gfy165rp4mmpzrq5muc838qn",
+              "createdAt": "2025-05-25T10:00:00.000Z"
+            }
+          ],
           "warehouses": [
             {
               "id": "wh_fbl19yvmsq44uuodg8n4kvv2",
@@ -746,12 +635,6 @@
           ],
           "suppliers": ["sup_xdyn2y5k86zn3gxvss7rym0w"],
           "customers": ["cust_gfy165rp4mmpzrq5muc838qn"],
-          "sales": [
-            "sale_yvqvzoet0tmx8fuq1r33m7df",
-            "sale_pf0xvak0rwxcccpd9trgh9fa",
-            "sale_snh8zs22qnvj4iyqm32tcj04",
-            "sale_xfdt86ehwalmpa21fpea6p5d"
-          ],
           "products": [
             "prod_uzujt3nrndmn90yyslc61wqv",
             "prod_rljvumttoz3f2v122kw7bf4x",

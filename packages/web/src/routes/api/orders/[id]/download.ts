@@ -1,5 +1,5 @@
 import { withSession } from "@/lib/api/session";
-import { OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { Effect } from "effect";
@@ -21,7 +21,7 @@ export async function GET({ params }: { params: { id: string } }) {
   try {
     const result = await Effect.runPromise(
       Effect.gen(function* (_) {
-        const orderService = yield* _(OrderService);
+        const orderService = yield* _(CustomerOrderService);
         const order = yield* _(orderService.findById(params.id));
         const organizationService = yield* _(OrganizationService);
         const org = yield* _(organizationService.findById(orgId));
@@ -32,7 +32,7 @@ export async function GET({ params }: { params: { id: string } }) {
           orderService.generatePDF(params.id, org, { page: { size: "A4", orientation: "portrait" } }),
         );
         return { pdf, filename: order.barcode ?? order.createdAt.toISOString() };
-      }).pipe(Effect.provide(OrderLive), Effect.provide(OrganizationLive)),
+      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive)),
     );
 
     return new Response(result.pdf, {

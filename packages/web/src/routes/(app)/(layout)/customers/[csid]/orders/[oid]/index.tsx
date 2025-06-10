@@ -202,7 +202,7 @@ export default function CustomerOrderPage() {
                     <span class="text-sm text-muted-foreground">
                       Total Items:{" "}
                       {orderInfo()
-                        .prods.map((p) => p.quantity)
+                        .products.map((p) => p.quantity)
                         .reduce((a, b) => a + b, 0)}
                     </span>
                   </div>
@@ -213,7 +213,7 @@ export default function CustomerOrderPage() {
                     <h2 class="font-medium">Products</h2>
                   </div>
                   <div class="flex flex-col gap-0">
-                    <For each={orderInfo().prods}>
+                    <For each={orderInfo().products}>
                       {(product) => (
                         <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
                           <div class="flex flex-row items-center justify-between">
@@ -365,7 +365,7 @@ export default function CustomerOrderPage() {
                     <For
                       each={Object.entries(
                         orderInfo()
-                          .prods.filter((prod) => prod.product.currency !== null)
+                          .products.filter((prod) => prod.product.currency !== null)
                           .reduce(
                             (acc, prod) => {
                               const currency = prod.product.currency!;

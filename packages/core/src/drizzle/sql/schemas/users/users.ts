@@ -4,9 +4,9 @@ import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial, string } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_catalogs } from "../catalogs/catalogs";
+import { TB_customer_orders } from "../customers/customer_orders";
 import { commonTable } from "../entity";
 import { TB_messages } from "../messages/messages";
-import { TB_orders } from "../orders/orders";
 import { TB_organization_users } from "../organizations/organization_users";
 import { TB_payment_history } from "../payments/payment_history";
 import { TB_sessions } from "../sessions";
@@ -40,7 +40,7 @@ export const user_relation = relations(TB_users, ({ one, many }) => ({
   whs: many(TB_users_warehouses),
   payment_methods: many(TB_user_payment_methods),
   payment_history: many(TB_payment_history),
-  orders: many(TB_orders),
+  customerOrders: many(TB_customer_orders),
   catalogs: many(TB_catalogs),
 }));
 

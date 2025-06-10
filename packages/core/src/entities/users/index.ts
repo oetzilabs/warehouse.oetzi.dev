@@ -25,361 +25,6 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
     const hashPassword = (password: string) => createHash("sha256").update(password).digest("hex");
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_users.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        payment_methods: {
-          with: {
-            payment_method: true,
-          },
-        },
-        payment_history: {
-          with: {
-            paymentMethod: true,
-          },
-        },
-        orgs: {
-          with: {
-            org: {
-              with: {
-                products: {
-                  with: {
-                    product: true,
-                  },
-                },
-                supps: {
-                  with: {
-                    supplier: {
-                      with: {
-                        products: {
-                          with: {
-                            product: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-                customerOrders: {
-                  with: {
-                    order: {
-                      with: {
-                        custSched: {
-                          with: {
-                            schedule: true,
-                            customer: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-                purchases: {
-                  with: {
-                    order: true,
-                  },
-                },
-                devices: {
-                  with: {
-                    type: true,
-                  },
-                },
-                sales: {
-                  with: {
-                    sale: true,
-                  },
-                },
-                customers: {
-                  with: {
-                    customer: {
-                      with: {
-                        sales: {
-                          with: {
-                            items: {
-                              with: {
-                                product: true,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-                catalogs: {
-                  with: {
-                    products: {
-                      with: {
-                        product: true,
-                      },
-                    },
-                  },
-                },
-                owner: {
-                  columns: {
-                    hashed_password: false,
-                  },
-                },
-                users: {
-                  with: {
-                    user: {
-                      columns: {
-                        hashed_password: false,
-                      },
-                    },
-                  },
-                },
-                whs: {
-                  with: {
-                    warehouse: {
-                      with: {
-                        addresses: {
-                          with: {
-                            address: true,
-                          },
-                        },
-                        owner: {
-                          columns: {
-                            hashed_password: false,
-                          },
-                        },
-                        products: {
-                          with: {
-                            product: true,
-                          },
-                        },
-                        facilities: {
-                          with: {
-                            areas: {
-                              with: {
-                                storages: {
-                                  with: {
-                                    type: true,
-                                    area: true,
-                                    products: true,
-                                    children: true,
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        whs: {
-          with: {
-            warehouse: {
-              with: {
-                addresses: {
-                  with: {
-                    address: true,
-                  },
-                },
-                owner: {
-                  columns: {
-                    hashed_password: false,
-                  },
-                },
-                products: {
-                  with: {
-                    product: true,
-                  },
-                },
-                facilities: {
-                  with: {
-                    areas: {
-                      with: {
-                        storages: {
-                          with: {
-                            type: true,
-                            area: true,
-                            products: true,
-                            children: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        sessions: {
-          with: {
-            user: {
-              columns: {
-                hashed_password: false,
-              },
-            },
-            org: {
-              with: {
-                products: {
-                  with: {
-                    product: true,
-                  },
-                },
-                supps: {
-                  with: {
-                    supplier: {
-                      with: {
-                        products: {
-                          with: {
-                            product: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-                customers: {
-                  with: {
-                    customer: {
-                      with: {
-                        sales: {
-                          with: {
-                            items: {
-                              with: {
-                                product: true,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-                catalogs: {
-                  with: {
-                    products: {
-                      with: {
-                        product: true,
-                      },
-                    },
-                  },
-                },
-                owner: {
-                  columns: {
-                    hashed_password: false,
-                  },
-                },
-                users: {
-                  with: {
-                    user: {
-                      columns: {
-                        hashed_password: false,
-                      },
-                    },
-                  },
-                },
-                whs: {
-                  with: {
-                    warehouse: {
-                      with: {
-                        addresses: {
-                          with: {
-                            address: true,
-                          },
-                        },
-                        owner: {
-                          columns: {
-                            hashed_password: false,
-                          },
-                        },
-                        products: {
-                          with: {
-                            product: true,
-                          },
-                        },
-                        facilities: {
-                          with: {
-                            areas: {
-                              with: {
-                                storages: {
-                                  with: {
-                                    type: true,
-                                    area: true,
-                                    products: true,
-                                    children: true,
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            wh: {
-              with: {
-                addresses: {
-                  with: {
-                    address: true,
-                  },
-                },
-                owner: {
-                  columns: {
-                    hashed_password: false,
-                  },
-                },
-                products: {
-                  with: {
-                    product: true,
-                  },
-                },
-                facilities: {
-                  with: {
-                    areas: {
-                      with: {
-                        storages: {
-                          with: {
-                            type: true,
-                            area: true,
-                            products: true,
-                            children: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            fc: {
-              with: {
-                areas: {
-                  with: {
-                    storages: {
-                      with: {
-                        type: true,
-                        area: true,
-                        products: true,
-                        children: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
 
     const create = (userInput: InferInput<typeof UserCreateSchema>) =>
       Effect.gen(function* (_) {
@@ -409,9 +54,8 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return user;
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new UserInvalidId({ id }));
@@ -440,65 +84,15 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   },
                   org: {
                     with: {
-                      users: {
+                      products: {
                         with: {
-                          user: {
-                            columns: {
-                              hashed_password: false,
-                            },
-                          },
-                        },
-                      },
-                      owner: {
-                        columns: {
-                          hashed_password: false,
-                        },
-                      },
-                      whs: {
-                        with: {
-                          warehouse: true,
-                        },
-                      },
-                      catalogs: true,
-                      customerOrders: {
-                        with: {
-                          order: {
+                          product: {
                             with: {
-                              prods: {
-                                with: {
-                                  product: {
-                                    with: {
-                                      brands: true,
-                                      catalogs: true,
-                                      labels: true,
-                                      suppliers: true,
-                                    },
-                                  },
-                                },
-                              },
-                              custSched: {
-                                with: {
-                                  schedule: true,
-                                  customer: true,
-                                },
-                              },
+                              labels: true,
+                              brands: true,
+                              suppliers: true,
                             },
                           },
-                        },
-                      },
-                      devices: {
-                        with: {
-                          type: true,
-                        },
-                      },
-                      purchases: {
-                        with: {
-                          order: true,
-                        },
-                      },
-                      sales: {
-                        with: {
-                          sale: true,
                         },
                       },
                       supps: {
@@ -511,9 +105,87 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                           customer: true,
                         },
                       },
-                      products: {
+                      owner: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                      users: {
                         with: {
-                          product: true,
+                          user: {
+                            columns: {
+                              hashed_password: false,
+                            },
+                          },
+                        },
+                      },
+                      customerOrders: {
+                        with: {
+                          customer: true,
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                          sale: true,
+                        },
+                      },
+                      purchases: {
+                        with: {
+                          supplier: true,
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
+                      devices: {
+                        with: {
+                          type: true,
+                        },
+                      },
+                      sales: {
+                        with: {
+                          sale: true,
+                        },
+                      },
+                      catalogs: {
+                        with: {
+                          products: {
+                            with: {
+                              product: true,
+                            },
+                          },
+                        },
+                      },
+                      whs: {
+                        with: {
+                          warehouse: {
+                            with: {
+                              addresses: {
+                                with: {
+                                  address: true,
+                                },
+                              },
+                              facilities: {
+                                with: {
+                                  areas: {
+                                    with: {
+                                      storages: {
+                                        with: {
+                                          type: true,
+                                          area: true,
+                                          products: true,
+                                          children: true,
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
                         },
                       },
                     },
@@ -534,9 +206,8 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return user;
       });
 
-    const findByEmail = (emailInput: string, relations?: FindManyParams["with"]) =>
+    const findByEmail = (emailInput: string) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const emailX = pipe(string(), email());
         const parsedEmail = safeParse(emailX, emailInput);
         if (!parsedEmail.success) {

@@ -65,3 +65,36 @@ export class SupplierNoteNotUpdated extends Schema.TaggedError<SupplierNoteNotUp
 export class SupplierNoteNotDeleted extends Schema.TaggedError<SupplierNoteNotDeleted>()("SupplierNoteNotDeleted", {
   id: Schema.String,
 }) {}
+
+export class SupplierPurchaseNotCreated extends Schema.TaggedError<SupplierPurchaseNotCreated>()(
+  "SupplierPurchaseNotCreated",
+  {},
+) {}
+
+export class SupplierPurchaseNotDeleted extends Schema.TaggedError<SupplierPurchaseNotDeleted>()(
+  "SupplierPurchaseNotDeleted",
+  {
+    id: Schema.String,
+  },
+) {}
+
+export class SupplierPurchaseNotFound extends Schema.TaggedError<SupplierPurchaseNotFound>()(
+  "SupplierPurchaseNotFound",
+  {
+    id: Schema.String,
+  },
+) {}
+
+export class SupplierPurchaseNotUpdated extends Schema.TaggedError<SupplierPurchaseNotUpdated>()(
+  "SupplierPurchaseNotUpdated",
+  {
+    id: Schema.String,
+  },
+) {}
+
+export class SupplierPurchaseInvalidId extends Schema.TaggedError<SupplierPurchaseInvalidId>()(
+  "SupplierPurchaseInvalidId",
+  {
+    id: Schema.String,
+  },
+) {}

@@ -19,13 +19,13 @@ import {
 } from "valibot";
 import {
   CustomerCreateSchema,
+  CustomerOrderCreateSchema,
+  CustomerOrderProductCreateSchema,
   FacilityCreateSchema,
   NotificationCreateSchema,
-  OrderCreateSchema,
-  OrderProductCreateSchema,
-  OrganizationCustomerOrderCreateSchema,
-  OrganizationSupplierOrderCreateSchema,
   SupplierCreateSchema,
+  SupplierPurchaseCreateSchema,
+  SupplierPurchaseProductCreateSchema,
   TaxGroupCountryRatesCreateSchema,
   TaxGroupCreateSchema,
   TaxRateCreateSchema,
@@ -131,34 +131,61 @@ export const WarehouseSchema = object({
   products: array(string()), // references to product IDs
 });
 
-export const CustomerOrderSchema = object({
-  ...omit(OrganizationCustomerOrderCreateSchema, ["organization_id"]).entries,
-  createdAt: optional(
-    pipe(
-      string(),
-      transform((v) => dayjs(v).toDate()),
-    ),
-  ), // used for date
-});
-
-export const SupplierOrderSchema = object({
-  ...omit(OrganizationSupplierOrderCreateSchema, ["organization_id"]).entries,
-  createdAt: optional(
-    pipe(
-      string(),
-      transform((v) => dayjs(v).toDate()),
-    ),
-  ), // used for date
-});
-
-export const OrderSchema = object({
-  customers: array(CustomerOrderSchema),
-  suppliers: array(SupplierOrderSchema),
-});
-
 export const DeviceSchema = object({
   ...omit(DeviceCreateSchema, ["organization_id"]).entries,
   id: prefixed_cuid2,
+});
+
+export const SalesItemSchema = object({
+  ...SaleItemCreateSchema.entries,
+});
+
+export const SaleSchema = object({
+  ...SaleCreateSchema.entries,
+  id: prefixed_cuid2,
+  createdAt: optional(
+    nullable(
+      pipe(
+        string(),
+        transform((v) => dayjs(v).toDate()),
+      ),
+    ),
+  ),
+  items: array(omit(SalesItemSchema, ["saleId"])), // references to product IDs
+});
+
+export const CustomerOrderProductSchema = object({
+  ...omit(CustomerOrderProductCreateSchema, ["customerOrderId", "createdAt", "updatedAt", "deletedAt"]).entries,
+  id: prefixed_cuid2,
+});
+
+export const CustomerOrderSchema = object({
+  ...CustomerOrderCreateSchema.entries,
+  id: prefixed_cuid2,
+  createdAt: optional(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ),
+  products: array(CustomerOrderProductSchema),
+});
+
+export const SupplierPurchaseProductSchema = object({
+  ...omit(SupplierPurchaseProductCreateSchema, ["supplierPurchaseId", "createdAt", "updatedAt", "deletedAt"]).entries,
+  id: prefixed_cuid2,
+});
+
+export const SupplierPurchaseSchema = object({
+  ...SupplierPurchaseCreateSchema.entries,
+  id: prefixed_cuid2,
+  createdAt: optional(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ),
+  products: array(SupplierPurchaseProductSchema),
 });
 
 export const OrganizationSchema = object({
@@ -169,9 +196,10 @@ export const OrganizationSchema = object({
   products: array(string()), // references to product IDs
   suppliers: array(string()), // references to supplier IDs
   customers: array(string()), // references to customer IDs
-  sales: array(string()), // references to sales IDs
-  orders: OrderSchema,
   devices: array(DeviceSchema), // references to device IDs
+  purchases: array(SupplierPurchaseSchema),
+  orders: array(CustomerOrderSchema),
+  sales: array(SaleSchema),
 });
 
 export const UserSchema = object({
@@ -212,24 +240,6 @@ export const SupplierSchema = object({
   products: array(string()), // references to product IDs
 });
 
-export const SalesItemSchema = object({
-  ...SaleItemCreateSchema.entries,
-});
-
-export const SaleSchema = object({
-  ...SaleCreateSchema.entries,
-  id: prefixed_cuid2,
-  createdAt: optional(
-    nullable(
-      pipe(
-        string(),
-        transform((v) => dayjs(v).toDate()),
-      ),
-    ),
-  ),
-  items: array(omit(SalesItemSchema, ["saleId"])), // references to product IDs
-});
-
 export const CustomerSchema = object({
   ...CustomerCreateSchema.entries,
   id: prefixed_cuid2,
@@ -239,23 +249,6 @@ export const CustomerSchema = object({
 export const NotificationSchema = object({
   ...NotificationCreateSchema.entries,
   id: prefixed_cuid2,
-});
-
-export const OrderProductSchema = object({
-  ...omit(OrderProductCreateSchema, ["orderId", "createdAt", "updatedAt", "deletedAt"]).entries,
-  id: prefixed_cuid2,
-});
-
-export const NormalOrderSchema = object({
-  ...OrderCreateSchema.entries,
-  id: prefixed_cuid2,
-  createdAt: optional(
-    pipe(
-      string(),
-      transform((v) => dayjs(v).toDate()),
-    ),
-  ),
-  products: array(OrderProductSchema),
 });
 
 export const TaxRateSchema = object({
@@ -301,8 +294,8 @@ export const SeedDataSchema = object({
   suppliers: array(SupplierSchema),
   customers: array(CustomerSchema),
   notifications: array(NotificationSchema),
-  sales: array(SaleSchema),
-  orders: array(NormalOrderSchema),
+  // sales: array(SaleSchema),
+  // orders: array(NormalOrderSchema),
   tax_rates: array(TaxRateSchema),
   tax_groups: array(TaxGroupSchema),
   tax_group_countryrates: array(TaxGroupCountryRateSchema),

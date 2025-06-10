@@ -4,12 +4,11 @@ import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
-import { TB_orders } from "../orders/orders";
 import { TB_organization_customers } from "../organizations/organization_customers";
-import { TB_organizations_customerorders } from "../organizations/organizations_orders";
 import { TB_sales } from "../sales/sales";
 import { schema } from "../utils";
 import { TB_customer_notes } from "./customer_notes";
+import { TB_customer_orders } from "./customer_orders";
 import { TB_customer_preferred_deliverytimes } from "./customer_preferred_deliverytimes";
 import { TB_customer_preferred_pickuptimes } from "./customer_preferred_pickuptimes";
 import { TB_customer_schedules } from "./customer_schedules";
@@ -35,7 +34,7 @@ export const TB_customers = commonTable(
 export const customer_relations = relations(TB_customers, ({ many, one }) => ({
   sales: many(TB_sales),
   organizations: many(TB_organization_customers),
-  orgOrders: many(TB_organizations_customerorders),
+  orders: many(TB_customer_orders),
   notes: many(TB_customer_notes),
   schedules: many(TB_customer_schedules),
   ppt: many(TB_customer_preferred_pickuptimes),

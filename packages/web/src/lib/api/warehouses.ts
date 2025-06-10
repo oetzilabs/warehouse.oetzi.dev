@@ -6,7 +6,7 @@ import {
 } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { AddressLive, AddressService } from "@warehouseoetzidev/core/src/entities/addresses";
 import { FacilityLive } from "@warehouseoetzidev/core/src/entities/facilities";
-import { OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseTypeLive, WarehouseTypeService } from "@warehouseoetzidev/core/src/entities/warehouse_types";

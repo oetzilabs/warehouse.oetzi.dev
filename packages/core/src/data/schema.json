@@ -446,66 +446,6 @@
                     "type": "string"
                   }
                 },
-                "sales": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "orders": {
-                  "type": "object",
-                  "properties": {
-                    "customers": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "order_id": {
-                            "type": "string"
-                          },
-                          "customer_id": {
-                            "type": "string"
-                          },
-                          "createdAt": {
-                            "type": "string"
-                          }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                          "order_id",
-                          "customer_id"
-                        ]
-                      }
-                    },
-                    "suppliers": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "order_id": {
-                            "type": "string"
-                          },
-                          "supplier_id": {
-                            "type": "string"
-                          },
-                          "createdAt": {
-                            "type": "string"
-                          }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                          "order_id",
-                          "supplier_id"
-                        ]
-                      }
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "customers",
-                    "suppliers"
-                  ]
-                },
                 "devices": {
                   "type": "array",
                   "items": {
@@ -548,6 +488,257 @@
                       "id"
                     ]
                   }
+                },
+                "purchases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "draft",
+                          "pending",
+                          "processing",
+                          "completed",
+                          "cancelled"
+                        ]
+                      },
+                      "barcode": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "supplier_id": {
+                        "type": "string"
+                      },
+                      "id": {},
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "products": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "productId": {
+                              "type": "string"
+                            },
+                            "quantity": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "id": {}
+                          },
+                          "additionalProperties": false,
+                          "required": [
+                            "productId",
+                            "id"
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "barcode",
+                      "title",
+                      "supplier_id",
+                      "id",
+                      "products"
+                    ]
+                  }
+                },
+                "orders": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "pending",
+                          "processing",
+                          "completed",
+                          "cancelled"
+                        ]
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "barcode": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "saleId": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "customer_id": {
+                        "type": "string"
+                      },
+                      "id": {},
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "products": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "productId": {
+                              "type": "string"
+                            },
+                            "quantity": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "id": {}
+                          },
+                          "additionalProperties": false,
+                          "required": [
+                            "productId",
+                            "id"
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "title",
+                      "customer_id",
+                      "id",
+                      "products"
+                    ]
+                  }
+                },
+                "sales": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "customerId": {
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": [
+                          "created",
+                          "draft",
+                          "pending",
+                          "confirmed",
+                          "processing",
+                          "shipped",
+                          "delivered",
+                          "cancelled",
+                          "deleted"
+                        ]
+                      },
+                      "note": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "barcode": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "id": {},
+                      "createdAt": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "productId": {
+                              "type": "string"
+                            },
+                            "quantity": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "price": {
+                              "type": "number",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "currency": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "required": [
+                            "productId",
+                            "quantity",
+                            "price",
+                            "currency"
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "customerId",
+                      "organizationId",
+                      "id",
+                      "items"
+                    ]
+                  }
                 }
               },
               "additionalProperties": false,
@@ -559,9 +750,10 @@
                 "products",
                 "suppliers",
                 "customers",
-                "sales",
+                "devices",
+                "purchases",
                 "orders",
-                "devices"
+                "sales"
               ]
             }
           }
@@ -1380,183 +1572,6 @@
         ]
       }
     },
-    "sales": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "customerId": {
-            "type": "string"
-          },
-          "organizationId": {
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "created",
-              "draft",
-              "pending",
-              "confirmed",
-              "processing",
-              "shipped",
-              "delivered",
-              "cancelled",
-              "deleted"
-            ]
-          },
-          "note": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "barcode": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "id": {},
-          "createdAt": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "productId": {
-                  "type": "string"
-                },
-                "quantity": {
-                  "type": "integer",
-                  "minimum": -2147483648,
-                  "maximum": 2147483647
-                },
-                "price": {
-                  "type": "number",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "currency": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false,
-              "required": [
-                "productId",
-                "quantity",
-                "price",
-                "currency"
-              ]
-            }
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "customerId",
-          "organizationId",
-          "id",
-          "items"
-        ]
-      }
-    },
-    "orders": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "enum": [
-              "pending",
-              "processing",
-              "completed",
-              "cancelled"
-            ]
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "barcode": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "saleId": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "id": {},
-          "createdAt": {
-            "type": "string"
-          },
-          "products": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "productId": {
-                  "type": "string"
-                },
-                "quantity": {
-                  "type": "integer",
-                  "minimum": -2147483648,
-                  "maximum": 2147483647
-                },
-                "id": {}
-              },
-              "additionalProperties": false,
-              "required": [
-                "productId",
-                "id"
-              ]
-            }
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "title",
-          "id",
-          "products"
-        ]
-      }
-    },
     "tax_rates": {
       "type": "array",
       "items": {
@@ -1688,8 +1703,6 @@
     "suppliers",
     "customers",
     "notifications",
-    "sales",
-    "orders",
     "tax_rates",
     "tax_groups",
     "tax_group_countryrates",

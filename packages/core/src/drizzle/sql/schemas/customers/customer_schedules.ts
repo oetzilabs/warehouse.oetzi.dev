@@ -4,9 +4,9 @@ import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_customers } from "../customers/customers";
-import { TB_orders } from "../orders/orders";
 import { TB_schedules } from "../schedules/schedules";
 import { schema } from "../utils";
+import { TB_customer_orders } from "./customer_orders";
 
 export const schedule_type = schema.enum("schedule_type", [
   "delivery", // We deliver
@@ -30,7 +30,7 @@ export const TB_customer_schedules = schema.table("customer_schedules", (t) => (
     .varchar("schedule_id")
     .notNull()
     .references(() => TB_schedules.id),
-  orderId: t.varchar("order_id").references(() => TB_orders.id),
+  orderId: t.varchar("order_id").references(() => TB_customer_orders.id),
   type: schedule_type("type").notNull(),
 }));
 
@@ -43,9 +43,9 @@ export const customer_schedules_relations = relations(TB_customer_schedules, ({ 
     fields: [TB_customer_schedules.scheduleId],
     references: [TB_schedules.id],
   }),
-  order: one(TB_orders, {
+  order: one(TB_customer_orders, {
     fields: [TB_customer_schedules.orderId],
-    references: [TB_orders.id],
+    references: [TB_customer_orders.id],
   }),
 }));
 

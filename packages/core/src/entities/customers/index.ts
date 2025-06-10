@@ -24,52 +24,6 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_customers.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
-      pdt: true,
-      ppt: true,
-      schedules: {
-        with: {
-          schedule: true,
-        },
-      },
-      sales: {
-        with: {
-          items: {
-            with: {
-              product: true,
-            },
-          },
-        },
-      },
-      organizations: {
-        with: {
-          organization: true,
-        },
-      },
-      orgOrders: {
-        with: {
-          order: {
-            with: {
-              custSched: {
-                with: {
-                  schedule: true,
-                },
-              },
-              prods: {
-                with: {
-                  product: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      notes: {
-        orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
-      },
-    });
 
     const create = (input: InferInput<typeof CustomerCreateSchema>, orgId: string) =>
       Effect.gen(function* (_) {
@@ -85,9 +39,8 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         return yield* findById(customer.id);
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
-        const rels = relations ?? withRelations();
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new CustomerInvalidId({ id }));
@@ -113,30 +66,16 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                   organization: true,
                 },
               },
-              orgOrders: {
+              orders: {
                 with: {
-                  order: {
+                  custSched: {
                     with: {
-                      custSched: {
-                        with: {
-                          schedule: true,
-                        },
-                      },
-                      oco: {
-                        with: {
-                          customer: true,
-                        },
-                      },
-                      oso: {
-                        with: {
-                          supplier: true,
-                        },
-                      },
-                      prods: {
-                        with: {
-                          product: true,
-                        },
-                      },
+                      schedule: true,
+                    },
+                  },
+                  products: {
+                    with: {
+                      product: true,
                     },
                   },
                 },
@@ -216,20 +155,16 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                       organization: true,
                     },
                   },
-                  orgOrders: {
+                  orders: {
                     with: {
-                      order: {
+                      custSched: {
                         with: {
-                          custSched: {
-                            with: {
-                              schedule: true,
-                            },
-                          },
-                          prods: {
-                            with: {
-                              product: true,
-                            },
-                          },
+                          schedule: true,
+                        },
+                      },
+                      products: {
+                        with: {
+                          product: true,
                         },
                       },
                     },
@@ -259,54 +194,50 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
         return yield* Effect.promise(() =>
-          db.query.TB_organizations_customerorders.findMany({
+          db.query.TB_customer_orders.findMany({
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.customer_id, parsedCustomerId.output),
                 operations.eq(fields.organization_id, parsedOrganizationId.output),
               ),
             with: {
-              order: {
+              sale: {
                 with: {
-                  sale: {
+                  discounts: {
                     with: {
-                      discounts: {
+                      discount: true,
+                    },
+                  },
+                },
+              },
+              custSched: {
+                with: {
+                  schedule: true,
+                },
+              },
+              users: {
+                with: {
+                  user: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                },
+              },
+              products: {
+                with: {
+                  product: {
+                    with: {
+                      tg: {
                         with: {
-                          discount: true,
-                        },
-                      },
-                    },
-                  },
-                  custSched: {
-                    with: {
-                      schedule: true,
-                    },
-                  },
-                  users: {
-                    with: {
-                      user: {
-                        columns: {
-                          hashed_password: false,
-                        },
-                      },
-                    },
-                  },
-                  prods: {
-                    with: {
-                      product: {
-                        with: {
-                          tg: {
+                          crs: {
                             with: {
-                              crs: {
-                                with: {
-                                  tr: true,
-                                },
-                              },
+                              tr: true,
                             },
                           },
-                          brands: true,
                         },
                       },
+                      brands: true,
                     },
                   },
                 },

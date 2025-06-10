@@ -18,13 +18,13 @@ export const GenericList = <T,>(props: GenericListProps<T>) => {
     <div
       class={cn({
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4": variant() === "grid",
-        "flex flex-col gap-4": variant() === "list",
+        "flex flex-col gap-4": variant() === "list" || others.data().length === 0,
       })}
     >
       <For
         each={others.filteredData()}
         fallback={
-          <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground">
+          <div class="flex flex-col gap-4 items-center justify-center rounded-lg p-14 border text-muted-foreground w-full">
             <span class="text-sm select-none">
               <Show when={others.data().length === 0}>{others.emptyMessage ?? "No items have been added"}</Show>
               <Show when={others.data().length > 0 && (others.searchTerm?.()?.length ?? 0) > 0}>

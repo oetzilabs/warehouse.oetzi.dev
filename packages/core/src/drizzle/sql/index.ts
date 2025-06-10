@@ -64,8 +64,11 @@ export class DatabaseService extends Effect.Service<DatabaseService>()("@warehou
           return global.globalClient;
         }
         if (Resource.DatabaseProvider.value === "local") {
-          const localClient = postgres(Resource.DatabaseUrl.value, { max: 1000, onnotice(notice) {} });
-          const db = localDrizzle(localClient, { schema });
+          const localClient = postgres(Resource.DatabaseUrl.value, {
+            max: 1000,
+            onnotice(notice) {},
+          });
+          const db = localDrizzle(localClient, { schema, logger: true });
           global.globalClient = db;
         } else {
           const client = neon(Resource.DatabaseUrl.value);
