@@ -111,7 +111,7 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
                         <For each={storage.productSummary}>
                           {(pc) => (
                             <div class="flex items-center gap-2 text-sm">
-                              <Package class="size-4" />
+                              <Package class="size-4 shrink-0" />
                               <span class="truncate font-['Geist_Mono_Variable']">
                                 {pc.count}x {pc.product.name}
                               </span>
