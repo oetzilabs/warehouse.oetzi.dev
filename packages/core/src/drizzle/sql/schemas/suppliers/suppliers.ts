@@ -10,6 +10,7 @@ import { schema } from "../utils";
 import { TB_supplier_contacts } from "./suppliers_contacts";
 import { TB_supplier_notes } from "./suppliers_notes";
 import { TB_supplier_products } from "./suppliers_products";
+import { TB_supplier_schedules } from "./suppliers_schedules";
 
 export const supplier_status = schema.enum("supplier_status", ["active", "inactive", "under_review", "blacklisted"]);
 
@@ -35,6 +36,7 @@ export const supplier_relations = relations(TB_suppliers, ({ many }) => ({
   contacts: many(TB_supplier_contacts),
   organizations: many(TB_organization_suppliers),
   orgOrders: many(TB_organizations_supplierorders),
+  schedules: many(TB_supplier_schedules),
 }));
 
 export type SupplierSelect = typeof TB_suppliers.$inferSelect;

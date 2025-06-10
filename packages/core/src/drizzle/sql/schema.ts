@@ -52,6 +52,7 @@ export * from "./schemas/suppliers/suppliers";
 export * from "./schemas/suppliers/suppliers_products";
 export * from "./schemas/suppliers/suppliers_contacts";
 export * from "./schemas/suppliers/suppliers_notes";
+export * from "./schemas/suppliers/suppliers_schedules";
 
 export * from "./schemas/documents/documents";
 export * from "./schemas/documents/storages";
