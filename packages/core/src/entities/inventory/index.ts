@@ -55,6 +55,11 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
                       with: {
                         order: {
                           with: {
+                            prods: {
+                              with: {
+                                product: true,
+                              },
+                            },
                             oco: {
                               with: {
                                 customer: true,
@@ -282,8 +287,19 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       Effect.gen(function* (_) {
         const { products } = yield* statistics(organizationId);
 
-        // check if the storage where the product count is less then the products minimumStock, by checking if the capacity of the storage is less than the product count too.
-        const productsWithAlerts = products.filter((p) => p.count < (p.product.reorderPoint ?? p.product.minimumStock));
+        const productsWithAlerts = products
+          .filter((p) => p.count < (p.product.reorderPoint ?? p.product.minimumStock))
+          .map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              orders: p.product.orders.filter((o) => {
+                const ocoMatch = o.order.oco?.some((co) => co.organization.id === organizationId);
+                const osoMatch = o.order.oso?.some((so) => so.organization.id === organizationId);
+                return ocoMatch || osoMatch;
+              }),
+            },
+          }));
 
         return productsWithAlerts;
       });
@@ -316,3 +332,4 @@ export type InventoryInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType
 export type StorageStatisticsInfo = NonNullable<
   Awaited<Effect.Effect.Success<ReturnType<InventoryService["storageStatistics"]>>>
 >;
+export type InventoryAlertInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<InventoryService["alerts"]>>>>;

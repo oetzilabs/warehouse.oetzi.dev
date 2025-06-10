@@ -1,3 +1,4 @@
+import { LastOrderInfo } from "@/components/last-order-info";
 import { InventoryList } from "@/components/lists/inventory";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +16,7 @@ import { cn } from "@/lib/utils";
 import Calendar from "@corvu/calendar";
 import { createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { createForm } from "@tanstack/solid-form";
-import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
-import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
+import { type InventoryAlertInfo } from "@warehouseoetzidev/core/src/entities/inventory";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import ArrowRight from "lucide-solid/icons/arrow-right";
 import CalendarPlus from "lucide-solid/icons/calendar-plus";
@@ -83,16 +82,25 @@ export default function InventoryPage() {
                         <For each={alerts()}>
                           {(a) => (
                             <div class="flex flex-row gap-4 items-center w-full border-b last:border-b-0 p-4">
-                              <div class="flex-1 flex flex-col gap-2">
-                                <div class="flex flex-row items-center gap-2">
-                                  <div class="flex-1 font-semibold">{a.product.name}</div>
-                                  <div class="text-sm text-muted-foreground">
-                                    {a.count}/{a.product.minimumStock}
+                              <div class="flex-1 flex flex-col gap-4">
+                                <div class="flex-1 flex flex-col gap-2">
+                                  <div class="flex flex-row items-center gap-2">
+                                    <div class="flex-1 font-semibold">{a.product.name}</div>
+                                    <div class="text-sm text-muted-foreground">
+                                      {a.count}/{a.product.minimumStock}
+                                    </div>
+                                  </div>
+                                  <div class="flex flex-row items-center gap-2">
+                                    <div class="flex-1 text-sm text-muted-foreground">{a.product.description}</div>
                                   </div>
                                 </div>
                                 <div class="flex flex-row items-center gap-2">
-                                  <div class="flex-1 text-sm text-muted-foreground">{a.product.description}</div>
-                                  <ReorderDialog product={a.product} />
+                                  <div class="flex-1 text-sm text-muted-foreground">
+                                    <LastOrderInfo product={a.product} />
+                                  </div>
+                                  <div class="flex flex-row items-center gap-2">
+                                    <ReorderDialog product={a.product} />
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -112,22 +120,16 @@ export default function InventoryPage() {
   );
 }
 
-const ReorderDialog = (props: {
-  product: Omit<
-    ProductInfo,
-    "images" | "certs" | "space" | "stcs" | "catalogs" | "brands" | "saleItems" | "orders" | "labels" | "stco"
-  >;
-}) => {
+const ReorderDialog = (props: { product: InventoryAlertInfo[number]["product"] }) => {
   const [reorderDialog, setReorderDialog] = createSignal(false);
 
   const form = createForm(() => ({
     defaultValues: {
-      supplierId: null,
-      // supplierId: props.product.suppliers.length > 0 ? props.product.suppliers[0].supplier.id : null,
+      supplierId: props.product.suppliers.length > 0 ? props.product.suppliers[0].supplier.id : "",
       amount: props.product.reorderPoint ?? props.product.minimumStock,
       preferredDate: new Date(),
     } satisfies {
-      supplierId: string | null;
+      supplierId: string;
       amount: number;
       preferredDate: Date;
     },
