@@ -464,9 +464,7 @@ export default function DashboardPage() {
                             {(product) => (
                               <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
                                 <div class="flex flex-col grow">
-                                  <span class="font-medium text-neutral-900 dark:text-neutral-100">
-                                    {product.product.name}
-                                  </span>
+                                  <span class="font-medium text-neutral-900 dark:text-neutral-100">{product.name}</span>
                                   <span class="text-sm text-neutral-500 dark:text-neutral-400">
                                     {dayjs(product.createdAt).format("MMM D, YYYY")}
                                   </span>
@@ -474,7 +472,7 @@ export default function DashboardPage() {
                                 <Button
                                   size="sm"
                                   as={A}
-                                  href={`/orders/suppliers/${product.product.id}`}
+                                  href={`/products/${product.id}`}
                                   variant="outline"
                                   class="bg-background"
                                 >

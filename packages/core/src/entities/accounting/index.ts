@@ -3,7 +3,7 @@ import { and, gte, lte } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { TB_organizations_sales, TB_organizations_supplierorders } from "../../drizzle/sql/schema";
+import { TB_organizations_sales } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { AccountingDateRangeInvalid, AccountingOrganizationInvalidId } from "./errors";
 
@@ -63,14 +63,16 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
         // Get supplier orders (expenses)
         const purchases = yield* Effect.promise(() =>
-          db.query.TB_organizations_supplierorders.findMany({
-            where: (fields, operations) => and(operations.eq(fields.organization_id, parsedOrgId.output)),
+          db.query.TB_supplier_purchases.findMany({
+            where: (fields, operations) => operations.eq(fields.organization_id, parsedOrgId.output),
             with: {
-              order: {
+              supplier: true,
+              products: {
                 with: {
-                  prods: {
+                  product: {
                     with: {
-                      product: true,
+                      labels: true,
+                      brands: true,
                     },
                   },
                 },
@@ -79,18 +81,28 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
           }),
         );
 
-        // Get sales (income)
-        const orgSales = yield* Effect.promise(() =>
-          db.query.TB_organizations_sales.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
-          }),
-        );
-        const salesId = orgSales.map((s) => s.saleId);
-
+        // Get sales directly with a single query
         const sales = yield* Effect.promise(() =>
           db.query.TB_sales.findMany({
-            where: (fields, operations) => operations.and(operations.inArray(fields.id, salesId)),
-            with: { items: { with: { product: true } } },
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+            with: {
+              items: {
+                with: {
+                  product: {
+                    with: {
+                      labels: true,
+                      brands: true,
+                    },
+                  },
+                },
+              },
+              customer: true,
+              discounts: {
+                with: {
+                  discount: true,
+                },
+              },
+            },
             orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
           }),
         );
@@ -115,7 +127,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
         // Group supplier orders by day
         purchases.forEach((order) => {
-          const day = dayjs(order.order.createdAt).format("YYYY-MM-DD");
+          const day = dayjs(order.createdAt).format("YYYY-MM-DD");
           if (!transactionsByDay.has(day)) {
             transactionsByDay.set(day, { sales: [], orders: [] });
           }
@@ -136,7 +148,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
             // Process orders (bought)
             orders.forEach((so) => {
-              so.order.prods.forEach((prod) => {
+              so.products.forEach((prod) => {
                 if (prod.product.purchasePrice && prod.product.currency) {
                   const currency = prod.product.currency;
                   if (!currencyMap.has(currency)) {

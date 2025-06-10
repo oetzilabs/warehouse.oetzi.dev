@@ -225,18 +225,18 @@ export default function CustomerPage() {
                             <div class="flex flex-row items-center justify-between p-4 hover:bg-muted-foreground/[0.025] border-b last:border-b-0">
                               <div class="flex flex-col gap-1">
                                 <div class="flex flex-row items-center gap-2">
-                                  <span class="text-sm font-medium">#{o.order.barcode ?? "N/A"}</span>
+                                  <span class="text-sm font-medium">#{o.barcode ?? "N/A"}</span>
                                   <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                    {o.order.status}
+                                    {o.status}
                                   </span>
                                 </div>
                                 <div class="flex flex-col">
                                   <span class="text-xs text-muted-foreground">
-                                    {dayjs(o.order.createdAt).format("MMM D, YYYY")}
+                                    {dayjs(o.createdAt).format("MMM D, YYYY")}
                                   </span>
                                   <span class="text-xs text-muted-foreground">
-                                    {o.order.prods.length} product{o.order.prods.length === 1 ? "" : "s"} •{" "}
-                                    {o.order.prods.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
+                                    {o.products.length} product{o.products.length === 1 ? "" : "s"} •{" "}
+                                    {o.products.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
                                   </span>
                                 </div>
                               </div>
@@ -245,7 +245,7 @@ export default function CustomerPage() {
                                 class="bg-background"
                                 size="sm"
                                 as={A}
-                                href={`./orders/${o.order.id}`}
+                                href={`./orders/${o.id}`}
                               >
                                 View
                                 <ArrowUpRight class="size-4" />
@@ -302,7 +302,7 @@ export default function CustomerPage() {
                           <For each={customerInfo().customer.ppt}>
                             {(t) => (
                               <div class="flex flex-row gap-2 items-center justify-between border-b last:border-b-0 p-4">
-                                {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
+                                {/* <span class="text-sm text-muted-foreground">{o.products.length}</span> */}
                                 <div class="flex flex-col gap-2">
                                   <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
                                   <Show when={t.notes}>
@@ -379,7 +379,7 @@ export default function CustomerPage() {
                           <For each={customerInfo().customer.pdt}>
                             {(t) => (
                               <div class="flex flex-row gap-2 items-center justify-between border-b last:border-b-0 p-4">
-                                {/* <span class="text-sm text-muted-foreground">{o.order.prods.length}</span> */}
+                                {/* <span class="text-sm text-muted-foreground">{o.products.length}</span> */}
                                 <div class="flex flex-col gap-2">
                                   <span class="text-sm text-muted-foreground">{dayjs(t.startTime).format("dddd")}</span>
                                   <Show when={t.notes}>

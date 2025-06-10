@@ -2,9 +2,9 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_orders } from "../orders/orders";
 import { TB_schedules } from "../schedules/schedules";
 import { schema } from "../utils";
+import { TB_supplier_purchases } from "./supplier_purchases";
 import { TB_suppliers } from "./suppliers";
 
 export const supplier_schedule_type = schema.enum("supplier_schedule_type", [
@@ -29,7 +29,7 @@ export const TB_supplier_schedules = schema.table("supplier_schedules", (t) => (
     .varchar("schedule_id")
     .notNull()
     .references(() => TB_schedules.id),
-  orderId: t.varchar("order_id").references(() => TB_orders.id),
+  purchaseId: t.varchar("purchase_id").references(() => TB_supplier_purchases.id),
   type: supplier_schedule_type("type").notNull(),
 }));
 
@@ -42,9 +42,9 @@ export const supplier_schedules_relations = relations(TB_supplier_schedules, ({ 
     fields: [TB_supplier_schedules.scheduleId],
     references: [TB_schedules.id],
   }),
-  order: one(TB_orders, {
-    fields: [TB_supplier_schedules.orderId],
-    references: [TB_orders.id],
+  purchase: one(TB_supplier_purchases, {
+    fields: [TB_supplier_schedules.purchaseId],
+    references: [TB_supplier_purchases.id],
   }),
 }));
 

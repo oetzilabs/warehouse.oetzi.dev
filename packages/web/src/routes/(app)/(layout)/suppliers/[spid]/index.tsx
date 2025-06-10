@@ -270,7 +270,7 @@ export default function SupplierPage() {
                     </div>
                   </div>
                   <div class="flex flex-col w-full">
-                    <Show when={supplierInfo().orders.length === 0}>
+                    <Show when={supplierInfo().purchases.length === 0}>
                       <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full bg-muted-foreground/5">
                         <span class="text-sm text-muted-foreground">No orders have been made</span>
                         <div class="flex flex-row gap-2 items-center justify-center">
@@ -285,25 +285,25 @@ export default function SupplierPage() {
                         </div>
                       </div>
                     </Show>
-                    <Show when={supplierInfo().orders.length > 0}>
+                    <Show when={supplierInfo().purchases.length > 0}>
                       <div class="flex flex-col gap-0">
-                        <For each={supplierInfo().orders.slice(0, 10)}>
+                        <For each={supplierInfo().purchases.slice(0, 10)}>
                           {(o) => (
                             <div class="flex flex-row items-center justify-between p-4 border-b last:border-b-0">
                               <div class="flex flex-col gap-1">
                                 <div class="flex flex-row items-center gap-2">
-                                  <span class="text-sm font-medium">#{o.order.barcode ?? "N/A"}</span>
+                                  <span class="text-sm font-medium">#{o.barcode ?? "N/A"}</span>
                                   <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                    {o.order.status}
+                                    {o.status}
                                   </span>
                                 </div>
                                 <div class="flex flex-col">
                                   <span class="text-xs text-muted-foreground">
-                                    {dayjs(o.order.createdAt).format("MMM D, YYYY")}
+                                    {dayjs(o.createdAt).format("MMM D, YYYY")}
                                   </span>
                                   <span class="text-xs text-muted-foreground">
-                                    {o.order.prods.length} product{o.order.prods.length === 1 ? "" : "s"} •{" "}
-                                    {o.order.prods.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
+                                    {o.products.length} product{o.products.length === 1 ? "" : "s"} •{" "}
+                                    {o.products.map((p) => p.quantity).reduce((a, b) => a + b, 0)} items
                                   </span>
                                 </div>
                               </div>
@@ -312,7 +312,7 @@ export default function SupplierPage() {
                                 class="bg-background"
                                 size="sm"
                                 as={A}
-                                href={`./orders/${o.order.id}`}
+                                href={`./orders/${o.id}`}
                               >
                                 View
                                 <ArrowUpRight class="size-4" />
@@ -320,10 +320,10 @@ export default function SupplierPage() {
                             </div>
                           )}
                         </For>
-                        <Show when={supplierInfo().orders.length > 10}>
+                        <Show when={supplierInfo().purchases.length > 10}>
                           <div class="flex flex-row items-center justify-center p-4 border-t bg-muted/30">
                             <Button as={A} href="./orders" variant="ghost" size="sm" class="gap-2">
-                              Show All Orders ({supplierInfo().orders.length})
+                              Show All Orders ({supplierInfo().purchases.length})
                               <ArrowUpRight class="size-4" />
                             </Button>
                           </div>

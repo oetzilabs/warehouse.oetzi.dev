@@ -15,9 +15,6 @@ export * from "./schemas/taxes/tax_rates";
 export * from "./schemas/taxes/tax_group";
 export * from "./schemas/taxes/tax_group_countryrates";
 
-export * from "./schemas/orders/orders";
-export * from "./schemas/orders/order_products";
-
 export * from "./schemas/images/images";
 
 export * from "./schemas/brands/brands";
@@ -42,6 +39,8 @@ export * from "./schemas/sales/sales_discounts";
 export * from "./schemas/customers/customers";
 export * from "./schemas/customers/customer_notes";
 export * from "./schemas/customers/customer_schedules";
+export * from "./schemas/customers/customer_orders";
+export * from "./schemas/customers/customer_order_products";
 export * from "./schemas/customers/customer_preferred_pickuptimes";
 export * from "./schemas/customers/customer_preferred_deliverytimes";
 
@@ -53,6 +52,8 @@ export * from "./schemas/suppliers/suppliers_products";
 export * from "./schemas/suppliers/suppliers_contacts";
 export * from "./schemas/suppliers/suppliers_notes";
 export * from "./schemas/suppliers/suppliers_schedules";
+export * from "./schemas/suppliers/supplier_purchases";
+export * from "./schemas/suppliers/supplier_purchase_products";
 
 export * from "./schemas/documents/documents";
 export * from "./schemas/documents/storages";
@@ -92,7 +93,6 @@ export * from "./schemas/organizations/organizations_storages";
 export * from "./schemas/organizations/organizations_documents";
 export * from "./schemas/organizations/organization_suppliers";
 export * from "./schemas/organizations/organization_customers";
-export * from "./schemas/organizations/organizations_orders";
 export * from "./schemas/organizations/organizations_sales";
 export * from "./schemas/organizations/organization_notifications";
 

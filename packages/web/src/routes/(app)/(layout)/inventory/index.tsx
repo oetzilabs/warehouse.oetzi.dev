@@ -124,10 +124,11 @@ export default function InventoryPage() {
 const ReorderDialog = (props: { product: InventoryAlertInfo[number]["product"] }) => {
   const [reorderDialog, setReorderDialog] = createSignal(false);
 
-  const lastSupplyOrder = (o: InventoryAlertInfo[number]["product"]["orders"][number]) => {
+  const lastSupplyOrder = () => {
     const supplier = props.product.suppliers.find((s) =>
-      o.order.oso.map((o) => o.supplier_id).includes(s.supplier.id),
+      s.supplier.purchases.some((p) => p.status === "completed"),
     )?.supplier;
+
     if (!supplier) return dayjs().add(1, "day").day();
 
     // Find the earliest schedule
@@ -144,9 +145,7 @@ const ReorderDialog = (props: { product: InventoryAlertInfo[number]["product"] }
     defaultValues: {
       supplierId: props.product.suppliers.length > 0 ? props.product.suppliers[0].supplier.id : "",
       amount: props.product.reorderPoint ?? props.product.minimumStock,
-      preferredDate: dayjs()
-        .set("day", props.product.orders.length > 0 ? lastSupplyOrder(props.product.orders[0]) : 1)
-        .toDate(),
+      preferredDate: dayjs().add(1, "day").toDate(),
     } satisfies {
       supplierId: string;
       amount: number;

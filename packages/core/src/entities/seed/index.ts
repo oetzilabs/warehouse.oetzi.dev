@@ -8,22 +8,20 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   ProductCreateWithDateTransformSchema,
   TB_brands,
+  TB_customer_order_products,
+  TB_customer_orders,
   TB_customers,
   TB_device_types,
   TB_devices,
   TB_document_storage_offers,
   TB_notifications,
-  TB_order_products,
-  TB_orders,
   TB_organization_customers,
   TB_organization_suppliers,
   TB_organization_users,
   TB_organizations,
-  TB_organizations_customerorders,
   TB_organizations_notifications,
   TB_organizations_products,
   TB_organizations_sales,
-  TB_organizations_supplierorders,
   TB_organizations_warehouses,
   TB_payment_methods,
   TB_product_labels,
@@ -36,6 +34,8 @@ import {
   TB_storage_types,
   TB_storages,
   TB_supplier_products,
+  TB_supplier_purchase_products,
+  TB_supplier_purchases,
   TB_suppliers,
   TB_tax_group_countryrates,
   TB_tax_groups,
@@ -334,29 +334,6 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
         }
         yield* Console.log("brands added");
 
-        for (const order of seedData.output.orders) {
-          yield* Effect.promise(() =>
-            db
-              .insert(TB_orders)
-              .values(order)
-              .onConflictDoUpdate({
-                target: TB_orders.id,
-                set: order,
-              })
-              .returning(),
-          );
-          for (const product of order.products) {
-            yield* Effect.promise(() =>
-              db
-                .insert(TB_order_products)
-                .values({ ...product, orderId: order.id })
-                .onConflictDoUpdate({ target: TB_order_products.id, set: { ...product, orderId: order.id } })
-                .returning(),
-            );
-          }
-        }
-        yield* Console.log("orders added");
-
         for (const supplier of seedData.output.suppliers) {
           yield* Effect.promise(() =>
             db
@@ -586,75 +563,173 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             }
             yield* Console.log(`suppliers for organization ${org.id} added`);
 
-            for (const order of org.orders.suppliers) {
-              yield* Effect.promise(() =>
+            for (const order of org.orders) {
+              const { products, ...orderData } = order;
+              yield* Console.dir(orderData, { depth: null });
+              const [added] = yield* Effect.promise(() =>
                 db
-                  .insert(TB_organizations_supplierorders)
-                  .values({ organization_id: org.id, order_id: order.order_id, supplier_id: order.supplier_id })
-                  .onConflictDoNothing()
+                  .insert(TB_customer_orders)
+                  .values({ ...orderData, organization_id: org.id })
+                  .onConflictDoUpdate({
+                    target: TB_customer_orders.id,
+                    set: { ...orderData, organization_id: org.id },
+                  })
                   .returning(),
               );
-            }
-            yield* Console.log(`supply-orders for organization ${org.id} added`);
+              // if (!added) {
+              //   return yield* Effect.fail(
+              //     new SeedingFailed({ message: "Failed to add order", service: "org.customer_orders" }),
+              //   );
+              // }
+              yield* Console.log(`order ${orderData.id} added to organization ${org.id}`);
 
-            for (const order of org.orders.customers) {
-              yield* Effect.promise(() =>
+              for (const product of products) {
+                const [productAdded] = yield* Effect.promise(() =>
+                  db
+                    .insert(TB_customer_order_products)
+                    .values({ ...product, customerOrderId: orderData.id })
+                    .onConflictDoUpdate({
+                      target: TB_customer_order_products.id,
+                      set: { ...product, customerOrderId: orderData.id },
+                    })
+                    .returning(),
+                );
+
+                // if (!productAdded) {
+                //   return yield* Effect.fail(
+                //     new SeedingFailed({
+                //       message: "Failed to add order product",
+                //       service: "org.customer_order_products",
+                //     }),
+                //   );
+                // }
+                yield* Console.log(`order ${orderData.id} added to customer ${orderData.customer_id}`);
+              }
+              yield* Console.log(`orders for organization ${org.id} added`);
+            }
+            yield* Console.log("orders added");
+
+            // Add sales seeding
+            for (const sale of org.sales) {
+              const { items, ...saleData } = sale;
+              const [saleAdded] = yield* Effect.promise(() =>
                 db
-                  .insert(TB_organizations_customerorders)
-                  .values({ organization_id: org.id, order_id: order.order_id, customer_id: order.customer_id })
-                  .onConflictDoNothing()
+                  .insert(TB_sales)
+                  .values({
+                    ...saleData,
+                    createdAt: saleData.createdAt ? dayjs(saleData.createdAt).toDate() : new Date(),
+                  })
+                  .onConflictDoUpdate({
+                    target: TB_sales.id,
+                    set: {
+                      ...saleData,
+                      createdAt: saleData.createdAt ? dayjs(saleData.createdAt).toDate() : new Date(),
+                    },
+                  })
                   .returning(),
               );
+
+              for (const item of items) {
+                yield* Effect.promise(() =>
+                  db
+                    .insert(TB_sale_items)
+                    .values({ ...item, saleId: sale.id })
+                    .onConflictDoUpdate({
+                      target: [TB_sale_items.productId, TB_sale_items.saleId],
+                      set: { ...item, saleId: sale.id },
+                    })
+                    .returning(),
+                );
+              }
+              yield* Console.log(`sale ${sale.id} added to organization ${org.id}`);
             }
-            yield* Console.log(`customer-orders for organization ${org.id} added`);
+            yield* Console.log("sales added");
+
+            // Add purchases seeding
+            for (const purchase of org.purchases) {
+              const { products, ...purchaseData } = purchase;
+              const [purchaseAdded] = yield* Effect.promise(() =>
+                db
+                  .insert(TB_supplier_purchases)
+                  .values({
+                    ...purchaseData,
+                    organization_id: org.id,
+                    createdAt: purchaseData.createdAt ? dayjs(purchaseData.createdAt).toDate() : new Date(),
+                  })
+                  .onConflictDoUpdate({
+                    target: TB_supplier_purchases.id,
+                    set: {
+                      ...purchaseData,
+                      organization_id: org.id,
+                      createdAt: purchaseData.createdAt ? dayjs(purchaseData.createdAt).toDate() : new Date(),
+                    },
+                  })
+                  .returning(),
+              );
+
+              for (const product of products) {
+                yield* Effect.promise(() =>
+                  db
+                    .insert(TB_supplier_purchase_products)
+                    .values({ ...product, supplierPurchaseId: purchase.id })
+                    .onConflictDoUpdate({
+                      target: [TB_supplier_purchase_products.id],
+                      set: { ...product, supplierPurchaseId: purchase.id },
+                    })
+                    .returning(),
+                );
+              }
+              yield* Console.log(`purchase ${purchase.id} added to organization ${org.id}`);
+            }
+            yield* Console.log("purchases added");
           }
           yield* Console.log(`organizations for user ${user.id} added`);
         }
         yield* Console.log("user added");
 
-        // seed sales
-        for (const sale of seedData.output.sales) {
-          const { items, ...saleData } = sale;
-          yield* Effect.promise(() =>
-            db
-              .insert(TB_sales)
-              .values({ ...saleData, createdAt: saleData.createdAt ? dayjs(saleData.createdAt).toDate() : new Date() })
-              .onConflictDoUpdate({
-                target: TB_sales.id,
-                set: { ...saleData, createdAt: saleData.createdAt ? dayjs(saleData.createdAt).toDate() : new Date() },
-              })
-              .returning(),
-          );
+        // // seed sales
+        // for (const sale of org.sales) {
+        //   const { items, ...saleData } = sale;
+        //   yield* Effect.promise(() =>
+        //     db
+        //       .insert(TB_sales)
+        //       .values({ ...saleData, createdAt: saleData.createdAt ? dayjs(saleData.createdAt).toDate() : new Date() })
+        //       .onConflictDoUpdate({
+        //         target: TB_sales.id,
+        //         set: { ...saleData, createdAt: saleData.createdAt ? dayjs(saleData.createdAt).toDate() : new Date() },
+        //       })
+        //       .returning(),
+        //   );
 
-          for (const item of items) {
-            yield* Effect.promise(() =>
-              db
-                .insert(TB_sale_items)
-                .values({ ...item, saleId: sale.id })
-                .onConflictDoUpdate({
-                  target: [TB_sale_items.productId, TB_sale_items.saleId],
-                  set: { ...item, saleId: sale.id },
-                })
-                .returning(),
-            );
-          }
-        }
-        yield* Console.log("sales added");
+        //   for (const item of items) {
+        //     yield* Effect.promise(() =>
+        //       db
+        //         .insert(TB_sale_items)
+        //         .values({ ...item, saleId: sale.id })
+        //         .onConflictDoUpdate({
+        //           target: [TB_sale_items.productId, TB_sale_items.saleId],
+        //           set: { ...item, saleId: sale.id },
+        //         })
+        //         .returning(),
+        //     );
+        //   }
+        // }
+        // yield* Console.log("sales added");
 
-        for (const u of seedData.output.users) {
-          for (const o of u.organizations) {
-            for (const saleId of o.sales) {
-              yield* Effect.promise(() =>
-                db
-                  .insert(TB_organizations_sales)
-                  .values({ organizationId: o.id, saleId: saleId })
-                  .onConflictDoNothing()
-                  .returning(),
-              );
-            }
-            yield* Console.log(`sales for organization ${o.id} added`);
-          }
-        }
+        // for (const u of seedData.output.users) {
+        //   for (const o of u.organizations) {
+        //     for (const saleId of o.sales) {
+        //       yield* Effect.promise(() =>
+        //         db
+        //           .insert(TB_organizations_sales)
+        //           .values({ organizationId: o.id, saleId: saleId })
+        //           .onConflictDoNothing()
+        //           .returning(),
+        //       );
+        //     }
+        //     yield* Console.log(`sales for organization ${o.id} added`);
+        //   }
+        // }
 
         return true;
       });

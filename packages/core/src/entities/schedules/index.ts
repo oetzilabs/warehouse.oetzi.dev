@@ -197,25 +197,30 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
         if (!parsedOrganizationId.success) {
           return yield* Effect.fail(new ScheduleInvalidId({ id: organizationId }));
         }
-        const orgSchedules = yield* Effect.promise(() =>
-          db.query.TB_organizations_customerorders.findMany({
+
+        const orders = yield* Effect.promise(() =>
+          db.query.TB_customer_orders.findMany({
             where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
-              order: {
+              custSched: {
                 with: {
-                  custSched: {
+                  schedule: {
                     with: {
-                      schedule: true,
-                      customer: true,
-                      order: true,
+                      customers: {
+                        with: {
+                          customer: true,
+                          order: true,
+                        },
+                      },
                     },
                   },
+                  customer: true,
                 },
               },
             },
           }),
         );
-        return orgSchedules.map((o) => o.order.custSched);
+        return Array.from(new Set(orders.flatMap((o) => o.custSched.map((cs) => cs.schedule))));
       });
 
     return {

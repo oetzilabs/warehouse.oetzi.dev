@@ -19,129 +19,6 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_sessions.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        user: {
-          columns: {
-            hashed_password: false,
-          },
-          with: {
-            sessions: {
-              with: {
-                org: {
-                  with: {
-                    supps: {
-                      with: {
-                        supplier: true,
-                      },
-                    },
-                    customers: {
-                      with: {
-                        customer: true,
-                      },
-                    },
-                    customerOrders: {
-                      with: {
-                        order: true,
-                      },
-                    },
-                    purchases: {
-                      with: {
-                        order: true,
-                      },
-                    },
-                    devices: {
-                      with: {
-                        type: true,
-                      },
-                    },
-                    sales: {
-                      with: {
-                        sale: true,
-                      },
-                    },
-                    catalogs: true,
-                    products: {
-                      with: {
-                        product: true,
-                      },
-                    },
-                  },
-                },
-                wh: {
-                  with: {
-                    products: {
-                      with: {
-                        product: true,
-                      },
-                    },
-                  },
-                },
-                fc: true,
-              },
-            },
-          },
-        },
-        org: {
-          with: {
-            catalogs: true,
-            customerOrders: {
-              with: {
-                order: true,
-              },
-            },
-            devices: {
-              with: {
-                type: true,
-              },
-            },
-            purchases: {
-              with: {
-                order: true,
-              },
-            },
-            sales: {
-              with: {
-                sale: true,
-              },
-            },
-            supps: {
-              with: {
-                supplier: true,
-              },
-            },
-            customers: {
-              with: {
-                customer: true,
-              },
-            },
-            products: {
-              with: {
-                product: true,
-              },
-            },
-          },
-        },
-        wh: {
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
-            },
-          },
-        },
-        fc: true,
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
-
     const create = (sessionInput: InferInput<typeof SessionCreateSchema>) =>
       Effect.gen(function* (_) {
         const [session] = yield* Effect.promise(() => db.insert(TB_sessions).values(sessionInput).returning());
@@ -151,7 +28,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         return session;
       });
 
-    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -166,124 +43,20 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 columns: {
                   hashed_password: false,
                 },
-              },
-              org: {
-                with: {
-                  catalogs: true,
-                  customerOrders: {
-                    with: {
-                      order: {
-                        with: {
-                          prods: {
-                            with: {
-                              product: {
-                                with: {
-                                  brands: true,
-                                  catalogs: true,
-                                  labels: true,
-                                  suppliers: true,
-                                },
-                              },
-                            },
-                          },
-                          custSched: {
-                            with: {
-                              schedule: true,
-                              customer: true,
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                  devices: {
-                    with: {
-                      type: true,
-                    },
-                  },
-                  purchases: {
-                    with: {
-                      order: true,
-                    },
-                  },
-                  sales: {
-                    with: {
-                      sale: true,
-                    },
-                  },
-                  supps: {
-                    with: {
-                      supplier: true,
-                    },
-                  },
-                  customers: {
-                    with: {
-                      customer: true,
-                    },
-                  },
-                  products: {
-                    with: {
-                      product: true,
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        );
-
-        if (!session) {
-          return yield* Effect.fail(new SessionNotFound({ id }));
-        }
-
-        return session;
-      });
-
-    const generateToken = () =>
-      Effect.gen(function* (_) {
-        const token = randomBytes(32).toString("hex");
-        return token;
-      });
-
-    const findByUserId = (userId: string, relations: FindManyParams["with"] = withRelations()) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, userId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new SessionInvalidId({ id: userId }));
-        }
-
-        return yield* Effect.promise(() =>
-          db.query.TB_sessions.findMany({
-            where: (sessions, operations) => operations.eq(sessions.userId, parsedId.output),
-            with: {
-              user: {
-                columns: {
-                  hashed_password: false,
-                },
                 with: {
                   sessions: {
                     with: {
                       org: {
                         with: {
-                          catalogs: true,
-                          customerOrders: {
+                          products: {
                             with: {
-                              order: true,
-                            },
-                          },
-                          devices: {
-                            with: {
-                              type: true,
-                            },
-                          },
-                          purchases: {
-                            with: {
-                              order: true,
-                            },
-                          },
-                          sales: {
-                            with: {
-                              sale: true,
+                              product: {
+                                with: {
+                                  labels: true,
+                                  brands: true,
+                                  suppliers: true,
+                                },
+                              },
                             },
                           },
                           supps: {
@@ -296,9 +69,73 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                               customer: true,
                             },
                           },
-                          products: {
+                          customerOrders: {
                             with: {
-                              product: true,
+                              customer: true,
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                              sale: true,
+                            },
+                          },
+                          purchases: {
+                            with: {
+                              supplier: true,
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                          devices: {
+                            with: {
+                              type: true,
+                            },
+                          },
+                          sales: {
+                            with: {
+                              sale: true,
+                            },
+                          },
+                          catalogs: {
+                            with: {
+                              products: {
+                                with: {
+                                  product: true,
+                                },
+                              },
+                            },
+                          },
+                          whs: {
+                            with: {
+                              warehouse: {
+                                with: {
+                                  addresses: {
+                                    with: {
+                                      address: true,
+                                    },
+                                  },
+                                  facilities: {
+                                    with: {
+                                      areas: {
+                                        with: {
+                                          storages: {
+                                            with: {
+                                              type: true,
+                                              area: true,
+                                              products: true,
+                                              children: true,
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
                             },
                           },
                         },
@@ -319,7 +156,17 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
               },
               org: {
                 with: {
-                  catalogs: true,
+                  products: {
+                    with: {
+                      product: {
+                        with: {
+                          labels: true,
+                          brands: true,
+                          suppliers: true,
+                        },
+                      },
+                    },
+                  },
                   supps: {
                     with: {
                       supplier: true,
@@ -330,9 +177,224 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                       customer: true,
                     },
                   },
+                  customerOrders: {
+                    with: {
+                      customer: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                      sale: true,
+                    },
+                  },
+                  purchases: {
+                    with: {
+                      supplier: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  devices: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      sale: true,
+                    },
+                  },
+                  catalogs: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  whs: {
+                    with: {
+                      warehouse: {
+                        with: {
+                          addresses: {
+                            with: {
+                              address: true,
+                            },
+                          },
+                          facilities: {
+                            with: {
+                              areas: {
+                                with: {
+                                  storages: {
+                                    with: {
+                                      type: true,
+                                      area: true,
+                                      products: true,
+                                      children: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              wh: {
+                with: {
                   products: {
                     with: {
                       product: true,
+                    },
+                  },
+                },
+              },
+              fc: true,
+            },
+          }),
+        );
+
+        if (!session) {
+          return yield* Effect.fail(new SessionNotFound({ id }));
+        }
+
+        return session;
+      });
+
+    const generateToken = () =>
+      Effect.gen(function* (_) {
+        const token = randomBytes(32).toString("hex");
+        return token;
+      });
+
+    const findByUserId = (userId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, userId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new SessionInvalidId({ id: userId }));
+        }
+
+        return yield* Effect.promise(() =>
+          db.query.TB_sessions.findMany({
+            where: (sessions, operations) => operations.eq(sessions.userId, parsedId.output),
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+              org: {
+                with: {
+                  products: {
+                    with: {
+                      product: {
+                        with: {
+                          labels: true,
+                          brands: true,
+                          suppliers: true,
+                        },
+                      },
+                    },
+                  },
+                  supps: {
+                    with: {
+                      supplier: true,
+                    },
+                  },
+                  customers: {
+                    with: {
+                      customer: true,
+                    },
+                  },
+                  owner: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                  users: {
+                    with: {
+                      user: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                    },
+                  },
+                  customerOrders: {
+                    with: {
+                      customer: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                      sale: true,
+                    },
+                  },
+                  purchases: {
+                    with: {
+                      supplier: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  devices: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      sale: true,
+                    },
+                  },
+                  catalogs: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  whs: {
+                    with: {
+                      warehouse: {
+                        with: {
+                          addresses: {
+                            with: {
+                              address: true,
+                            },
+                          },
+                          facilities: {
+                            with: {
+                              areas: {
+                                with: {
+                                  storages: {
+                                    with: {
+                                      type: true,
+                                      area: true,
+                                      products: true,
+                                      children: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -342,7 +404,7 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
         );
       });
 
-    const findByToken = (token: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findByToken = (token: string) =>
       Effect.gen(function* (_) {
         const session = yield* Effect.promise(() =>
           db.query.TB_sessions.findFirst({
@@ -352,56 +414,20 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 columns: {
                   hashed_password: false,
                 },
+              },
+              org: {
                 with: {
-                  sessions: {
+                  products: {
                     with: {
-                      org: {
+                      product: {
                         with: {
-                          catalogs: true,
-                          customerOrders: {
-                            with: {
-                              order: true,
-                            },
-                          },
-                          purchases: {
-                            with: {
-                              order: true,
-                            },
-                          },
-                          sales: {
-                            with: {
-                              sale: true,
-                            },
-                          },
-                          devices: {
-                            with: {
-                              type: true,
-                            },
-                          },
-                          supps: {
-                            with: {
-                              supplier: true,
-                            },
-                          },
-                          customers: {
-                            with: {
-                              customer: true,
-                            },
-                          },
-                          products: {
-                            with: {
-                              product: true,
-                            },
-                          },
+                          labels: true,
+                          brands: true,
+                          suppliers: true,
                         },
                       },
                     },
                   },
-                },
-              },
-              org: {
-                with: {
-                  catalogs: true,
                   supps: {
                     with: {
                       supplier: true,
@@ -412,9 +438,87 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                       customer: true,
                     },
                   },
-                  products: {
+                  owner: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                  users: {
                     with: {
-                      product: true,
+                      user: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                    },
+                  },
+                  customerOrders: {
+                    with: {
+                      customer: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                      sale: true,
+                    },
+                  },
+                  purchases: {
+                    with: {
+                      supplier: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  devices: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      sale: true,
+                    },
+                  },
+                  catalogs: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  whs: {
+                    with: {
+                      warehouse: {
+                        with: {
+                          addresses: {
+                            with: {
+                              address: true,
+                            },
+                          },
+                          facilities: {
+                            with: {
+                              areas: {
+                                with: {
+                                  storages: {
+                                    with: {
+                                      type: true,
+                                      area: true,
+                                      products: true,
+                                      children: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },

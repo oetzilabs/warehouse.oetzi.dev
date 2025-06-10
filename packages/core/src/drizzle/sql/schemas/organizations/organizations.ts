@@ -6,15 +6,16 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_addresses } from "../address";
 import { TB_catalog_products } from "../catalogs/catalog_products";
 import { TB_catalogs } from "../catalogs/catalogs";
+import { TB_customer_orders } from "../customers/customer_orders";
 import { TB_devices } from "../devices/devices";
 import { commonTable } from "../entity";
 import { TB_sessions } from "../sessions";
+import { TB_supplier_purchases } from "../suppliers/supplier_purchases";
 import { TB_users } from "../users/users";
 import { TB_organization_customers } from "./organization_customers";
 import { TB_organization_discounts } from "./organization_discounts";
 import { TB_organization_suppliers } from "./organization_suppliers";
 import { TB_organization_users } from "./organization_users";
-import { TB_organizations_customerorders, TB_organizations_supplierorders } from "./organizations_orders";
 import { TB_organizations_products } from "./organizations_products";
 import { TB_organizations_sales } from "./organizations_sales";
 import { TB_organizations_warehouses } from "./organizations_warehouses";
@@ -52,8 +53,8 @@ export const organizations_relation = relations(TB_organizations, ({ many, one }
   products: many(TB_organizations_products),
   sessions: many(TB_sessions),
   catalogs: many(TB_catalogs),
-  customerOrders: many(TB_organizations_customerorders),
-  purchases: many(TB_organizations_supplierorders),
+  customerOrders: many(TB_customer_orders),
+  purchases: many(TB_supplier_purchases),
   sales: many(TB_organizations_sales),
   devices: many(TB_devices),
 }));

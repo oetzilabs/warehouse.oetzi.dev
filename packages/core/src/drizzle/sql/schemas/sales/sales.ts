@@ -3,9 +3,9 @@ import { decimal, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
+import { TB_customer_orders } from "../customers/customer_orders";
 import { TB_customers } from "../customers/customers";
 import { commonTable } from "../entity";
-import { TB_orders } from "../orders/orders";
 import { TB_organizations } from "../organizations/organizations";
 import { TB_sale_items } from "../sales/sales_items";
 import { TB_users } from "../users/users";
@@ -50,7 +50,7 @@ export const sales_relations = relations(TB_sales, ({ one, many }) => ({
     references: [TB_organizations.id],
   }),
   items: many(TB_sale_items),
-  orders: many(TB_orders),
+  orders: many(TB_customer_orders),
   discounts: many(TB_sales_discounts),
 }));
 

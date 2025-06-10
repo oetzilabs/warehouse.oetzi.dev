@@ -4,7 +4,7 @@ import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCustomerOrders } from "@/lib/api/orders";
 import { createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
+import { type CustomerOrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
@@ -23,10 +23,10 @@ export const route = {
 export default function CustomerOrdersPage() {
   const data = createAsync(() => getCustomerOrders(), { deferStream: true });
 
-  const calculateOrders = (orders: { customer_id: string; order: OrderInfo; createdAt: Date }[]) => {
+  const calculateOrders = (orders: CustomerOrderInfo[]) => {
     const ordersByDay = orders.reduce(
       (acc, order) => {
-        const date = dayjs(order.order.createdAt).format("YYYY-MM-DD");
+        const date = dayjs(order.createdAt).format("YYYY-MM-DD");
         acc[date] = (acc[date] || 0) + 1;
         return acc;
       },

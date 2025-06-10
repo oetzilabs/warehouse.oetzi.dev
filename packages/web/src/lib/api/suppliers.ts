@@ -78,8 +78,8 @@ export const getSupplierById = query(async (id: string) => {
           isInSortiment: p.product.organizations.find((po) => po.organizationId === orgId)?.deletedAt,
         })),
       };
-      const orders = yield* supplierService.getOrdersBySupplierIdAndOrganizationId(supplier.id, orgId);
-      return { supplier, orders };
+      const purchases = yield* supplierService.getPurchasesBySupplierIdAndOrganizationId(supplier.id, orgId);
+      return { supplier, purchases };
     }).pipe(Effect.provide(SupplierLive)),
   );
   return supplier;

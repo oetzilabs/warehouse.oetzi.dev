@@ -4,9 +4,15 @@ import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { date, InferInput, nullable, object, omit, optional, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
-import { TB_order_products, TB_product_to_images, TB_storage_to_products, TB_supplier_products } from "../../schema";
+import {
+  TB_product_to_images,
+  TB_storage_to_products,
+  TB_supplier_products,
+  TB_supplier_purchase_products,
+} from "../../schema";
 import { TB_brands } from "../brands/brands";
 import { TB_catalog_products } from "../catalogs/catalog_products";
+import { TB_customer_order_products } from "../customers/customer_order_products";
 import { commonTable } from "../entity";
 import { TB_organizations_products } from "../organizations/organizations_products";
 import { TB_sale_items } from "../sales/sales_items";
@@ -89,7 +95,8 @@ export const TB_products = commonTable(
 
 export const product_relations = relations(TB_products, ({ many, one }) => ({
   saleItems: many(TB_sale_items),
-  orders: many(TB_order_products),
+  orders: many(TB_customer_order_products),
+  purchases: many(TB_supplier_purchase_products),
   warehouses: many(TB_warehouse_products),
   organizations: many(TB_organizations_products),
   labels: many(TB_products_to_labels),

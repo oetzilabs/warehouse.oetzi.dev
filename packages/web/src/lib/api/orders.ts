@@ -1,5 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { OrderInfo, OrderLive, OrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
@@ -29,10 +29,10 @@ export const getCustomerOrders = query(async () => {
   }
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       const orders = yield* orderService.findCustomerOrdersByOrganizationId(orgId);
       return orders;
-    }).pipe(Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(CustomerOrderLive)),
   );
   return Exit.match(orders, {
     onSuccess: (ords) => {
@@ -69,10 +69,10 @@ export const getPurchases = query(async () => {
   }
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const ordersService = yield* _(OrderService);
-      const orders = yield* ordersService.findSupplierOrdersByOrganizationId(orgId);
+      const ordersService = yield* _(CustomerOrderService);
+      const orders = yield* ordersService.findSupplierPurchasesByOrganizationId(orgId);
       return orders;
-    }).pipe(Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(CustomerOrderLive)),
   );
   return Exit.match(orders, {
     onSuccess: (ords) => {
@@ -109,10 +109,10 @@ export const getPendingSupplyOrders = query(async () => {
   }
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const ordersService = yield* _(OrderService);
-      const orders = yield* ordersService.findSupplierOrdersByOrganizationId(orgId);
-      return orders.filter((o) => o.order.status === "pending" || o.order.status === "processing");
-    }).pipe(Effect.provide(OrderLive)),
+      const ordersService = yield* _(CustomerOrderService);
+      const orders = yield* ordersService.findSupplierPurchasesByOrganizationId(orgId);
+      return orders.filter((o) => o.status === "pending" || o.status === "processing");
+    }).pipe(Effect.provide(CustomerOrderLive)),
   );
   return Exit.match(orders, {
     onSuccess: (ords) => {
@@ -142,14 +142,14 @@ export const getOrdersByUserId = query(async (uid: string) => {
   const orders = await Effect.runPromise(
     Effect.gen(function* (_) {
       const userService = yield* _(UserService);
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       const user = yield* userService.findById(uid);
       if (!user) {
         return yield* Effect.fail(new Error("User not found"));
       }
       const orders = yield* orderService.findByUserId(user.id);
       return orders;
-    }).pipe(Effect.provide(UserLive), Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(UserLive), Effect.provide(CustomerOrderLive)),
   );
   return orders;
 }, "order-by-user-id");
@@ -171,10 +171,10 @@ export const getOrderById = query(async (oid: string) => {
 
   const order = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       const order = yield* orderService.findById(oid);
       return order;
-    }).pipe(Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(CustomerOrderLive)),
   );
 
   return Exit.match(order, {
@@ -207,10 +207,10 @@ export const deleteOrder = action(async (oid: string) => {
 
   const result = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       yield* orderService.safeRemove(oid);
       return true;
-    }).pipe(Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(CustomerOrderLive)),
   );
 
   return Exit.match(result, {
@@ -252,9 +252,9 @@ export const convertToSale = action(async (id: string, cid: string) => {
 
   const order = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       return yield* orderService.convertToSale(id, cid, orgId);
-    }).pipe(Effect.provide(OrderLive)),
+    }).pipe(Effect.provide(CustomerOrderLive)),
   );
   return json(order, {
     revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
@@ -281,7 +281,7 @@ export const downloadOrderSheet = action(async (id: string) => {
   }
   const order = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const orderService = yield* _(OrderService);
+      const orderService = yield* _(CustomerOrderService);
       const order = yield* orderService.findById(id);
       const organizationService = yield* _(OrganizationService);
       const org = yield* organizationService.findById(orgId);
@@ -293,7 +293,7 @@ export const downloadOrderSheet = action(async (id: string) => {
         pdf: pdf.toString("base64"),
         name: order.barcode ?? order.createdAt.toISOString(),
       });
-    }).pipe(Effect.provide(OrderLive), Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive)),
   );
   return json(order);
 });
