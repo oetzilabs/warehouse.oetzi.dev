@@ -3,15 +3,12 @@ import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getSales } from "@/lib/api/sales";
-import { FilterConfig } from "@/lib/filtering";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import { createSignal, Show } from "solid-js";
-import { createStore } from "solid-js/store";
+import { Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {

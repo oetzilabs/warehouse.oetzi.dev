@@ -116,7 +116,7 @@ export function SalesList(props: SalesListProps) {
                 <div class="flex flex-col gap-0.5">
                   <span class="text-sm font-medium">{item.product.name}</span>
                   <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
-                  <Show when={item.product.tg}>
+                  <Show when={item.product.organizations[0].tg}>
                     {(tg) => (
                       <span class="text-sm text-muted-foreground">
                         {tg().name} ({tg().crs[0]?.tr.rate}%)
@@ -134,15 +134,18 @@ export function SalesList(props: SalesListProps) {
                 <div class="flex flex-col items-end">
                   <div class="flex flex-row items-baseline gap-1">
                     <span class="text-xs text-muted-foreground">{item.quantity}x</span>
-                    <span class="text-sm font-medium">{item.product.sellingPrice.toFixed(2)}</span>
+                    <span class="text-sm font-medium">{item.product.organizations[0].sellingPrice.toFixed(2)}</span>
                   </div>
                   <span class="text-xs text-muted-foreground">
-                    {(item.product.sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
+                    {(item.product.organizations[0].sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
                   </span>
-                  <Show when={item.product.tg}>
+                  <Show when={item.product.organizations[0].tg}>
                     {(tg) => (
                       <span class="text-xs text-muted-foreground">
-                        {((item.product.sellingPrice * item.quantity * (tg().crs[0]?.tr.rate ?? 0)) / 100).toFixed(2)}{" "}
+                        {(
+                          (item.product.organizations[0].sellingPrice * item.quantity * (tg().crs[0]?.tr.rate ?? 0)) /
+                          100
+                        ).toFixed(2)}{" "}
                         {item.product.currency} Tax
                       </span>
                     )}
@@ -158,7 +161,7 @@ export function SalesList(props: SalesListProps) {
             <span class="text-sm text-muted-foreground">
               {sale.items
                 .slice(5)
-                .reduce((acc, item) => acc + item.product.sellingPrice * item.quantity, 0)
+                .reduce((acc, item) => acc + item.product.organizations[0].sellingPrice * item.quantity, 0)
                 .toFixed(2)}{" "}
               {sale.items[0].product.currency}
             </span>

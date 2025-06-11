@@ -1,6 +1,6 @@
 {
-  "id": "159a3e23-4e5b-44ed-b070-d47a4e96d4c6",
-  "prevId": "6f2480ee-0f6f-498d-a470-2465d76f27a9",
+  "id": "702b70f8-b135-4e0c-b54f-4d55419ee126",
+  "prevId": "4d02d539-4b23-43ec-b404-db02e82ad2ab",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1408,108 +1408,13 @@
           "name": "barcode",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "brand_id": {
           "name": "brand_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "minimum_stock": {
-          "name": "minimum_stock",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "maximum_stock": {
-          "name": "maximum_stock",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reorder_point": {
-          "name": "reorder_point",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serial_number": {
-          "name": "serial_number",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "lot_number": {
-          "name": "lot_number",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "batch_number": {
-          "name": "batch_number",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "manufacturing_date": {
-          "name": "manufacturing_date",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expiration_date": {
-          "name": "expiration_date",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "shelf_life_days": {
-          "name": "shelf_life_days",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "product_status",
-          "typeSchema": "warehouse",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "condition": {
-          "name": "condition",
-          "type": "product_condition",
-          "typeSchema": "warehouse",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'new'"
-        },
-        "purchase_price": {
-          "name": "purchase_price",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "selling_price": {
-          "name": "selling_price",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "msrp": {
-          "name": "msrp",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
         },
         "weight": {
           "name": "weight",
@@ -1523,12 +1428,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "safety_stock": {
-          "name": "safety_stock",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "customs_tariff_number": {
           "name": "customs_tariff_number",
           "type": "text",
@@ -1537,12 +1436,6 @@
         },
         "country_of_origin": {
           "name": "country_of_origin",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "default_tax_group_id": {
-          "name": "default_tax_group_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1588,24 +1481,18 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "products_default_tax_group_id_tax_groups_id_fk": {
-          "name": "products_default_tax_group_id_tax_groups_id_fk",
-          "tableFrom": "products",
-          "tableTo": "tax_groups",
-          "schemaTo": "warehouse",
-          "columnsFrom": [
-            "default_tax_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "products_barcode_unique": {
+          "name": "products_barcode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "barcode"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1955,7 +1842,7 @@
           "name": "barcode",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "id": {
           "name": "id",
@@ -2015,7 +1902,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "sales_barcode_unique": {
+          "name": "sales_barcode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "barcode"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2439,7 +2334,7 @@
           "name": "barcode",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "sale_id": {
           "name": "sale_id",
@@ -2531,7 +2426,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "customer_orders_barcode_unique": {
+          "name": "customer_orders_barcode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "barcode"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3539,7 +3442,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "supplier_purchases_barcode_unique": {
+          "name": "supplier_purchases_barcode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "barcode"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -5859,6 +5770,84 @@
           "primaryKey": false,
           "notNull": true
         },
+        "status": {
+          "name": "status",
+          "type": "product_status",
+          "typeSchema": "warehouse",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "condition": {
+          "name": "condition",
+          "type": "product_condition",
+          "typeSchema": "warehouse",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'new'"
+        },
+        "minimum_stock": {
+          "name": "minimum_stock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "maximum_stock": {
+          "name": "maximum_stock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reorder_point": {
+          "name": "reorder_point",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "purchase_price": {
+          "name": "purchase_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selling_price": {
+          "name": "selling_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "msrp": {
+          "name": "msrp",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "default_tax_group_id": {
+          "name": "default_tax_group_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp with time zone",
@@ -5894,6 +5883,20 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organizations_products_default_tax_group_id_tax_groups_id_fk": {
+          "name": "organizations_products_default_tax_group_id_tax_groups_id_fk",
+          "tableFrom": "organizations_products",
+          "tableTo": "tax_groups",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "default_tax_group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -6436,28 +6439,6 @@
         "buy_x_get_y"
       ]
     },
-    "warehouse.product_condition": {
-      "name": "product_condition",
-      "schema": "warehouse",
-      "values": [
-        "new",
-        "used",
-        "refurbished",
-        "damaged",
-        "expired"
-      ]
-    },
-    "warehouse.product_status": {
-      "name": "product_status",
-      "schema": "warehouse",
-      "values": [
-        "active",
-        "discontinued",
-        "out_of_stock",
-        "recalled",
-        "pending_review"
-      ]
-    },
     "warehouse.sale_status": {
       "name": "sale_status",
       "schema": "warehouse",
@@ -6608,6 +6589,28 @@
         "completed",
         "failed",
         "refunded"
+      ]
+    },
+    "warehouse.product_condition": {
+      "name": "product_condition",
+      "schema": "warehouse",
+      "values": [
+        "new",
+        "used",
+        "refurbished",
+        "damaged",
+        "expired"
+      ]
+    },
+    "warehouse.product_status": {
+      "name": "product_status",
+      "schema": "warehouse",
+      "values": [
+        "active",
+        "discontinued",
+        "out_of_stock",
+        "recalled",
+        "pending_review"
       ]
     }
   },

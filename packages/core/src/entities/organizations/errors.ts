@@ -92,3 +92,18 @@ export class OrganizationProductNotRemoved extends Schema.TaggedError<Organizati
     organizationId: Schema.String,
   },
 ) {}
+
+export class OrganizationProductNotUpdated extends Schema.TaggedError<OrganizationProductNotUpdated>()(
+  "OrganizationProductNotUpdated",
+  {
+    productId: Schema.String,
+    organizationId: Schema.String,
+  },
+) {}
+
+export class OrganizationProductInvalidId extends Schema.TaggedError<OrganizationProductInvalidId>()(
+  "OrganizationProductInvalidId",
+  {
+    id: Schema.String,
+  },
+) {}

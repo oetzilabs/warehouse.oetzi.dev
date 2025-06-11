@@ -187,9 +187,10 @@ export default function SalePage() {
                             <div class="flex flex-col gap-0.5">
                               <span class="font-medium">{item.product.name}</span>
                               <span class="text-sm text-muted-foreground">SKU: {item.product.sku}</span>
-                              <Show when={item.product.tg}>
+                              <Show when={item.product.organizations[0].tg}>
                                 <span class="text-sm text-muted-foreground">
-                                  {item.product.tg?.name} ({item.product.tg?.crs[0]?.tr.rate}%)
+                                  {item.product.organizations[0].tg?.name} (
+                                  {item.product.organizations[0].tg?.crs[0]?.tr.rate}%)
                                 </span>
                               </Show>
                               <Show when={item.product.weight}>
@@ -203,19 +204,20 @@ export default function SalePage() {
                             <div class="flex flex-col items-end">
                               <div class="flex flex-row items-baseline gap-1">
                                 <span class="text-sm text-muted-foreground">
-                                  {item.product.sellingPrice.toFixed(2)}
+                                  {item.product.organizations[0].sellingPrice.toFixed(2)}
                                 </span>
                                 <span class="font-medium">x{item.quantity}</span>
                               </div>
                               <span class="text-sm text-muted-foreground">
-                                {(item.product.sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
+                                {(item.product.organizations[0].sellingPrice * item.quantity).toFixed(2)}{" "}
+                                {item.product.currency}
                               </span>
-                              <Show when={item.product.tg}>
+                              <Show when={item.product.organizations[0].tg}>
                                 <span class="text-xs text-muted-foreground">
                                   {(
-                                    (item.product.sellingPrice *
+                                    (item.product.organizations[0].sellingPrice *
                                       item.quantity *
-                                      (item.product.tg!.crs[0]?.tr.rate ?? 0)) /
+                                      (item.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
                                     100
                                   ).toFixed(2)}{" "}
                                   {item.product.currency} Tax
@@ -249,21 +251,21 @@ export default function SalePage() {
                                 };
                               }
 
-                              const amount = item.product.sellingPrice * item.quantity;
+                              const amount = item.product.organizations[0].sellingPrice * item.quantity;
                               acc[currency].subtotal += amount;
                               acc[currency].total += amount;
 
-                              if (item.product.tg) {
-                                const tgKey = item.product.tg.name;
+                              if (item.product.organizations[0].tg) {
+                                const tgKey = item.product.organizations[0].tg.name;
                                 if (!acc[currency].taxGroups.has(tgKey)) {
                                   acc[currency].taxGroups.set(tgKey, {
-                                    name: item.product.tg.name,
+                                    name: item.product.organizations[0].tg.name,
                                     rates: new Map(),
                                     total: 0,
                                   });
                                 }
 
-                                for (const cr of item.product.tg.crs) {
+                                for (const cr of item.product.organizations[0].tg.crs) {
                                   const rate = cr.tr.rate;
                                   const taxAmount = amount * (rate / 100);
                                   const tg = acc[currency].taxGroups.get(tgKey)!;

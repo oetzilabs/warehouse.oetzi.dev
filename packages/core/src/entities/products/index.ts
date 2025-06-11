@@ -48,6 +48,19 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           db.query.TB_products.findFirst({
             where: (fields, operations) => operations.eq(fields.id, parsedId.output),
             with: {
+              organizations: {
+                with: {
+                  tg: {
+                    with: {
+                      crs: {
+                        with: {
+                          tr: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
               stcs: {
                 with: {
                   condition: true,
@@ -250,6 +263,19 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
+                  organizations: {
+                    with: {
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                   stcs: {
                     with: {
                       condition: true,

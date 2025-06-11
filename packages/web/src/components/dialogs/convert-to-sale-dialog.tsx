@@ -58,6 +58,10 @@ export function ConvertToSaleDialog(props: ConvertToSaleDialogProps) {
       })),
     } satisfies ConvertToSaleForm,
     onSubmit: async (state) => {
+      if (!props.customerId) {
+        toast.error("Failed to convert order to sale: Customer ID is missing");
+        return;
+      }
       return toast.promise(convertToSaleAction(props.orderId, props.customerId, state.value.products), {
         loading: "Converting order to sale...",
         success: () => {
@@ -90,7 +94,13 @@ export function ConvertToSaleDialog(props: ConvertToSaleDialogProps) {
             Verify the quantities for each product before converting this order to a sale.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={convertForm.handleSubmit} class="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            convertForm.handleSubmit();
+          }}
+          class="space-y-4"
+        >
           <div class="flex flex-col  max-h-[400px] overflow-y-auto border rounded-lg">
             <convertForm.Field name="products" mode="array">
               {(field) => (

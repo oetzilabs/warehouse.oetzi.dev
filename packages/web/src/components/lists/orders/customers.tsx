@@ -36,8 +36,8 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         field: "price",
         label: "Price",
         fn: (a, b) => {
-          const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-          const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
+          const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.organizations[0].sellingPrice, 0);
+          const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.organizations[0].sellingPrice, 0);
           return aTotal - bTotal;
         },
       },
@@ -111,10 +111,10 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
                 <div class="flex flex-col items-end">
                   <div class="flex flex-row items-baseline gap-1">
                     <span class="text-xs text-muted-foreground">{p.quantity}x</span>
-                    <span class="text-sm font-medium ">{p.product.sellingPrice.toFixed(2)}</span>
+                    <span class="text-sm font-medium ">{p.product.organizations[0].sellingPrice.toFixed(2)}</span>
                   </div>
                   <span class="text-xs text-muted-foreground">
-                    Total: {(p.product.sellingPrice * p.quantity).toFixed(2)} {p.product.currency}
+                    Total: {(p.product.organizations[0].sellingPrice * p.quantity).toFixed(2)} {p.product.currency}
                   </span>
                 </div>
               </div>
@@ -127,9 +127,9 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
             <span class="text-sm text-muted-foreground">
               {item.products
                 .slice(5)
-                .reduce((acc, p) => acc + p.product.sellingPrice * p.quantity, 0)
+                .reduce((acc, p) => acc + p.product.organizations[0].sellingPrice * p.quantity, 0)
                 .toFixed(2)}{" "}
-              {item.products[0].product.currency}
+              {item.products[0].product.organizations[0].currency}
             </span>
           </div>
         </Show>

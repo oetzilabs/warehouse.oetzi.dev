@@ -429,7 +429,7 @@ export default function DashboardPage() {
                                 <Button
                                   size="sm"
                                   as={A}
-                                  href={`/orders/suppliers/${product.product.id}`}
+                                  href={`/products/${product.product.id}`}
                                   variant="outline"
                                   class="bg-background"
                                 >

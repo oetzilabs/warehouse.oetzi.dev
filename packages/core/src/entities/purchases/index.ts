@@ -52,6 +52,11 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
           return yield* Effect.fail(new PurchaseInvalidId({ id }));
         }
 
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
         const order = yield* Effect.promise(() =>
           db.query.TB_supplier_purchases.findFirst({
             where: (orders, operations) => operations.eq(orders.id, parsedId.output),
@@ -62,11 +67,15 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -84,14 +93,29 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
           return yield* Effect.fail(new PurchaseNotFound({ id }));
         }
 
+        // Filter organizations and get org-specific product data
+        const filteredOrder = {
+          ...order,
+          products: order.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+              currency: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)?.currency,
+              sellingPrice: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)
+                ?.sellingPrice,
+            },
+          })),
+        };
+
         const productStocks = yield* inventoryService.getStockForProducts(
-          order.products.map((p) => p.productId),
+          filteredOrder.products.map((p) => p.productId),
           organizationId,
         );
-        // yield* Console.dir(productStocks, { depth: Infinity });
+
         const orderWithProductStocks = {
-          ...order,
-          products: order.products.map((p, i) => ({
+          ...filteredOrder,
+          products: filteredOrder.products.map((p) => ({
             ...p,
             product: {
               ...p.product,
@@ -142,44 +166,6 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         return deleted;
       });
 
-    // const findByUserId = (userId: string) =>
-    //   Effect.gen(function* (_) {
-    //     const parsedUserId = safeParse(prefixed_cuid2, userId);
-    //     if (!parsedUserId.success) {
-    //       return yield* Effect.fail(new OrderUserInvalidId({ userId }));
-    //     }
-
-    //     return yield* Effect.promise(() =>
-    //       db.query.TB_user_orders.findMany({
-    //         where: (fields, operations) => operations.eq(fields.userId, parsedUserId.output),
-    //         with: {
-    //           order: {
-    //             with: {
-    //               products: {
-    //                 with: {
-    //                   product: {
-    //                     with: {
-    //                       tg: {
-    //                         with: {
-    //                           crs: {
-    //                             with: {
-    //                               tr: true,
-    //                             },
-    //                           },
-    //                         },
-    //                       },
-    //                       brands: true,
-    //                     },
-    //                   },
-    //                 },
-    //               },
-    //             },
-    //           },
-    //         },
-    //       }),
-    //     );
-    //   });
-
     const safeRemove = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
@@ -212,11 +198,15 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -246,11 +236,15 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -362,7 +356,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         return percentage;
       });
 
-    const findSupplierPurchasesByOrganizationId = (organizationId: string) =>
+    const findByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedOrganizationId.success) {
@@ -377,11 +371,15 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -404,7 +402,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
       update,
       remove,
       safeRemove,
-      findSupplierPurchasesByOrganizationId,
+      findByOrganizationId,
       percentageSupplierPurchasesLastWeekByOrganizationId,
       all,
       getSupplierPurchaseChartData,

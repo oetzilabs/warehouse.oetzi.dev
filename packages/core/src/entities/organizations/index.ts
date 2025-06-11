@@ -3,9 +3,10 @@ import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
-  CustomerOrderCreate,
   CustomerOrderCreateSchema,
   OrganizationCreateSchema,
+  OrganizationProductCreateSchema,
+  OrganizationProductUpdateSchema,
   OrganizationUpdateSchema,
   SupplierPurchaseCreateSchema,
   TB_customer_orders,
@@ -16,12 +17,8 @@ import {
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
-import { FacilityInfo, FacilityLive, FacilityService } from "../facilities";
 import { OrderInvalidId } from "../orders/errors";
-import { ProductInfo } from "../products";
 import { ProductInvalidId } from "../products/errors";
-import { StorageInfo, StorageLive, StorageService } from "../storages";
-import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 import { SupplierInvalidId, SupplierPurchaseInvalidId, SupplierPurchaseNotCreated } from "../suppliers/errors";
 import {
   OrganizationAlreadyExists,
@@ -29,10 +26,9 @@ import {
   OrganizationNotDeleted,
   OrganizationNotFound,
   OrganizationNotUpdated,
-  OrganizationProductNotAdded,
+  OrganizationProductInvalidId,
   OrganizationProductNotFound,
-  OrganizationProductNotRemoved,
-  OrganizationTaxRateNotFound,
+  OrganizationProductNotUpdated,
   OrganizationUserAddFailed,
   OrganizationUserAlreadyExists,
   OrganizationUserInvalidId,
@@ -770,7 +766,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
-    const addProduct = (organizationId: string, productId: string) =>
+    const addProduct = (
+      data: InferInput<typeof OrganizationProductCreateSchema>,
+      organizationId: string,
+      productId: string,
+    ) =>
       Effect.gen(function* (_) {
         const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
         const parsedProductId = safeParse(prefixed_cuid2, productId);
@@ -810,7 +810,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.promise(() =>
           db
             .insert(TB_organizations_products)
-            .values({ organizationId: parsedOrgId.output, productId: parsedProductId.output })
+            .values({ ...data, organizationId: parsedOrgId.output, productId: parsedProductId.output })
             .returning(),
         );
       });
@@ -918,6 +918,44 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return org;
       });
 
+    const updateProduct = (
+      productId: string,
+      orgId: string,
+      data: Omit<InferInput<typeof OrganizationProductUpdateSchema>, "productId" | "organizationId">,
+    ) =>
+      Effect.gen(function* (_) {
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new OrganizationProductInvalidId({ id: productId }));
+        }
+
+        const parsedOrganizationId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
+
+        const [updated] = yield* Effect.promise(() =>
+          db
+            .update(TB_organizations_products)
+            .set({ ...data, updatedAt: new Date() })
+            .where(
+              and(
+                eq(TB_organizations_products.productId, parsedProductId.output),
+                eq(TB_organizations_products.organizationId, parsedOrganizationId.output),
+              ),
+            )
+            .returning(),
+        );
+
+        if (!updated) {
+          return yield* Effect.fail(
+            new OrganizationProductNotUpdated({ productId, organizationId: parsedOrganizationId.output }),
+          );
+        }
+
+        return updated;
+      });
+
     return {
       create,
       findById,
@@ -929,6 +967,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       addUser,
       removeUser,
       users,
+      updateProduct,
       addCustomerOrder,
       removeCustomerOrder,
       addSupplierPurchase,

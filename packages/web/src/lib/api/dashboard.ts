@@ -113,7 +113,8 @@ export const getDashboardData = query(async () => {
   return Exit.match(dashboardDataExit, {
     onSuccess: (data) => json(data),
     onFailure: (cause) => {
-      const errors = Chunk.toReadonlyArray(Cause.failures(cause)).map((c) => c.message);
+      console.error("Dashboard data errors:", cause);
+      const errors = Chunk.toReadonlyArray(Cause.failures(cause));
       console.error("Dashboard data errors:", errors);
 
       // Return empty data structure on error

@@ -49,7 +49,7 @@ export const ProductsList = (props: ProductsListProps) => {
         {
           field: "price",
           label: "Price",
-          fn: (a, b) => a.product.sellingPrice - b.product.sellingPrice,
+          fn: (a, b) => a.sellingPrice - b.sellingPrice,
         },
       ],
     },
@@ -129,7 +129,7 @@ export const ProductsList = (props: ProductsListProps) => {
           </div>
           <div class="flex flex-col items-end">
             <span class="text-sm font-medium font-['Geist_Mono_Variable']">
-              {item.product.sellingPrice.toFixed(2)} {item.product.currency}
+              {item.sellingPrice.toFixed(2)} {item.currency}
             </span>
           </div>
         </div>

@@ -18,34 +18,35 @@ import {
   union,
 } from "valibot";
 import {
+  BrandCreateSchema,
   CustomerCreateSchema,
   CustomerOrderCreateSchema,
   CustomerOrderProductCreateSchema,
+  DeviceCreateSchema,
+  DeviceTypeCreateSchema,
+  DocumentStorageOfferCreateSchema,
   FacilityCreateSchema,
   NotificationCreateSchema,
+  OrganizationCreateSchema,
+  OrganizationProductCreateSchema,
+  PaymentMethodCreateSchema,
+  ProductCreateSchema,
+  ProductLabelCreateSchema,
+  SaleCreateSchema,
+  SaleItemCreateSchema,
+  StorageCreateSchema,
+  StorageTypeCreateSchema,
   SupplierCreateSchema,
   SupplierPurchaseCreateSchema,
   SupplierPurchaseProductCreateSchema,
   TaxGroupCountryRatesCreateSchema,
   TaxGroupCreateSchema,
   TaxRateCreateSchema,
+  UserCreateSchema,
   WarehouseAreaCreateSchema,
+  WarehouseCreateSchema,
   WarehouseTypeCreateSchema,
 } from "../../drizzle/sql/schema";
-import { BrandCreateSchema } from "../../drizzle/sql/schemas/brands/brands";
-import { DeviceTypeCreateSchema } from "../../drizzle/sql/schemas/devices/device_type";
-import { DeviceCreateSchema } from "../../drizzle/sql/schemas/devices/devices";
-import { DocumentStorageOfferCreateSchema } from "../../drizzle/sql/schemas/documents/storage_offers";
-import { OrganizationCreateSchema } from "../../drizzle/sql/schemas/organizations/organizations";
-import { PaymentMethodCreateSchema } from "../../drizzle/sql/schemas/payments/payment_methods";
-import { ProductLabelCreateSchema } from "../../drizzle/sql/schemas/products/product_labels";
-import { ProductCreateWithDateTransformSchema } from "../../drizzle/sql/schemas/products/products";
-import { SaleCreateSchema } from "../../drizzle/sql/schemas/sales/sales";
-import { SaleItemCreateSchema } from "../../drizzle/sql/schemas/sales/sales_items";
-import { StorageTypeCreateSchema } from "../../drizzle/sql/schemas/storages/storage_types";
-import { StorageCreateSchema } from "../../drizzle/sql/schemas/storages/storages";
-import { UserCreateSchema } from "../../drizzle/sql/schemas/users/users";
-import { WarehouseCreateSchema } from "../../drizzle/sql/schemas/warehouses/warehouses";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 
 export const DimensionsSchema = object({
@@ -119,7 +120,7 @@ export const ProductLabelSchema = object({
 });
 
 export const ProductSchema = object({
-  ...ProductCreateWithDateTransformSchema.entries,
+  ...ProductCreateSchema.entries,
   id: prefixed_cuid2,
   labels: array(string()), // references to label IDs
 });
@@ -188,12 +189,16 @@ export const SupplierPurchaseSchema = object({
   products: array(SupplierPurchaseProductSchema),
 });
 
+export const OrganizationProductSchema = object({
+  ...omit(OrganizationProductCreateSchema, ["organizationId"]).entries,
+});
+
 export const OrganizationSchema = object({
   ...OrganizationCreateSchema.entries,
   id: prefixed_cuid2,
   slug: string(),
   warehouses: array(WarehouseSchema),
-  products: array(string()), // references to product IDs
+  products: array(OrganizationProductSchema), // references to product IDs
   suppliers: array(string()), // references to supplier IDs
   customers: array(string()), // references to customer IDs
   devices: array(DeviceSchema), // references to device IDs

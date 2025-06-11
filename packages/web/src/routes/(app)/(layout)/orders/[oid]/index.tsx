@@ -222,9 +222,10 @@ export default function CustomerOrderPage() {
                             <div class="flex flex-col gap-0.5">
                               <span class="font-medium">{product.product.name}</span>
                               <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
-                              <Show when={product.product.tg}>
+                              <Show when={product.product.organizations[0].tg}>
                                 <span class="text-sm text-muted-foreground">
-                                  {product.product.tg?.name} ({product.product.tg?.crs[0]?.tr.rate}%)
+                                  {product.product.organizations[0].tg?.name} (
+                                  {product.product.organizations[0].tg?.crs[0]?.tr.rate}%)
                                 </span>
                               </Show>
                             </div>
@@ -239,12 +240,12 @@ export default function CustomerOrderPage() {
                                 {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
                                 {product.product.currency}
                               </span>
-                              <Show when={product.product.tg}>
+                              <Show when={product.product.organizations[0].tg}>
                                 <span class="text-xs text-muted-foreground">
                                   {(
                                     (product.product.sellingPrice *
                                       product.quantity *
-                                      (product.product.tg!.crs[0]?.tr.rate ?? 0)) /
+                                      (product.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
                                     100
                                   ).toFixed(2)}{" "}
                                   {product.product.currency} Tax
@@ -383,17 +384,17 @@ export default function CustomerOrderPage() {
                               acc[currency].subtotal += amount;
                               acc[currency].total += amount;
 
-                              if (prod.product.tg) {
-                                const tgKey = prod.product.tg.name;
+                              if (prod.product.organizations[0].tg) {
+                                const tgKey = prod.product.organizations[0].tg.name;
                                 if (!acc[currency].taxGroups.has(tgKey)) {
                                   acc[currency].taxGroups.set(tgKey, {
-                                    name: prod.product.tg.name,
+                                    name: prod.product.organizations[0].tg.name,
                                     rates: new Map(),
                                     total: 0,
                                   });
                                 }
 
-                                for (const cr of prod.product.tg.crs) {
+                                for (const cr of prod.product.organizations[0].tg.crs) {
                                   const rate = cr.tr.rate;
                                   const taxAmount = amount * (rate / 100);
                                   const tg = acc[currency].taxGroups.get(tgKey)!;
@@ -477,7 +478,7 @@ export default function CustomerOrderPage() {
                   <div class="flex flex-row gap-4 w-full">
                     <ConvertToSaleDialog
                       orderId={orderInfo().id}
-                      customerId={params.csid}
+                      customerId={orderInfo().customer.id}
                       saleId={orderInfo().saleId}
                       products={orderInfo().products}
                     />

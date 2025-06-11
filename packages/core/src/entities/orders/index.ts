@@ -1,3 +1,4 @@
+import cuid2 from "@paralleldrive/cuid2";
 import dayjs from "dayjs";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { Console, Effect } from "effect";
@@ -9,6 +10,7 @@ import {
   SaleItemCreate,
   TB_customer_order_products,
   TB_customer_orders,
+  TB_organizations_products,
   TB_organizations_sales,
   TB_products,
   TB_sale_items,
@@ -21,7 +23,8 @@ import { InventoryLive, InventoryService } from "../inventory";
 import { OrganizationInfo } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
-import { SaleNotCreated } from "../sales/errors";
+import { CreatedSale, SaleProduct } from "../sales";
+import { SaleConversionFailed, SaleNotCreated } from "../sales/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   OrderInvalidId,
@@ -64,6 +67,11 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
           return yield* Effect.fail(new OrderInvalidId({ id }));
         }
 
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+
         const order = yield* Effect.promise(() =>
           db.query.TB_customer_orders.findFirst({
             where: (orders, operations) => operations.eq(orders.id, parsedId.output),
@@ -97,11 +105,15 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -119,14 +131,29 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
           return yield* Effect.fail(new OrderNotFound({ id }));
         }
 
+        // Filter organizations and get org-specific product data
+        const filteredOrder = {
+          ...order,
+          products: order.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+              currency: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)!.currency,
+              sellingPrice: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)!
+                .sellingPrice,
+            },
+          })),
+        };
+
         const productStocks = yield* inventoryService.getStockForProducts(
-          order.products.map((p) => p.productId),
+          filteredOrder.products.map((p) => p.productId),
           organizationId,
         );
-        // yield* Console.dir(productStocks, { depth: Infinity });
+
         const orderWithProductStocks = {
-          ...order,
-          products: order.products.map((p, i) => ({
+          ...filteredOrder,
+          products: filteredOrder.products.map((p) => ({
             ...p,
             product: {
               ...p.product,
@@ -194,11 +221,15 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                     with: {
                       product: {
                         with: {
-                          tg: {
+                          organizations: {
                             with: {
-                              crs: {
+                              tg: {
                                 with: {
-                                  tr: true,
+                                  crs: {
+                                    with: {
+                                      tr: true,
+                                    },
+                                  },
                                 },
                               },
                             },
@@ -271,11 +302,15 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -290,13 +325,14 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         );
       });
 
-    const findCustomerOrdersByOrganizationId = (organizationId: string) =>
+    const findByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedOrganizationId.success) {
           return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
-        const orgOrders = yield* Effect.promise(() =>
+
+        const orders = yield* Effect.promise(() =>
           db.query.TB_customer_orders.findMany({
             where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
@@ -329,11 +365,15 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -346,7 +386,22 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
             },
           }),
         );
-        return orgOrders;
+
+        // Filter organizations for each product
+        const filteredOrders = orders.map((order) => ({
+          ...order,
+          products: order.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter(
+                (org) => org.organizationId === parsedOrganizationId.output,
+              ),
+            },
+          })),
+        }));
+
+        return filteredOrders;
       });
 
     const findMostPopularProductsByOrganizationId = (organizationId: string) =>
@@ -364,8 +419,9 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                 name: TB_products.name,
                 sku: TB_products.sku,
                 description: TB_products.description,
-                sellingPrice: TB_products.sellingPrice,
-                status: TB_products.status,
+                status: TB_organizations_products.status,
+                sellingPrice: TB_organizations_products.sellingPrice,
+                currency: TB_organizations_products.currency,
               },
               orderCount: sql<number>`count(distinct ${TB_customer_orders.id})`,
               totalQuantity: sql<number>`sum(${TB_customer_order_products.quantity})`,
@@ -376,8 +432,23 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
               eq(TB_customer_orders.id, TB_customer_order_products.customerOrderId),
             )
             .innerJoin(TB_products, eq(TB_customer_order_products.productId, TB_products.id))
+            .innerJoin(
+              TB_organizations_products,
+              and(
+                eq(TB_organizations_products.productId, TB_products.id),
+                eq(TB_organizations_products.organizationId, parsedOrganizationId.output),
+              ),
+            )
             .where(eq(TB_customer_orders.organization_id, parsedOrganizationId.output))
-            .groupBy(TB_products.id)
+            .groupBy(
+              TB_products.id,
+              TB_products.name,
+              TB_products.sku,
+              TB_products.description,
+              TB_organizations_products.status,
+              TB_organizations_products.sellingPrice,
+              TB_organizations_products.currency,
+            )
             .orderBy(
               sql`count(distinct ${TB_customer_orders.id}) desc, sum(${TB_customer_order_products.quantity}) desc`,
             )
@@ -608,67 +679,78 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
 
         const order = yield* findById(id, orgId);
 
-        const itemsFromOrder = order.products.map(
-          (p) =>
-            ({
-              currency: p.product.currency,
-              quantity: products.find((po) => po.id === p.product.id)?.quantity ?? p.quantity,
-              productId: p.product.id,
-              price: p.product.sellingPrice,
-            }) satisfies Omit<SaleItemCreate, "saleId">,
-        );
+        const itemsFromOrder = order.products.map((p) => {
+          const orgProduct = p.product.organizations[0];
+          return {
+            currency: orgProduct.currency,
+            quantity: products.find((po) => po.id === p.product.id)!.quantity ?? p.quantity,
+            productId: p.product.id,
+            price: orgProduct.sellingPrice,
+          } satisfies Omit<SaleItemCreate, "saleId">;
+        });
 
-        const [sale, ...items] = yield* Effect.promise(() =>
-          db.transaction(async (tx) => {
-            // do while loop to generate barcode
-            let barcode = "";
-            while (barcode.length < 13) {
-              barcode = `sale-${dayjs().format("YYYYMMDD-HHmmss")}-${Math.floor(Math.random() * 10000)}`;
-              const existingSale = await tx.query.TB_sales.findFirst({
-                where: (fields, operations) => operations.eq(fields.barcode, barcode),
-              });
-              if (!existingSale) {
-                break;
-              }
-            }
+        const result = yield* Effect.async<{ sale: CreatedSale; items: SaleProduct[] }, SaleConversionFailed>(
+          (resume) => {
+            db.transaction(async (tx) => {
+              try {
+                // Create barcode
+                const barcode = `sale-${cuid2.createId()}`;
 
-            return tx
-              .insert(TB_sales)
-              .values({
-                customerId: cid,
-                organizationId: orgId,
-                status: "created",
-                barcode,
-              })
-              .returning()
-              .catch(() => tx.rollback())
-              .then(async ([sale]) => {
+                // Insert sale
+                const [sale] = await tx
+                  .insert(TB_sales)
+                  .values({
+                    customerId: cid,
+                    organizationId: orgId,
+                    status: "created",
+                    barcode,
+                  })
+                  .returning();
+
+                if (!sale) throw new Error("Failed to create sale");
+
+                // Insert sale items
                 const items = await tx
                   .insert(TB_sale_items)
                   .values(itemsFromOrder.map((i) => ({ ...i, saleId: sale.id })))
-                  .returning()
-                  .catch(() => tx.rollback());
-                return [sale, ...items] as const;
-              });
-          }),
+                  .returning();
+
+                // Update order status
+                await tx
+                  .update(TB_customer_orders)
+                  .set({ saleId: sale.id, status: "processing", updatedAt: new Date() })
+                  .where(eq(TB_customer_orders.id, id))
+                  .returning();
+
+                // Create organization-sale relation
+                await tx
+                  .insert(TB_organizations_sales)
+                  .values({
+                    organizationId: orgId,
+                    saleId: sale.id,
+                  })
+                  .returning();
+
+                resume(Effect.succeed({ sale, items }));
+              } catch (error) {
+                resume(
+                  Effect.fail(
+                    new SaleConversionFailed({
+                      message: error instanceof Error ? error.message : "Unknown error during sale conversion",
+                    }),
+                  ),
+                );
+                return tx.rollback();
+              }
+            });
+          },
         );
 
-        if (!sale) {
+        if (!result.sale) {
           return yield* Effect.fail(new SaleNotCreated());
         }
 
-        yield* update({ id, saleId: sale.id, status: "processing" });
-        yield* Effect.promise(() =>
-          db
-            .insert(TB_organizations_sales)
-            .values({
-              organizationId: orgId,
-              saleId: sale.id,
-            })
-            .returning(),
-        );
-
-        return { sale, items };
+        return result;
       });
 
     const generatePDF = (
@@ -746,11 +828,15 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -774,7 +860,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       remove,
       safeRemove,
       findByUserId,
-      findCustomerOrdersByOrganizationId,
+      findByOrganizationId,
       findSupplierPurchasesByOrganizationId,
       findMostPopularProductsByOrganizationId,
       percentageCustomerOrdersLastWeekByOrganizationId,

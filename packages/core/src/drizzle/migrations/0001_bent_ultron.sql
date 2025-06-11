@@ -1,1 +1,0 @@
-ALTER TABLE "warehouse"."supplier_purchases" ADD COLUMN "barcode" varchar NOT NULL;

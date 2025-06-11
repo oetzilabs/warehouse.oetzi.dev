@@ -1,15 +1,22 @@
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { and, eq } from "drizzle-orm";
+import { Console, Effect } from "effect";
 import { InferInput, number, object, parse, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { SaleCreateSchema, SaleUpdateSchema, TB_sales } from "../../drizzle/sql/schema";
+import {
+  SaleCreateSchema,
+  SaleItemCreateSchema,
+  SaleUpdateSchema,
+  TB_sale_items,
+  TB_sales,
+} from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrderNotFound } from "../orders/errors";
 import { OrganizationInfo, OrganizationLive, OrganizationService } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
+import { ProductLive, ProductService } from "../products";
 import {
   SaleInvalidId,
   SaleNotCreated,
@@ -17,6 +24,11 @@ import {
   SaleNotFound,
   SaleNotUpdated,
   SaleOrganizationNotFound,
+  SaleProductInvalidId,
+  SaleProductNotAdded,
+  SaleProductNotFound,
+  SaleProductNotRemoved,
+  SaleProductNotUpdated,
 } from "./errors";
 
 dayjs.extend(isBetween);
@@ -25,24 +37,8 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const organizationsService = yield* _(OrganizationService);
+    const productService = yield* _(ProductService);
     const db = yield* database.instance;
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_sales.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        items: {
-          with: {
-            product: true,
-          },
-        },
-        customer: true,
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
 
     const create = (saleInput: InferInput<typeof SaleCreateSchema>) =>
       Effect.gen(function* (_) {
@@ -50,7 +46,8 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         if (!sale) {
           return yield* Effect.fail(new SaleNotCreated({}));
         }
-        return findById(sale.id, saleInput.organizationId);
+        return sale;
+        // return yield* findById(sale.id, saleInput.organizationId);
       });
 
     const findById = (id: string, orgId: string) =>
@@ -76,11 +73,15 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -99,7 +100,22 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           return yield* Effect.fail(new SaleNotFound({ id }));
         }
 
-        return sale;
+        // Filter and map organization-specific product data
+        const filteredSale = {
+          ...sale,
+          items: sale.items.map((item) => ({
+            ...item,
+            product: {
+              ...item.product,
+              organizations: item.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+              currency: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)?.currency,
+              sellingPrice: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)
+                ?.sellingPrice,
+            },
+          })),
+        };
+
+        return filteredSale;
       });
 
     const update = (id: string, saleInput: InferInput<typeof SaleUpdateSchema>) =>
@@ -187,11 +203,15 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
                     with: {
                       product: {
                         with: {
-                          tg: {
+                          organizations: {
                             with: {
-                              crs: {
+                              tg: {
                                 with: {
-                                  tr: true,
+                                  crs: {
+                                    with: {
+                                      tr: true,
+                                    },
+                                  },
                                 },
                               },
                             },
@@ -207,30 +227,27 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
             },
           }),
         );
-        return sales.map((s) => s.sale);
-      });
 
-    // const findByWarehouseId = (warehouseId: string) =>
-    //   Effect.gen(function* (_) {
-    //     const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
-    //     if (!parsedWarehouseId.success) {
-    //       return yield* Effect.fail(new OrganizationInvalidId({ id: warehouseId }));
-    //     }
-    //     const sales = yield* Effect.promise(() =>
-    //       db.query.TB_sales.findMany({
-    //         where: (fields, operations) => operations.eq(fields.warehouseId, parsedWarehouseId.output),
-    //         with: {
-    //           items: {
-    //             with: {
-    //               product: true,
-    //             },
-    //           },
-    //           customer: true,
-    //         },
-    //       }),
-    //     );
-    //     return sales;
-    //   });
+        // Filter and map organization-specific product data
+        const filteredSales = sales.map((s) => ({
+          ...s,
+          sale: {
+            ...s.sale,
+            items: s.sale.items.map((item) => ({
+              ...item,
+              product: {
+                ...item.product,
+                organizations: item.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+                currency: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)?.currency,
+                sellingPrice: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)
+                  ?.sellingPrice,
+              },
+            })),
+          },
+        }));
+
+        return filteredSales.map((s) => s.sale);
+      });
 
     const safeRemove = (id: string) =>
       Effect.gen(function* (_) {
@@ -277,6 +294,98 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return generatedPdf;
       }).pipe(Effect.provide(PDFLive));
 
+    const addProduct = (
+      saleId: string,
+      productId: string,
+      orgId: string,
+      data: Omit<InferInput<typeof SaleItemCreateSchema>, "saleId" | "productId">,
+    ) =>
+      Effect.gen(function* (_) {
+        const parsedSaleId = safeParse(prefixed_cuid2, saleId);
+        if (!parsedSaleId.success) {
+          return yield* Effect.fail(new SaleInvalidId({ id: saleId }));
+        }
+
+        const parsedItemId = safeParse(prefixed_cuid2, productId);
+        if (!parsedItemId.success) {
+          return yield* Effect.fail(new SaleProductInvalidId({ id: productId }));
+        }
+
+        const product = yield* productService.findById(productId);
+
+        const sale = yield* findById(saleId, orgId);
+        // is the status allowed to change the product items?
+        if (
+          (["cancelled", "deleted", "delivered", "shipped", "confirmed"] as (typeof sale.status)[]).includes(
+            sale.status,
+          )
+        ) {
+          return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
+        }
+
+        // does the sale have the product already?
+        const exists = yield* Effect.promise(() =>
+          db.query.TB_sale_items.findFirst({
+            where: (fields, operations) =>
+              and(eq(fields.saleId, parsedSaleId.output), eq(fields.productId, parsedItemId.output)),
+          }),
+        );
+
+        if (exists) {
+          return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
+        }
+
+        const [added] = yield* Effect.promise(() =>
+          db
+            .insert(TB_sale_items)
+            .values({ ...data, saleId: parsedSaleId.output, productId: parsedItemId.output })
+            .returning(),
+        );
+
+        if (!added) {
+          return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
+        }
+        return added;
+      });
+
+    const removeProduct = (saleId: string, productId: string, orgId: string) =>
+      Effect.gen(function* (_) {
+        const parsedSaleId = safeParse(prefixed_cuid2, saleId);
+        if (!parsedSaleId.success) {
+          return yield* Effect.fail(new SaleInvalidId({ id: saleId }));
+        }
+
+        const parsedItemId = safeParse(prefixed_cuid2, productId);
+        if (!parsedItemId.success) {
+          return yield* Effect.fail(new SaleProductInvalidId({ id: productId }));
+        }
+
+        const product = yield* productService.findById(productId);
+
+        const sale = yield* findById(saleId, orgId);
+        // is the status allowed to change the product items?
+        if (
+          (["cancelled", "deleted", "delivered", "shipped", "confirmed"] as (typeof sale.status)[]).includes(
+            sale.status,
+          )
+        ) {
+          return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
+        }
+
+        const [removed] = yield* Effect.promise(() =>
+          db
+            .delete(TB_sale_items)
+            .where(and(eq(TB_sale_items.saleId, parsedSaleId.output), eq(TB_sale_items.productId, parsedItemId.output)))
+            .returning(),
+        );
+
+        if (!removed) {
+          return yield* Effect.fail(new SaleProductNotRemoved({ saleId, productId }));
+        }
+
+        return removed;
+      });
+
     return {
       create,
       findById,
@@ -285,12 +394,16 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       safeRemove,
       calculateTotal,
       findWithinRange,
+      addProduct,
+      removeProduct,
       findByOrganizationId,
       generatePDF,
     } as const;
   }),
-  dependencies: [DatabaseLive, OrganizationLive],
+  dependencies: [DatabaseLive, OrganizationLive, ProductLive],
 }) {}
 
 export const SalesLive = SalesService.Default;
 export type SaleInfo = NonNullable<Effect.Effect.Success<ReturnType<SalesService["findById"]>>>;
+export type CreatedSale = NonNullable<Effect.Effect.Success<ReturnType<SalesService["create"]>>>;
+export type SaleProduct = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SalesService["addProduct"]>>>>;

@@ -26,7 +26,7 @@ export const getPurchases = query(async () => {
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const ordersService = yield* _(PurchasesService);
-      const orders = yield* ordersService.findSupplierPurchasesByOrganizationId(orgId);
+      const orders = yield* ordersService.findByOrganizationId(orgId);
       return orders;
     }).pipe(Effect.provide(PurchasesLive)),
   );
@@ -40,7 +40,7 @@ export const getPurchases = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'getPurchases': ${errors.join(", ")}`);
     },
   });
 }, "purchased-orders");
@@ -65,10 +65,10 @@ export const getPendingPurchases = query(async () => {
   }
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const ordersService = yield* _(CustomerOrderService);
-      const orders = yield* ordersService.findSupplierPurchasesByOrganizationId(orgId);
+      const ordersService = yield* _(PurchasesService);
+      const orders = yield* ordersService.findByOrganizationId(orgId);
       return orders.filter((o) => o.status === "pending" || o.status === "processing");
-    }).pipe(Effect.provide(CustomerOrderLive)),
+    }).pipe(Effect.provide(PurchasesLive)),
   );
   return Exit.match(orders, {
     onSuccess: (ords) => {
@@ -80,7 +80,7 @@ export const getPendingPurchases = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'getPendingPurchases': ${errors.join(", ")}`);
     },
   });
 }, "sales-order-by-warehouse-id");
@@ -120,7 +120,7 @@ export const getPurchaseById = query(async (pid: string) => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'getPurchaseById': ${errors.join(", ")}`);
     },
   });
 }, "purchase-by-id");
@@ -161,7 +161,7 @@ export const deletePurchase = action(async (pid: string) => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'deletePurchase': ${errors.join(", ")}`);
     },
   });
 });

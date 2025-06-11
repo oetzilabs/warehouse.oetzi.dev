@@ -31,7 +31,7 @@ export const getCustomerOrders = query(async () => {
   const orders = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const orderService = yield* _(CustomerOrderService);
-      const orders = yield* orderService.findCustomerOrdersByOrganizationId(orgId);
+      const orders = yield* orderService.findByOrganizationId(orgId);
       return orders;
     }).pipe(Effect.provide(CustomerOrderLive)),
   );
@@ -45,7 +45,7 @@ export const getCustomerOrders = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'getCustomerOrders': ${errors.join(", ")}`);
     },
   });
 }, "customer-order-by-warehouse-id");
@@ -176,14 +176,26 @@ export const convertToSale = action(
       throw redirect("/", { status: 403, statusText: "Forbidden" });
     }
 
-    const order = await Effect.runPromise(
+    const order = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
         const orderService = yield* _(CustomerOrderService);
         return yield* orderService.convertToSale(id, cid, orgId, products);
       }).pipe(Effect.provide(CustomerOrderLive)),
     );
-    return json(order, {
-      revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
+    return Exit.match(order, {
+      onSuccess: (order) => {
+        return json(order, {
+          revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
+        });
+      },
+      onFailure: (cause) => {
+        console.error("Failed to convert order to sale:", cause);
+        const causes = Cause.failures(cause);
+        const errors = Chunk.toReadonlyArray(causes).map((c) => {
+          return c.message;
+        });
+        throw new Error(`Some error(s) occurred at 'convertToSale': ${errors.join(", ")}`);
+      },
     });
   },
 );

@@ -38,7 +38,6 @@ import {
   getProductBrands,
   getProductById,
   getProductLabels,
-  reAddProduct,
   removeLabelsFromProduct,
   updateProductStock,
 } from "@/lib/api/products";
@@ -108,9 +107,6 @@ export default function ProductPage() {
 
   const deleteProductAction = useAction(deleteProduct);
   const isDeletingProduct = useSubmission(deleteProduct);
-
-  const reAddProductAction = useAction(reAddProduct);
-  const isReAddingProduct = useSubmission(reAddProduct);
 
   const printProductSheetAction = useAction(printProductSheet);
   const isPrintingProductSheet = useSubmission(printProductSheet);
@@ -269,17 +265,18 @@ export default function ProductPage() {
                           >
                             <DropdownMenuItem
                               class="cursor-pointer"
-                              onSelect={() => {
-                                toast.promise(reAddProductAction(productInfo().id), {
-                                  loading: "Adding product back to Sortiment...",
-                                  success: "Product added back to Sortiment",
-                                  error: "Failed to add product back to Sortiment",
-                                });
-                              }}
+                              disabled
+                              // onSelect={() => {
+                              //   toast.promise(reAddProductAction(productInfo().id), {
+                              //     loading: "Adding product back to Sortiment...",
+                              //     success: "Product added back to Sortiment",
+                              //     error: "Failed to add product back to Sortiment",
+                              //   });
+                              // }}
                             >
-                              <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
+                              {/* <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
                                 <Loader2 class="size-4 animate-spin" />
-                              </Show>
+                              </Show> */}
                               Readd to Sortiment
                             </DropdownMenuItem>
                           </Show>
@@ -291,33 +288,36 @@ export default function ProductPage() {
                 <div class="flex flex-row items-center gap-4 w-full justify-between">
                   <div class="flex flex-col items-start gap-1">
                     <span class="text-xl font-semibold">
-                      Selling Price: {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
+                      Selling Price: {productInfo().organizations[0].sellingPrice.toFixed(2)}{" "}
+                      {productInfo().organizations[0].currency}
                     </span>
                     <span class="text-sm text-muted-foreground">
-                      Purchase: {(productInfo().purchasePrice ?? 0).toFixed(2)} {productInfo().currency}
+                      Purchase: {(productInfo().organizations[0].purchasePrice ?? 0).toFixed(2)}{" "}
+                      {productInfo().organizations[0].currency}
                     </span>
                     <span class="text-sm text-muted-foreground">
                       Margin:{" "}
                       {(
-                        ((productInfo().sellingPrice - (productInfo().purchasePrice ?? 0)) /
-                          productInfo().sellingPrice) *
+                        ((productInfo().organizations[0].sellingPrice -
+                          (productInfo().organizations[0].purchasePrice ?? 0)) /
+                          productInfo().organizations[0].sellingPrice) *
                         100
                       ).toFixed(1)}
                       %
                     </span>
-                    <span class="text-sm text-muted-foreground">
+                    {/* <span class="text-sm text-muted-foreground">
                       Stock: {productInfo().space.length}/
                       {productInfo()
-                        .space.map((sp) => sp.storage.productCapacity)
+                        .space.map((sp) => sp.storage.capacity)
                         .reduce((a, b) => a + b, 0) ?? 0}
-                    </span>
+                    </span> */}
                   </div>
                   <div class="px-4 flex flex-row items-center gap-4">
                     <div class="flex flex-col justify-between items-center gap-1 text-muted-foreground">
                       <RulerDimensionLine class="size-6" />
                       <span class="text-sm font-medium">
                         <Show when={productInfo().dimensions} fallback="N/A">
-                          {(w) => `${w().width}/${w().height}/${w().length}/${w().unit}`}
+                          {(w) => `${w().width}/${w().height}/${w().depth}/${w().unit}`}
                         </Show>
                       </span>
                     </div>
@@ -950,9 +950,9 @@ export default function ProductPage() {
                     <h2 class="font-medium ">Inventory</h2>
                     <StockDialog
                       id={productInfo().id}
-                      minimumStock={productInfo().minimumStock ?? 0}
-                      maximumStock={productInfo().maximumStock ?? 0}
-                      reorderPoint={productInfo().reorderPoint ?? 0}
+                      minimumStock={productInfo().organizations[0].minimumStock ?? 0}
+                      maximumStock={productInfo().organizations[0].maximumStock ?? 0}
+                      reorderPoint={productInfo().organizations[0].reorderPoint ?? 0}
                     />
                   </div>
                   <div class="flex flex-col gap-1 p-4 border-b">
@@ -962,15 +962,15 @@ export default function ProductPage() {
                     </div>
                     <div class="flex justify-between">
                       <span class="text-sm font-medium">Min Stock:</span>
-                      <span class="text-sm">{productInfo().minimumStock}</span>
+                      <span class="text-sm">{productInfo().organizations[0].minimumStock}</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-sm font-medium">Max Stock:</span>
-                      <span class="text-sm">{productInfo().maximumStock ?? "N/A"}</span>
+                      <span class="text-sm">{productInfo().organizations[0].maximumStock ?? "N/A"}</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-sm font-medium">Reordering At:</span>
-                      <span class="text-sm">{productInfo().reorderPoint ?? "N/A"}</span>
+                      <span class="text-sm">{productInfo().organizations[0].reorderPoint ?? "N/A"}</span>
                     </div>
                   </div>
                   <div class="flex flex-col p-4">

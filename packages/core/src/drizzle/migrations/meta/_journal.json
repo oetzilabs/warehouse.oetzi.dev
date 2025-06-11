@@ -5,22 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1749578086096,
-      "tag": "0000_aspiring_bishop",
+      "when": 1749635927955,
+      "tag": "0000_closed_sauron",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1749585508512,
-      "tag": "0001_bent_ultron",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1749634898891,
-      "tag": "0002_tough_mimic",
+      "when": 1749637347162,
+      "tag": "0001_first_smiling_tiger",
       "breakpoints": true
     }
   ]

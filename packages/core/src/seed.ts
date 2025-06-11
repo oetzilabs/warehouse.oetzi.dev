@@ -5,16 +5,6 @@ import { DeviceLive, DeviceService } from "./entities/devices";
 import { SeedLive, SeedService } from "./entities/seed";
 import { SeedingFailed } from "./entities/seed/errors";
 
-const program = Effect.gen(function* (_) {
-  //services
-  const brandService = yield* _(BrandService);
-  const deviceService = yield* _(DeviceService);
-
-  // seeding
-  const brands = yield* brandService.seed();
-  const devices = yield* deviceService.seed();
-}).pipe(Effect.provide(BrandLive), Effect.provide(DeviceLive));
-
 const program2 = Effect.gen(function* (_) {
   const seedService = yield* _(SeedService);
   yield* seedService.seed();

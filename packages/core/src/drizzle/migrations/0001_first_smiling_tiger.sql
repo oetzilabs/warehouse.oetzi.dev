@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."organizations_products" ADD COLUMN "created_at" timestamp with time zone DEFAULT now();--> statement-breakpoint
+ALTER TABLE "warehouse"."organizations_products" ADD COLUMN "updated_at" timestamp with time zone;

@@ -51,3 +51,25 @@ export const getStorageStockStatus = (storage: any) => {
 };
 
 export type StorageStockStatus = ReturnType<typeof getStorageStockStatus>;
+
+export function createAbortablePromise<T extends unknown, E extends unknown>(
+  executor: (resolve: (value: T) => void, reject: (reason: E) => void, signal: AbortSignal) => void,
+) {
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const promise = new Promise((resolve, reject) => {
+    // Add an event listener to the signal to reject the promise if aborted
+    signal.addEventListener("abort", () => {
+      reject(new DOMException("Promise aborted", "AbortError"));
+    });
+
+    // Execute the provided function, passing resolve, reject, and the signal
+    executor(resolve, reject, signal);
+  });
+
+  return {
+    promise,
+    abort: () => controller.abort(),
+  };
+}

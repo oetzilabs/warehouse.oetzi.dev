@@ -225,50 +225,6 @@ export const downloadProductSheet = action(
   },
 );
 
-export const reAddProduct = action(async (id: string) => {
-  "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const product = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const orgService = yield* _(OrganizationService);
-      const org = yield* orgService.findById(orgId);
-      if (!org) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-      }
-      const productService = yield* _(ProductService);
-      const product = yield* productService.findById(id);
-      if (!product) {
-        return yield* Effect.fail(new ProductNotFound({ id }));
-      }
-
-      const p = yield* orgService.addProduct(org.id, product.id);
-      if (!p) {
-        return yield* Effect.fail(new OrganizationProductNotAdded({ productId: id, organizationId: orgId }));
-      }
-
-      return p;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
-  );
-  return json(product, {
-    revalidate: [getProductById.keyFor(id), getProducts.key],
-  });
-});
-
 export const addLabelsToProduct = action(async (id: string, labels: string[]) => {
   "use server";
   const auth = await withSession();
@@ -405,24 +361,43 @@ export const updateProductStock = action(
     if (!auth) {
       throw redirect("/", { status: 403, statusText: "Forbidden" });
     }
-    const [user, session] = auth;
-    if (!session.current_organization_id) {
+    const user = auth[0];
+    if (!user) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const session = auth[1];
+    if (!session) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const orgId = session.current_organization_id;
+    if (!orgId) {
       throw redirect("/", { status: 403, statusText: "Forbidden" });
     }
 
-    const result = await Effect.runPromise(
+    const result = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
-        const service = yield* _(ProductService);
-        const product = yield* service.findById(id);
-        if (!product) {
-          return yield* Effect.fail(new ProductNotFound({ id }));
-        }
+        const orgService = yield* _(OrganizationService);
+        const productService = yield* _(ProductService);
+        const org = yield* orgService.findById(orgId);
+        const product = yield* productService.findById(id);
 
-        return yield* service.update(product.id, { id: product.id, minimumStock, maximumStock, reorderPoint });
-      }).pipe(Effect.provide(ProductLive)),
+        return yield* orgService.updateProduct(product.id, org.id, { minimumStock, maximumStock, reorderPoint });
+      }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive)),
     );
-    return json(result, {
-      revalidate: [getProductById.keyFor(id), getProducts.key],
+    return Exit.match(result, {
+      onSuccess: (result) => {
+        return json(result, {
+          revalidate: [getProductById.keyFor(id), getProducts.key],
+        });
+      },
+      onFailure: (cause) => {
+        console.error("Failed to update product:", cause);
+        const causes = Cause.failures(cause);
+        const errors = Chunk.toReadonlyArray(causes).map((c) => {
+          return c.message;
+        });
+        throw new Error(`Some error(s) occurred at 'updateProduct': ${errors.join(", ")}`);
+      },
     });
   },
 );

@@ -213,6 +213,19 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                   product: {
                     with: {
                       labels: true,
+                      organizations: {
+                        with: {
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },

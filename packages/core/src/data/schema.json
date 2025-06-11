@@ -431,7 +431,107 @@
                 "products": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "type": "object",
+                    "properties": {
+                      "productId": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": [
+                          "active",
+                          "discontinued",
+                          "out_of_stock",
+                          "recalled",
+                          "pending_review"
+                        ]
+                      },
+                      "minimumStock": {
+                        "type": "integer",
+                        "minimum": -2147483648,
+                        "maximum": 2147483647
+                      },
+                      "maximumStock": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "integer",
+                            "minimum": -2147483648,
+                            "maximum": 2147483647
+                          }
+                        ]
+                      },
+                      "reorderPoint": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "integer",
+                            "minimum": -2147483648,
+                            "maximum": 2147483647
+                          }
+                        ]
+                      },
+                      "condition": {
+                        "enum": [
+                          "new",
+                          "used",
+                          "refurbished",
+                          "damaged",
+                          "expired"
+                        ]
+                      },
+                      "purchasePrice": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "number",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        ]
+                      },
+                      "sellingPrice": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "msrp": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "number",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        ]
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "default_tax_group_id": {
+                        "anyOf": [
+                          {
+                            "const": null
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "productId",
+                      "sellingPrice",
+                      "currency"
+                    ]
                   }
                 },
                 "suppliers": {
@@ -586,14 +686,7 @@
                         ]
                       },
                       "barcode": {
-                        "anyOf": [
-                          {
-                            "const": null
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
+                        "type": "string"
                       },
                       "saleId": {
                         "anyOf": [
@@ -638,6 +731,7 @@
                     "additionalProperties": false,
                     "required": [
                       "title",
+                      "barcode",
                       "customer_id",
                       "id",
                       "products"
@@ -679,14 +773,7 @@
                         ]
                       },
                       "barcode": {
-                        "anyOf": [
-                          {
-                            "const": null
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
+                        "type": "string"
                       },
                       "id": {},
                       "createdAt": {
@@ -735,6 +822,7 @@
                     "required": [
                       "customerId",
                       "organizationId",
+                      "barcode",
                       "id",
                       "items"
                     ]
@@ -790,14 +878,7 @@
             "type": "string"
           },
           "barcode": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
+            "type": "string"
           },
           "brand_id": {
             "anyOf": [
@@ -808,140 +889,6 @@
                 "type": "string"
               }
             ]
-          },
-          "minimumStock": {
-            "type": "integer",
-            "minimum": -2147483648,
-            "maximum": 2147483647
-          },
-          "maximumStock": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "integer",
-                "minimum": -2147483648,
-                "maximum": 2147483647
-              }
-            ]
-          },
-          "reorderPoint": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "integer",
-                "minimum": -2147483648,
-                "maximum": 2147483647
-              }
-            ]
-          },
-          "serialNumber": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "lotNumber": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "batchNumber": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "manufacturingDate": {
-            "type": "string"
-          },
-          "expirationDate": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "shelfLife": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "integer",
-                "minimum": -2147483648,
-                "maximum": 2147483647
-              }
-            ]
-          },
-          "status": {
-            "enum": [
-              "active",
-              "discontinued",
-              "out_of_stock",
-              "recalled",
-              "pending_review"
-            ]
-          },
-          "condition": {
-            "enum": [
-              "new",
-              "used",
-              "refurbished",
-              "damaged",
-              "expired"
-            ]
-          },
-          "purchasePrice": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "number",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              }
-            ]
-          },
-          "sellingPrice": {
-            "type": "number",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "msrp": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "number",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              }
-            ]
-          },
-          "currency": {
-            "type": "string"
           },
           "weight": {
             "anyOf": [
@@ -1013,18 +960,6 @@
               }
             ]
           },
-          "safetyStock": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "integer",
-                "minimum": -2147483648,
-                "maximum": 2147483647
-              }
-            ]
-          },
           "customsTariffNumber": {
             "anyOf": [
               {
@@ -1036,16 +971,6 @@
             ]
           },
           "countryOfOrigin": {
-            "anyOf": [
-              {
-                "const": null
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "default_tax_group_id": {
             "anyOf": [
               {
                 "const": null
@@ -1067,10 +992,7 @@
         "required": [
           "name",
           "sku",
-          "manufacturingDate",
-          "expirationDate",
-          "sellingPrice",
-          "currency",
+          "barcode",
           "id",
           "labels"
         ]
