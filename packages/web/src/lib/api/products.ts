@@ -149,8 +149,6 @@ export const deleteProduct = action(async (id: string) => {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
       const p = yield* orgService.removeProduct(org.id, product.id);
-      // remove the product from the warehouse
-      // yield* warehouseService.removeProduct(wh.id, product.id);
       return p;
     }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
   );
@@ -401,3 +399,50 @@ export const updateProductStock = action(
     });
   },
 );
+
+export const reAddProduct = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromiseExit(
+    Effect.gen(function* (_) {
+      const service = yield* _(ProductService);
+      const product = yield* service.findById(id);
+      const orgService = yield* _(OrganizationService);
+      const org = yield* orgService.findById(orgId);
+      const p = yield* orgService.reAddProduct(org.id, product.id);
+      return p;
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+  );
+
+  return Exit.match(result, {
+    onSuccess: (result) => {
+      return json(result, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      });
+    },
+    onFailure: (cause) => {
+      console.error("Failed to re-add product:", cause);
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return c.message;
+      });
+      throw new Error(`Some error(s) occurred at 're-add product': ${errors.join(", ")}`);
+    },
+  });
+});

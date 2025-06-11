@@ -38,6 +38,7 @@ import {
   getProductBrands,
   getProductById,
   getProductLabels,
+  reAddProduct,
   removeLabelsFromProduct,
   updateProductStock,
 } from "@/lib/api/products";
@@ -122,6 +123,9 @@ export default function ProductPage() {
 
   const assignBrandAction = useAction(assignBrand);
   const isAssigningBrand = useSubmission(assignBrand);
+
+  const reAddProductAction = useAction(reAddProduct);
+  const isReAddingProduct = useSubmission(reAddProduct);
 
   const filteredBrands = (brands: BrandInfo[]) => {
     if (!brandSearch()) return brands;
@@ -265,18 +269,17 @@ export default function ProductPage() {
                           >
                             <DropdownMenuItem
                               class="cursor-pointer"
-                              disabled
-                              // onSelect={() => {
-                              //   toast.promise(reAddProductAction(productInfo().id), {
-                              //     loading: "Adding product back to Sortiment...",
-                              //     success: "Product added back to Sortiment",
-                              //     error: "Failed to add product back to Sortiment",
-                              //   });
-                              // }}
+                              onSelect={() => {
+                                toast.promise(reAddProductAction(productInfo().id), {
+                                  loading: "Adding product back to Sortiment...",
+                                  success: "Product added back to Sortiment",
+                                  error: "Failed to add product back to Sortiment",
+                                });
+                              }}
                             >
-                              {/* <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
+                              <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
                                 <Loader2 class="size-4 animate-spin" />
-                              </Show> */}
+                              </Show>
                               Readd to Sortiment
                             </DropdownMenuItem>
                           </Show>
