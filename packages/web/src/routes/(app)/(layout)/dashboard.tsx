@@ -7,7 +7,7 @@ import { getAuthenticatedUser } from "@/lib/api/auth";
 import { getDashboardData } from "@/lib/api/dashboard";
 import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
-import { getPendingSupplyOrders } from "@/lib/api/orders";
+import { getPendingPurchases } from "@/lib/api/purchases";
 import { getSchedules } from "@/lib/api/schedules";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const notifications = createAsync(async () => getNotifications(), { deferStream: true });
   const inventory = createAsync(async () => getInventory(), { deferStream: true });
   const schedules = createAsync(async () => getSchedules(), { deferStream: true });
-  const pendingSupplyOrders = createAsync(async () => getPendingSupplyOrders(), { deferStream: true });
+  const pendingSupplyOrders = createAsync(async () => getPendingPurchases(), { deferStream: true });
 
   const acceptNotificationAction = useAction(acceptNotification);
   const isAcceptingNotification = useSubmission(acceptNotification);
@@ -52,12 +52,7 @@ export default function DashboardPage() {
               size="sm"
               onClick={() => {
                 toast.promise(
-                  revalidate([
-                    getNotifications.key,
-                    getDashboardData.key,
-                    getInventory.key,
-                    getPendingSupplyOrders.key,
-                  ]),
+                  revalidate([getNotifications.key, getDashboardData.key, getInventory.key, getPendingPurchases.key]),
                   {
                     loading: "Refreshing dashboard...",
                     success: "Refreshed dashboard",

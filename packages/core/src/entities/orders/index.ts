@@ -744,7 +744,21 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
               supplier: true,
               products: {
                 with: {
-                  product: true,
+                  product: {
+                    with: {
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                      brands: true,
+                      labels: true,
+                    },
+                  },
                 },
               },
             },

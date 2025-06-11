@@ -6,6 +6,7 @@ import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/user
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
 import { Cause, Chunk, Effect, Exit } from "effect";
+import { getPurchases } from "./purchases";
 import { getSales } from "./sales";
 import { withSession } from "./session";
 
@@ -48,86 +49,6 @@ export const getCustomerOrders = query(async () => {
     },
   });
 }, "customer-order-by-warehouse-id");
-
-export const getPurchases = query(async () => {
-  "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orders = await Effect.runPromiseExit(
-    Effect.gen(function* (_) {
-      const ordersService = yield* _(CustomerOrderService);
-      const orders = yield* ordersService.findSupplierPurchasesByOrganizationId(orgId);
-      return orders;
-    }).pipe(Effect.provide(CustomerOrderLive)),
-  );
-  return Exit.match(orders, {
-    onSuccess: (ords) => {
-      return json(ords);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
-    },
-  });
-}, "purchased-orders");
-
-export const getPendingSupplyOrders = query(async () => {
-  "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orders = await Effect.runPromiseExit(
-    Effect.gen(function* (_) {
-      const ordersService = yield* _(CustomerOrderService);
-      const orders = yield* ordersService.findSupplierPurchasesByOrganizationId(orgId);
-      return orders.filter((o) => o.status === "pending" || o.status === "processing");
-    }).pipe(Effect.provide(CustomerOrderLive)),
-  );
-  return Exit.match(orders, {
-    onSuccess: (ords) => {
-      return json(ords);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
-    },
-  });
-}, "sales-order-by-warehouse-id");
 
 export const getOrdersByUserId = query(async (uid: string) => {
   "use server";
@@ -222,7 +143,7 @@ export const deleteOrder = action(async (oid: string) => {
       return json(
         { success: true },
         {
-          revalidate: [getCustomerOrders.key, getPurchases.key, getOrdersByUserId.key, getOrderById.keyFor(oid)],
+          revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(oid)],
         },
       );
     },

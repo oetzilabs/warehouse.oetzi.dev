@@ -54,7 +54,12 @@ export const SupplierPurchaseCreateSchema = omit(createInsertSchema(TB_supplier_
   "deletedAt",
   "organization_id",
 ]);
+export const SupplierPurchaseUpdateSchema = object({
+  ...partial(omit(createInsertSchema(TB_supplier_purchases), ["createdAt", "updatedAt"])).entries,
+  id: prefixed_cuid2,
+});
 export type SupplierPurchaseCreate = InferInput<typeof SupplierPurchaseCreateSchema>;
+export type SupplierPurchaseUpdate = InferInput<typeof SupplierPurchaseUpdateSchema>;
 export const SupplyPurchaseUpdateSchema = object({
   ...partial(omit(createInsertSchema(TB_supplier_purchases), ["createdAt", "updatedAt"])).entries,
   id: prefixed_cuid2,

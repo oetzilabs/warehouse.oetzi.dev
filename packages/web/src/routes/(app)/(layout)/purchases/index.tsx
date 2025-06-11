@@ -2,9 +2,9 @@ import { PurchasesList } from "@/components/lists/orders";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getPurchases } from "@/lib/api/orders";
+import { getPurchases } from "@/lib/api/purchases";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
-import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
+import { type SupplierPurchaseInfo } from "@warehouseoetzidev/core/src/entities/suppliers";
 import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
@@ -24,10 +24,10 @@ export default function PurchasesPage() {
   const params = useParams();
   const orders = createAsync(() => getPurchases(), { deferStream: true, initialValue: [] });
 
-  const calculateOrders = (orders: { supplier_id: string; order: OrderInfo; createdAt: Date }[]) => {
+  const calculateOrders = (orders: SupplierPurchaseInfo[]) => {
     const ordersByDay = orders.reduce(
       (acc, order) => {
-        const date = dayjs(order.order.createdAt).format("YYYY-MM-DD");
+        const date = dayjs(order.createdAt).format("YYYY-MM-DD");
         acc[date] = (acc[date] || 0) + 1;
         return acc;
       },

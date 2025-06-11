@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices } from "@/lib/api/devices";
-import { deleteOrder, getOrderById } from "@/lib/api/orders";
+import { deletePurchase, getPurchaseById } from "@/lib/api/purchases";
 import { cn } from "@/lib/utils";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
@@ -37,20 +37,20 @@ export const route = {
   preload: (props) => {
     const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
-    const order = getOrderById(props.params.oid);
-    return { user, sessionToken, order };
+    const purchase = getPurchaseById(props.params.pid);
+    return { user, sessionToken, purchase };
   },
 } as RouteDefinition;
 
 export default function SupplierOrderPage() {
   const params = useParams();
   const navigate = useNavigate();
-  const order = createAsync(() => getOrderById(params.pid), { deferStream: true });
+  const purchase = createAsync(() => getPurchaseById(params.pid), { deferStream: true });
   const devices = createAsync(() => getDevices(), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
 
-  const deleteOrderAction = useAction(deleteOrder);
-  const isDeletingOrder = useSubmission(deleteOrder);
+  const deletePurchaseAction = useAction(deletePurchase);
+  const isDeletingPurchase = useSubmission(deletePurchase);
 
   return (
     <Suspense
@@ -61,8 +61,8 @@ export default function SupplierOrderPage() {
         </div>
       }
     >
-      <Show when={order()}>
-        {(orderInfo) => (
+      <Show when={purchase()}>
+        {(purchaseInfo) => (
           <div class="container flex flex-col gap-4 py-4">
             <div class="flex flex-row items-center justify-between gap-4">
               <div class="flex flex-row items-center gap-4">
@@ -71,19 +71,19 @@ export default function SupplierOrderPage() {
                   Back
                 </Button>
                 <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="text-xl font-semibold">#{orderInfo().barcode ?? "N/A"}</h1>
+                  <h1 class="text-xl font-semibold">#{purchaseInfo().barcode ?? "N/A"}</h1>
                   <span
                     class={cn("text-xs font-semibold", {
-                      "text-yellow-500": orderInfo().status.toLowerCase() === "pending",
-                      "text-green-500": orderInfo().status.toLowerCase() === "completed",
-                      "text-red-500": orderInfo().status.toLowerCase() === "cancelled",
-                      "text-blue-500": orderInfo().status.toLowerCase() === "processing",
+                      "text-yellow-500": purchaseInfo().status.toLowerCase() === "pending",
+                      "text-green-500": purchaseInfo().status.toLowerCase() === "completed",
+                      "text-red-500": purchaseInfo().status.toLowerCase() === "cancelled",
+                      "text-blue-500": purchaseInfo().status.toLowerCase() === "processing",
                       "text-muted-foreground": !["pending", "completed", "cancelled", "processing"].includes(
-                        orderInfo().status.toLowerCase(),
+                        purchaseInfo().status.toLowerCase(),
                       ),
                     })}
                   >
-                    {orderInfo().status}
+                    {purchaseInfo().status}
                   </span>
                 </div>
               </div>
@@ -122,9 +122,10 @@ export default function SupplierOrderPage() {
                           </Button>
                           <Button
                             variant="destructive"
+                            disabled={isDeletingPurchase.pending}
                             onClick={() => {
                               const promise = new Promise(async (resolve, reject) => {
-                                const p = await deleteOrderAction(orderInfo().id).catch(reject);
+                                const p = await deletePurchaseAction(purchaseInfo().id).catch(reject);
                                 setDeleteDialogOpen(false);
                                 navigate(`/suppliers/${params.spid}`);
                                 return resolve(p);
@@ -152,15 +153,15 @@ export default function SupplierOrderPage() {
                   <h2 class="font-medium">Order Details</h2>
                   <div class="flex flex-col gap-1">
                     <span class="text-sm text-muted-foreground">
-                      Created: {dayjs(orderInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                      Created: {dayjs(purchaseInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
                     </span>
                     <span class="text-sm text-muted-foreground">
-                      Updated: {dayjs(orderInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
+                      Updated: {dayjs(purchaseInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
                     </span>
                     <span class="text-sm text-muted-foreground">
                       Total Items:{" "}
-                      {orderInfo()
-                        .prods.map((p) => p.quantity)
+                      {purchaseInfo()
+                        .products.map((p) => p.quantity)
                         .reduce((a, b) => a + b, 0)}
                     </span>
                   </div>
@@ -171,7 +172,7 @@ export default function SupplierOrderPage() {
                     <h2 class="font-medium">Products</h2>
                   </div>
                   <div class="flex flex-col gap-0">
-                    <For each={orderInfo().prods}>
+                    <For each={purchaseInfo().products}>
                       {(product) => (
                         <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
                           <div class="flex flex-row items-center justify-between">
@@ -221,8 +222,8 @@ export default function SupplierOrderPage() {
                   <div class="flex flex-col">
                     <For
                       each={Object.entries(
-                        orderInfo()
-                          .prods.filter((prod) => prod.product.currency !== null)
+                        purchaseInfo()
+                          .products.filter((prod) => prod.product.currency !== null)
                           .reduce(
                             (acc, prod) => {
                               const currency = prod.product.currency!;
