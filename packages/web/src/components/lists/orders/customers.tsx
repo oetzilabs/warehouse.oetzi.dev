@@ -65,15 +65,6 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
     setFilterConfig("sort", defaultSort);
   };
 
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
   const filteredData = useFilter(props.data, filterConfig);
 
   const renderCustomerOrderItem = (item: CustomerOrderInfo) => (
@@ -90,7 +81,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
             </span>
           </div>
         </div>
-        <Button as={A} href={`/customers/${item.customer_id}/orders/${item.id}`} size="sm" class="gap-2">
+        <Button as={A} href={`/orders/${item.id}`} size="sm" class="gap-2">
           Open
           <ArrowUpRight class="size-4" />
         </Button>
@@ -153,7 +144,6 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
           value={search()}
           onChange={(e) => {
             setSearch(e);
-            debouncedSearch(e);
           }}
           class="w-full max-w-full"
         >

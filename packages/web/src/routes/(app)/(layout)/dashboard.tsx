@@ -277,7 +277,7 @@ export default function DashboardPage() {
                                       as={A}
                                       variant="outline"
                                       class="bg-background"
-                                      href={`/customers/${item.customerId}/orders/${item.order.id}`}
+                                      href={`/orders/${item.order.id}`}
                                     >
                                       Open
                                       <ArrowUpRight class="size-4" />
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                                       as={A}
                                       variant="outline"
                                       class="bg-background"
-                                      href={`/suppliers/${item.supplierId}/orders/${item.order.id}`}
+                                      href={`/purchases/${item.order.id}`}
                                     >
                                       Open
                                       <ArrowUpRight class="size-4" />

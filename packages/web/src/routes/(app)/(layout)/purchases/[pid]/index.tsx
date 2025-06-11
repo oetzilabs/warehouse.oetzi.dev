@@ -42,7 +42,7 @@ export const route = {
   },
 } as RouteDefinition;
 
-export default function SupplierOrderPage() {
+export default function PurchasePage() {
   const params = useParams();
   const navigate = useNavigate();
   const purchase = createAsync(() => getPurchaseById(params.pid), { deferStream: true });
@@ -65,26 +65,13 @@ export default function SupplierOrderPage() {
         {(purchaseInfo) => (
           <div class="container flex flex-col gap-4 py-4">
             <div class="flex flex-row items-center justify-between gap-4">
-              <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href={`/suppliers/${params.spid}`}>
+              <div class="flex flex-row items-center gap-4 py-2">
+                <Button variant="outline" size="sm" as={A} href="/purchases">
                   <ArrowLeft class="size-4" />
                   Back
                 </Button>
                 <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="text-xl font-semibold">#{purchaseInfo().barcode ?? "N/A"}</h1>
-                  <span
-                    class={cn("text-xs font-semibold", {
-                      "text-yellow-500": purchaseInfo().status.toLowerCase() === "pending",
-                      "text-green-500": purchaseInfo().status.toLowerCase() === "completed",
-                      "text-red-500": purchaseInfo().status.toLowerCase() === "cancelled",
-                      "text-blue-500": purchaseInfo().status.toLowerCase() === "processing",
-                      "text-muted-foreground": !["pending", "completed", "cancelled", "processing"].includes(
-                        purchaseInfo().status.toLowerCase(),
-                      ),
-                    })}
-                  >
-                    {purchaseInfo().status}
-                  </span>
+                  <h1 class="leading-none font-semibold">Purchase</h1>
                 </div>
               </div>
               <div class="flex flex-row items-center gap-2">
@@ -147,26 +134,38 @@ export default function SupplierOrderPage() {
               </div>
             </div>
 
+            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+              <div class="flex flex-row items-center gap-2 justify-between">
+                <h2 class="text-2xl font-bold tracking-wide">#{purchaseInfo().barcode ?? "N/A"}</h2>
+                <div class="flex flex-row items-center gap-2">
+                  <Show when={purchaseInfo().status}>
+                    <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
+                      {purchaseInfo().status}
+                    </span>
+                  </Show>
+                </div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Created: {dayjs(purchaseInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Updated: {dayjs(purchaseInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Total Items:{" "}
+                  {purchaseInfo()
+                    .products.map((p) => p.quantity)
+                    .reduce((a, b) => a + b, 0)}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Products: {purchaseInfo().products.length}
+                </span>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Order Details</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">
-                      Created: {dayjs(purchaseInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Updated: {dayjs(purchaseInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Total Items:{" "}
-                      {purchaseInfo()
-                        .products.map((p) => p.quantity)
-                        .reduce((a, b) => a + b, 0)}
-                    </span>
-                  </div>
-                </div>
-
                 <div class="flex flex-col border rounded-lg overflow-clip">
                   <div class="w-full p-4 border-b bg-muted/30">
                     <h2 class="font-medium">Products</h2>

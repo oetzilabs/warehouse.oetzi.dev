@@ -32,7 +32,7 @@ import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
-export default function SaleIdPage() {
+export default function SalePage() {
   const params = useParams();
   const navigate = useNavigate();
   const sale = createAsync(() => getSaleById(params.salesid), { deferStream: true });
@@ -84,17 +84,7 @@ export default function SaleIdPage() {
                   Back
                 </Button>
                 <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="text-xl font-semibold">Sale #{saleInfo().id}</h1>
-                  <span
-                    class={cn("text-xs font-semibold", {
-                      "text-yellow-500": saleInfo().status.toLowerCase() === "pending",
-                      "text-green-500": saleInfo().status.toLowerCase() === "completed",
-                      "text-red-500": saleInfo().status.toLowerCase() === "cancelled",
-                      "text-blue-500": saleInfo().status.toLowerCase() === "processing",
-                    })}
-                  >
-                    {saleInfo().status}
-                  </span>
+                  <h1 class="text-xl font-semibold">Sale</h1>
                 </div>
               </div>
               <div class="flex flex-row items-center gap-2">
@@ -156,23 +146,35 @@ export default function SaleIdPage() {
               </div>
             </div>
 
+            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+              <div class="flex flex-row items-center gap-2 justify-between">
+                <h2 class="text-2xl font-bold tracking-wide">#{saleInfo().barcode.replace("sale-", "")}</h2>
+                <div class="flex flex-row items-center gap-2">
+                  <Show when={saleInfo().status}>
+                    <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
+                      {saleInfo().status}
+                    </span>
+                  </Show>
+                </div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Created: {dayjs(saleInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Updated: {dayjs(saleInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Total Items: {saleInfo().items.reduce((acc, item) => acc + item.quantity, 0)}
+                </span>
+                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                  Products: {saleInfo().items.length}
+                </span>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
-                  <h2 class="font-medium">Sale Details</h2>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-sm text-muted-foreground">
-                      Created: {dayjs(saleInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Updated: {dayjs(saleInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
-                    </span>
-                    <span class="text-sm text-muted-foreground">
-                      Total Items: {saleInfo().items.reduce((acc, item) => acc + item.quantity, 0)}
-                    </span>
-                  </div>
-                </div>
-
                 <div class="flex flex-col border rounded-lg">
                   <div class="w-full p-4 border-b bg-muted/30">
                     <h2 class="font-medium">Products</h2>

@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getPurchases } from "@/lib/api/purchases";
-import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
+import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { type SupplierPurchaseInfo } from "@warehouseoetzidev/core/src/entities/suppliers";
 import dayjs from "dayjs";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { Show } from "solid-js";
@@ -76,7 +77,13 @@ export default function PurchasesPage() {
           <div class="w-full flex flex-row h-full ">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="font-semibold leading-none">Purchases</h1>
+                <div class="flex flex-row items-center gap-4 py-2">
+                  <Button size="sm" as={A} href="/dashboard" variant="outline" class="bg-background">
+                    <ArrowLeft class="size-4" />
+                    Back
+                  </Button>
+                  <h1 class="font-semibold leading-none">Purchases</h1>
+                </div>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"

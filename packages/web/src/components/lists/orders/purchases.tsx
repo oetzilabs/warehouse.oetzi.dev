@@ -91,7 +91,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
             </span>
           </div>
         </div>
-        <Button as={A} href={`/suppliers/${item.supplier_id}/purchases/${item.id}`} size="sm" class="gap-2">
+        <Button as={A} href={`/purchases/${item.id}`} size="sm" class="gap-2">
           Open
           <svg
             xmlns="http://www.w3.org/2000/svg"

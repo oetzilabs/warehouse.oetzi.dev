@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCustomerOrders } from "@/lib/api/orders";
-import { createAsync, revalidate, RouteDefinition } from "@solidjs/router";
+import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { type CustomerOrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { Show } from "solid-js";
@@ -75,7 +76,13 @@ export default function CustomerOrdersPage() {
           <div class="w-full flex flex-row h-full gap-4">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="font-semibold leading-none">Customer Orders</h1>
+                <div class="flex flex-row items-center gap-4 py-2">
+                  <Button size="sm" as={A} href="/dashboard" variant="outline" class="bg-background">
+                    <ArrowLeft class="size-4" />
+                    Back
+                  </Button>
+                  <h1 class="font-semibold leading-none">Customer Orders</h1>
+                </div>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
