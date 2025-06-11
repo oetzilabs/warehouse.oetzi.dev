@@ -49,6 +49,7 @@ export * from "./schemas/catalogs/catalog_products";
 
 export * from "./schemas/suppliers/suppliers";
 export * from "./schemas/suppliers/suppliers_products";
+export * from "./schemas/suppliers/suppliers_product_price_history";
 export * from "./schemas/suppliers/suppliers_contacts";
 export * from "./schemas/suppliers/suppliers_notes";
 export * from "./schemas/suppliers/suppliers_schedules";
@@ -89,6 +90,7 @@ export * from "./schemas/organizations/organizations_addresses";
 export * from "./schemas/organizations/organization_users";
 export * from "./schemas/organizations/organizations_warehouses";
 export * from "./schemas/organizations/organizations_products";
+export * from "./schemas/organizations/organization_product_price_history";
 export * from "./schemas/organizations/organizations_storages";
 export * from "./schemas/organizations/organizations_documents";
 export * from "./schemas/organizations/organization_suppliers";

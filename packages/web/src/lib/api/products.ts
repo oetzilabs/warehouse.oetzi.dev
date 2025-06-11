@@ -446,3 +446,36 @@ export const reAddProduct = action(async (id: string) => {
     },
   });
 });
+
+export const getLatestPricesByProductId = query(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const product = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const orgService = yield* _(OrganizationService);
+      const productService = yield* _(ProductService);
+      const org = yield* orgService.findById(orgId);
+      const product = yield* productService.findById(id);
+      const orgP = yield* orgService.findProductById(orgId, id);
+      const currentPrices = yield* productService.getPriceHistory(product.id, org.id);
+
+      return currentPrices;
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+  );
+  return product;
+}, "product-by-id");

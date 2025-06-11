@@ -1,15 +1,24 @@
 import dayjs from "dayjs";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
-import { ProductCreateSchema, ProductUpdateSchema, TB_products, TB_products_to_labels } from "../../drizzle/sql/schema";
+import {
+  ProductCreateSchema,
+  ProductUpdateSchema,
+  TB_organization_product_price_history,
+  TB_products,
+  TB_products_to_labels,
+  TB_supplier_product_price_history,
+} from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
 import { OrganizationInfo } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
+import { SupplierInfo, SupplierLive, SupplierService } from "../suppliers";
+import { SupplierInvalidId } from "../suppliers/errors";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   ProductInvalidId,
@@ -590,6 +599,57 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return count;
       });
 
+    const getPriceHistory = (productId: string, orgId: string) =>
+      Effect.gen(function* (_) {
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
+
+        const supplierService = yield* _(SupplierService);
+
+        const [latestSellingPrice] = yield* Effect.promise(() =>
+          db
+            .select()
+            .from(TB_organization_product_price_history)
+            .where(
+              and(
+                eq(TB_organization_product_price_history.organizationId, orgId),
+                eq(TB_organization_product_price_history.productId, productId),
+              ),
+            )
+            .orderBy(desc(TB_organization_product_price_history.effectiveDate))
+            .limit(1),
+        );
+
+        const latestPurchasePrices = yield* Effect.promise(() =>
+          db
+            .select()
+            .from(TB_supplier_product_price_history)
+            .where(eq(TB_supplier_product_price_history.productId, productId))
+            .orderBy(desc(TB_supplier_product_price_history.effectiveDate)),
+        );
+
+        // lets make a map of the latest purchase prices by supplier. { supplier: x, pricing: latestPrices }
+        const supplierPricesMap: {
+          supplier: SupplierInfo;
+          pricing: (typeof latestPurchasePrices)[number];
+        }[] = [];
+        for (const purchasePrice of latestPurchasePrices) {
+          const supplier = yield* supplierService.findById(purchasePrice.supplierId);
+          supplierPricesMap.push({
+            supplier: supplier,
+            pricing: purchasePrice,
+          });
+        }
+
+        return { latestSellingPrice, latestPurchasePrices };
+      }).pipe(Effect.provide(SupplierLive));
+
     return {
       create,
       findById,
@@ -603,6 +663,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       printProductSheet,
       generatePDF: generateSheet,
       getStockCount,
+      getPriceHistory,
     } as const;
   }),
   dependencies: [DatabaseLive],

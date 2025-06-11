@@ -3,6 +3,7 @@ import { integer, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, partial } from "valibot";
 import { commonTable } from "../entity";
+import { TB_organization_product_price_history } from "../organizations/organization_product_price_history";
 import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_supplier_purchases } from "./supplier_purchases";

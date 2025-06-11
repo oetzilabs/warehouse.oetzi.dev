@@ -29,6 +29,7 @@ import {
   NotificationCreateSchema,
   OrganizationCreateSchema,
   OrganizationProductCreateSchema,
+  OrganizationProductPriceHistoryCreateSchema,
   PaymentMethodCreateSchema,
   ProductCreateSchema,
   ProductLabelCreateSchema,
@@ -37,6 +38,7 @@ import {
   StorageCreateSchema,
   StorageTypeCreateSchema,
   SupplierCreateSchema,
+  SupplierProductPriceHistoryCreateSchema,
   SupplierPurchaseCreateSchema,
   SupplierPurchaseProductCreateSchema,
   TaxGroupCountryRatesCreateSchema,
@@ -172,9 +174,20 @@ export const CustomerOrderSchema = object({
   products: array(CustomerOrderProductSchema),
 });
 
+export const SupplierProductPriceHistorySchema = object({
+  ...omit(SupplierProductPriceHistoryCreateSchema, ["supplierId", "productId"]).entries,
+  effectiveDate: pipe(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ),
+});
+
 export const SupplierPurchaseProductSchema = object({
   ...omit(SupplierPurchaseProductCreateSchema, ["supplierPurchaseId", "createdAt", "updatedAt", "deletedAt"]).entries,
   id: prefixed_cuid2,
+  pricing: array(SupplierProductPriceHistorySchema),
 });
 
 export const SupplierPurchaseSchema = object({
@@ -189,8 +202,19 @@ export const SupplierPurchaseSchema = object({
   products: array(SupplierPurchaseProductSchema),
 });
 
+export const OrganizationProductPriceHistorySchema = object({
+  ...omit(OrganizationProductPriceHistoryCreateSchema, ["organizationId", "productId"]).entries,
+  effectiveDate: pipe(
+    pipe(
+      string(),
+      transform((v) => dayjs(v).toDate()),
+    ),
+  ),
+});
+
 export const OrganizationProductSchema = object({
   ...omit(OrganizationProductCreateSchema, ["organizationId"]).entries,
+  pricing: array(OrganizationProductPriceHistorySchema),
 });
 
 export const OrganizationSchema = object({

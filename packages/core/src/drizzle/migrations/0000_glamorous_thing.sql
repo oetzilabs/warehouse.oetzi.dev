@@ -437,6 +437,15 @@ CREATE TABLE "warehouse"."supplier_products" (
 	CONSTRAINT "supplier_products_supplier_id_product_id_pk" PRIMARY KEY("supplier_id","product_id")
 );
 --> statement-breakpoint
+CREATE TABLE "warehouse"."supplier_product_price_history" (
+	"supplier_id" varchar NOT NULL,
+	"product_id" varchar NOT NULL,
+	"effective_date" timestamp with time zone DEFAULT now() NOT NULL,
+	"supplier_price" numeric(10, 2) NOT NULL,
+	"currency" text NOT NULL,
+	CONSTRAINT "supplier_product_price_history_supplier_id_product_id_effective_date_pk" PRIMARY KEY("supplier_id","product_id","effective_date")
+);
+--> statement-breakpoint
 CREATE TABLE "warehouse"."supplier_contacts" (
 	"supplier_id" varchar NOT NULL,
 	"type" "warehouse"."contact_type" DEFAULT 'other' NOT NULL,
@@ -789,17 +798,24 @@ CREATE TABLE "warehouse"."organizations_products" (
 	"organization_id" varchar NOT NULL,
 	"product_id" varchar NOT NULL,
 	"status" "warehouse"."product_status" DEFAULT 'active' NOT NULL,
+	"condition" "warehouse"."product_condition" DEFAULT 'new' NOT NULL,
 	"minimum_stock" integer DEFAULT 0 NOT NULL,
 	"maximum_stock" integer,
 	"reorder_point" integer,
-	"condition" "warehouse"."product_condition" DEFAULT 'new' NOT NULL,
-	"purchase_price" numeric(10, 2),
-	"selling_price" numeric(10, 2) NOT NULL,
-	"msrp" numeric(10, 2),
-	"currency" text NOT NULL,
 	"default_tax_group_id" text,
+	"created_at" timestamp with time zone DEFAULT now(),
+	"updated_at" timestamp with time zone,
 	"deleted_at" timestamp with time zone,
 	CONSTRAINT "organizations_products_organization_id_product_id_pk" PRIMARY KEY("organization_id","product_id")
+);
+--> statement-breakpoint
+CREATE TABLE "warehouse"."organization_product_price_history" (
+	"organization_id" varchar NOT NULL,
+	"product_id" varchar NOT NULL,
+	"effective_date" timestamp with time zone DEFAULT now() NOT NULL,
+	"selling_price" numeric(10, 2) NOT NULL,
+	"currency" text NOT NULL,
+	CONSTRAINT "organization_product_price_history_organization_id_product_id_effective_date_pk" PRIMARY KEY("organization_id","product_id","effective_date")
 );
 --> statement-breakpoint
 CREATE TABLE "warehouse"."organizations_storages" (
@@ -895,6 +911,8 @@ ALTER TABLE "warehouse"."catalog_products" ADD CONSTRAINT "catalog_products_cata
 ALTER TABLE "warehouse"."catalog_products" ADD CONSTRAINT "catalog_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "warehouse"."products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."supplier_products" ADD CONSTRAINT "supplier_products_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "warehouse"."suppliers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."supplier_products" ADD CONSTRAINT "supplier_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "warehouse"."products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "warehouse"."supplier_product_price_history" ADD CONSTRAINT "supplier_product_price_history_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "warehouse"."suppliers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "warehouse"."supplier_product_price_history" ADD CONSTRAINT "supplier_product_price_history_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "warehouse"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."supplier_contacts" ADD CONSTRAINT "supplier_contacts_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "warehouse"."suppliers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."supplier_notes" ADD CONSTRAINT "supplier_notes_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "warehouse"."suppliers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."supplier_schedules" ADD CONSTRAINT "supplier_schedules_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "warehouse"."suppliers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -946,6 +964,8 @@ ALTER TABLE "warehouse"."organizations_warehouses" ADD CONSTRAINT "organizations
 ALTER TABLE "warehouse"."organizations_products" ADD CONSTRAINT "organizations_products_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "warehouse"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."organizations_products" ADD CONSTRAINT "organizations_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "warehouse"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."organizations_products" ADD CONSTRAINT "organizations_products_default_tax_group_id_tax_groups_id_fk" FOREIGN KEY ("default_tax_group_id") REFERENCES "warehouse"."tax_groups"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "warehouse"."organization_product_price_history" ADD CONSTRAINT "organization_product_price_history_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "warehouse"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "warehouse"."organization_product_price_history" ADD CONSTRAINT "organization_product_price_history_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "warehouse"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."organizations_storages" ADD CONSTRAINT "organizations_storages_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "warehouse"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."organizations_storages" ADD CONSTRAINT "organizations_storages_storage_id_document_storages_id_fk" FOREIGN KEY ("storage_id") REFERENCES "warehouse"."document_storages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse"."organizations_documents" ADD CONSTRAINT "organizations_documents_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "warehouse"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
