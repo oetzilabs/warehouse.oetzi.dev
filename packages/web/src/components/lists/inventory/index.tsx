@@ -18,7 +18,6 @@ import { Warning } from "postcss";
 import { Accessor, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import FacilityEditor from "../../FacilityEditor";
-import "@fontsource-variable/geist-mono";
 
 type InventoryListProps = {
   inventory: Accessor<InventoryInfo>;

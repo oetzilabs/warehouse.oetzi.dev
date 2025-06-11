@@ -21,12 +21,9 @@ export async function GET({ params }: { params: { id: string } }) {
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const saleService = yield* _(SalesService);
-      const sale = yield* saleService.findById(params.id);
       const organizationService = yield* _(OrganizationService);
       const org = yield* organizationService.findById(orgId);
-      if (!org) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-      }
+      const sale = yield* saleService.findById(params.id, org.id);
       const pdf = yield* saleService.generatePDF(params.id, org, { page: { size: "A4", orientation: "portrait" } });
       return { pdf, filename: sale.barcode ?? sale.createdAt.toISOString() };
     }).pipe(Effect.provide(SalesLive), Effect.provide(OrganizationLive)),

@@ -50,19 +50,27 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         if (!sale) {
           return yield* Effect.fail(new SaleNotCreated({}));
         }
-        return findById(sale.id);
+        return findById(sale.id, saleInput.organizationId);
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string, orgId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new SaleInvalidId({ id }));
         }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
 
         const sale = yield* Effect.promise(() =>
           db.query.TB_sales.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.id, parsedId.output),
+                operations.eq(fields.organizationId, parsedOrgId.output),
+              ),
             with: {
               items: {
                 with: {
@@ -128,9 +136,9 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return deletedSale;
       });
 
-    const calculateTotal = (id: string) =>
+    const calculateTotal = (id: string, orgId: string) =>
       Effect.gen(function* (_) {
-        const sale = yield* findById(id);
+        const sale = yield* findById(id, orgId);
         if (!sale) {
           return yield* Effect.fail(new SaleNotFound({ id }));
         }
@@ -256,7 +264,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       },
     ) =>
       Effect.gen(function* (_) {
-        const sale = yield* findById(id);
+        const sale = yield* findById(id, organization.id);
         if (!sale) {
           return yield* Effect.fail(new OrderNotFound({ id }));
         }

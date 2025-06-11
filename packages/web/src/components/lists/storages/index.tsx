@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressValueLabel } from "@/components/ui/progress";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import "@fontsource-variable/geist-mono";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type StorageStatisticsInfo } from "@warehouseoetzidev/core/src/entities/inventory";

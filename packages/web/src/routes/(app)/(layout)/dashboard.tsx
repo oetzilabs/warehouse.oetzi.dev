@@ -9,7 +9,6 @@ import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { getPendingSupplyOrders } from "@/lib/api/orders";
 import { getSchedules } from "@/lib/api/schedules";
-import "@fontsource-variable/geist-mono";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";

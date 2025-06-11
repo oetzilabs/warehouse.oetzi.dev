@@ -1,10 +1,11 @@
 import { count, inArray } from "drizzle-orm";
 import { Console, Effect } from "effect";
-import { safeParse } from "valibot";
+import { array, safeParse } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { TB_storage_to_products } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { ProductInvalidId, ProductNotFound } from "../products/errors";
 import { StorageInfo } from "../storages";
 import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 
@@ -209,7 +210,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         };
       });
 
-    const productCount = (storageId: string) =>
+    const productCountByStorageId = (storageId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, storageId);
         if (!parsedId.success) {
@@ -236,7 +237,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
 
-        const productsCount = yield* productCount(storage.id);
+        const productsCount = yield* productCountByStorageId(storage.id);
         if (storage.children.length === 0) {
           return { ...storage, childrenCapacity: storage.capacity, productsCount };
         }
@@ -247,7 +248,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
         const childrenCapacity = yield* Effect.all(children.map((c) => Effect.suspend(() => storageCapacity(c.id))));
 
-        const pc = yield* Effect.all(children.map((c) => Effect.suspend(() => productCount(c.id))));
+        const pc = yield* Effect.all(children.map((c) => Effect.suspend(() => productCountByStorageId(c.id))));
 
         return {
           ...storage,
@@ -255,6 +256,24 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           childrenCapacity: childrenCapacity.reduce((acc, c) => acc + c, 0),
           productsCount: pc.reduce((acc, c) => acc + c, 0),
         };
+      });
+
+    const productCountByProductId = (productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, productId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        const products = yield* Effect.promise(() =>
+          db.query.TB_storage_to_products.findMany({
+            where: (fields, operations) => operations.eq(fields.productId, parsedId.output),
+          }),
+        );
+        if (!products) {
+          return yield* Effect.fail(new ProductNotFound({ id: productId }));
+        }
+        return products.length;
       });
 
     const storageCapacity = (storageId: string): Effect.Effect<number, StorageInvalidId | StorageNotFound> =>
@@ -312,7 +331,85 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         };
       });
 
-    return { storageStatistics, statistics, alerts, storageCapacity, productCount } as const;
+    const getStockForProducts = (productIds: string[], orgId: string) =>
+      Effect.gen(function* (_) {
+        const parsedIds = safeParse(array(prefixed_cuid2), productIds);
+        if (!parsedIds.success) {
+          return yield* Effect.fail(new Error("Invalid product ids"));
+        }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
+        const products = yield* Effect.promise(() =>
+          db.query.TB_products.findMany({
+            where: (fields, operations) => operations.inArray(fields.id, parsedIds.output),
+          }),
+        );
+        if (products.length === 0) {
+          return yield* Effect.fail(new Error("No products found"));
+        }
+        const ids = products.map((p) => p.id);
+
+        const productsInOrganization = [];
+        for (const productId of ids) {
+          const orgProduct = yield* Effect.promise(() =>
+            db.query.TB_organizations_products.findFirst({
+              where: (fields, operations) =>
+                operations.and(
+                  operations.eq(fields.productId, productId),
+                  operations.eq(fields.organizationId, parsedOrgId.output),
+                ),
+            }),
+          );
+          if (orgProduct) {
+            productsInOrganization.push(productId);
+          }
+        }
+
+        // get all the root storages of all warehouses in the organization
+        const warehouses = yield* Effect.promise(() =>
+          db.query.TB_organizations_warehouses.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+            with: {
+              warehouse: {
+                with: {
+                  facilities: {
+                    with: {
+                      areas: {
+                        with: {
+                          storages: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+
+        const storages = yield* Effect.all(
+          warehouses
+            .flatMap((w) => w.warehouse.facilities.flatMap((f) => f.areas.flatMap((a) => a.storages.map((s) => s.id))))
+            .map((sid) => storageList(sid)),
+        );
+
+        const xStock = storages.flatMap((s) =>
+          s.productSummary.map((ps) => ({ productId: ps.product.id, stock: ps.count })),
+        );
+
+        return xStock;
+      });
+
+    return {
+      storageStatistics,
+      statistics,
+      alerts,
+      storageCapacity,
+      productCountByStorageId,
+      getStockForProducts,
+    } as const;
   }),
   dependencies: [DatabaseLive],
 }) {}

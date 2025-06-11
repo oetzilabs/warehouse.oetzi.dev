@@ -106,11 +106,15 @@ export const getSaleById = query(async (sid: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
 
   const sale = await Effect.runPromise(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
-      const sale = yield* salesService.findById(sid);
+      const sale = yield* salesService.findById(sid, orgId);
       if (!sale) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
