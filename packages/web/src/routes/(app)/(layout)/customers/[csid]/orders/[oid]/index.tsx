@@ -1,3 +1,4 @@
+import { ConvertToSaleDialog } from "@/components/dialogs/convert-to-sale-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  NumberField,
+  NumberFieldDecrementTrigger,
+  NumberFieldGroup,
+  NumberFieldIncrementTrigger,
+  NumberFieldInput,
+} from "@/components/ui/number-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices } from "@/lib/api/devices";
 import { getDiscounts } from "@/lib/api/discounts";
@@ -52,15 +60,10 @@ export default function CustomerOrderPage() {
   const devices = createAsync(() => getDevices(), { deferStream: true });
   const discounts = createAsync(() => getDiscounts());
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
-  const [convertToSaleDialogOpen, setConvertToSaleDialogOpen] = createSignal(false);
-
   const deleteOrderAction = useAction(deleteOrder);
   const isDeletingOrder = useSubmission(deleteOrder);
 
   const [dialogOpen, setDialogOpen] = createSignal(false);
-
-  const convertToSaleAction = useAction(convertToSale);
-  const isConvertingToSale = useSubmission(convertToSale);
 
   const downloadOrderSheetAction = useAction(downloadOrderSheet);
   const isDownloadingOrderSheet = useSubmission(downloadOrderSheet);
@@ -164,6 +167,7 @@ export default function CustomerOrderPage() {
                           </Button>
                           <Button
                             variant="destructive"
+                            disabled={isDeletingOrder.pending}
                             onClick={() => {
                               const promise = new Promise(async (resolve, reject) => {
                                 const p = await deleteOrderAction(orderInfo().id).catch(reject);
@@ -473,23 +477,12 @@ export default function CustomerOrderPage() {
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
                   <div class="flex flex-row gap-4 w-full">
-                    <Button
-                      disabled={isConvertingToSale.pending || orderInfo().saleId !== null}
-                      class="w-full"
-                      onClick={() => {
-                        setConvertToSaleDialogOpen(false);
-                        toast.promise(convertToSaleAction(orderInfo().id, params.csid), {
-                          loading: "Converting order to sale...",
-                          success: "Order converted to sale",
-                          error: "Failed to convert order to sale",
-                        });
-                      }}
-                    >
-                      <Show when={isConvertingToSale.pending} fallback={<Tickets class="size-6" />}>
-                        <Loader2 class="size-6 animate-spin" />
-                      </Show>
-                      Convert to Sale
-                    </Button>
+                    <ConvertToSaleDialog
+                      orderId={orderInfo().id}
+                      customerId={params.csid}
+                      saleId={orderInfo().saleId}
+                      products={orderInfo().products}
+                    />
                   </div>
                   <div class="flex flex-col xl:flex-row gap-4 w-full">
                     <Button

@@ -13,7 +13,7 @@ import {
   TDocumentDefinitions,
 } from "pdfmake/interfaces";
 import QRCode from "qrcode";
-import { OrderInfo } from "../orders";
+import { CustomerOrderInfo } from "../orders";
 import { OrganizationInfo } from "../organizations";
 import { ProductInfo } from "../products";
 import { SaleInfo } from "../sales";
@@ -295,7 +295,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       });
 
     const order = (
-      data: OrderInfo,
+      data: CustomerOrderInfo,
       organization: OrganizationInfo,
       config: {
         page: {
@@ -361,50 +361,50 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                             margin: [0, 0, 5, 5],
                           }),
                           Text("Updated", "tableHeader"),
-                          Text(dayjs(data.updatedAt).format("DD.MM.YYYY HH:mm"), "tableCell", {
+                          Text(data.updatedAt ? dayjs(data.updatedAt).format("DD.MM.YYYY HH:mm") : "N/A", "tableCell", {
                             margin: [0, 0, 5, 5],
                           }),
                         ],
                         [{ text: "", colSpan: 4, margin: [0, 5] }],
-                        [
-                          Text("Pickup Times", "tableHeader", { colSpan: 2 }),
-                          {},
-                          Text("Delivery Times", "tableHeader", { colSpan: 2 }),
-                          {},
-                        ],
-                        ...Array.from(
-                          {
-                            length: Math.max(data.custSched.length, ...data.oco.map((o) => o.customer.pdt.length)),
-                          },
-                          (_, i) => [
-                            // Pickup time column
-                            data.custSched[i]
-                              ? Text(dayjs(data.custSched[i].schedule.scheduleStart).format("dddd"), "tableCell")
-                              : {},
-                            data.custSched[i]
-                              ? Text(
-                                  `${dayjs(data.custSched[i].schedule.scheduleStart).format("HH:mm")} - ${dayjs(data.custSched[i].schedule.scheduleEnd).format("HH:mm")}`,
-                                  "tableCell",
-                                )
-                              : {},
-                            // Delivery time column
-                            data.oco.some((o) => o.customer.pdt[i])
-                              ? Text(dayjs(data.oco[0].customer.pdt[i].startTime).format("dddd"), "tableCell")
-                              : {},
-                            data.oco.some((o) => o.customer.pdt[i])
-                              ? Text(
-                                  data.oco
-                                    .filter((o) => o.customer.pdt[i])
-                                    .map(
-                                      (o) =>
-                                        `${dayjs(o.customer.pdt[i].startTime).format("HH:mm")} - ${dayjs(o.customer.pdt[i].endTime).format("HH:mm")}`,
-                                    )
-                                    .join(", "),
-                                  "tableCell",
-                                )
-                              : {},
-                          ],
-                        ),
+                        // [
+                        //   Text("Pickup Times", "tableHeader", { colSpan: 2 }),
+                        //   {},
+                        //   Text("Delivery Times", "tableHeader", { colSpan: 2 }),
+                        //   {},
+                        // ],
+                        // ...Array.from(
+                        //   {
+                        //     length: data.customer.pdt.length,
+                        //   },
+                        //   (_, i) => [
+                        //     // Pickup time column
+                        //     data.customer.pdt[i]
+                        //       ? Text(dayjs(data.customer.pdt[i].schedule.scheduleStart).format("dddd"), "tableCell")
+                        //       : {},
+                        //     data.customer.pdt[i]
+                        //       ? Text(
+                        //           `${dayjs(data.customer.pdt[i].schedule.scheduleStart).format("HH:mm")} - ${dayjs(data.custSched[i].schedule.scheduleEnd).format("HH:mm")}`,
+                        //           "tableCell",
+                        //         )
+                        //       : {},
+                        //     // Delivery time column
+                        //     data.oco.some((o) => o.customer.pdt[i])
+                        //       ? Text(dayjs(data.oco[0].customer.pdt[i].startTime).format("dddd"), "tableCell")
+                        //       : {},
+                        //     data.oco.some((o) => o.customer.pdt[i])
+                        //       ? Text(
+                        //           data.oco
+                        //             .filter((o) => o.customer.pdt[i])
+                        //             .map(
+                        //               (o) =>
+                        //                 `${dayjs(o.customer.pdt[i].startTime).format("HH:mm")} - ${dayjs(o.customer.pdt[i].endTime).format("HH:mm")}`,
+                        //             )
+                        //             .join(", "),
+                        //           "tableCell",
+                        //         )
+                        //       : {},
+                        //   ],
+                        // ),
                       ],
                       {
                         widths: ["auto", "*", "auto", "*"],
@@ -443,7 +443,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                               }),
                             ],
                             // Products
-                            ...data.prods.map((prod) => [
+                            ...data.products.map((prod) => [
                               {
                                 stack: [
                                   Text(prod.product.name, "tableCell"),
@@ -489,7 +489,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                             [{ text: "", colSpan: 5, margin: [0, 5] }, {}, {}, {}, {}],
                             // Totals by currency
                             ...Object.entries(
-                              data.prods.reduce(
+                              data.products.reduce(
                                 (acc, prod) => {
                                   const currency = prod.product.currency!;
                                   if (!acc[currency]) acc[currency] = 0;
@@ -619,22 +619,34 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                       [
                         [
                           Text("Created", "tableHeader"),
-                          Text(dayjs(data.createdAt).format("DD.MM.YYYY HH:mm"), "tableCell"),
+                          Text(dayjs(data.createdAt).format("DD.MM.YYYY HH:mm"), "tableCell", {
+                            margin: [5, 0, 5, 5],
+                          }),
                           Text("Updated", "tableHeader"),
-                          Text(dayjs(data.updatedAt).format("DD.MM.YYYY HH:mm"), "tableCell"),
+                          Text(data.updatedAt ? dayjs(data.updatedAt).format("DD.MM.YYYY HH:mm") : "N/A", "tableCell", {
+                            margin: [5, 0, 5, 5],
+                          }),
                         ],
                         [{ text: "", colSpan: 4, margin: [0, 5] }],
                         [
                           Text("Customer", "tableHeader"),
-                          Text(data.customer.name, "tableCell"),
+                          Text(data.customer.name, "tableCell", {
+                            margin: [5, 0, 5, 5],
+                          }),
                           Text("Email", "tableHeader"),
-                          Text(data.customer.email, "tableCell"),
+                          Text(data.customer.email, "tableCell", {
+                            margin: [5, 0, 5, 5],
+                          }),
                         ],
                         [
                           Text("Status", "tableHeader"),
-                          Text(data.status.toUpperCase(), "tableCell"),
+                          Text(data.status.toUpperCase(), "tableCell", {
+                            margin: [5, 0, 5, 5],
+                          }),
                           Text("Note", "tableHeader"),
-                          Text(data.note ?? "-", "tableCell"),
+                          Text(data.note ?? "-", "tableCell", {
+                            margin: [5, 0, 5, 5],
+                          }),
                         ],
                       ],
                       {
@@ -652,11 +664,21 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                         [
                           // Header
                           [
-                            Text("Product", "tableHeader"),
-                            Text("Qty", "tableHeader"),
-                            Text("Price", "tableHeader"),
-                            Text("Tax", "tableHeader"),
-                            Text("Total", "tableHeader"),
+                            Text("Product", "tableHeader", {
+                              margin: [0, 0, 5, 5],
+                            }),
+                            Text("Qty", "tableHeader", {
+                              margin: [0, 0, 5, 5],
+                            }),
+                            Text("Price", "tableHeader", {
+                              margin: [0, 0, 5, 5],
+                            }),
+                            Text("Tax", "tableHeader", {
+                              margin: [0, 0, 5, 5],
+                            }),
+                            Text("Total", "tableHeader", {
+                              margin: [0, 0, 5, 5],
+                            }),
                           ],
                           // Products
                           ...data.items.map((item) => [
@@ -674,18 +696,27 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                                   : []),
                               ],
                             },
-                            Text(`${item.quantity}x`, "tableCell"),
-                            Text(`${item.price.toFixed(2)} ${item.product.currency}`, "tableCell"),
+                            Text(`${item.quantity}x`, "tableCell", {
+                              margin: [0, 0, 5, 5],
+                            }),
+                            Text(`${item.price.toFixed(2)} ${item.product.currency}`, "tableCell", {
+                              margin: [0, 0, 5, 5],
+                            }),
                             {
                               stack:
                                 item.product.tg?.crs.map((cr) =>
                                   Text(
                                     `${((item.price * item.quantity * (cr.tr.rate ?? 0)) / 100).toFixed(2)} ${item.product.currency}`,
                                     "tableCell",
+                                    {
+                                      margin: [0, 0, 5, 5],
+                                    },
                                   ),
                                 ) ?? [],
                             },
-                            Text(`${(item.price * item.quantity).toFixed(2)} ${item.product.currency}`, "tableCell"),
+                            Text(`${(item.price * item.quantity).toFixed(2)} ${item.product.currency}`, "tableCell", {
+                              margin: [0, 0, 5, 5],
+                            }),
                           ]),
                           // Spacing before totals
                           [{ text: "", colSpan: 5, margin: [0, 5] }],

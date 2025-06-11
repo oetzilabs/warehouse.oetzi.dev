@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useSimpleDateFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
-import "@fontsource-variable/geist-mono";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { type AccountingInfo } from "@warehouseoetzidev/core/src/entities/accounting";
 import dayjs from "dayjs";

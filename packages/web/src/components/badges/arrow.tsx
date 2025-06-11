@@ -4,7 +4,6 @@ import ArrowRight from "lucide-solid/icons/arrow-right";
 import ArrowUp from "lucide-solid/icons/arrow-up";
 import CircleHelp from "lucide-solid/icons/circle-help";
 import { Match, splitProps, Switch } from "solid-js";
-import "@fontsource-variable/geist-mono";
 
 type ArrowBadgeProps = {
   value: number;

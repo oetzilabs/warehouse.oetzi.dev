@@ -17,6 +17,7 @@ import "./app.css";
 import { UserProvider } from "./components/providers/User";
 import { AppLayout } from "./layout";
 import "@fontsource/pacifico";
+import "@fontsource-variable/geist-mono";
 import { Button } from "./components/ui/button";
 
 export default function App() {

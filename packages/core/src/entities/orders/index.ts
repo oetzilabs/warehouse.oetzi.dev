@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
@@ -17,6 +17,7 @@ import {
 } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
+import { InventoryLive, InventoryService } from "../inventory";
 import { OrganizationInfo } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
@@ -55,8 +56,9 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         return order;
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, organizationId: string) =>
       Effect.gen(function* (_) {
+        const inventoryService = yield* _(InventoryService);
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new OrderInvalidId({ id }));
@@ -117,8 +119,23 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
           return yield* Effect.fail(new OrderNotFound({ id }));
         }
 
-        return order;
-      });
+        const productStocks = yield* inventoryService.getStockForProducts(
+          order.products.map((p) => p.productId),
+          organizationId,
+        );
+        // yield* Console.dir(productStocks, { depth: Infinity });
+        const orderWithProductStocks = {
+          ...order,
+          products: order.products.map((p, i) => ({
+            ...p,
+            product: {
+              ...p.product,
+              stock: productStocks.find((ps) => ps.productId === p.product.id)?.stock ?? 0,
+            },
+          })),
+        };
+        return orderWithProductStocks;
+      }).pipe(Effect.provide(InventoryLive));
 
     const update = (input: InferInput<typeof CustomerOrderUpdateSchema>) =>
       Effect.gen(function* (_) {
@@ -574,7 +591,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         };
       });
 
-    const convertToSale = (id: string, cid: string, orgId: string) =>
+    const convertToSale = (id: string, cid: string, orgId: string, products: Array<{ id: string; quantity: number }>) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -589,28 +606,39 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
           return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
         }
 
-        const order = yield* findById(id);
-        if (!order) {
-          return yield* Effect.fail(new OrderNotFound({ id }));
-        }
+        const order = yield* findById(id, orgId);
+
         const itemsFromOrder = order.products.map(
           (p) =>
             ({
               currency: p.product.currency,
-              quantity: p.quantity,
+              quantity: products.find((po) => po.id === p.product.id)?.quantity ?? p.quantity,
               productId: p.product.id,
               price: p.product.sellingPrice,
             }) satisfies Omit<SaleItemCreate, "saleId">,
         );
 
         const [sale, ...items] = yield* Effect.promise(() =>
-          db.transaction((tx) => {
+          db.transaction(async (tx) => {
+            // do while loop to generate barcode
+            let barcode = "";
+            while (barcode.length < 13) {
+              barcode = `sale-${dayjs().format("YYYYMMDD-HHmmss")}-${Math.floor(Math.random() * 10000)}`;
+              const existingSale = await tx.query.TB_sales.findFirst({
+                where: (fields, operations) => operations.eq(fields.barcode, barcode),
+              });
+              if (!existingSale) {
+                break;
+              }
+            }
+
             return tx
               .insert(TB_sales)
               .values({
                 customerId: cid,
                 organizationId: orgId,
                 status: "created",
+                barcode,
               })
               .returning()
               .catch(() => tx.rollback())
@@ -654,10 +682,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       },
     ) =>
       Effect.gen(function* (_) {
-        const order = yield* findById(id);
-        if (!order) {
-          return yield* Effect.fail(new OrderNotFound({ id }));
-        }
+        const order = yield* findById(id, organization.id);
 
         const pdfGenService = yield* _(PDFService);
         let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.order(order, organization, {

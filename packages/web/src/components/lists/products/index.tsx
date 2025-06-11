@@ -11,7 +11,6 @@ import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
-import "@fontsource-variable/geist-mono";
 
 type ProductsListProps = {
   data: Accessor<OrganizationProductInfo[]>;

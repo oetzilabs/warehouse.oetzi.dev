@@ -11,7 +11,6 @@ import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { createSignal, For, onMount, Show } from "solid-js";
-import "@fontsource-variable/geist-mono";
 import { toast } from "solid-sonner";
 
 export const route = {

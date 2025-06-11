@@ -22,12 +22,9 @@ export async function GET({ params }: { params: { id: string } }) {
     const result = await Effect.runPromise(
       Effect.gen(function* (_) {
         const orderService = yield* _(CustomerOrderService);
-        const order = yield* _(orderService.findById(params.id));
         const organizationService = yield* _(OrganizationService);
         const org = yield* _(organizationService.findById(orgId));
-        if (!org) {
-          return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-        }
+        const order = yield* orderService.findById(params.id, org.id);
         const pdf = yield* _(
           orderService.generatePDF(params.id, org, { page: { size: "A4", orientation: "portrait" } }),
         );
