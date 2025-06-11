@@ -766,6 +766,48 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       });
 
+    const reAddProduct = (organizationId: string, productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+        const parsedProductId = safeParse(prefixed_cuid2, productId);
+
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        if (!parsedProductId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+
+        const exists = yield* Effect.promise(() =>
+          db.query.TB_organizations_products.findFirst({
+            where: (organization_products, operations) =>
+              and(
+                operations.eq(organization_products.organizationId, parsedOrgId.output),
+                operations.eq(organization_products.productId, parsedProductId.output),
+              ),
+          }),
+        );
+
+        if (!exists) {
+          return yield* Effect.fail(
+            new OrganizationProductNotFound({ productId: parsedProductId.output, organizationId: parsedOrgId.output }),
+          );
+        }
+
+        return yield* Effect.promise(() =>
+          db
+            .update(TB_organizations_products)
+            .set({ deletedAt: null })
+            .where(
+              and(
+                eq(TB_organizations_products.organizationId, parsedOrgId.output),
+                eq(TB_organizations_products.productId, parsedProductId.output),
+              ),
+            )
+            .returning(),
+        );
+      });
+
     const addProduct = (
       data: InferInput<typeof OrganizationProductCreateSchema>,
       organizationId: string,
@@ -974,6 +1016,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       removeSupplierPurchase,
       findProductById,
       removeProduct,
+      reAddProduct,
       addProduct,
       getDashboardData,
     } as const;
