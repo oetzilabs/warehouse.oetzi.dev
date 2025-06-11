@@ -69,6 +69,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -101,9 +102,12 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
             product: {
               ...p.product,
               organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
-              currency: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)?.currency,
-              sellingPrice: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)
-                ?.sellingPrice,
+              currency: p.product.organizations
+                .find((org) => org.organizationId === parsedOrgId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: p.product.organizations
+                .find((org) => org.organizationId === parsedOrgId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
         };
@@ -200,6 +204,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -238,6 +243,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -373,6 +379,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -393,7 +400,24 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
             },
           }),
         );
-        return orgPurchases;
+        return orgPurchases.map((op) => ({
+          ...op,
+          products: op.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter(
+                (org) => org.organizationId === parsedOrganizationId.output,
+              ),
+              currency: p.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: p.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+            },
+          })),
+        }));
       });
 
     return {

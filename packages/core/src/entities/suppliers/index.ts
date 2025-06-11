@@ -43,40 +43,55 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         yield* Effect.promise(() =>
           db.insert(TB_organization_suppliers).values({ supplier_id: supplier.id, organization_id: orgId }).returning(),
         );
-        return yield* findById(supplier.id);
+        return yield* findById(supplier.id, orgId);
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, orgId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new SupplierInvalidId({ id }));
         }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
 
         const supplier = yield* Effect.promise(() =>
-          db.query.TB_suppliers.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          db.query.TB_organization_suppliers.findFirst({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.supplier_id, parsedId.output),
+                operations.eq(fields.organization_id, parsedOrgId.output),
+              ),
             with: {
-              products: {
-                with: {
-                  product: {
-                    with: {
-                      labels: true,
-                      organizations: true,
-                    },
-                  },
-                },
-              },
-              contacts: true,
-              notes: {
-                orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
-              },
-              organizations: true,
-              purchases: {
+              supplier: {
                 with: {
                   products: {
                     with: {
-                      product: true,
+                      product: {
+                        with: {
+                          labels: true,
+                          organizations: true,
+                        },
+                      },
+                    },
+                  },
+                  contacts: true,
+                  notes: {
+                    orderBy: (fields, operations) => [
+                      operations.desc(fields.updatedAt),
+                      operations.desc(fields.createdAt),
+                    ],
+                  },
+                  organizations: true,
+                  purchases: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -89,7 +104,16 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
           return yield* Effect.fail(new SupplierNotFound({ id }));
         }
 
-        return supplier;
+        return {
+          ...supplier.supplier,
+          products: supplier.supplier.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+            },
+          })),
+        };
       });
 
     const update = (input: InferInput<typeof SupplierUpdateSchema>) =>
@@ -114,9 +138,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return updated;
       });
 
-    const addContact = (supplierId: string, input: InferInput<typeof SupplierContactCreateSchema>) =>
+    const addContact = (supplierId: string, orgId: string, input: InferInput<typeof SupplierContactCreateSchema>) =>
       Effect.gen(function* (_) {
-        const supplier = yield* findById(supplierId);
+        const supplier = yield* findById(supplierId, orgId);
         const [contact] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_contacts)
@@ -131,9 +155,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return contact;
       });
 
-    const addNote = (supplierId: string, input: InferInput<typeof SupplierNoteCreateSchema>) =>
+    const addNote = (supplierId: string, orgId: string, input: InferInput<typeof SupplierNoteCreateSchema>) =>
       Effect.gen(function* (_) {
-        const supplier = yield* findById(supplierId);
+        const supplier = yield* findById(supplierId, orgId);
         const [note] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_notes)
@@ -160,26 +184,12 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
             with: {
               supplier: {
                 with: {
-                  products: {
-                    with: {
-                      product: {
-                        with: {
-                          labels: true,
-                          organizations: true,
-                        },
-                      },
-                    },
-                  },
                   contacts: true,
                   notes: true,
                   organizations: true,
                   purchases: {
                     with: {
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
+                      products: true,
                     },
                   },
                 },
@@ -215,6 +225,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
                       labels: true,
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {

@@ -75,6 +75,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -108,9 +109,12 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
             product: {
               ...item.product,
               organizations: item.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
-              currency: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)?.currency,
-              sellingPrice: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)
-                ?.sellingPrice,
+              currency: item.product.organizations
+                .find((org) => org.organizationId === parsedOrgId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: item.product.organizations
+                .find((org) => org.organizationId === parsedOrgId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
         };
@@ -205,6 +209,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
                         with: {
                           organizations: {
                             with: {
+                              priceHistory: true,
                               tg: {
                                 with: {
                                   crs: {
@@ -238,9 +243,12 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
               product: {
                 ...item.product,
                 organizations: item.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
-                currency: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)?.currency,
-                sellingPrice: item.product.organizations.find((org) => org.organizationId === parsedOrgId.output)
-                  ?.sellingPrice,
+                currency: item.product.organizations
+                  .find((org) => org.organizationId === parsedOrgId.output)!
+                  .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+                sellingPrice: item.product.organizations
+                  .find((org) => org.organizationId === parsedOrgId.output)!
+                  .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
               },
             })),
           },
@@ -311,7 +319,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           return yield* Effect.fail(new SaleProductInvalidId({ id: productId }));
         }
 
-        const product = yield* productService.findById(productId);
+        const product = yield* productService.findById(productId, orgId);
 
         const sale = yield* findById(saleId, orgId);
         // is the status allowed to change the product items?
@@ -360,7 +368,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           return yield* Effect.fail(new SaleProductInvalidId({ id: productId }));
         }
 
-        const product = yield* productService.findById(productId);
+        const product = yield* productService.findById(productId, orgId);
 
         const sale = yield* findById(saleId, orgId);
         // is the status allowed to change the product items?

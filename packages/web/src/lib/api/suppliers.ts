@@ -8,7 +8,7 @@ import {
   SupplierNoteUpdateSchema,
 } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/suppliers/suppliers_notes";
 import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
@@ -36,6 +36,7 @@ export const getSuppliers = query(async () => {
   const suppliers = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
+      yield* Console.log({ orgId });
       const suppliers = yield* supplierService.findByOrganizationId(orgId);
       return suppliers;
     }).pipe(Effect.provide(SupplierLive)),
@@ -65,7 +66,7 @@ export const getSupplierById = query(async (id: string) => {
   const supplier = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
-      const supplierFromDb = yield* supplierService.findById(id);
+      const supplierFromDb = yield* supplierService.findById(id, orgId);
       if (!supplierFromDb) {
         throw redirect(`/suppliers/${id}`, { status: 404, statusText: "Not Found" });
       }
@@ -161,7 +162,7 @@ export const addNote = action(async (sid: string, data: InferInput<typeof Suppli
   const note = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(SupplierService);
-      return yield* service.addNote(sid, data);
+      return yield* service.addNote(sid, orgId, data);
     }).pipe(Effect.provide(SupplierLive)),
   );
   return json(note, {
