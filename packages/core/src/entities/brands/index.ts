@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
-import brands from "../../data/brands.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { BrandCreateSchema, BrandUpdateSchema, TB_brands } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
@@ -108,44 +107,6 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
         return yield* Effect.promise(() => db.query.TB_brands.findMany());
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbBrands = yield* Effect.promise(() => db.query.TB_brands.findMany());
-
-        const brds = parse(
-          array(
-            object({
-              ...BrandCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          brands,
-        );
-
-        const existing = dbBrands.map((b) => b.id);
-        const toCreate = brds.filter((b) => !existing.includes(b.id));
-
-        if (toCreate.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_brands).values(toCreate).returning());
-          yield* Effect.log("Created brands", toCreate);
-        }
-
-        const toUpdate = brds.filter((b) => existing.includes(b.id));
-        if (toUpdate.length > 0) {
-          for (const brand of toUpdate) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_brands)
-                .set({ ...brand, updatedAt: new Date() })
-                .where(eq(TB_brands.id, brand.id))
-                .returning(),
-            );
-          }
-        }
-
-        return brds;
-      });
-
     return {
       create,
       findById,
@@ -153,7 +114,6 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
       remove,
       safeRemove,
       all,
-      seed,
     } as const;
   }),
   dependencies: [DatabaseLive],
