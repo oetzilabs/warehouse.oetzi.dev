@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
-import devices from "../../data/devices.json";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { DeviceCreateSchema, DeviceUpdateSchema, TB_devices } from "../../drizzle/sql/schema";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
@@ -106,44 +105,6 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         return yield* Effect.promise(() => db.query.TB_devices.findMany());
       });
 
-    const seed = () =>
-      Effect.gen(function* (_) {
-        const dbDevices = yield* Effect.promise(() => db.query.TB_devices.findMany());
-
-        const devs = parse(
-          array(
-            object({
-              ...DeviceCreateSchema.entries,
-              id: prefixed_cuid2,
-            }),
-          ),
-          devices,
-        );
-
-        const existing = dbDevices.map((d) => d.id);
-        const toCreate = devs.filter((d) => !existing.includes(d.id));
-
-        if (toCreate.length > 0) {
-          yield* Effect.promise(() => db.insert(TB_devices).values(toCreate).returning());
-          yield* Effect.log("Created devices", toCreate);
-        }
-
-        const toUpdate = devs.filter((d) => existing.includes(d.id));
-        if (toUpdate.length > 0) {
-          for (const device of toUpdate) {
-            yield* Effect.promise(() =>
-              db
-                .update(TB_devices)
-                .set({ ...device, updatedAt: new Date() })
-                .where(eq(TB_devices.id, device.id))
-                .returning(),
-            );
-          }
-        }
-
-        return devs;
-      });
-
     const findByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
@@ -201,7 +162,6 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       remove,
       safeRemove,
       all,
-      seed,
       findByOrganizationId,
       getDeviceTypes,
     } as const;
