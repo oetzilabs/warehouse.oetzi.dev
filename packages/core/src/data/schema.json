@@ -445,6 +445,15 @@
                           "pending_review"
                         ]
                       },
+                      "condition": {
+                        "enum": [
+                          "new",
+                          "used",
+                          "refurbished",
+                          "damaged",
+                          "expired"
+                        ]
+                      },
                       "minimumStock": {
                         "type": "integer",
                         "minimum": -2147483648,
@@ -474,47 +483,6 @@
                           }
                         ]
                       },
-                      "condition": {
-                        "enum": [
-                          "new",
-                          "used",
-                          "refurbished",
-                          "damaged",
-                          "expired"
-                        ]
-                      },
-                      "purchasePrice": {
-                        "anyOf": [
-                          {
-                            "const": null
-                          },
-                          {
-                            "type": "number",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          }
-                        ]
-                      },
-                      "sellingPrice": {
-                        "type": "number",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      "msrp": {
-                        "anyOf": [
-                          {
-                            "const": null
-                          },
-                          {
-                            "type": "number",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          }
-                        ]
-                      },
-                      "currency": {
-                        "type": "string"
-                      },
                       "default_tax_group_id": {
                         "anyOf": [
                           {
@@ -524,13 +492,37 @@
                             "type": "string"
                           }
                         ]
+                      },
+                      "pricing": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sellingPrice": {
+                              "type": "number",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "currency": {
+                              "type": "string"
+                            },
+                            "effectiveDate": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "required": [
+                            "sellingPrice",
+                            "currency",
+                            "effectiveDate"
+                          ]
+                        }
                       }
                     },
                     "additionalProperties": false,
                     "required": [
                       "productId",
-                      "sellingPrice",
-                      "currency"
+                      "pricing"
                     ]
                   }
                 },
@@ -639,12 +631,38 @@
                               "minimum": -2147483648,
                               "maximum": 2147483647
                             },
-                            "id": {}
+                            "id": {},
+                            "pricing": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "supplierPrice": {
+                                    "type": "number",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "currency": {
+                                    "type": "string"
+                                  },
+                                  "effectiveDate": {
+                                    "type": "string"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "required": [
+                                  "supplierPrice",
+                                  "currency",
+                                  "effectiveDate"
+                                ]
+                              }
+                            }
                           },
                           "additionalProperties": false,
                           "required": [
                             "productId",
-                            "id"
+                            "id",
+                            "pricing"
                           ]
                         }
                       }

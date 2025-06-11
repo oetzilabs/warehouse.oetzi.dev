@@ -15,6 +15,7 @@ import {
   TB_document_storage_offers,
   TB_notifications,
   TB_organization_customers,
+  TB_organization_product_price_history,
   TB_organization_suppliers,
   TB_organization_users,
   TB_organizations,
@@ -32,6 +33,7 @@ import {
   TB_storage_to_products,
   TB_storage_types,
   TB_storages,
+  TB_supplier_product_price_history,
   TB_supplier_products,
   TB_supplier_purchase_products,
   TB_supplier_purchases,
@@ -519,13 +521,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             }
             yield* Console.log(`warehouses for organization ${org.id} added`);
 
-            yield* Console.log(`ADDING PRODUCTS TO ORGANIZATION ${org.id}, products: ${org.products.length}`);
-            yield* Console.dir(org.products, { depth: null });
             for (const product of org.products) {
-              yield* Console.log(
-                `adding product ${product.productId} to organization ${org.id} - this is somehow failing`,
-              );
-              // TODO: Add product to organization
               const [addedProduct] = yield* Effect.promise(() =>
                 db
                   .insert(TB_organizations_products)
@@ -542,13 +538,32 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
                   })
                   .returning(),
               );
-              if (!addedProduct) {
-                return yield* Effect.fail(
-                  new SeedingFailed({
-                    message: "Failed to add product to organization",
-                    service: "org.products",
-                  }),
+              yield* Console.log(`product ${product.productId} added to organization ${org.id}`);
+
+              for (const pricing of product.pricing) {
+                yield* Effect.promise(() =>
+                  db
+                    .insert(TB_organization_product_price_history)
+                    .values({
+                      ...pricing,
+                      organizationId: org.id,
+                      productId: product.productId,
+                    })
+                    .onConflictDoUpdate({
+                      target: [
+                        TB_organization_product_price_history.organizationId,
+                        TB_organization_product_price_history.productId,
+                        TB_organization_product_price_history.effectiveDate,
+                      ],
+                      set: {
+                        ...pricing,
+                        productId: product.productId,
+                        organizationId: org.id,
+                      },
+                    })
+                    .returning(),
                 );
+                yield* Console.log(`product history for ${product.productId} added for organization ${org.id}`);
               }
               yield* Console.log(`product ${product.productId} added to organization ${org.id}`);
             }
@@ -579,7 +594,6 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
 
             for (const order of org.orders) {
               const { products, ...orderData } = order;
-              yield* Console.dir(orderData, { depth: null });
               const [added] = yield* Effect.promise(() =>
                 db
                   .insert(TB_customer_orders)
@@ -659,7 +673,6 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             }
             yield* Console.log("sales added");
 
-            // Add purchases seeding
             for (const purchase of org.purchases) {
               const { products, ...purchaseData } = purchase;
               const [purchaseAdded] = yield* Effect.promise(() =>
@@ -682,16 +695,50 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
               );
 
               for (const product of products) {
-                yield* Effect.promise(() =>
+                const [x] = yield* Effect.promise(() =>
                   db
                     .insert(TB_supplier_purchase_products)
                     .values({ ...product, supplierPurchaseId: purchase.id })
                     .onConflictDoUpdate({
-                      target: [TB_supplier_purchase_products.id],
+                      target: TB_supplier_purchase_products.id,
                       set: { ...product, supplierPurchaseId: purchase.id },
                     })
                     .returning(),
                 );
+
+                yield* Console.log(`ADDING PRODUCT HISTORY, list: ${product.pricing.length}`);
+                for (const pricing of product.pricing) {
+                  const [x] = yield* Effect.promise(() =>
+                    db
+                      .insert(TB_supplier_product_price_history)
+                      .values({
+                        ...pricing,
+                        supplierId: purchaseData.supplier_id,
+                        productId: product.productId,
+                      })
+                      .onConflictDoUpdate({
+                        target: [
+                          TB_supplier_product_price_history.supplierId,
+                          TB_supplier_product_price_history.productId,
+                          TB_supplier_product_price_history.effectiveDate,
+                        ],
+                        set: {
+                          ...pricing,
+                          supplierId: purchaseData.supplier_id,
+                          productId: product.productId,
+                        },
+                      })
+                      .returning(),
+                  );
+                  if (!x) {
+                    return yield* Effect.fail(
+                      new SeedingFailed({
+                        message: "Failed to add product history",
+                        service: "org.purchases.products.history",
+                      }),
+                    );
+                  }
+                }
               }
               yield* Console.log(`purchase ${purchase.id} added to organization ${org.id}`);
             }

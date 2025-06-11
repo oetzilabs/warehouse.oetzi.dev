@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_suppliers } from "./suppliers";
+import { TB_supplier_product_price_history } from "./suppliers_product_price_history";
 
 export const TB_supplier_products = schema.table(
   "supplier_products",
@@ -27,7 +28,7 @@ export const TB_supplier_products = schema.table(
   (table) => [primaryKey({ columns: [table.supplierId, table.productId] })],
 );
 
-export const supplier_products_relations = relations(TB_supplier_products, ({ one }) => ({
+export const supplier_products_relations = relations(TB_supplier_products, ({ one, many }) => ({
   supplier: one(TB_suppliers, {
     fields: [TB_supplier_products.supplierId],
     references: [TB_suppliers.id],
@@ -36,6 +37,8 @@ export const supplier_products_relations = relations(TB_supplier_products, ({ on
     fields: [TB_supplier_products.productId],
     references: [TB_products.id],
   }),
+  // New relation to the history table
+  priceHistory: many(TB_supplier_product_price_history),
 }));
 
 export type SupplierProductSelect = typeof TB_supplier_products.$inferSelect;

@@ -373,12 +373,26 @@
                 {
                   "productId": "prod_uzujt3nrndmn90yyslc61wqv",
                   "quantity": 22,
-                  "id": "ordprod_d683xr2dlzdkwrdru1u42ckb"
+                  "id": "ordprod_d683xr2dlzdkwrdru1u42ckb",
+                  "pricing": [
+                    {
+                      "supplierPrice": 3.5,
+                      "currency": "EUR",
+                      "effectiveDate": "2025-05-01T10:00:00.000Z"
+                    }
+                  ]
                 },
                 {
                   "productId": "prod_rljvumttoz3f2v122kw7bf4x",
                   "quantity": 5,
-                  "id": "ordprod_yltrkzqyzhcy34edm7jg18hd"
+                  "id": "ordprod_yltrkzqyzhcy34edm7jg18hd",
+                  "pricing": [
+                    {
+                      "supplierPrice": 6.99,
+                      "currency": "EUR",
+                      "effectiveDate": "2025-05-01T10:00:00.000Z"
+                    }
+                  ]
                 }
               ]
             },
@@ -394,7 +408,8 @@
                 {
                   "productId": "prod_uzujt3nrndmn90yyslc61wqv",
                   "quantity": 10,
-                  "id": "ordprod_a7patto9bgvsordky9juzfr1"
+                  "id": "ordprod_a7patto9bgvsordky9juzfr1",
+                  "pricing": []
                 }
               ]
             }
@@ -588,41 +603,50 @@
             {
               "productId": "prod_uzujt3nrndmn90yyslc61wqv",
               "condition": "new",
-              "currency": "EUR",
-              "purchasePrice": 3.5,
-              "sellingPrice": 6.99,
-              "msrp": null,
               "default_tax_group_id": "taxgroup_v2440iaek4v20c7cb2kth19e",
               "maximumStock": 20,
               "reorderPoint": 30,
               "minimumStock": 20,
-              "status": "active"
+              "status": "active",
+              "pricing": [
+                {
+                  "currency": "EUR",
+                  "sellingPrice": 6.99,
+                  "effectiveDate": "2025-05-01T10:00:00.000Z"
+                }
+              ]
             },
             {
               "productId": "prod_rljvumttoz3f2v122kw7bf4x",
               "condition": "new",
-              "currency": "EUR",
-              "purchasePrice": 6.99,
-              "sellingPrice": 9.99,
-              "msrp": null,
               "default_tax_group_id": "taxgroup_v2440iaek4v20c7cb2kth19e",
               "maximumStock": 50,
               "reorderPoint": 70,
               "minimumStock": 50,
-              "status": "active"
+              "status": "active",
+              "pricing": [
+                {
+                  "currency": "EUR",
+                  "sellingPrice": 9.99,
+                  "effectiveDate": "2025-05-01T10:00:00.000Z"
+                }
+              ]
             },
             {
               "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
               "condition": "new",
-              "currency": "EUR",
-              "purchasePrice": 10.0,
-              "sellingPrice": 15.0,
-              "msrp": null,
               "default_tax_group_id": "taxgroup_v2440iaek4v20c7cb2kth19e",
               "maximumStock": 100,
               "reorderPoint": 150,
               "minimumStock": 100,
-              "status": "active"
+              "status": "active",
+              "pricing": [
+                {
+                  "currency": "EUR",
+                  "sellingPrice": 15.0,
+                  "effectiveDate": "2025-05-01T10:00:00.000Z"
+                }
+              ]
             }
           ]
         }

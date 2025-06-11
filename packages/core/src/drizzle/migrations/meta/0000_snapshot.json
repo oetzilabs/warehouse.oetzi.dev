@@ -1,5 +1,5 @@
 {
-  "id": "4d02d539-4b23-43ec-b404-db02e82ad2ab",
+  "id": "f651144d-5e19-4a09-b4cd-fc9113ed800f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -3059,6 +3059,88 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "warehouse.supplier_product_price_history": {
+      "name": "supplier_product_price_history",
+      "schema": "warehouse",
+      "columns": {
+        "supplier_id": {
+          "name": "supplier_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "supplier_price": {
+          "name": "supplier_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "supplier_product_price_history_supplier_id_suppliers_id_fk": {
+          "name": "supplier_product_price_history_supplier_id_suppliers_id_fk",
+          "tableFrom": "supplier_product_price_history",
+          "tableTo": "suppliers",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "supplier_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "supplier_product_price_history_product_id_products_id_fk": {
+          "name": "supplier_product_price_history_product_id_products_id_fk",
+          "tableFrom": "supplier_product_price_history",
+          "tableTo": "products",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_product_price_history_supplier_id_product_id_effective_date_pk": {
+          "name": "supplier_product_price_history_supplier_id_product_id_effective_date_pk",
+          "columns": [
+            "supplier_id",
+            "product_id",
+            "effective_date"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "warehouse.supplier_contacts": {
       "name": "supplier_contacts",
       "schema": "warehouse",
@@ -5778,6 +5860,14 @@
           "notNull": true,
           "default": "'active'"
         },
+        "condition": {
+          "name": "condition",
+          "type": "product_condition",
+          "typeSchema": "warehouse",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'new'"
+        },
         "minimum_stock": {
           "name": "minimum_stock",
           "type": "integer",
@@ -5797,41 +5887,22 @@
           "primaryKey": false,
           "notNull": false
         },
-        "condition": {
-          "name": "condition",
-          "type": "product_condition",
-          "typeSchema": "warehouse",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'new'"
-        },
-        "purchase_price": {
-          "name": "purchase_price",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "selling_price": {
-          "name": "selling_price",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "msrp": {
-          "name": "msrp",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "default_tax_group_id": {
           "name": "default_tax_group_id",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
@@ -5893,6 +5964,88 @@
           "columns": [
             "organization_id",
             "product_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "warehouse.organization_product_price_history": {
+      "name": "organization_product_price_history",
+      "schema": "warehouse",
+      "columns": {
+        "organization_id": {
+          "name": "organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "selling_price": {
+          "name": "selling_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organization_product_price_history_organization_id_organizations_id_fk": {
+          "name": "organization_product_price_history_organization_id_organizations_id_fk",
+          "tableFrom": "organization_product_price_history",
+          "tableTo": "organizations",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "organization_product_price_history_product_id_products_id_fk": {
+          "name": "organization_product_price_history_product_id_products_id_fk",
+          "tableFrom": "organization_product_price_history",
+          "tableTo": "products",
+          "schemaTo": "warehouse",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organization_product_price_history_organization_id_product_id_effective_date_pk": {
+          "name": "organization_product_price_history_organization_id_product_id_effective_date_pk",
+          "columns": [
+            "organization_id",
+            "product_id",
+            "effective_date"
           ]
         }
       },

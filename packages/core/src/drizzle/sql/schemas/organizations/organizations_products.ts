@@ -6,6 +6,7 @@ import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { TB_products } from "../products/products";
 import { TB_tax_groups } from "../taxes/tax_group";
 import { schema } from "../utils";
+import { TB_organization_product_price_history } from "./organization_product_price_history";
 import { TB_organizations } from "./organizations";
 
 export const product_status = schema.enum("product_status", [
@@ -38,12 +39,6 @@ export const TB_organizations_products = schema.table(
     maximumStock: t.integer("maximum_stock"),
     reorderPoint: t.integer("reorder_point"),
 
-    // Pricing & Costs
-    purchasePrice: decimal("purchase_price", { precision: 10, scale: 2, mode: "number" }),
-    sellingPrice: decimal("selling_price", { precision: 10, scale: 2, mode: "number" }).notNull(),
-    msrp: decimal("msrp", { precision: 10, scale: 2, mode: "number" }),
-    currency: t.text("currency").notNull(),
-
     default_tax_group_id: t.text("default_tax_group_id").references(() => TB_tax_groups.id),
     createdAt: t.timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow(),
     updatedAt: t.timestamp("updated_at", { withTimezone: true, mode: "date" }),
@@ -52,7 +47,7 @@ export const TB_organizations_products = schema.table(
   (table) => [primaryKey({ columns: [table.organizationId, table.productId] })],
 );
 
-export const organizations_products_relations = relations(TB_organizations_products, ({ one }) => ({
+export const organizations_products_relations = relations(TB_organizations_products, ({ one, many }) => ({
   organization: one(TB_organizations, {
     fields: [TB_organizations_products.organizationId],
     references: [TB_organizations.id],
@@ -65,6 +60,8 @@ export const organizations_products_relations = relations(TB_organizations_produ
     fields: [TB_organizations_products.default_tax_group_id],
     references: [TB_tax_groups.id],
   }),
+  // New relation to the history table
+  priceHistory: many(TB_organization_product_price_history),
 }));
 
 export type OrganizationProductSelect = typeof TB_organizations_products.$inferSelect;
