@@ -23,11 +23,15 @@ export const printProductSheet = action(async (did: string, pid: string) => {
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
 
   const program = Effect.gen(function* (_) {
     const productService = yield* _(ProductService);
     const deviceService = yield* _(DeviceService);
-    const product = yield* productService.findById(pid);
+    const product = yield* productService.findById(pid, orgId);
     if (!product) {
       return yield* Effect.fail(new ProductNotFound({ id: pid }));
     }

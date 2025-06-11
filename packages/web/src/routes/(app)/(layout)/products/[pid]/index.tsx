@@ -291,19 +291,17 @@ export default function ProductPage() {
                 <div class="flex flex-row items-center gap-4 w-full justify-between">
                   <div class="flex flex-col items-start gap-1">
                     <span class="text-xl font-semibold">
-                      Selling Price: {productInfo().organizations[0].sellingPrice.toFixed(2)}{" "}
-                      {productInfo().organizations[0].currency}
+                      Selling Price: {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
                     </span>
                     <span class="text-sm text-muted-foreground">
                       Purchase: {(productInfo().organizations[0].purchasePrice ?? 0).toFixed(2)}{" "}
-                      {productInfo().organizations[0].currency}
+                      {productInfo().currency}
                     </span>
                     <span class="text-sm text-muted-foreground">
                       Margin:{" "}
                       {(
-                        ((productInfo().organizations[0].sellingPrice -
-                          (productInfo().organizations[0].purchasePrice ?? 0)) /
-                          productInfo().organizations[0].sellingPrice) *
+                        ((productInfo().sellingPrice - (productInfo().organizations[0].purchasePrice ?? 0)) /
+                          productInfo().sellingPrice) *
                         100
                       ).toFixed(1)}
                       %

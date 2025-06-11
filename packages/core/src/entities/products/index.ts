@@ -37,90 +37,103 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof ProductCreateSchema>) =>
+    const create = (input: InferInput<typeof ProductCreateSchema>, orgId: string) =>
       Effect.gen(function* (_) {
         const [product] = yield* Effect.promise(() => db.insert(TB_products).values(input).returning());
         if (!product) {
           return yield* Effect.fail(new ProductNotCreated({}));
         }
-        return findById(product.id);
+        return findById(product.id, orgId);
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, orgId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new ProductInvalidId({ id }));
         }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
+        }
 
         const product = yield* Effect.promise(() =>
-          db.query.TB_products.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          db.query.TB_organizations_products.findFirst({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.productId, parsedId.output),
+                operations.eq(fields.organizationId, parsedOrgId.output),
+              ),
             with: {
-              organizations: {
+              product: {
                 with: {
-                  tg: {
+                  organizations: {
                     with: {
-                      crs: {
+                      priceHistory: true,
+                      tg: {
                         with: {
-                          tr: true,
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
                         },
                       },
                     },
                   },
-                },
-              },
-              stcs: {
-                with: {
-                  condition: true,
-                },
-              },
-              certs: {
-                with: {
-                  cert: true,
-                },
-              },
-              images: {
-                with: {
-                  image: true,
-                },
-              },
-              space: {
-                with: {
-                  storage: true,
-                },
-              },
-              brands: true,
-              saleItems: {
-                with: {
-                  sale: {
+                  stcs: {
                     with: {
-                      customer: true,
+                      condition: true,
                     },
                   },
-                },
-              },
-              orders: {
-                with: {
-                  customerOrder: true,
-                },
-              },
-              labels: {
-                with: {
-                  label: true,
-                },
-              },
-              stco: {
-                with: {
-                  condition: true,
-                },
-              },
-              suppliers: {
-                with: {
-                  supplier: {
+                  certs: {
                     with: {
-                      contacts: true,
-                      notes: true,
+                      cert: true,
+                    },
+                  },
+                  images: {
+                    with: {
+                      image: true,
+                    },
+                  },
+                  space: {
+                    with: {
+                      storage: true,
+                    },
+                  },
+                  brands: true,
+                  saleItems: {
+                    with: {
+                      sale: {
+                        with: {
+                          customer: true,
+                        },
+                      },
+                    },
+                  },
+                  orders: {
+                    with: {
+                      customerOrder: true,
+                    },
+                  },
+                  labels: {
+                    with: {
+                      label: true,
+                    },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
+                    },
+                  },
+                  suppliers: {
+                    with: {
+                      supplier: {
+                        with: {
+                          contacts: true,
+                          notes: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -133,7 +146,15 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           return yield* Effect.fail(new ProductNotFound({ id }));
         }
 
-        return product;
+        return {
+          ...product.product,
+          currency: product.product.organizations
+            .find((org) => org.organizationId === parsedOrgId.output)!
+            .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+          sellingPrice: product.product.organizations
+            .find((org) => org.organizationId === parsedOrgId.output)!
+            .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+        };
       });
 
     const update = (id: string, input: InferInput<typeof ProductUpdateSchema>) =>
@@ -198,6 +219,20 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             with: {
               product: {
                 with: {
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                   images: {
                     with: {
                       image: true,
@@ -257,6 +292,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             ...op,
             createdAt: op.product.createdAt,
             updatedAt: op.product.updatedAt,
+            currency: op.product.organizations
+              .find((org) => org.organizationId === parsedOrganizationId.output)!
+              .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+            sellingPrice: op.product.organizations
+              .find((org) => org.organizationId === parsedOrganizationId.output)!
+              .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
           }));
       });
 
@@ -274,6 +315,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                 with: {
                   organizations: {
                     with: {
+                      priceHistory: true,
                       tg: {
                         with: {
                           crs: {
@@ -640,7 +682,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           pricing: (typeof latestPurchasePrices)[number];
         }[] = [];
         for (const purchasePrice of latestPurchasePrices) {
-          const supplier = yield* supplierService.findById(purchasePrice.supplierId);
+          const supplier = yield* supplierService.findById(purchasePrice.supplierId, orgId);
           supplierPricesMap.push({
             supplier: supplier,
             pricing: purchasePrice,

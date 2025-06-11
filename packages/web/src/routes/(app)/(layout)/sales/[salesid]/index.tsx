@@ -204,18 +204,17 @@ export default function SalePage() {
                             <div class="flex flex-col items-end">
                               <div class="flex flex-row items-baseline gap-1">
                                 <span class="text-sm text-muted-foreground">
-                                  {item.product.organizations[0].sellingPrice.toFixed(2)}
+                                  {item.product.sellingPrice.toFixed(2)}
                                 </span>
                                 <span class="font-medium">x{item.quantity}</span>
                               </div>
                               <span class="text-sm text-muted-foreground">
-                                {(item.product.organizations[0].sellingPrice * item.quantity).toFixed(2)}{" "}
-                                {item.product.currency}
+                                {(item.product.sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
                               </span>
                               <Show when={item.product.organizations[0].tg}>
                                 <span class="text-xs text-muted-foreground">
                                   {(
-                                    (item.product.organizations[0].sellingPrice *
+                                    (item.product.sellingPrice *
                                       item.quantity *
                                       (item.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
                                     100
@@ -251,7 +250,7 @@ export default function SalePage() {
                                 };
                               }
 
-                              const amount = item.product.organizations[0].sellingPrice * item.quantity;
+                              const amount = item.product.sellingPrice * item.quantity;
                               acc[currency].subtotal += amount;
                               acc[currency].total += amount;
 

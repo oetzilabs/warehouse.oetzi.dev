@@ -193,7 +193,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         if (!parsedOrganizationId.success) {
           return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
-        return yield* Effect.promise(() =>
+        const orders = yield* Effect.promise(() =>
           db.query.TB_customer_orders.findMany({
             where: (fields, operations) =>
               operations.and(
@@ -228,11 +228,16 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                 with: {
                   product: {
                     with: {
-                      tg: {
+                      organizations: {
                         with: {
-                          crs: {
+                          priceHistory: true,
+                          tg: {
                             with: {
-                              tr: true,
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
                             },
                           },
                         },
@@ -245,6 +250,25 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             },
           }),
         );
+
+        return orders.map((order) => ({
+          ...order,
+          products: order.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter(
+                (org) => org.organizationId === parsedOrganizationId.output,
+              ),
+              currency: p.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: p.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+            },
+          })),
+        }));
       });
 
     const remove = (id: string) =>

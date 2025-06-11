@@ -100,7 +100,7 @@ export const getProductById = query(async (pid: string) => {
         return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
       const productService = yield* _(ProductService);
-      const product = yield* productService.findById(pid);
+      const product = yield* productService.findById(pid, orgId);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id: pid }));
       }
@@ -144,7 +144,7 @@ export const deleteProduct = action(async (id: string) => {
       if (!org) {
         return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
-      const product = yield* productService.findById(id);
+      const product = yield* productService.findById(id, orgId);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
@@ -185,7 +185,7 @@ export const downloadProductSheet = action(
     const productExit = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
         const productService = yield* _(ProductService);
-        const product = yield* productService.findById(pid);
+        const product = yield* productService.findById(pid, orgId);
         if (!product) {
           return yield* Effect.fail(new ProductNotFound({ id: pid }));
         }
@@ -229,15 +229,23 @@ export const addLabelsToProduct = action(async (id: string, labels: string[]) =>
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id);
+      const product = yield* service.findById(id, orgId);
       const prodlabels = product.labels.map((l) => l.label.id);
       const toAdd = labels.filter((l) => !prodlabels.includes(l));
       for (const label of toAdd) {
@@ -263,15 +271,23 @@ export const removeLabelsFromProduct = action(async (id: string, labelId: string
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id);
+      const product = yield* service.findById(id, orgId);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
@@ -320,15 +336,23 @@ export const assignBrand = action(async (id: string, brandId: string) => {
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id);
+      const product = yield* service.findById(id, orgId);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
@@ -377,7 +401,7 @@ export const updateProductStock = action(
         const orgService = yield* _(OrganizationService);
         const productService = yield* _(ProductService);
         const org = yield* orgService.findById(orgId);
-        const product = yield* productService.findById(id);
+        const product = yield* productService.findById(id, orgId);
 
         return yield* orgService.updateProduct(product.id, org.id, { minimumStock, maximumStock, reorderPoint });
       }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive)),
@@ -422,7 +446,7 @@ export const reAddProduct = action(async (id: string) => {
   const result = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id);
+      const product = yield* service.findById(id, orgId);
       const orgService = yield* _(OrganizationService);
       const org = yield* orgService.findById(orgId);
       const p = yield* orgService.reAddProduct(org.id, product.id);
@@ -470,7 +494,7 @@ export const getLatestPricesByProductId = query(async (id: string) => {
       const orgService = yield* _(OrganizationService);
       const productService = yield* _(ProductService);
       const org = yield* orgService.findById(orgId);
-      const product = yield* productService.findById(id);
+      const product = yield* productService.findById(id, orgId);
       const orgP = yield* orgService.findProductById(orgId, id);
       const currentPrices = yield* productService.getPriceHistory(product.id, org.id);
 

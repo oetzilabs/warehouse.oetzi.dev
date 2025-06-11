@@ -73,6 +73,16 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                     with: {
                       labels: true,
                       brands: true,
+                      suppliers: {
+                        with: {
+                          priceHistory: true,
+                        },
+                      },
+                      organizations: {
+                        with: {
+                          priceHistory: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -92,6 +102,20 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                     with: {
                       labels: true,
                       brands: true,
+                      organizations: {
+                        with: {
+                          priceHistory: true,
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -103,7 +127,6 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                 },
               },
             },
-            orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
           }),
         );
 
@@ -136,7 +159,6 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
 
         const transactions: FinancialTransaction[] = Array.from(transactionsByDay.entries())
           .map(([day, { sales, orders }]) => {
-            // Process transactions
             const currencyMap = new Map<
               string,
               { bought: number; sold: number; stornosBought: number; stornosSold: number }
@@ -147,44 +169,78 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
             let totalProductsStornoSold = 0;
 
             // Process orders (bought)
-            orders.forEach((so) => {
-              so.products.forEach((prod) => {
-                if (prod.product.purchasePrice && prod.product.currency) {
-                  const currency = prod.product.currency;
-                  if (!currencyMap.has(currency)) {
-                    currencyMap.set(currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
+            orders
+              .filter((s) => s.status === "completed")
+              .forEach((so) => {
+                so.products.forEach((prod) => {
+                  // Find the relevant price from priceHistory that was active at the time of the order
+                  const orderDate = so.createdAt;
+                  const orgPriceHistory = prod.product.suppliers
+                    .find((org) => org.supplierId === so.supplier_id)
+                    ?.priceHistory.sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
+
+                  if (orgPriceHistory && orgPriceHistory.length > 0) {
+                    const applicablePrice =
+                      orgPriceHistory.find((ph) => ph.effectiveDate <= orderDate) ??
+                      orgPriceHistory[orgPriceHistory.length - 1];
+
+                    const currency = applicablePrice.currency;
+                    if (!currencyMap.has(currency)) {
+                      currencyMap.set(currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
+                    }
+
+                    const amount = applicablePrice.supplierPrice * Math.abs(prod.quantity);
+                    if (prod.quantity < 0) {
+                      currencyMap.get(currency)!.stornosBought += amount;
+                      totalProductsStornoBought += Math.abs(prod.quantity);
+                    } else {
+                      currencyMap.get(currency)!.bought += amount;
+                      totalProductsBought += prod.quantity;
+                    }
                   }
-                  const amount = prod.product.purchasePrice * Math.abs(prod.quantity);
-                  if (prod.quantity < 0) {
-                    currencyMap.get(currency)!.stornosBought += amount;
-                    totalProductsStornoBought += Math.abs(prod.quantity);
-                  } else {
-                    currencyMap.get(currency)!.bought += amount;
-                    totalProductsBought += prod.quantity;
-                  }
-                }
+                });
               });
-            });
 
             // Process sales (sold)
-            sales.forEach((sale) => {
-              sale.items.forEach((item) => {
-                if (!currencyMap.has(item.currency)) {
-                  currencyMap.set(item.currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
-                }
-                const amount = item.price * Math.abs(item.quantity);
-                if (item.quantity < 0) {
-                  currencyMap.get(item.currency)!.stornosSold += amount;
-                  totalProductsStornoSold += Math.abs(item.quantity);
-                } else {
-                  currencyMap.get(item.currency)!.sold += amount;
-                  totalProductsSold += item.quantity;
-                }
+            sales
+              .filter((s) => s.status === "confirmed")
+              .forEach((sale) => {
+                sale.items.forEach((item) => {
+                  // Find the relevant price from priceHistory that was active at the time of the sale
+                  const saleDate = sale.createdAt;
+                  const orgPriceHistory = item.product.organizations
+                    .find((org) => org.organizationId === parsedOrgId.output)
+                    ?.priceHistory.sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
+
+                  if (orgPriceHistory && orgPriceHistory.length > 0) {
+                    const applicablePrice =
+                      orgPriceHistory.find((ph) => ph.effectiveDate <= saleDate) ??
+                      orgPriceHistory[orgPriceHistory.length - 1];
+
+                    const currency = applicablePrice.currency;
+                    if (!currencyMap.has(currency)) {
+                      currencyMap.set(currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
+                    }
+
+                    const amount = item.price * Math.abs(item.quantity);
+                    if (item.quantity < 0) {
+                      currencyMap.get(currency)!.stornosSold += amount;
+                      totalProductsStornoSold += Math.abs(item.quantity);
+                    } else {
+                      currencyMap.get(currency)!.sold += amount;
+                      totalProductsSold += item.quantity;
+                    }
+                  }
+                });
               });
-            });
 
             const type: FinancialTransaction["type"] =
-              sales.length > 0 && orders.length > 0 ? "mixed" : sales.length > 0 ? "income" : "expense";
+              sales.filter((s) => s.status === "confirmed").length > 0 &&
+              orders.filter((s) => s.status === "completed").length > 0
+                ? "mixed"
+                : sales.filter((s) => s.status === "confirmed").length > 0
+                  ? "income"
+                  : "expense";
 
             return {
               date: new Date(day),

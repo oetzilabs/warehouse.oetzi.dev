@@ -10,6 +10,7 @@ import {
   SaleItemCreate,
   TB_customer_order_products,
   TB_customer_orders,
+  TB_organization_product_price_history,
   TB_organizations_products,
   TB_organizations_sales,
   TB_products,
@@ -107,6 +108,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -139,9 +141,12 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
             product: {
               ...p.product,
               organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
-              currency: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)!.currency,
-              sellingPrice: p.product.organizations.find((org) => org.organizationId === parsedOrgId.output)!
-                .sellingPrice,
+              currency: p.product.organizations
+                .find((org) => org.organizationId === parsedOrgId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: p.product.organizations
+                .find((org) => org.organizationId === parsedOrgId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
         };
@@ -223,6 +228,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                         with: {
                           organizations: {
                             with: {
+                              priceHistory: true,
                               tg: {
                                 with: {
                                   crs: {
@@ -304,6 +310,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -367,6 +374,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {
@@ -397,6 +405,12 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
               organizations: p.product.organizations.filter(
                 (org) => org.organizationId === parsedOrganizationId.output,
               ),
+              currency: p.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: p.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
         }));
@@ -420,9 +434,22 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                 sku: TB_products.sku,
                 description: TB_products.description,
                 status: TB_organizations_products.status,
-                sellingPrice: TB_organizations_products.sellingPrice,
-                currency: TB_organizations_products.currency,
               },
+              // Get latest price from price history
+              latestPrice: sql<{
+                sellingPrice: number;
+                currency: string;
+              }>`(
+                SELECT json_build_object(
+                  'sellingPrice', ph.selling_price,
+                  'currency', ph.currency
+                )
+                FROM ${TB_organization_product_price_history} ph
+                WHERE ph.organization_id = ${TB_organizations_products.organizationId}
+                AND ph.product_id = ${TB_organizations_products.productId}
+                ORDER BY ph.effective_date DESC
+                LIMIT 1
+              )`,
               orderCount: sql<number>`count(distinct ${TB_customer_orders.id})`,
               totalQuantity: sql<number>`sum(${TB_customer_order_products.quantity})`,
             })
@@ -446,8 +473,8 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
               TB_products.sku,
               TB_products.description,
               TB_organizations_products.status,
-              TB_organizations_products.sellingPrice,
-              TB_organizations_products.currency,
+              TB_organizations_products.organizationId,
+              TB_organizations_products.productId,
             )
             .orderBy(
               sql`count(distinct ${TB_customer_orders.id}) desc, sum(${TB_customer_order_products.quantity}) desc`,
@@ -682,10 +709,12 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         const itemsFromOrder = order.products.map((p) => {
           const orgProduct = p.product.organizations[0];
           return {
-            currency: orgProduct.currency,
+            currency: orgProduct.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]
+              .currency,
             quantity: products.find((po) => po.id === p.product.id)!.quantity ?? p.quantity,
             productId: p.product.id,
-            price: orgProduct.sellingPrice,
+            price: orgProduct.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]
+              .sellingPrice,
           } satisfies Omit<SaleItemCreate, "saleId">;
         });
 
@@ -830,6 +859,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
                     with: {
                       organizations: {
                         with: {
+                          priceHistory: true,
                           tg: {
                             with: {
                               crs: {

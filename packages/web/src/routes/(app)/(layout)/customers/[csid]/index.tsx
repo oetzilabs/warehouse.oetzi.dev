@@ -240,13 +240,7 @@ export default function CustomerPage() {
                                   </span>
                                 </div>
                               </div>
-                              <Button
-                                variant="outline"
-                                class="bg-background"
-                                size="sm"
-                                as={A}
-                                href={`./orders/${o.id}`}
-                              >
+                              <Button variant="outline" class="bg-background" size="sm" as={A} href={`/orders/${o.id}`}>
                                 View
                                 <ArrowUpRight class="size-4" />
                               </Button>
