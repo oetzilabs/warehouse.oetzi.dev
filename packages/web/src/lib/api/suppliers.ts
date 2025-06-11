@@ -36,7 +36,6 @@ export const getSuppliers = query(async () => {
   const suppliers = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
-      yield* Console.log({ orgId });
       const suppliers = yield* supplierService.findByOrganizationId(orgId);
       return suppliers;
     }).pipe(Effect.provide(SupplierLive)),
