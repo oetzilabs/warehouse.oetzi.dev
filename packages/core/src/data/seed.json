@@ -436,7 +436,7 @@
             {
               "id": "spurch_qbvnuek6eij9zesoq4gycf0w",
               "status": "completed",
-              "barcode": "test-purchase-barcode-001",
+              "barcode": "test-purchase-barcode-002",
               "title": "Test Purchase Order",
               "description": "This is a test order",
               "supplier_id": "sup_xdyn2y5k86zn3gxvss7rym0w",

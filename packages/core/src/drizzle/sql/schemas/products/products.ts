@@ -40,7 +40,7 @@ export const TB_products = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     sku: text("sku").notNull(),
-    barcode: text("barcode"),
+    barcode: text("barcode").unique().notNull(),
     brand_id: text("brand_id").references(() => TB_brands.id),
 
     // Inventory Control

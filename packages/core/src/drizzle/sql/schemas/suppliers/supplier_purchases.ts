@@ -21,7 +21,7 @@ export const TB_supplier_purchases = commonTable(
   "supplier_purchases",
   {
     status: supplier_purchase_status("status").notNull().default("pending"),
-    barcode: varchar("barcode").notNull(),
+    barcode: varchar("barcode").unique().notNull(),
     title: text("title").notNull(),
     description: text("description"),
     organization_id: varchar("organization_id")

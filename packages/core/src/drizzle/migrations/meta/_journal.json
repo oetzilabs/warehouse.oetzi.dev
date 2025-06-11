@@ -15,6 +15,13 @@
       "when": 1749585508512,
       "tag": "0001_bent_ultron",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749634898891,
+      "tag": "0002_tough_mimic",
+      "breakpoints": true
     }
   ]
 }

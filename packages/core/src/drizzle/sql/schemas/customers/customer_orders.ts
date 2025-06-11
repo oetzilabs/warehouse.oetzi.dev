@@ -25,7 +25,7 @@ export const TB_customer_orders = commonTable(
     status: customer_order_status("status").notNull().default("pending"),
     title: text("title").notNull(),
     description: text("description"),
-    barcode: varchar("barcode"),
+    barcode: varchar("barcode").unique().notNull(),
     saleId: varchar("sale_id").references(() => TB_sales.id),
     organization_id: varchar("organization_id")
       .references(() => TB_organizations.id)

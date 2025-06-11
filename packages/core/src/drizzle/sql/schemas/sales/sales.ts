@@ -35,7 +35,7 @@ export const TB_sales = commonTable(
       .notNull(),
     status: sale_status("status").default("draft").notNull(),
     note: text("note"),
-    barcode: text("barcode"),
+    barcode: text("barcode").unique().notNull(),
   },
   "sale",
 );
