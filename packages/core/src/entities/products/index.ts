@@ -126,13 +126,29 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                       condition: true,
                     },
                   },
+                  purchases: {
+                    with: {
+                      product: true,
+                      supplierPurchase: {
+                        with: {
+                          products: true,
+                        },
+                      },
+                    },
+                  },
                   suppliers: {
                     with: {
                       priceHistory: true,
                       supplier: {
                         with: {
+                          schedules: true,
                           contacts: true,
                           notes: true,
+                          purchases: {
+                            with: {
+                              products: true,
+                            },
+                          },
                         },
                       },
                     },

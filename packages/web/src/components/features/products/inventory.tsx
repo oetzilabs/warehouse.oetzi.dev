@@ -31,6 +31,7 @@ import X from "lucide-solid/icons/x";
 import { Accessor, createSignal, For, Show, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
+import { Reorder } from "./reorder";
 
 type InventoryProps = {
   product: Accessor<ProductInfo>;
@@ -72,7 +73,15 @@ export const Inventory = (props: InventoryProps) => {
         </div>
       </div>
       <div class="flex flex-col p-4">
-        <Button>Reorder Now</Button>
+        <Reorder
+          product={() => ({
+            ...props.product(),
+            preferredDate: props.product().purchases.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+              .supplierPurchase.createdAt,
+            reorderPoint: props.product().organizations[0].reorderPoint ?? 0,
+            minimumStock: props.product().organizations[0].minimumStock,
+          })}
+        />
       </div>
     </div>
   );

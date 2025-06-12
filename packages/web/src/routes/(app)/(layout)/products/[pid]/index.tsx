@@ -5,9 +5,9 @@ import { Conditions } from "@/components/features/products/conditions";
 import { ProductImages } from "@/components/features/products/images";
 import { Inventory } from "@/components/features/products/inventory";
 import { Labels } from "@/components/features/products/lables";
+import { MarginRange } from "@/components/features/products/margin-range";
 import { PricingHistory } from "@/components/features/products/pricing-history";
 import { Suppliers } from "@/components/features/products/suppliers";
-import { MarginRange } from "@/components/margin-range";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

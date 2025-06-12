@@ -186,10 +186,15 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return storage;
       });
 
+    type ProductSummary = {
+      product: Effect.Effect.Success<ReturnType<typeof sb>>["products"][number]["product"];
+      count: number;
+    };
+
     const storageBox = (
       storageId: string,
     ): Effect.Effect<
-      Effect.Effect.Success<ReturnType<typeof sb>> & { productSummary: any[] },
+      Effect.Effect.Success<ReturnType<typeof sb>> & { productSummary: ProductSummary[] },
       StorageInvalidId | StorageNotFound
     > =>
       Effect.gen(function* (_) {
