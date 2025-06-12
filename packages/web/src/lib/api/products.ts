@@ -1,5 +1,6 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { BrandLive, BrandService } from "@warehouseoetzidev/core/src/entities/brands";
+import { InventoryLive, InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import {
   OrganizationNotFound,
@@ -96,19 +97,9 @@ export const getProductById = query(async (pid: string) => {
     Effect.gen(function* (_) {
       const orgService = yield* _(OrganizationService);
       const org = yield* orgService.findById(orgId);
-      if (!org) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-      }
       const productService = yield* _(ProductService);
       const product = yield* productService.findById(pid, orgId);
-      if (!product) {
-        return yield* Effect.fail(new ProductNotFound({ id: pid }));
-      }
       const orgP = yield* orgService.findProductById(orgId, pid);
-      if (!orgP) {
-        return yield* Effect.fail(new OrganizationProductNotFound({ productId: pid, organizationId: orgId }));
-      }
-
       const stock = yield* productService.getStockCount(product.id, orgId);
 
       return { ...product, isInSortiment: orgP.deletedAt === null, stock };
@@ -503,3 +494,86 @@ export const getLatestPricesByProductId = query(async (id: string) => {
   );
   return product;
 }, "product-by-id");
+
+export const clearBrand = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const result = await Effect.runPromiseExit(
+    Effect.gen(function* (_) {
+      const service = yield* _(ProductService);
+      const product = yield* service.findById(id, orgId);
+      if (!product) {
+        return yield* Effect.fail(new ProductNotFound({ id }));
+      }
+
+      yield* service.update(product.id, { id: product.id, brand_id: null });
+
+      return true;
+    }).pipe(Effect.provide(ProductLive)),
+  );
+  return Exit.match(result, {
+    onSuccess: (result) => {
+      return json(result, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      });
+    },
+    onFailure: (cause) => {
+      console.error("Failed to re-add product:", cause);
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return c.message;
+      });
+      throw new Error(`Some error(s) occurred at 're-add product': ${errors.join(", ")}`);
+    },
+  });
+});
+
+export const getProductStock = query(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const product = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const orgService = yield* _(OrganizationService);
+      const productService = yield* _(ProductService);
+      const inventoryService = yield* _(InventoryService);
+      const org = yield* orgService.findById(orgId);
+      const product = yield* productService.findById(id, org.id);
+      const orgP = yield* orgService.findProductById(org.id, id);
+      const stock = yield* inventoryService.getStockForProducts([id], org.id);
+
+      return stock[0].stock;
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(InventoryLive)),
+  );
+  return product;
+}, "product-stock-by-id");

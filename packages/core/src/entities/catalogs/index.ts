@@ -75,11 +75,15 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return catalog;
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, orgId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new CatalogInvalidId({ id }));
+        }
+        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
+        if (!parsedOrgId.success) {
+          return yield* Effect.fail(new CatalogOrganizationInvalidId({ organizationId: orgId }));
         }
 
         const catalog = yield* Effect.promise(() =>
@@ -88,7 +92,15 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
             with: {
               products: {
                 with: {
-                  product: true,
+                  product: {
+                    with: {
+                      organizations: {
+                        with: {
+                          priceHistory: true,
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -99,7 +111,30 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
           return yield* Effect.fail(new CatalogNotFound({ id }));
         }
 
-        return catalog;
+        return {
+          ...catalog,
+          products: catalog.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organization: p.product.organizations.find((o) => o.organizationId === parsedOrgId.output),
+              priceHistory:
+                p.product.organizations
+                  .find((o) => o.organizationId === parsedOrgId.output)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
+              sellingPrice:
+                p.product.organizations
+                  .find((o) => o.organizationId === parsedOrgId.output)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]
+                  ?.sellingPrice || 0,
+              currency:
+                p.product.organizations
+                  .find((o) => o.organizationId === parsedOrgId.output)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ||
+                "USD",
+            },
+          })),
+        };
       });
 
     const update = (input: InferInput<typeof CatalogUpdateSchema>) =>

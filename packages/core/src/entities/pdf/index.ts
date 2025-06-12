@@ -448,10 +448,10 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                                 stack: [
                                   Text(prod.product.name, "tableCell"),
                                   Text(prod.product.sku, "smallText", { margin: [0, 2, 0, 0] }),
-                                  ...(prod.product.tg
+                                  ...(prod.product.organizations[0].tg
                                     ? [
                                         Text(
-                                          `${prod.product.tg.name} (${prod.product.tg.crs[0]?.tr.rate ?? 0}%)`,
+                                          `${prod.product.organizations[0].tg.name} (${prod.product.organizations[0].tg.crs[0]?.tr.rate ?? 0}%)`,
                                           "smallText",
                                         ),
                                       ]
@@ -467,7 +467,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                               }),
                               {
                                 stack:
-                                  prod.product.tg?.crs.map((cr) =>
+                                  prod.product.organizations[0].tg?.crs.map((cr) =>
                                     Text(
                                       `${((prod.product.sellingPrice * prod.quantity * (cr.tr.rate ?? 0)) / 100).toFixed(2)} ${prod.product.currency}`,
                                       "tableCell",
@@ -686,10 +686,10 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                               stack: [
                                 Text(item.product.name, "tableCell"),
                                 Text(item.product.sku, "smallText"),
-                                ...(item.product.tg
+                                ...(item.product.organizations[0].tg
                                   ? [
                                       Text(
-                                        `${item.product.tg.name} (${item.product.tg.crs[0]?.tr.rate ?? 0}%)`,
+                                        `${item.product.organizations[0].tg.name} (${item.product.organizations[0].tg.crs[0]?.tr.rate ?? 0}%)`,
                                         "smallText",
                                       ),
                                     ]
@@ -704,7 +704,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
                             }),
                             {
                               stack:
-                                item.product.tg?.crs.map((cr) =>
+                                item.product.organizations[0].tg?.crs.map((cr) =>
                                   Text(
                                     `${((item.price * item.quantity * (cr.tr.rate ?? 0)) / 100).toFixed(2)} ${item.product.currency}`,
                                     "tableCell",

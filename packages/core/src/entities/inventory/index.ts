@@ -51,6 +51,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
                 db.query.TB_products.findFirst({
                   where: (fields, operations) => operations.eq(fields.id, p.productId),
                   with: {
+                    organizations: true,
                     brands: true,
                     suppliers: {
                       with: {
@@ -79,7 +80,14 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
                 }),
               );
               return {
-                product: product!,
+                product: {
+                  ...product!,
+                  organizations: product!.organizations.filter((o) => o.organizationId === parsedId.output),
+                  reorderPoint:
+                    product!.organizations.find((o) => o.organizationId === parsedId.output)?.reorderPoint ?? 0,
+                  minimumStock:
+                    product!.organizations.find((o) => o.organizationId === parsedId.output)?.minimumStock ?? 0,
+                },
                 count: p.count,
               };
             }),

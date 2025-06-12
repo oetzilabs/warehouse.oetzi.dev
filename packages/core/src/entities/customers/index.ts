@@ -260,6 +260,10 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
               organizations: p.product.organizations.filter(
                 (org) => org.organizationId === parsedOrganizationId.output,
               ),
+              priceHistory:
+                p.product.organizations
+                  .find((o) => o.organizationId === parsedOrganizationId.output)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
               currency: p.product.organizations
                 .find((org) => org.organizationId === parsedOrganizationId.output)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,

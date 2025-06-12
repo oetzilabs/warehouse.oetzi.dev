@@ -20,7 +20,6 @@ export const TB_supplier_products = schema.table(
       .references(() => TB_products.id)
       .notNull(),
     supplierSku: text("supplier_sku"),
-    supplierPrice: decimal("supplier_price", { precision: 10, scale: 2 }),
     isPreferredSupplier: text("is_preferred_supplier").default("false"),
     minOrderQuantity: decimal("min_order_quantity", { precision: 10, scale: 2 }),
     leadTime: text("lead_time"),

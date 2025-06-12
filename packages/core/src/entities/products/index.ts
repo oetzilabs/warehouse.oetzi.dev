@@ -128,6 +128,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   },
                   suppliers: {
                     with: {
+                      priceHistory: true,
                       supplier: {
                         with: {
                           contacts: true,
@@ -148,6 +149,10 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
         return {
           ...product.product,
+          priceHistory:
+            product.product.organizations
+              .find((o) => o.organizationId === parsedOrgId.output)
+              ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
           currency: product.product.organizations
             .find((org) => org.organizationId === parsedOrgId.output)!
             .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
@@ -718,3 +723,6 @@ export type ProductInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<P
 export type OrganizationProductInfo = NonNullable<
   Awaited<Effect.Effect.Success<ReturnType<ProductService["findByOrganizationId"]>>>
 >[number];
+export type ProductSupplierInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<ProductService["findById"]>>>
+>["suppliers"][number];

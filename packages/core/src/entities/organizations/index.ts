@@ -868,8 +868,7 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         if (!parsedProductId.success) {
           return yield* Effect.fail(new ProductInvalidId({ id: productId }));
         }
-
-        return yield* Effect.promise(() =>
+        const orgP = yield* Effect.promise(() =>
           db.query.TB_organizations_products.findFirst({
             where: (organization_products, operations) =>
               and(
@@ -878,6 +877,12 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               ),
           }),
         );
+        if (!orgP) {
+          return yield* Effect.fail(
+            new OrganizationProductNotFound({ productId: productId, organizationId: organizationId }),
+          );
+        }
+        return orgP;
       });
 
     const getDashboardData = (organizationId: string) =>
