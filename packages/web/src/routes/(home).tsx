@@ -19,7 +19,7 @@ export default function IndexPage() {
     <>
       <div class="flex flex-col h-full w-full overflow-y-auto">
         <div class="flex grow w-full">
-          <div class="flex flex-col container py-20 md:py-10 gap-32">
+          <div class="flex flex-col container py-10 md:py-20 gap-32">
             <div class="w-full flex flex-col items-center text-center gap-10 md:gap-20">
               <div class="flex flex-col gap-20 items-center justify-center w-full">
                 <div class="flex flex-col w-max gap-4 items-center justify-center">
@@ -31,16 +31,16 @@ export default function IndexPage() {
                   </div>
                 </div>
                 <div class="w-full flex flex-col gap-8 md:gap-16 items-center justify-center">
-                  <div class="flex flex-col gap-8 md:gap-16 items-center justify-center w-full">
-                    <div class="flex flex-col gap-8 select-none items-center justify-center">
-                      <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-[60px] leading-none tracking-tight">
+                  <div class="flex flex-col gap-6 md:gap-16 items-center justify-center w-full font-['Lisu_Bosa']">
+                    <div class="flex flex-col gap-2 md:gap-6 select-none items-center justify-center">
+                      <h1 class="text-neutral-800 dark:text-neutral-200 font-bold text-2xl md:text-[50px] leading-none tracking-tight">
                         Supercharge your
                       </h1>
                       <span class="px-2 py-0.5 rounded font-[Pacifico] text-6xl md:text-[180px] leading-none text-indigo-600 dark:text-indigo-500">
                         warehouse.
                       </span>
                     </div>
-                    <p class="text-muted-foreground text-base md:text-xl font-medium">
+                    <p class="text-muted-foreground text-base md:text-2xl font-medium">
                       Empower your business with seamless and efficient inventory solutions.
                     </p>
                   </div>

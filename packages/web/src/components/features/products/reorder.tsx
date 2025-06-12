@@ -8,6 +8,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  NumberField,
+  NumberFieldDecrementTrigger,
+  NumberFieldGroup,
+  NumberFieldIncrementTrigger,
+  NumberFieldInput,
+  NumberFieldLabel,
+} from "@/components/ui/number-field";
 import { cn } from "@/lib/utils";
 import Calendar from "@corvu/calendar";
 import { createForm } from "@tanstack/solid-form";
@@ -243,6 +251,24 @@ export const Reorder = (props: ReorderProps) => {
                 </div>
               )}
             </form.Subscribe>
+          </div>
+          <div class="flex flex-col gap-2 items-center justify-center w-full border-b last:border-b-0 p-4">
+            <form.Field name="amount">
+              {(field) => (
+                <NumberField
+                  value={field().state.value}
+                  onRawValueChange={(value) => field().setValue(value)}
+                  class="!w-full !max-w-full"
+                >
+                  <NumberFieldLabel>Amount</NumberFieldLabel>
+                  <NumberFieldGroup class="!w-full !max-w-full">
+                    <NumberFieldInput class="!w-full !max-w-full" />
+                    <NumberFieldIncrementTrigger />
+                    <NumberFieldDecrementTrigger />
+                  </NumberFieldGroup>
+                </NumberField>
+              )}
+            </form.Field>
           </div>
         </div>
         <DialogFooter class="flex grow">

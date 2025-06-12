@@ -140,7 +140,7 @@ export function Footer() {
           <div class="flex flex-col w-full">
             <div class="flex justify-between items-end">
               <div class="flex flex-col gap-2 items-start">
-                <div class="flex flex-row gap-2 items-center">
+                <div class="flex flex-row gap-2 items-baseline">
                   <A
                     class="flex-none text-lg text-indigo-600 dark:text-indigo-500 font-[Pacifico]"
                     href="/"
@@ -148,8 +148,11 @@ export function Footer() {
                   >
                     warehouse.
                   </A>
-                  <div class="flex flex-col gap-1">
-                    <p class="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">© 2025 Ötzilabs.</p>
+                  <div class="flex flex-row gap-1 items-baseline">
+                    <span class="mt-1 text-[10px] text-xs text-neutral-600 dark:text-neutral-400 ">© 2025 </span>
+                    <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400 font-['Lisu_Bosa'] font-black">
+                      oetzilabs.
+                    </p>
                   </div>
                 </div>
                 <div>

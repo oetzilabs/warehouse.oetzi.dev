@@ -31,6 +31,7 @@
     "@corvu/otp-field": "0.1.4",
     "@corvu/resizable": "0.2.5",
     "@fontsource-variable/geist-mono": "^5.2.6",
+    "@fontsource/lisu-bosa": "^5.2.6",
     "@fontsource/pacifico": "^5.2.5",
     "@iconify-json/lucide": "1.2.45",
     "@iconify/icons-lucide": "1.2.135",

@@ -100,6 +100,7 @@
         "@corvu/otp-field": "0.1.4",
         "@corvu/resizable": "0.2.5",
         "@fontsource-variable/geist-mono": "^5.2.6",
+        "@fontsource/lisu-bosa": "^5.2.6",
         "@fontsource/pacifico": "^5.2.5",
         "@iconify-json/lucide": "1.2.45",
         "@iconify/icons-lucide": "1.2.135",
@@ -450,6 +451,8 @@
     "@foliojs-fork/restructure": ["@foliojs-fork/restructure@2.0.2", "", {}, "sha512-59SgoZ3EXbkfSX7b63tsou/SDGzwUEK6MuB5sKqgVK1/XE0fxmpsOb9DQI8LXW3KfGnAjImCGhhEb7uPPAUVNA=="],
 
     "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.2.6", "", {}, "sha512-vw6T9JGTrYJ980bn7W8iTPhe2jVK5ifunVs7xh9dfTVArjDSkJs03JjeZrH5LKEpGABLXSlSlNU57HRm4tmFMg=="],
+
+    "@fontsource/lisu-bosa": ["@fontsource/lisu-bosa@5.2.6", "", {}, "sha512-75LOs7fin2reBJG9xkrzpvl46sDIyP5vnT9FrpvipfP6XC/L1i0j9JtDogGdjXf4brEZVzyaPIIuGJV/tDg7qw=="],
 
     "@fontsource/pacifico": ["@fontsource/pacifico@5.2.5", "", {}, "sha512-JpimzPRR6Hh2jIj3x+6Wzk8vBv9IdInuu2y0muGnpQQIOscyQdM4i8bSSszgOoH4WD3PuUpMGHCi4ZBNtoekWA=="],
 
