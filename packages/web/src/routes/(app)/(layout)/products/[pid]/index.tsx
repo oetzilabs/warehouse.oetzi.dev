@@ -22,40 +22,24 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import {
-  deleteProduct,
-  downloadProductSheet,
-  getProductById,
-  reAddProduct,
-  updateProductStock,
-} from "@/lib/api/products";
-import { cn } from "@/lib/utils";
+import { deleteProduct, getProductById, reAddProduct } from "@/lib/api/products";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
-import ArrowRight from "lucide-solid/icons/arrow-right";
-import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import Map from "lucide-solid/icons/map";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
 import Plus from "lucide-solid/icons/plus";
-import Printer from "lucide-solid/icons/printer";
 import RulerDimensionLine from "lucide-solid/icons/ruler-dimension-line";
-import Settings from "lucide-solid/icons/settings-2";
 import Weight from "lucide-solid/icons/weight";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
-import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 
 dayjs.extend(relativeTime);
@@ -278,7 +262,6 @@ export default function ProductPage() {
               </div>
               <div class="col-span-full md:col-span-1 flex flex-col gap-4">
                 <Inventory product={productInfo} />
-
                 <Actions product={productInfo} />
               </div>
             </div>
