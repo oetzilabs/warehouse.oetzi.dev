@@ -258,6 +258,7 @@ export const Reorder = (props: ReorderProps) => {
                 <NumberField
                   value={field().state.value}
                   onRawValueChange={(value) => field().setValue(value)}
+                  minValue={0}
                   class="!w-full !max-w-full"
                 >
                   <NumberFieldLabel>Amount</NumberFieldLabel>
