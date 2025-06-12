@@ -5,6 +5,7 @@ import { Conditions } from "@/components/features/products/conditions";
 import { ProductImages } from "@/components/features/products/images";
 import { Inventory } from "@/components/features/products/inventory";
 import { Labels } from "@/components/features/products/lables";
+import { PricingHistory } from "@/components/features/products/pricing-history";
 import { Suppliers } from "@/components/features/products/suppliers";
 import { MarginRange } from "@/components/margin-range";
 import { Badge } from "@/components/ui/badge";
@@ -253,6 +254,7 @@ export default function ProductPage() {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
+                <PricingHistory product={productInfo} />
                 <ProductImages product={productInfo} />
                 <Codes product={productInfo} />
                 <Brand product={productInfo} />
