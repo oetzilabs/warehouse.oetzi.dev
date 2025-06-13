@@ -41,8 +41,8 @@ export default function DashboardPage() {
   const isAcceptingNotification = useSubmission(acceptNotification);
 
   return (
-    <div class="flex flex-col w-full grow">
-      <div class="flex flex-col gap-4 w-full grow p-4 container">
+    <div class="flex flex-col w-full grow py-4">
+      <div class="flex flex-col gap-4 w-full grow container">
         <div class="flex flex-row gap-4 items-center justify-between">
           <div class="flex flex-row items-baseline gap-4 py-2">
             <span class="font-semibold leading-none">Overview</span>
@@ -187,8 +187,8 @@ export default function DashboardPage() {
                         </div>
                         <div class="flex flex-row gap-2">
                           <Button size="sm" as={A} href="/orders/new" disabled variant="secondary">
-                            <Plus class="size-4" />
                             Create
+                            <Plus class="size-4" />
                           </Button>
                           <Button size="sm" as={A} href="/orders">
                             View All
@@ -300,8 +300,8 @@ export default function DashboardPage() {
                         </div>
                         <div class="flex flex-row gap-2">
                           <Button size="sm" as={A} href="/purchases/new" disabled variant="secondary">
-                            <Plus class="size-4" />
                             Create
+                            <Plus class="size-4" />
                           </Button>
                           <Button size="sm" as={A} href="/purchases">
                             View All
@@ -447,8 +447,8 @@ export default function DashboardPage() {
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Last Sold Products</h3>
                         <div class="flex flex-row gap-2">
                           <Button size="sm" as={A} href="/products/new">
-                            <Plus class="size-4" />
                             Create
+                            <Plus class="size-4" />
                           </Button>
                         </div>
                       </div>
