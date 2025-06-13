@@ -29,7 +29,6 @@ dayjs.extend(relativeTime);
 type NotesProps = {
   id: Accessor<SupplierInfo["id"]>;
   list: Accessor<SupplierInfo["notes"]>;
-  supplier: Accessor<SupplierInfo>;
 };
 
 export const Notes = (props: NotesProps) => {
@@ -74,8 +73,29 @@ export const Notes = (props: NotesProps) => {
                     <div class="flex flex-row items-center gap-1 justify-between">
                       <span class="font-semibold">{note.title}</span>
                       <div class="flex flex-row items-center gap-2 w-max">
-                        <EditNoteDialog id={note.id} note={{ ...note, supplier: props.supplier() }} sid={props.id()} />
-                        <DeleteNoteDialog id={note.id} noteId={note.id} />
+                        <EditNoteDialog
+                          id={note.id}
+                          note={note}
+                          sid={props.id()}
+                          onSaved={() =>
+                            toast.promise(revalidate(getSupplierById.keyFor(props.id())), {
+                              loading: "Refreshing supplier...",
+                              success: "Refreshed supplier",
+                              error: "Failed to refresh supplier",
+                            })
+                          }
+                        />
+                        <DeleteNoteDialog
+                          id={note.id}
+                          noteId={note.id}
+                          onDeleted={() =>
+                            toast.promise(revalidate(getSupplierById.keyFor(props.id())), {
+                              loading: "Refreshing supplier...",
+                              success: "Refreshed supplier",
+                              error: "Failed to refresh supplier",
+                            })
+                          }
+                        />
                       </div>
                     </div>
                     <span class="text-sm text-muted-foreground">{note.content}</span>
@@ -95,26 +115,10 @@ export const Notes = (props: NotesProps) => {
     </div>
   );
 };
-const DeleteNoteDialog = (props: { id: string; noteId: string }) => {
+const DeleteNoteDialog = (props: { id: string; noteId: string; onDeleted: () => void }) => {
   const [open, setOpen] = createSignal(false);
   const removeNoteAction = useAction(removeNote);
   const isDeletingNote = useSubmission(removeNote);
-  const options = formOptions({
-    defaultValues: {
-      id: props.noteId,
-    },
-  });
-  const form = createForm(() => ({
-    ...options,
-    onSubmit: (state) => {
-      if (isDeletingNote.pending) return;
-      toast.promise(removeNoteAction(props.id, state.value.id), {
-        loading: "Deleting note...",
-        success: "Note deleted",
-        error: "Failed to delete note",
-      });
-    },
-  }));
 
   return (
     <Dialog open={open()} onOpenChange={setOpen}>
@@ -122,26 +126,46 @@ const DeleteNoteDialog = (props: { id: string; noteId: string }) => {
         <X class="size-3" />
       </DialogTrigger>
       <DialogContent>
-        <form onSubmit={() => form.handleSubmit()} class="flex flex-col gap-4 py-2">
-          <DialogHeader>
-            <DialogTitle>Delete Note</DialogTitle>
-            <DialogDescription>Are you sure you want to delete this note?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} type="button" size="sm">
-              No, Cancel.
-            </Button>
-            <Button type="submit" size="sm" variant="destructive">
-              Yes, Delete!
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogHeader>
+          <DialogTitle>Delete Note</DialogTitle>
+          <DialogDescription>Are you sure you want to delete this note?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} type="button" size="sm">
+            No, Cancel.
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            variant="destructive"
+            disabled={isDeletingNote.pending}
+            onClick={() => {
+              if (isDeletingNote.pending) return;
+              toast.promise(removeNoteAction(props.id, props.noteId), {
+                loading: "Deleting note...",
+                success: () => {
+                  setOpen(false);
+                  props.onDeleted();
+                  return "Note deleted";
+                },
+                error: "Failed to delete note",
+              });
+            }}
+          >
+            Yes, Delete!
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
-const EditNoteDialog = (props: { id: string; note: SupplierNoteInfo; sid: string }) => {
+const EditNoteDialog = (props: {
+  id: string;
+  note: Omit<SupplierNoteInfo, "supplier">;
+  sid: string;
+  onSaved: () => void;
+}) => {
   const [open, setOpen] = createSignal(false);
   const updateNoteAction = useAction(updateNote);
   const isUpdatingNote = useSubmission(updateNote);
@@ -158,7 +182,11 @@ const EditNoteDialog = (props: { id: string; note: SupplierNoteInfo; sid: string
       if (isUpdatingNote.pending) return;
       toast.promise(updateNoteAction(props.sid, { ...state.value, id: props.id }), {
         loading: "Updating note...",
-        success: "Note updated",
+        success: () => {
+          setOpen(false);
+          props.onSaved();
+          return "Note updated";
+        },
         error: "Failed to update note",
       });
     },
@@ -170,7 +198,13 @@ const EditNoteDialog = (props: { id: string; note: SupplierNoteInfo; sid: string
         <Pencil class="!size-3" />
       </DialogTrigger>
       <DialogContent>
-        <form onSubmit={() => form.handleSubmit()} class="flex flex-col gap-4 py-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          class="flex flex-col gap-4 py-2"
+        >
           <DialogHeader>
             <DialogTitle>Edit Note</DialogTitle>
             <DialogDescription>Edit a note for the supplier</DialogDescription>
@@ -252,7 +286,13 @@ const AddNoteDialog = (props: { id: string }) => {
         Add Note
       </DialogTrigger>
       <DialogContent>
-        <form onSubmit={() => form.handleSubmit()} class="flex flex-col gap-4 py-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          class="flex flex-col gap-4 py-2"
+        >
           <DialogHeader>
             <DialogTitle>Add Note</DialogTitle>
             <DialogDescription>Add a note to the supplier</DialogDescription>

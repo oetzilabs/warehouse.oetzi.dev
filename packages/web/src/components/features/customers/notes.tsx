@@ -1,4 +1,4 @@
-import { PreferredTimeDialog } from "@/components/customers/preferred-time-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,49 +9,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import {
-  addPreferredDeliveryTime,
-  addPreferredPickupTime,
-  deleteCustomer,
-  getCustomerById,
-  removePreferredDeliveryTime,
-  removePreferredPickupTime,
-} from "@/lib/api/customers";
-import {
-  A,
-  createAsync,
-  revalidate,
-  RouteDefinition,
-  useAction,
-  useNavigate,
-  useParams,
-  useSubmission,
-} from "@solidjs/router";
-import { CustomerInfo } from "@warehouseoetzidev/core/src/entities/customers";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
+import { addNote, removeNote, updateNote, getCustomerById } from "@/lib/api/customers";
+import { revalidate, useAction, useSubmission } from "@solidjs/router";
+import { createForm, formOptions } from "@tanstack/solid-form";
+import type { CustomerInfo, CustomerNoteInfo } from "@warehouseoetzidev/core/src/entities/customers";
 import dayjs from "dayjs";
-import ArrowLeft from "lucide-solid/icons/arrow-left";
-import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import Database from "lucide-solid/icons/database";
-import Edit from "lucide-solid/icons/edit";
-import Loader2 from "lucide-solid/icons/loader-2";
-import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import relativeTime from "dayjs/plugin/relativeTime";
+import Pencil from "lucide-solid/icons/pencil";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import ScanBarcode from "lucide-solid/icons/scan-barcode";
-import Trash from "lucide-solid/icons/trash";
 import X from "lucide-solid/icons/x";
-import { Accessor, createSignal, For, Show, Suspense } from "solid-js";
+import { Accessor, createSignal, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
+dayjs.extend(relativeTime);
+
 type NotesProps = {
-  customer: Accessor<CustomerInfo>;
+  id: Accessor<CustomerInfo['id']>;
+  list: Accessor<CustomerInfo['notes']>;
 };
 
 export const Notes = (props: NotesProps) => {
@@ -60,44 +37,54 @@ export const Notes = (props: NotesProps) => {
       <div class="flex flex-row items-center gap-2 justify-between p-4 py-2 pr-2 border-b bg-muted-foreground/5 dark:bg-muted/30">
         <h2 class="font-medium">Notes</h2>
         <div class="flex flex-row items-center">
-          <Button size="sm">
-            <Plus class="size-4" />
-            Add Note
-          </Button>
+          <AddNoteDialog id={props.id()} />
         </div>
       </div>
       <div class="flex flex-col w-full">
-        <Show when={props.customer().notes.length === 0}>
+        <Show when={props.list().length === 0}>
           <div class="flex flex-col gap-4 items-center justify-center p-10 col-span-full">
             <span class="text-sm text-muted-foreground">No notes have been added</span>
             <div class="flex flex-row gap-2 items-center justify-center">
-              <Button size="sm">
-                <Plus class="size-4" />
-                Add Note
+              <AddNoteDialog id={props.id()} />
+              <Button
+                size="sm"
+                variant="outline"
+                class="bg-background"
+                onClick={() => {
+                  toast.promise(revalidate(getCustomerById.keyFor(props.id())), {
+                    loading: "Refreshing customer...",
+                    success: "Refreshed customer",
+                    error: "Failed to refresh customer",
+                  });
+                }}
+              >
+                <RotateCw class="size-4" />
+                Refresh
               </Button>
             </div>
           </div>
         </Show>
-        <Show when={props.customer().notes.length > 0}>
+        <Show when={props.list().length > 0}>
           <div class="flex flex-col gap-1">
-            <For each={props.customer().notes}>
+            <For each={props.list()}>
               {(note) => (
                 <div class="flex flex-col gap-2 p-4 border-b last:border-b-0">
                   <div class="flex flex-col gap-3">
                     <div class="flex flex-row items-center gap-1 justify-between">
                       <span class="font-semibold">{note.title}</span>
                       <div class="flex flex-row items-center gap-2 w-max">
-                        <Button size="icon" variant="outline" class="bg-background size-6">
-                          <Edit class="size-3" />
-                        </Button>
-                        <Button size="icon" variant="outline" class="bg-background size-6">
-                          <X class="size-3" />
-                        </Button>
+                        <EditNoteDialog id={note.id} note={note} customerId={props.id()} />
+                        <DeleteNoteDialog id={props.id()} noteId={note.id} />
                       </div>
                     </div>
                     <span class="text-sm text-muted-foreground">{note.content}</span>
                   </div>
-                  <span class="text-sm text-muted-foreground">{dayjs(note.createdAt).fromNow()}</span>
+                  <div class="flex flex-row items-center gap-2">
+                    <Badge variant="secondary" class="text-[10px]">
+                      {note.type}
+                    </Badge>
+                    <span class="text-sm text-muted-foreground">{dayjs(note.createdAt).fromNow()}</span>
+                  </div>
                 </div>
               )}
             </For>
@@ -105,5 +92,201 @@ export const Notes = (props: NotesProps) => {
         </Show>
       </div>
     </div>
+  );
+};
+
+const DeleteNoteDialog = (props: { id: string; noteId: string }) => {
+  const [open, setOpen] = createSignal(false);
+  const removeNoteAction = useAction(removeNote);
+  const isDeletingNote = useSubmission(removeNote);
+  const options = formOptions({
+    defaultValues: {
+      id: props.noteId,
+    },
+  });
+  const form = createForm(() => ({
+    ...options,
+    onSubmit: (state) => {
+      if (isDeletingNote.pending) return;
+      toast.promise(removeNoteAction(props.id, state.value.id), {
+        loading: "Deleting note...",
+        success: "Note deleted",
+        error: "Failed to delete note",
+      });
+    },
+  }));
+
+  return (
+    <Dialog open={open()} onOpenChange={setOpen}>
+      <DialogTrigger as={Button} size="icon" variant="outline" class="bg-background size-6">
+        <X class="!size-3" />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Note</DialogTitle>
+          <DialogDescription>Are you sure you want to delete this note? This action cannot be undone.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" colorScheme="red" isLoading={isDeletingNote.pending}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const EditNoteDialog = (props: { id: string; note: CustomerNoteInfo; customerId: string }) => {
+  const [open, setOpen] = createSignal(false);
+  const updateNoteAction = useAction(updateNote);
+  const isUpdatingNote = useSubmission(updateNote);
+  const options = formOptions({
+    defaultValues: {
+      id: props.note.id,
+      title: props.note.title,
+      content: props.note.content,
+      type: props.note.type,
+    },
+  });
+  const form = createForm(() => ({
+    ...options,
+    onSubmit: (state) => {
+      if (isUpdatingNote.pending) return;
+      toast.promise(updateNoteAction(props.customerId, { ...state.value, id: props.id }), {
+        loading: "Updating note...",
+        success: "Note updated",
+        error: "Failed to update note",
+      });
+    },
+  }));
+
+  return (
+    <Dialog open={open()} onOpenChange={setOpen}>
+      <DialogTrigger as={Button} size="icon" variant="outline" class="bg-background size-6">
+        <Pencil class="size-3" />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Note</DialogTitle>
+          <DialogDescription>Update the details of the note below.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}>
+          <div class="grid gap-4 py-2">
+            <TextField>
+              <TextFieldLabel for="title">Title</TextFieldLabel>
+              <TextFieldInput id="title" name="title" required />
+            </TextField>
+            <TextField>
+              <TextFieldLabel for="content">Content</TextFieldLabel>
+              <TextFieldTextArea id="content" name="content" required />
+            </TextField>
+            <Select name="type" defaultValue={props.note.type}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select note type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="important">Important</SelectItem>
+                <SelectItem value="reminder">Reminder</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" isLoading={isUpdatingNote.pending}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const AddNoteDialog = (props: { id: string }) => {
+  const [open, setOpen] = createSignal(false);
+  const addNoteAction = useAction(addNote);
+  const isAddingNote = useSubmission(addNote);
+  const options = formOptions({
+    defaultValues: {
+      title: "",
+      content: "",
+      type: "general" as CustomerNoteInfo["type"],
+    },
+  });
+  const form = createForm(() => ({
+    ...options,
+    onSubmit: (state) => {
+      if (isAddingNote.pending) return;
+      toast.promise(addNoteAction(props.id, { ...state.value, customerId: props.id }), {
+        loading: "Adding note...",
+        success: () => {
+          setOpen(false);
+          return "Note added";
+        },
+        error: "Failed to add note",
+      });
+    },
+  }));
+
+  return (
+    <Dialog open={open()} onOpenChange={setOpen}>
+      <DialogTrigger as={Button} size="sm">
+        <Plus class="size-4" />
+        Add Note
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Note</DialogTitle>
+          <DialogDescription>Enter the details of the new note below.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}>
+          <div class="grid gap-4 py-2">
+            <TextField>
+              <TextFieldLabel for="title">Title</TextFieldLabel>
+              <TextFieldInput id="title" name="title" required />
+            </TextField>
+            <TextField>
+              <TextFieldLabel for="content">Content</TextFieldLabel>
+              <TextFieldTextArea id="content" name="content" required />
+            </TextField>
+            <Select name="type" defaultValue="general">
+              <SelectTrigger>
+                <SelectValue placeholder="Select note type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="important">Important</SelectItem>
+                <SelectItem value="reminder">Reminder</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" isLoading={isAddingNote.pending}>
+              Add Note
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };

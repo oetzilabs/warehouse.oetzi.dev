@@ -1,4 +1,3 @@
-import { PreferredTimeDialog } from "@/components/customers/preferred-time-dialog";
 import { Notes } from "@/components/features/customers/notes";
 import { Orders } from "@/components/features/customers/orders";
 import { PreferredDelivery } from "@/components/features/customers/preferred-delivery";
@@ -177,7 +176,7 @@ export default function CustomerPage() {
                   <PreferredPickup customer={() => customerInfo().customer} />
                   <PreferredDelivery customer={() => customerInfo().customer} />
                 </div>
-                <Notes customer={() => customerInfo().customer} />
+                <Notes id={() => customerInfo().customer.id} list={() => customerInfo().customer.notes} />
               </div>
             </div>
           </div>

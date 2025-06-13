@@ -179,11 +179,7 @@ export default function SupplierPage() {
 
                 <Products list={() => supplierInfo().supplier.products} />
                 <Purchases list={() => supplierInfo().supplier.purchases} />
-                <Notes
-                  id={() => supplierInfo().supplier.id}
-                  list={() => supplierInfo().supplier.notes}
-                  supplier={() => supplierInfo().supplier}
-                />
+                <Notes id={() => supplierInfo().supplier.id} list={() => supplierInfo().supplier.notes} />
               </div>
             </div>
           </div>
