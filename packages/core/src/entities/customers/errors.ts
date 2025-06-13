@@ -42,3 +42,10 @@ export class CustomerOrganizationUnlinkFailed extends Schema.TaggedError<Custome
     customerId: Schema.String,
   },
 ) {}
+
+export class CustomerNoteInvalidId extends Schema.TaggedError<CustomerNoteInvalidId>()(
+  "CustomerNoteInvalidId",
+  {
+    id: Schema.String,
+  },
+) {}

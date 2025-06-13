@@ -17,6 +17,7 @@ import {
   CustomerInvalidId,
   CustomerNotCreated,
   CustomerNotDeleted,
+  CustomerNoteInvalidId,
   CustomerNotFound,
   CustomerNotUpdated,
 } from "./errors";
@@ -34,7 +35,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         }
 
         yield* Effect.promise(() =>
-          db.insert(TB_organization_customers).values({ customer_id: customer.id, organization_id: orgId }).returning(),
+          db.insert(TB_organization_customers).values({ customer_id: customer.id, organization_id: orgId }).returning()
         );
 
         return yield* findById(customer.id);
@@ -85,7 +86,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                 orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
               },
             },
-          }),
+          })
         );
 
         if (!customer) {
@@ -113,7 +114,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             .update(TB_customers)
             .set({ ...input, updatedAt: new Date() })
             .where(eq(TB_customers.id, parsedId.output))
-            .returning(),
+            .returning()
         );
 
         if (!updated) {
@@ -179,7 +180,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                 },
               },
             },
-          }),
+          })
         );
         return orgCustomers.map((orgCustomer) => orgCustomer.customer);
       });
@@ -199,7 +200,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.customer_id, parsedCustomerId.output),
-                operations.eq(fields.organization_id, parsedOrganizationId.output),
+                operations.eq(fields.organization_id, parsedOrganizationId.output)
               ),
             with: {
               sale: {
@@ -249,7 +250,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
                 },
               },
             },
-          }),
+          })
         );
 
         return orders.map((order) => ({
@@ -259,7 +260,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             product: {
               ...p.product,
               organizations: p.product.organizations.filter(
-                (org) => org.organizationId === parsedOrganizationId.output,
+                (org) => org.organizationId === parsedOrganizationId.output
               ),
               priceHistory:
                 p.product.organizations
@@ -283,7 +284,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           return yield* Effect.fail(new CustomerInvalidId({ id }));
         }
         const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_customers).where(eq(TB_customers.id, parsedId.output)).returning(),
+          db.delete(TB_customers).where(eq(TB_customers.id, parsedId.output)).returning()
         );
         if (!deleted) {
           return yield* Effect.fail(new CustomerNotDeleted({ id }));
@@ -298,11 +299,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           return yield* Effect.fail(new CustomerInvalidId({ id }));
         }
         const [deleted] = yield* Effect.promise(() =>
-          db
-            .update(TB_customers)
-            .set({ deletedAt: new Date() })
-            .where(eq(TB_customers.id, parsedId.output))
-            .returning(),
+          db.update(TB_customers).set({ deletedAt: new Date() }).where(eq(TB_customers.id, parsedId.output)).returning()
         );
         if (!deleted) {
           return yield* Effect.fail(new CustomerNotDeleted({ id }));
@@ -312,7 +309,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
 
     const addPreferredDeliveryDateTime = (
       input: { startTime: Date; endTime?: Date; notes?: string },
-      customerId: string,
+      customerId: string
     ) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, customerId);
@@ -324,7 +321,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           db
             .insert(TB_customer_preferred_deliverytimes)
             .values({ ...input, customerId: parsedId.output })
-            .returning(),
+            .returning()
         );
       });
 
@@ -339,13 +336,13 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           db
             .delete(TB_customer_preferred_deliverytimes)
             .where(eq(TB_customer_preferred_deliverytimes.id, parsedId.output))
-            .returning(),
+            .returning()
         );
       });
 
     const addPreferredPickupDateTime = (
       input: { startTime: Date; endTime?: Date; notes?: string },
-      customerId: string,
+      customerId: string
     ) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, customerId);
@@ -357,7 +354,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           db
             .insert(TB_customer_preferred_pickuptimes)
             .values({ ...input, customerId: parsedId.output })
-            .returning(),
+            .returning()
         );
       });
 
@@ -372,7 +369,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           db
             .delete(TB_customer_preferred_pickuptimes)
             .where(eq(TB_customer_preferred_pickuptimes.id, parsedId.output))
-            .returning(),
+            .returning()
         );
       });
 
@@ -384,7 +381,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         }
 
         return yield* Effect.promise(() =>
-          db.insert(TB_customer_notes).values({ title, content, customerId: parsedId.output }).returning(),
+          db.insert(TB_customer_notes).values({ title, content, customerId: parsedId.output }).returning()
         );
       });
 
@@ -392,12 +389,34 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
-          return yield* Effect.fail(new CustomerInvalidId({ id }));
+          return yield* Effect.fail(new CustomerNoteInvalidId({ id }));
         }
 
         return yield* Effect.promise(() =>
-          db.delete(TB_customer_notes).where(eq(TB_customer_notes.id, parsedId.output)).returning(),
+          db.delete(TB_customer_notes).where(eq(TB_customer_notes.id, parsedId.output)).returning()
         );
+      });
+
+    const updateNote = (id: string, title: string, content: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id }));
+        }
+
+        const [updated] = yield* Effect.promise(() =>
+          db
+            .update(TB_customer_notes)
+            .set({ title, content, updatedAt: new Date() })
+            .where(eq(TB_customer_notes.id, parsedId.output))
+            .returning()
+        );
+
+        if (!updated) {
+          return yield* Effect.fail(new CustomerNotUpdated({ id }));
+        }
+
+        return updated;
       });
 
     return {
@@ -414,6 +433,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       addPreferredPickupDateTime,
       removePreferredPickupDateTime,
       addNote,
+      updateNote,
       removeNote,
     } as const;
   }),

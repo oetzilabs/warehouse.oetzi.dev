@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,12 +8,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
-import { addNote, removeNote, updateNote, getCustomerById } from "@/lib/api/customers";
+import { addNote, getCustomerById, removeNote, updateNote } from "@/lib/api/customers";
 import { revalidate, useAction, useSubmission } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
-import type { CustomerInfo, CustomerNoteInfo } from "@warehouseoetzidev/core/src/entities/customers";
+import type { CustomerInfo } from "@warehouseoetzidev/core/src/entities/customers";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Pencil from "lucide-solid/icons/pencil";
@@ -27,8 +25,8 @@ import { toast } from "solid-sonner";
 dayjs.extend(relativeTime);
 
 type NotesProps = {
-  id: Accessor<CustomerInfo['id']>;
-  list: Accessor<CustomerInfo['notes']>;
+  id: Accessor<CustomerInfo["id"]>;
+  list: Accessor<CustomerInfo["notes"]>;
 };
 
 export const Notes = (props: NotesProps) => {
@@ -80,9 +78,6 @@ export const Notes = (props: NotesProps) => {
                     <span class="text-sm text-muted-foreground">{note.content}</span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Badge variant="secondary" class="text-[10px]">
-                      {note.type}
-                    </Badge>
                     <span class="text-sm text-muted-foreground">{dayjs(note.createdAt).fromNow()}</span>
                   </div>
                 </div>
@@ -95,26 +90,11 @@ export const Notes = (props: NotesProps) => {
   );
 };
 
-const DeleteNoteDialog = (props: { id: string; noteId: string }) => {
+const DeleteNoteDialog = (props: { id: string; noteId: string;  }) => {
   const [open, setOpen] = createSignal(false);
+
   const removeNoteAction = useAction(removeNote);
   const isDeletingNote = useSubmission(removeNote);
-  const options = formOptions({
-    defaultValues: {
-      id: props.noteId,
-    },
-  });
-  const form = createForm(() => ({
-    ...options,
-    onSubmit: (state) => {
-      if (isDeletingNote.pending) return;
-      toast.promise(removeNoteAction(props.id, state.value.id), {
-        loading: "Deleting note...",
-        success: "Note deleted",
-        error: "Failed to delete note",
-      });
-    },
-  }));
 
   return (
     <Dialog open={open()} onOpenChange={setOpen}>
@@ -124,43 +104,56 @@ const DeleteNoteDialog = (props: { id: string; noteId: string }) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Note</DialogTitle>
-          <DialogDescription>Are you sure you want to delete this note? This action cannot be undone.</DialogDescription>
+          <DialogDescription>
+            Are you sure you want to delete this note? This action cannot be undone.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" colorScheme="red" isLoading={isDeletingNote.pending}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="destructive"
+            disabled={isDeletingNote.pending}
+            onClick={() => {
+              if (isDeletingNote.pending) return;
+              toast.promise(removeNoteAction(props.noteId), {
+                loading: "Deleting note...",
+                success: () => {
+                  setOpen(false);
+                  return "Note deleted";
+                },
+                error: "Failed to delete note",
+              });
+            }}
+          >
+            Delete
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
-const EditNoteDialog = (props: { id: string; note: CustomerNoteInfo; customerId: string }) => {
+const EditNoteDialog = (props: { id: string; note: CustomerInfo["notes"][number]; customerId: string }) => {
   const [open, setOpen] = createSignal(false);
+
   const updateNoteAction = useAction(updateNote);
   const isUpdatingNote = useSubmission(updateNote);
+
   const options = formOptions({
     defaultValues: {
       id: props.note.id,
       title: props.note.title,
       content: props.note.content,
-      type: props.note.type,
     },
   });
   const form = createForm(() => ({
     ...options,
     onSubmit: (state) => {
       if (isUpdatingNote.pending) return;
-      toast.promise(updateNoteAction(props.customerId, { ...state.value, id: props.id }), {
+      toast.promise(updateNoteAction(state.value), {
         loading: "Updating note...",
         success: "Note updated",
         error: "Failed to update note",
@@ -178,35 +171,47 @@ const EditNoteDialog = (props: { id: string; note: CustomerNoteInfo; customerId:
           <DialogTitle>Edit Note</DialogTitle>
           <DialogDescription>Update the details of the note below.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <div class="grid gap-4 py-2">
-            <TextField>
-              <TextFieldLabel for="title">Title</TextFieldLabel>
-              <TextFieldInput id="title" name="title" required />
-            </TextField>
-            <TextField>
-              <TextFieldLabel for="content">Content</TextFieldLabel>
-              <TextFieldTextArea id="content" name="content" required />
-            </TextField>
-            <Select name="type" defaultValue={props.note.type}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select note type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="important">Important</SelectItem>
-                <SelectItem value="reminder">Reminder</SelectItem>
-              </SelectContent>
-            </Select>
+            <form.Field name="title">
+              {(field) => (
+                <TextField class="gap-2 flex flex-col">
+                  <TextFieldLabel class="capitalize pl-1">Title</TextFieldLabel>
+                  <TextFieldInput
+                    placeholder="Title"
+                    class="w-full"
+                    value={field().state.value}
+                    onInput={(e) => field().handleChange(e.currentTarget.value)}
+                    onBlur={field().handleBlur}
+                  />
+                </TextField>
+              )}
+            </form.Field>
+            <form.Field name="content">
+              {(field) => (
+                <TextField class="gap-2 flex flex-col">
+                  <TextFieldLabel class="capitalize pl-1">Content</TextFieldLabel>
+                  <TextFieldTextArea
+                    placeholder="Content"
+                    class="w-full"
+                    value={field().state.value}
+                    onInput={(e) => field().handleChange(e.currentTarget.value)}
+                    onBlur={field().handleBlur}
+                  />
+                </TextField>
+              )}
+            </form.Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" isLoading={isUpdatingNote.pending}>
+            <Button type="submit" disabled={isUpdatingNote.pending}>
               Save Changes
             </Button>
           </DialogFooter>
@@ -222,16 +227,16 @@ const AddNoteDialog = (props: { id: string }) => {
   const isAddingNote = useSubmission(addNote);
   const options = formOptions({
     defaultValues: {
+      customerId: props.id,
       title: "",
       content: "",
-      type: "general" as CustomerNoteInfo["type"],
     },
   });
   const form = createForm(() => ({
     ...options,
     onSubmit: (state) => {
       if (isAddingNote.pending) return;
-      toast.promise(addNoteAction(props.id, { ...state.value, customerId: props.id }), {
+      toast.promise(addNoteAction(state.value), {
         loading: "Adding note...",
         success: () => {
           setOpen(false);
@@ -253,35 +258,47 @@ const AddNoteDialog = (props: { id: string }) => {
           <DialogTitle>Add Note</DialogTitle>
           <DialogDescription>Enter the details of the new note below.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <div class="grid gap-4 py-2">
-            <TextField>
-              <TextFieldLabel for="title">Title</TextFieldLabel>
-              <TextFieldInput id="title" name="title" required />
-            </TextField>
-            <TextField>
-              <TextFieldLabel for="content">Content</TextFieldLabel>
-              <TextFieldTextArea id="content" name="content" required />
-            </TextField>
-            <Select name="type" defaultValue="general">
-              <SelectTrigger>
-                <SelectValue placeholder="Select note type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="important">Important</SelectItem>
-                <SelectItem value="reminder">Reminder</SelectItem>
-              </SelectContent>
-            </Select>
+            <form.Field name="title">
+              {(field) => (
+                <TextField class="gap-2 flex flex-col">
+                  <TextFieldLabel class="capitalize pl-1">Title</TextFieldLabel>
+                  <TextFieldInput
+                    placeholder="Title"
+                    class="w-full"
+                    value={field().state.value}
+                    onInput={(e) => field().handleChange(e.currentTarget.value)}
+                    onBlur={field().handleBlur}
+                  />
+                </TextField>
+              )}
+            </form.Field>
+            <form.Field name="content">
+              {(field) => (
+                <TextField class="gap-2 flex flex-col">
+                  <TextFieldLabel class="capitalize pl-1">Content</TextFieldLabel>
+                  <TextFieldTextArea
+                    placeholder="Content"
+                    class="w-full"
+                    value={field().state.value}
+                    onInput={(e) => field().handleChange(e.currentTarget.value)}
+                    onBlur={field().handleBlur}
+                  />
+                </TextField>
+              )}
+            </form.Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" isLoading={isAddingNote.pending}>
+            <Button type="submit" disabled={isAddingNote.pending}>
               Add Note
             </Button>
           </DialogFooter>

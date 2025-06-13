@@ -218,10 +218,35 @@ export const addNote = action(async (input: { customerId: string; title: string;
   );
 });
 
+export const updateNote = action(async (input: { id: string; title: string; content: string }) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+  const user = auth[0];
+  if (!user) throw redirect("/", { status: 403, statusText: "Forbidden" });
+  const session = auth[1];
+  if (!session) throw redirect("/", { status: 403, statusText: "Forbidden" });
+  const orgId = session.current_organization_id;
+  if (!orgId) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+  return await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(CustomerService);
+      return yield* service.updateNote(input.id, input.title, input.content);
+    }).pipe(Effect.provide(CustomerLive)),
+  );
+});
+
 export const removeNote = action(async (id: string) => {
   "use server";
   const auth = await withSession();
   if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+  const user = auth[0];
+  if (!user) throw redirect("/", { status: 403, statusText: "Forbidden" });
+  const session = auth[1];
+  if (!session) throw redirect("/", { status: 403, statusText: "Forbidden" });
+  const orgId = session.current_organization_id;
+  if (!orgId) throw redirect("/", { status: 403, statusText: "Forbidden" });
 
   return await Effect.runPromise(
     Effect.gen(function* (_) {
