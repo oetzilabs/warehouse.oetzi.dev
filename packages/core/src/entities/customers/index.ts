@@ -5,6 +5,7 @@ import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   CustomerCreateSchema,
   CustomerUpdateSchema,
+  TB_customer_notes,
   TB_customer_preferred_deliverytimes,
   TB_customer_preferred_pickuptimes,
   TB_customers,
@@ -375,6 +376,30 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         );
       });
 
+    const addNote = (title: string, content: string, customerId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, customerId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id: customerId }));
+        }
+
+        return yield* Effect.promise(() =>
+          db.insert(TB_customer_notes).values({ title, content, customerId: parsedId.output }).returning(),
+        );
+      });
+
+    const removeNote = (id: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, id);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new CustomerInvalidId({ id }));
+        }
+
+        return yield* Effect.promise(() =>
+          db.delete(TB_customer_notes).where(eq(TB_customer_notes.id, parsedId.output)).returning(),
+        );
+      });
+
     return {
       create,
       findById,
@@ -388,6 +413,8 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       removePreferredDeliveryDateTime,
       addPreferredPickupDateTime,
       removePreferredPickupDateTime,
+      addNote,
+      removeNote,
     } as const;
   }),
   dependencies: [DatabaseLive],

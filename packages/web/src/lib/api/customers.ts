@@ -204,3 +204,29 @@ export const removePreferredDeliveryTime = action(async (id: string) => {
     }).pipe(Effect.provide(CustomerLive)),
   );
 });
+
+export const addNote = action(async (input: { customerId: string; title: string; content: string }) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+  return await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(CustomerService);
+      return yield* service.addNote(input.title, input.content, input.customerId);
+    }).pipe(Effect.provide(CustomerLive)),
+  );
+});
+
+export const removeNote = action(async (id: string) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) throw redirect("/", { status: 403, statusText: "Forbidden" });
+
+  return await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const service = yield* _(CustomerService);
+      return yield* service.removeNote(id);
+    }).pipe(Effect.provide(CustomerLive)),
+  );
+});
