@@ -1,24 +1,18 @@
 import { setTimeout } from "timers/promises";
 import { Console, Effect } from "effect";
 import ipp from "ipp";
-import mdns from "mdns"; // For discovering network printers via mDNS
+import mdns from "multicast-dns"; // For discovering network printers via mDNS
 import { BreakLine, CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer";
 import usb from "usb";
-import { literal, object, string, union } from "valibot";
-import { DatabaseLive } from "../../drizzle/sql/service";
-import { PrinterNotConnected } from "./errors";
 
-const PrinterCreateSchema = object({
-  name: string(),
-  model: string(),
-  connectionUrl: string(),
-  type: union([literal("network"), literal("serial"), literal("usb"), literal("thermal")]),
-});
-
-const PrinterUpdateSchema = object({
-  ...PrinterCreateSchema.entries,
-  id: string(),
-});
+type MDNSDevice = {
+  type: "mDNS_IPP";
+  name: string;
+  host: string;
+  port: number;
+  addresses: string[];
+  txtRecord?: string[];
+};
 
 export class PrinterService extends Effect.Service<PrinterService>()("@warehouse/printers", {
   effect: Effect.gen(function* (_) {
@@ -40,16 +34,6 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
           },
         });
         return printer;
-      });
-
-    const print = (device: ThermalPrinter, text: string) =>
-      Effect.gen(function* (_) {
-        const isConnected = yield* Effect.promise(() => device.isPrinterConnected());
-        if (!isConnected) {
-          return yield* Effect.fail(new PrinterNotConnected({}));
-        }
-        yield* Effect.sync(() => device.print(text));
-        return yield* Effect.promise(() => device.execute());
       });
 
     // Helper to promisify ipp.Printer discovery
@@ -84,8 +68,8 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
 
     const findLocal = ({ excludeNetwork = false, excludeUsb = false }) =>
       Effect.gen(function* (_) {
-        const usbdevices: any[] = [];
-        const networkdevices: any[] = [];
+        const usbdevices = [];
+        const networkdevices = [];
 
         if (!excludeUsb) {
           const devices = usb.getDeviceList();
@@ -183,27 +167,63 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
           // 2. Discover via mDNS/Bonjour (if supported by printers)
           yield* Effect.async<void, Error>((resume) => {
             try {
-              const browser = mdns.createBrowser(mdns.tcp("ipp"));
+              const dns = mdns();
+              const devices = new Map<string, Partial<MDNSDevice>>();
+              const networkdevices: MDNSDevice[] = [];
 
-              browser.on("serviceUp", (service: any) => {
-                networkdevices.push({
-                  type: "mDNS_IPP",
-                  name: service.name,
-                  host: service.host,
-                  port: service.port,
-                  addresses: service.addresses,
-                  txtRecord: service.txtRecord,
-                });
+              // Step 1: query for _ipp._tcp.local PTRs
+              dns.query([{ name: "_ipp._tcp.local", type: "PTR" }]);
+
+              dns.on("response", (res) => {
+                for (const answer of res.answers) {
+                  // PTR to discover service instance name
+                  if (answer.type === "PTR" && answer.name === "_ipp._tcp.local") {
+                    const serviceName = answer.data as string;
+                    if (!devices.has(serviceName)) {
+                      devices.set(serviceName, { name: serviceName, type: "mDNS_IPP" });
+                      dns.query([{ name: serviceName, type: "SRV" }]);
+                      dns.query([{ name: serviceName, type: "TXT" }]);
+                    }
+                  }
+
+                  // SRV to get host and port
+                  if (answer.type === "SRV") {
+                    const entry = devices.get(answer.name);
+                    if (entry) {
+                      entry.host = answer.data.target;
+                      entry.port = answer.data.port;
+                      dns.query([{ name: entry.host, type: "A" }]);
+                      dns.query([{ name: entry.host, type: "AAAA" }]);
+                    }
+                  }
+
+                  // A / AAAA record for address
+                  if ((answer.type === "A" || answer.type === "AAAA") && devices) {
+                    // find matching entry by host
+                    for (const entry of devices.values()) {
+                      if (entry.host === answer.name) {
+                        entry.addresses ??= [];
+                        entry.addresses.push(answer.data);
+                      }
+                    }
+                  }
+
+                  // TXT record
+                  if (answer.type === "TXT") {
+                    const entry = devices.get(answer.name);
+                    if (entry && Array.isArray(answer.data)) {
+                      entry.txtRecord = answer.data.map((buf: Buffer | string) =>
+                        typeof buf === "string" ? buf : buf.toString(),
+                      );
+                    }
+                  }
+                }
               });
 
-              browser.on("error", (error: any) => {
-                resume(Effect.fail(new Error(`mDNS browser error: ${error}`)));
-              });
-
-              browser.start();
-
+              // Timeout and finalize results
+              // wait 5 seconds then stop
               setTimeout(5000).then(() => {
-                browser.stop();
+                dns.destroy();
                 resume(Effect.succeed(void 0));
               });
             } catch (error) {
@@ -220,14 +240,9 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
 
     return {
       local,
-      print,
       findLocal,
     } as const;
   }),
-  dependencies: [DatabaseLive],
 }) {}
 
 export const PrinterLive = PrinterService.Default;
-
-// Type exports
-// export type PrinterInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<PrinterService["findById"]>>>>;

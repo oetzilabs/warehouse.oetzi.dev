@@ -1,11 +1,9 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { DeviceInfo, DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
+import { DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
-import { ProductNotDeleted, ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
-import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
-import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
+import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
+import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { withSession } from "./session";
 
