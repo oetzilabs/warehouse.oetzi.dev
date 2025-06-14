@@ -6,8 +6,8 @@ import mdns from "mdns"; // For discovering network printers via mDNS
 import { BreakLine, CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer";
 import usb from "usb";
 import { literal, object, safeParse, string, union, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { TB_device_types, TB_devices } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
   PrinterInvalidId,
@@ -34,139 +34,6 @@ const PrinterUpdateSchema = object({
 
 export class PrinterService extends Effect.Service<PrinterService>()("@warehouse/printers", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
-
-    const create = (userInput: InferInput<typeof PrinterCreateSchema>, organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new PrinterOrganizationInvalidId({ organizationId }));
-        }
-
-        const type_id = yield* Effect.promise(() =>
-          db.query.TB_device_types.findFirst({ where: ilike(TB_device_types.name, `%${userInput.type}%`) }),
-        );
-        if (!type_id) {
-          return yield* Effect.fail(new PrinterTypeInvalidId({ type: userInput.type }));
-        }
-
-        const [printer] = yield* Effect.promise(() =>
-          db
-            .insert(TB_devices)
-            .values({
-              ...userInput,
-              organization_id: parsedOrganizationId.output,
-              type_id: type_id.id,
-            })
-            .returning(),
-        );
-
-        if (!printer) {
-          return yield* Effect.fail(new PrinterNotCreated({}));
-        }
-
-        return printer;
-      });
-
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new PrinterInvalidId({ id }));
-        }
-
-        const printer = yield* Effect.promise(() =>
-          db.query.TB_devices.findFirst({
-            where: (devices, operations) => operations.and(operations.eq(devices.id, parsedId.output)),
-            with: {
-              type: true,
-            },
-          }),
-        );
-
-        if (!printer) {
-          return yield* Effect.fail(new PrinterNotFound({ id }));
-        }
-
-        return printer;
-      });
-
-    const update = (input: InferInput<typeof PrinterUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new PrinterInvalidId({ id: input.id }));
-        }
-
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_devices)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_devices.id, parsedId.output))
-            .returning(),
-        );
-
-        if (!updated) {
-          return yield* Effect.fail(new PrinterNotUpdated({ id: input.id }));
-        }
-
-        return updated;
-      });
-
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new PrinterInvalidId({ id }));
-        }
-
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning(),
-        );
-
-        if (!deleted) {
-          return yield* Effect.fail(new PrinterNotDeleted({ id }));
-        }
-
-        return deleted;
-      });
-
-    const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new PrinterInvalidId({ id }));
-        }
-
-        const [updated] = yield* Effect.promise(() =>
-          db.update(TB_devices).set({ deletedAt: new Date() }).where(eq(TB_devices.id, parsedId.output)).returning(),
-        );
-
-        if (!updated) {
-          return yield* Effect.fail(new PrinterNotDeleted({ id }));
-        }
-
-        return updated;
-      });
-
-    const findByOrganizationId = (organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new PrinterOrganizationInvalidId({ organizationId }));
-        }
-
-        return yield* Effect.promise(() =>
-          db.query.TB_devices.findMany({
-            where: (devices, operations) => operations.and(operations.eq(devices.organization_id, parsedId.output)),
-            with: {
-              type: true,
-            },
-          }),
-        );
-      });
-
     const local = (type: PrinterTypes, intf: string, width: number) =>
       Effect.gen(function* (_) {
         const printer = new ThermalPrinter({
@@ -363,45 +230,10 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         };
       });
 
-    const populateLocal = (orgId: string) =>
-      Effect.gen(function* (_) {
-        const { usb, network } = yield* findLocal({ excludeNetwork: true });
-        for (const device of usb) {
-          yield* Console.log(`Creating USB device ${device.product}`);
-          yield* create(
-            {
-              model: device.product,
-              connectionUrl: device.uri,
-              name: `${device.product} (${device.manufacturer})`,
-              type: "thermal",
-            },
-            orgId,
-          );
-        }
-        for (const device of network) {
-          yield* create(
-            {
-              model: device.attributes["printer-make-and-model"],
-              connectionUrl: device.uri,
-              name: device.attributes["printer-name"],
-              type: "network",
-            },
-            orgId,
-          );
-        }
-      });
-
     return {
-      create,
-      findById,
-      update,
-      remove,
-      safeRemove,
-      findByOrganizationId,
       local,
       print,
       findLocal,
-      populateLocal,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -410,4 +242,4 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
 export const PrinterLive = PrinterService.Default;
 
 // Type exports
-export type PrinterInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<PrinterService["findById"]>>>>;
+// export type PrinterInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<PrinterService["findById"]>>>>;
