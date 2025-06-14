@@ -8,7 +8,6 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Context, Effect, Layer } from "effect";
-import { Resource } from "sst";
 import { BasePath, VirtualFileSystemItemInfo, VirtualFileSystemServiceInterface } from "./";
 
 interface S3ConfigInterface {

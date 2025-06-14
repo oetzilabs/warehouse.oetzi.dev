@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import { Console, Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
 import data from "../../data/seed.json";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   TB_brands,
   TB_customer_order_products,
@@ -49,6 +48,7 @@ import {
   TB_warehouse_types,
   TB_warehouses,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { StorageInvalidId, StorageNotCreated, StorageNotFound, StorageNotUpdated } from "../storages/errors";
 import { SeedingFailed } from "./errors";
 import { SeedDataSchema, StorageSchema } from "./schema";
