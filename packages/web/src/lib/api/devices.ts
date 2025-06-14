@@ -1,6 +1,7 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { DeviceInfo, DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
+import { PrinterLive, PrinterService } from "@warehouseoetzidev/core/src/entities/printer";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotDeleted, ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
@@ -219,6 +220,34 @@ export const deleteDevice = action(async (id: string) => {
       const deviceService = yield* _(DeviceService);
       return yield* deviceService.safeRemove(id);
     }).pipe(Effect.provide(DeviceLive)),
+  );
+  return device;
+});
+
+export const populateLocal = action(async () => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+
+  const device = await Effect.runPromise(
+    Effect.gen(function* (_) {
+      const deviceService = yield* _(PrinterService);
+      return yield* deviceService.populateLocal(orgId);
+    }).pipe(Effect.provide(PrinterLive)),
   );
   return device;
 });
