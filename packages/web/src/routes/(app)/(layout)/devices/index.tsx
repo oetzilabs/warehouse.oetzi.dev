@@ -1,7 +1,7 @@
 import { DevicesList } from "@/components/lists/devices";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { getDevices, populateLocal } from "@/lib/api/devices";
+import { getDevices } from "@/lib/api/devices";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import Plus from "lucide-solid/icons/plus";
 import PrinterPlus from "lucide-solid/icons/printer";
@@ -20,8 +20,6 @@ export const route = {
 
 export default function DevicesPage() {
   const data = createAsync(() => getDevices(), { deferStream: true });
-  const populateLocalAction = useAction(populateLocal);
-  const isPopulatingLocal = useSubmission(populateLocal);
 
   return (
     <Show when={data()}>
@@ -49,20 +47,6 @@ export default function DevicesPage() {
                   <Button as={A} href="/devices/new" size="sm" class="pl-2.5 rounded-l-none">
                     <Plus class="size-4" />
                     Add Device
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    class="ml-2 w-9 bg-background"
-                    onClick={() => {
-                      toast.promise(populateLocalAction(), {
-                        loading: "Populating devices...",
-                        success: "Devices populated",
-                        error: "Failed to populate devices",
-                      });
-                    }}
-                  >
-                    <PrinterPlus class="size-4" />
                   </Button>
                 </div>
               </div>

@@ -1,24 +1,12 @@
 import { setTimeout } from "timers/promises";
-import { and, eq, ilike } from "drizzle-orm";
 import { Console, Effect } from "effect";
 import ipp from "ipp";
 import mdns from "mdns"; // For discovering network printers via mDNS
 import { BreakLine, CharacterSet, PrinterTypes, ThermalPrinter } from "node-thermal-printer";
 import usb from "usb";
-import { literal, object, safeParse, string, union, type InferInput } from "valibot";
-import { TB_device_types, TB_devices } from "../../drizzle/sql/schema";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
-import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import {
-  PrinterInvalidId,
-  PrinterNotConnected,
-  PrinterNotCreated,
-  PrinterNotDeleted,
-  PrinterNotFound,
-  PrinterNotUpdated,
-  PrinterOrganizationInvalidId,
-  PrinterTypeInvalidId,
-} from "./errors";
+import { literal, object, string, union } from "valibot";
+import { DatabaseLive } from "../../drizzle/sql/service";
+import { PrinterNotConnected } from "./errors";
 
 const PrinterCreateSchema = object({
   name: string(),
