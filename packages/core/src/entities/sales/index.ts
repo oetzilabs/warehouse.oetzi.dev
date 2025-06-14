@@ -3,7 +3,6 @@ import isBetween from "dayjs/plugin/isBetween";
 import { and, eq } from "drizzle-orm";
 import { Console, Effect } from "effect";
 import { InferInput, number, object, parse, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   SaleCreateSchema,
   SaleItemCreateSchema,
@@ -11,6 +10,7 @@ import {
   TB_sale_items,
   TB_sales,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrderNotFound } from "../orders/errors";
 import { OrganizationInfo, OrganizationLive, OrganizationService } from "../organizations";

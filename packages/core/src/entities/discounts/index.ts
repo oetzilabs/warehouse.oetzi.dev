@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { DiscountV1CreateSchema, DiscountV1UpdateSchema, TB_discounts_v1 } from "../../drizzle/sql/schemas/discounts";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
 import {

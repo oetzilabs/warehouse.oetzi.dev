@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { SessionCreateSchema, SessionUpdateSchema, TB_sessions } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
   SessionInvalidId,

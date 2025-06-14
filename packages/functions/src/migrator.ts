@@ -1,4 +1,4 @@
-import { migrate } from "@warehouseoetzidev/core/src/drizzle/sql";
+import { migrate } from "@warehouseoetzidev/core/src/drizzle/sql/service";
 import { ApiHandler, json } from "./utils";
 
 export const handler = ApiHandler(async (_evt) => {

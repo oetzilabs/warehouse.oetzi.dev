@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { StorageCreateSchema, StorageUpdateSchema, TB_storages } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { StorageInvalidId, StorageNotCreated, StorageNotDeleted, StorageNotFound, StorageNotUpdated } from "./errors";
 

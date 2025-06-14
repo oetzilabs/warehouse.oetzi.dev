@@ -1,13 +1,13 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   NotificationCreateSchema,
   NotificationUpdateSchema,
   TB_notifications,
   TB_organizations_notifications,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
   NotificationInvalidId,

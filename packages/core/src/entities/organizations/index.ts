@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   CustomerOrderCreateSchema,
   OrganizationCreateSchema,
@@ -15,6 +14,7 @@ import {
   TB_organizations_products,
   TB_supplier_purchases,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
 import { OrderInvalidId } from "../orders/errors";

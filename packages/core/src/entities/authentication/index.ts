@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
-import { Context, Effect } from "effect";
+import { Context, Effect, Redacted } from "effect";
 import jwt from "jsonwebtoken";
 import ms from "ms";
-import { Resource } from "sst";
+import { WarehouseConfig, WarehouseConfigLive } from "../config";
 import { SessionLive, SessionService } from "../sessions";
 import { UserLive, UserService } from "../users";
 import {
@@ -16,12 +16,6 @@ import {
   AuthUserNotFound,
 } from "./errors";
 
-export class JwtSecrets extends Context.Tag("JwtSecrets")<JwtSecrets, { readonly secrets: ReadonlyArray<string> }>() {}
-
-export const JwtSecretsLive = JwtSecrets.of({
-  secrets: [Resource.JWTSecret1.value, Resource.JWTSecret2.value].filter(Boolean),
-});
-
 interface JwtPayload {
   userId: string;
 }
@@ -30,7 +24,9 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
   effect: Effect.gen(function* (_) {
     const sessionService = yield* _(SessionService);
     const userService = yield* _(UserService);
-    const { secrets: jwtSecrets } = yield* _(JwtSecrets); // Access the JWT secrets
+    const C = yield* _(WarehouseConfig); // Access the JWT secrets
+    const config = yield* C.getConfig;
+    const jwtSecrets = [Redacted.value(config.JWTSecret1), Redacted.value(config.JWTSecret2)];
 
     if (jwtSecrets.length === 0) {
       return yield* Effect.fail(
@@ -177,7 +173,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       removeSession,
     } as const;
   }),
-  dependencies: [SessionLive, UserLive],
+  dependencies: [SessionLive, UserLive, WarehouseConfigLive],
 }) {}
 
 export const AuthLive = AuthService.Default;

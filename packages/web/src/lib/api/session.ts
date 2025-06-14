@@ -1,6 +1,6 @@
 import { client } from "@warehouseoetzidev/core/src/auth/client";
 import { subjects } from "@warehouseoetzidev/core/src/auth/subjects";
-import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/authentication";
+import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { Effect } from "effect";
 import { getCookie } from "vinxi/http";
@@ -16,7 +16,7 @@ export const withSession = async () => {
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.verify(sessionToken);
-    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+    }).pipe(Effect.provide(AuthLive)),
   );
 
   return [verified.user, verified.session] as const;

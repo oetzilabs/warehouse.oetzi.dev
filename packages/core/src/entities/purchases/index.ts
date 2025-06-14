@@ -2,12 +2,12 @@ import dayjs from "dayjs";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   SupplierPurchaseCreateSchema,
   SupplierPurchaseUpdateSchema,
   TB_supplier_purchases,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { InventoryLive, InventoryService } from "../inventory";
 import { OrganizationInfo } from "../organizations";

@@ -1,8 +1,8 @@
 import { count, inArray } from "drizzle-orm";
 import { Console, Effect } from "effect";
 import { array, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { TB_storage_to_products } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
 import { ProductInvalidId, ProductNotFound } from "../products/errors";

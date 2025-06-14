@@ -3,7 +3,7 @@ import { createId } from "@paralleldrive/cuid2";
 import dayjs from "dayjs";
 import { Config, Effect } from "effect";
 import { safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import {
   PreviousSnapshotNotFound,
   SnapshotInvalidType,

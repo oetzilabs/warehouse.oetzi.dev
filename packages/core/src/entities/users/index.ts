@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { email, InferInput, object, omit, pipe, safeParse, string } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import { TB_users, UserCreateSchema, UserUpdateSchema } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
   UserAuthenticationFailed,

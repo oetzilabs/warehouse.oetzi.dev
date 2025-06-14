@@ -1,13 +1,13 @@
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   DocumentStorageOfferCreateSchema,
   DocumentStorageOfferUpdateSchema,
   TB_document_storage_offers,
   TB_organizations_storages,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
   DocumentStorageOfferCreateFailed,

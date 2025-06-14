@@ -2,7 +2,6 @@ import dayjs from "dayjs";
 import { and, desc, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../../drizzle/sql";
 import {
   ProductCreateSchema,
   ProductUpdateSchema,
@@ -11,6 +10,7 @@ import {
   TB_products_to_labels,
   TB_supplier_product_price_history,
 } from "../../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";

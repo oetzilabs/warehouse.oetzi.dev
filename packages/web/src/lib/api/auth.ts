@@ -1,5 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { AuthLive, AuthService, JwtSecrets, JwtSecretsLive } from "@warehouseoetzidev/core/src/entities/authentication";
+import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { status } from "effect/Fiber";
 import { getCookie, setCookie } from "vinxi/http";
@@ -22,7 +22,7 @@ export const logout = action(async () => {
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+      }).pipe(Effect.provide(AuthLive)),
     );
   }
 
@@ -48,7 +48,7 @@ export const getAuthenticatedUser = query(
         Effect.gen(function* (_) {
           const authService = yield* _(AuthService);
           return yield* authService.verify(sessionToken);
-        }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+        }).pipe(Effect.provide(AuthLive)),
       );
       if (!verified) {
         return redirect("/", {
@@ -85,7 +85,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+      }).pipe(Effect.provide(AuthLive)),
     );
 
     setCookie("session_token", "", {
@@ -100,7 +100,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.login(email, password);
-    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+    }).pipe(Effect.provide(AuthLive)),
   );
 
   return Exit.match(loginAttempt, {
@@ -122,7 +122,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
         return c.message;
       });
       console.log(errors);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'loginViaEmail': ${errors.join(", ")}`);
     },
   });
 });
@@ -139,7 +139,7 @@ export const signupViaEmail = action(async (email: string, password: string, pas
       Effect.gen(function* (_) {
         const authService = yield* _(AuthService);
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+      }).pipe(Effect.provide(AuthLive)),
     );
 
     setCookie("session_token", "", {
@@ -154,7 +154,7 @@ export const signupViaEmail = action(async (email: string, password: string, pas
     Effect.gen(function* (_) {
       const authService = yield* _(AuthService);
       return yield* authService.signup(email, password);
-    }).pipe(Effect.provide(AuthLive), Effect.provideService(JwtSecrets, JwtSecretsLive)),
+    }).pipe(Effect.provide(AuthLive)),
   );
 
   return Exit.match(signupAttempt, {
