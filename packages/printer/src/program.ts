@@ -1,12 +1,12 @@
-import { BunRuntime } from "@effect/platform-bun";
-import { Cause, Chunk, Config, Effect, Exit, Redacted, Schedule } from "effect";
-import { PrinterTypes } from "node-thermal-printer";
-import { PrinterConfig, PrinterConfigLive } from "../../config";
-import { MQTTLive, MQTTService } from "../../services/mqtt";
-import { PrinterLive, PrinterService } from "../../services/printer";
-import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "../../services/printer/errors";
+import { Cause, Chunk, Effect, Exit, Redacted, Schedule } from "effect";
+import { PrinterConfig, PrinterConfigLive } from "./config";
+import { MQTTLive, MQTTService } from "./services/mqtt";
+import { PrinterLive, PrinterService } from "./services/printer";
 
-const program = Effect.gen(function* (_) {
+const lorem =
+  "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum";
+
+export const program = Effect.gen(function* (_) {
   const C = yield* _(PrinterConfig);
   const config = yield* C.getConfig;
   const org_id = Redacted.value(config.OrgId);
@@ -34,7 +34,14 @@ const program = Effect.gen(function* (_) {
       Effect.gen(function* (_) {
         const device = yield* printer.device();
         yield* printer.print(device, {
-          text: [{ content: message }],
+          text: [
+            {
+              content: `Pring message with length ${message.length}`,
+              align: "lt",
+              style: "normal",
+            },
+            { content: message, style: "normal", align: "lt" },
+          ],
         });
       }),
     );
@@ -56,7 +63,7 @@ const program = Effect.gen(function* (_) {
 
   const ping = Effect.gen(function* (_) {
     yield* mqtt.publish(client, channel, "ignore:ping");
-    yield* mqtt.publish(client, channel, "hello");
+    yield* mqtt.publish(client, channel, lorem);
     yield* mqtt.publish(client, pingChannel, "ping");
   });
 
@@ -64,7 +71,5 @@ const program = Effect.gen(function* (_) {
 
   yield* Effect.schedule(ping, schedule);
 
-  yield* Effect.forever(Effect.void);
-}).pipe(Effect.provide(MQTTLive), Effect.provide(PrinterLive));
-
-BunRuntime.runMain(Effect.scoped(program).pipe(Effect.provide(PrinterConfigLive)));
+  return yield* Effect.forever(Effect.void);
+}).pipe(Effect.provide(MQTTLive), Effect.provide(PrinterLive), Effect.provide(PrinterConfigLive));

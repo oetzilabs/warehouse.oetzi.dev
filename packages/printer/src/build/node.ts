@@ -28,7 +28,7 @@ class BuildService extends Effect.Service<BuildService>()("@warehouse/printers/b
         const outfile = path.join(process.cwd(), "dist", "release", targetName, "main");
         yield* Effect.promise(() =>
           esbuild.build({
-            entryPoints: ["./src/target/node/index.ts"],
+            entryPoints: ["./src/target/node.ts"],
             outfile,
             bundle: true,
             minify: true,
