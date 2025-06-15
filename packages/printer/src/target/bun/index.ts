@@ -1,10 +1,10 @@
 import { BunRuntime } from "@effect/platform-bun";
 import { Cause, Chunk, Config, Effect, Exit, Redacted, Schedule } from "effect";
 import { PrinterTypes } from "node-thermal-printer";
-import { PrinterConfig, PrinterConfigLive } from "./config";
-import { MQTTLive, MQTTService } from "./services/mqtt";
-import { PrinterLive, PrinterService } from "./services/printer";
-import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "./services/printer/errors";
+import { PrinterConfig, PrinterConfigLive } from "../../config";
+import { MQTTLive, MQTTService } from "../../services/mqtt";
+import { PrinterLive, PrinterService } from "../../services/printer";
+import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "../../services/printer/errors";
 
 const program = Effect.gen(function* (_) {
   const C = yield* _(PrinterConfig);
