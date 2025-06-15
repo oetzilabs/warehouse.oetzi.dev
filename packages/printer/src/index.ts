@@ -33,10 +33,9 @@ const program = Effect.gen(function* (_) {
     const printJob = Effect.scoped(
       Effect.gen(function* (_) {
         const device = yield* printer.device();
-        const operation = yield* printer.print(device, {
+        yield* printer.print(device, {
           text: [{ content: message }],
         });
-        return yield* operation;
       }),
     );
 

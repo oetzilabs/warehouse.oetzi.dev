@@ -84,57 +84,49 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         };
       },
     ) =>
-      Effect.try({
-        try: () =>
-          Effect.gen(function* (_) {
-            // Basic text printing
-            if (text) {
-              for (const t of text) {
-                printer
-                  .font(t.font ?? ("a" as FontFamily))
-                  .align(t.align || ("ct" as Alignment))
-                  .style(t.style || ("bu" as StyleString))
-                  .size(...(t.size || [1, 1]))
-                  .text(t.content);
-              }
-            }
+      Effect.gen(function* (_) {
+        // Basic text printing
+        if (text) {
+          for (const t of text) {
+            printer
+              .font(t.font ?? ("a" as FontFamily))
+              .align(t.align || ("ct" as Alignment))
+              .style(t.style || ("bu" as StyleString))
+              .size(...(t.size || [1, 1]))
+              .text(t.content);
+          }
+        }
 
-            // Barcode printing
-            if (barcodeData) {
-              printer.barcode(barcodeData.code, barcodeData.type as BarcodeType, {
-                width: barcodeData.width,
-                height: barcodeData.height,
-              });
-            }
+        // Barcode printing
+        if (barcodeData) {
+          printer.barcode(barcodeData.code, barcodeData.type as BarcodeType, {
+            width: barcodeData.width,
+            height: barcodeData.height,
+          });
+        }
 
-            // Table printing
-            if (tableData) {
-              printer.table(tableData);
-            }
+        // Table printing
+        if (tableData) {
+          printer.table(tableData);
+        }
 
-            // Custom table printing
-            if (customTableData) {
-              printer.tableCustom(customTableData.columns, customTableData.options);
-            }
+        // Custom table printing
+        if (customTableData) {
+          printer.tableCustom(customTableData.columns, customTableData.options);
+        }
 
-            // QR code printing
-            if (qrContent) {
-              yield* Effect.promise(() => printer.qrimage(qrContent));
-            }
+        // QR code printing
+        if (qrContent) {
+          yield* Effect.promise(() => printer.qrimage(qrContent));
+        }
 
-            // Image printing
-            if (imagePath) {
-              const image = yield* Effect.promise(() => Image.load(imagePath));
-              yield* Effect.promise(() => printer.image(image, "s8"));
-            }
+        // Image printing
+        if (imagePath) {
+          const image = yield* Effect.promise(() => Image.load(imagePath));
+          yield* Effect.promise(() => printer.image(image, "s8"));
+        }
 
-            yield* Effect.promise(() => printer.cut().close());
-          }),
-        catch: (error) =>
-          new PrintOperationError({
-            message: "Print operation failed",
-            cause: error,
-          }),
+        yield* Effect.promise(() => printer.cut().close());
       });
 
     return {
