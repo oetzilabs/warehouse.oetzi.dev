@@ -1,21 +1,7 @@
-import { join } from "path";
-import { setTimeout } from "timers/promises";
 import { Alignment, BarcodeType, CustomTableItem, FontFamily, Image, Printer, StyleString } from "@node-escpos/core";
 import USB from "@node-escpos/usb-adapter";
-import { Console, Effect } from "effect";
-import ipp from "ipp";
-import mdns from "multicast-dns";
-import usb from "usb";
-import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "./errors";
-
-type MDNSDevice = {
-  type: "mDNS_IPP";
-  name: string;
-  host: string;
-  port: number;
-  addresses: string[];
-  txtRecord?: string[];
-};
+import { Effect } from "effect";
+import { PrinterNotConnected, PrinterNotFound } from "./errors";
 
 export class PrinterService extends Effect.Service<PrinterService>()("@warehouse/printers", {
   effect: Effect.gen(function* (_) {

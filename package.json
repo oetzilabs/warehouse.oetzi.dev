@@ -38,9 +38,7 @@
     "aws-sdk",
     "canvas",
     "esbuild",
-    "mdns",
     "msgpackr-extract",
-    "sharp",
-    "usb"
+    "sharp"
   ]
 }
