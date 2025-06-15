@@ -22,11 +22,12 @@
     "typescript": "5.8.3"
   },
   "peerDependencies": {
-    "@effect/language-service": "^0.20.1",
-    "@effect/platform": "0.84.9",
-    "@effect/platform-bun": "0.69.14",
+    "@effect/language-service": "0.20.1",
+    "@effect/platform": "0.84.11",
+    "@effect/platform-bun": "0.69.16",
+    "@effect/platform-node": "0.85.16",
     "dayjs": "1.11.13",
-    "effect": "3.16.5",
+    "effect": "3.16.7",
     "valibot": "1.1.0"
   },
   "workspaces": [
