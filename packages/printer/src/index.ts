@@ -1,16 +1,16 @@
 import { BunRuntime } from "@effect/platform-bun";
-import { Config, Effect, Exit, Redacted, Schedule } from "effect";
+import { Cause, Chunk, Config, Effect, Exit, Redacted, Schedule } from "effect";
 import { PrinterTypes } from "node-thermal-printer";
 import { PrinterConfig, PrinterConfigLive } from "./config";
 import { MQTTLive, MQTTService } from "./services/mqtt";
 import { PrinterLive, PrinterService } from "./services/printer";
+import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "./services/printer/errors";
 
 const program = Effect.gen(function* (_) {
   const C = yield* _(PrinterConfig);
   const config = yield* C.getConfig;
   const org_id = Redacted.value(config.OrgId);
   const brokerUrl = Redacted.value(config.BrokerUrl);
-  const deviceId = Redacted.value(config.DeviceId);
   const channel = `${org_id}/events/devices/printer/message`;
   const pingChannel = `${org_id}/events/devices/printer/ping`;
 
@@ -33,16 +33,24 @@ const program = Effect.gen(function* (_) {
     const printJob = Effect.scoped(
       Effect.gen(function* (_) {
         const device = yield* printer.device();
-        yield* printer.print(device, {
+        const operation = yield* printer.print(device, {
           text: [{ content: message }],
         });
+        return yield* operation;
       }),
     );
 
     const exit = await Effect.runPromiseExit(printJob);
     Exit.match(exit, {
       onSuccess: () => console.log("Success"),
-      onFailure: (error) => console.error("Failure", error),
+      onFailure: (cause) => {
+        const causes = Cause.failures(cause);
+        const errors = Chunk.toReadonlyArray(causes).map((c) => {
+          return c.message;
+        });
+        const messages = errors.join(", ");
+        console.error("Print failed:", messages);
+      },
     });
   });
   // Run forever

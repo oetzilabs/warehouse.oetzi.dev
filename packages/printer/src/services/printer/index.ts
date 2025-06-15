@@ -6,6 +6,7 @@ import { Console, Effect } from "effect";
 import ipp from "ipp";
 import mdns from "multicast-dns";
 import usb from "usb";
+import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "./errors";
 
 type MDNSDevice = {
   type: "mDNS_IPP";
@@ -20,14 +21,27 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
   effect: Effect.gen(function* (_) {
     const device = (options = { encoding: "GB18030" }) =>
       Effect.gen(function* (_) {
-        const usbDevice = new USB();
+        const findDevice = Effect.try({
+          try: () => {
+            const usbDevice = new USB();
+            return usbDevice;
+          },
+          catch: (error) => new PrinterNotFound({ message: "No printer device found" }),
+        });
 
-        const acquire = Effect.async<Printer<[]>, Error>((resume) => {
+        const usbDevice = yield* findDevice;
+
+        const acquire = Effect.async<Printer<[]>, PrinterNotConnected>((resume) => {
           usbDevice.open((err) => {
-            if (err) resume(Effect.fail(err));
-            else {
-              const printer = new Printer(usbDevice, options);
-              resume(Effect.succeed(printer));
+            if (err) {
+              resume(Effect.fail(new PrinterNotConnected({ message: "Failed to connect to printer" })));
+            } else {
+              try {
+                const printer = new Printer(usbDevice, options);
+                resume(Effect.succeed(printer));
+              } catch (error) {
+                resume(Effect.fail(new PrinterNotConnected({ message: "Failed to initialize printer" })));
+              }
             }
           });
         });
@@ -70,49 +84,57 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         };
       },
     ) =>
-      Effect.gen(function* (_) {
-        // Basic text printing
-        if (text) {
-          for (const t of text) {
-            printer
-              .font(t.font ?? ("a" as FontFamily))
-              .align(t.align || ("ct" as Alignment))
-              .style(t.style || ("bu" as StyleString))
-              .size(...(t.size || [1, 1]))
-              .text(t.content);
-          }
-        }
+      Effect.try({
+        try: () =>
+          Effect.gen(function* (_) {
+            // Basic text printing
+            if (text) {
+              for (const t of text) {
+                printer
+                  .font(t.font ?? ("a" as FontFamily))
+                  .align(t.align || ("ct" as Alignment))
+                  .style(t.style || ("bu" as StyleString))
+                  .size(...(t.size || [1, 1]))
+                  .text(t.content);
+              }
+            }
 
-        // Barcode printing
-        if (barcodeData) {
-          printer.barcode(barcodeData.code, barcodeData.type as BarcodeType, {
-            width: barcodeData.width,
-            height: barcodeData.height,
-          });
-        }
+            // Barcode printing
+            if (barcodeData) {
+              printer.barcode(barcodeData.code, barcodeData.type as BarcodeType, {
+                width: barcodeData.width,
+                height: barcodeData.height,
+              });
+            }
 
-        // Table printing
-        if (tableData) {
-          printer.table(tableData);
-        }
+            // Table printing
+            if (tableData) {
+              printer.table(tableData);
+            }
 
-        // Custom table printing
-        if (customTableData) {
-          printer.tableCustom(customTableData.columns, customTableData.options);
-        }
+            // Custom table printing
+            if (customTableData) {
+              printer.tableCustom(customTableData.columns, customTableData.options);
+            }
 
-        // QR code printing
-        if (qrContent) {
-          yield* Effect.promise(() => printer.qrimage(qrContent));
-        }
+            // QR code printing
+            if (qrContent) {
+              yield* Effect.promise(() => printer.qrimage(qrContent));
+            }
 
-        // Image printing
-        if (imagePath) {
-          const image = yield* Effect.promise(() => Image.load(imagePath));
-          yield* Effect.promise(() => printer.image(image, "s8"));
-        }
+            // Image printing
+            if (imagePath) {
+              const image = yield* Effect.promise(() => Image.load(imagePath));
+              yield* Effect.promise(() => printer.image(image, "s8"));
+            }
 
-        yield* Effect.promise(() => printer.cut().close());
+            yield* Effect.promise(() => printer.cut().close());
+          }),
+        catch: (error) =>
+          new PrintOperationError({
+            message: "Print operation failed",
+            cause: error,
+          }),
       });
 
     return {

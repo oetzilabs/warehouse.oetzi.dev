@@ -13,7 +13,6 @@ export class PrinterConfig extends Context.Tag("@warehouse/config")<
       {
         readonly OrgId: Redacted.Redacted<string>;
         readonly BrokerUrl: Redacted.Redacted<string>;
-        readonly DeviceId: Redacted.Redacted<string>;
       },
       MissingConfig
     >;
@@ -35,15 +34,9 @@ export const PrinterConfigLive = Layer.succeed(
           ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "BROKER_URL" })),
         }),
       );
-      const deviceId = yield* Config.redacted("DEVICE_ID").pipe(
-        Effect.catchTags({
-          ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "DEVICE_ID" })),
-        }),
-      );
       return {
         BrokerUrl: brokerUrl,
         OrgId: org_id,
-        DeviceId: deviceId,
       };
     }),
   }),
