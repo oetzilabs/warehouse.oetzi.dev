@@ -45,7 +45,7 @@ const program = Effect.gen(function* (_) {
       onFailure: (cause) => {
         const causes = Cause.failures(cause);
         const errors = Chunk.toReadonlyArray(causes).map((c) => {
-          return c.message;
+          return `${c._tag}: ${c.message}`;
         });
         const messages = errors.join(", ");
         console.error("Print failed:", messages);
