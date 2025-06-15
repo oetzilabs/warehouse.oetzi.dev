@@ -30,7 +30,7 @@ class BuildService extends Effect.Service<BuildService>()("@warehouse/printers/b
           "build",
           "--outfile",
           outfile,
-          "./src/index.ts",
+          "./src/target/bun/index.ts",
           "--compile",
           "--minify",
           "--target",

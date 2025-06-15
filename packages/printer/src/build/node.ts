@@ -28,12 +28,13 @@ class BuildService extends Effect.Service<BuildService>()("@warehouse/printers/b
         const outfile = path.join(process.cwd(), "dist", "release", targetName, "main");
         yield* Effect.promise(() =>
           esbuild.build({
-            entryPoints: ["./src/index.ts"],
+            entryPoints: ["./src/target/node/index.ts"],
             outfile,
             bundle: true,
             minify: true,
             platform: "node",
             target: "es2022",
+            loader: { ".ts": "ts" },
           }),
         ).pipe(
           Effect.catchAll((error) =>
