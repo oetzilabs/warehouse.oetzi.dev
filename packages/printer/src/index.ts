@@ -23,7 +23,6 @@ const program = Effect.gen(function* (_) {
     Effect.sync(() => mqtt.disconnect(client.unsubscribe(channel))),
   );
 
-  const device = yield* printer.device();
   yield* mqtt.subscribe(client, channel, async (message) => {
     if (message === "ignore:ping") {
       console.log("Ignoring ping");
@@ -31,13 +30,27 @@ const program = Effect.gen(function* (_) {
     }
     console.log("Received message", message);
 
-    const printJob = Effect.gen(function* (_) {
-      yield* printer.print(device, {
-        text: [{ content: message }],
-      });
-    });
+    const printJob = Effect.scoped(
+      Effect.gen(function* (_) {
+        const device = yield* printer.device();
+        yield* printer.print(device, {
+          text: [{ content: message }],
+        });
+      }),
+    );
 
-    await Effect.runPromise(printJob);
+    const exit = await Effect.runPromiseExit(printJob);
+    Exit.match(exit, {
+      onSuccess: () => console.log("Success"),
+      onFailure: (cause) => {
+        const causes = Cause.failures(cause);
+        const errors = Chunk.toReadonlyArray(causes).map((c) => {
+          return c.message;
+        });
+        const messages = errors.join(", ");
+        console.error("Print failed:", messages);
+      },
+    });
   });
   // Run forever
 
