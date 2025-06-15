@@ -33,6 +33,11 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "RealtimeServer": {
+      "authorizer": string
+      "endpoint": string
+      "type": "sst.aws.Realtime"
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

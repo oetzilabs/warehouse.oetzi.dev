@@ -17,7 +17,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { deleteDevice, getDeviceById } from "@/lib/api/devices";
-import { A, createAsync, revalidate, RouteDefinition, useAction, useNavigate, useParams } from "@solidjs/router";
+import { testPrint } from "@/lib/api/printers";
+import {
+  A,
+  createAsync,
+  revalidate,
+  RouteDefinition,
+  useAction,
+  useNavigate,
+  useParams,
+  useSubmission,
+} from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
@@ -42,6 +52,9 @@ export default function DevicePage() {
   const device = createAsync(() => getDeviceById(params.did), { deferStream: true });
   const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
   const deleteDeviceAction = useAction(deleteDevice);
+
+  const testPrintAction = useAction(testPrint);
+  const isTestPrinting = useSubmission(testPrint);
 
   return (
     <Suspense
@@ -156,6 +169,21 @@ export default function DevicePage() {
                   {dayjs(deviceInfo().updatedAt ?? deviceInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
                 </span>
               </div>
+            </div>
+            <div class="">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  toast.promise(testPrintAction(), {
+                    loading: "Printing...",
+                    success: "Printed",
+                    error: "Failed to print",
+                  })
+                }
+              >
+                Test Print
+              </Button>
             </div>
           </div>
         )}

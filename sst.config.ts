@@ -20,9 +20,10 @@ export default $config({
   async run() {
     await import("./stacks/Secrets");
     await import("./stacks/Domain");
+
     const { bucket } = await import("./stacks/Bucket");
-    // const notification = await import("./stacks/Notification");
-    // const websocket = await import("./stacks/Websocket");
+    const { realtime } = await import("./stacks/Realtime");
+    const { localprinter } = await import("./stacks/LocalPrinter");
     // const auth = await import("./stacks/Auth");
     const api = await import("./stacks/Api");
     const web_apps = await import("./stacks/WebApps");
@@ -33,9 +34,9 @@ export default $config({
       storageArn: bucket.arn,
       storageUrn: bucket.urn,
 
-      // notificationArn: notification.notifications.arn,
-      // notificationUrn: notification.notifications.urn,
-      // websocket: websocket.websocket_api.url,
+      realtimeEndpoint: realtime.endpoint,
+      realtimeAuthorizer: realtime.authorizer,
+      realtimeUrn: realtime.urn,
 
       migrateUrn: migrate.urn,
       generateUrn: generate.urn,

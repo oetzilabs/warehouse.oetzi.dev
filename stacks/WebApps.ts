@@ -2,6 +2,7 @@ import { api } from "./Api";
 // import { auth } from "./Auth";
 import { bucket } from "./Bucket";
 import { cf, domain } from "./Domain";
+import { realtime } from "./Realtime";
 import { allSecrets } from "./Secrets";
 
 // import { websocket_api } from "./Websocket";
@@ -26,6 +27,7 @@ export const main_app = new sst.aws.SolidStart(`MainApp`, {
     api,
     // auth,
     ...allSecrets,
+    realtime,
   ],
   domain: {
     name: domain,
@@ -36,6 +38,10 @@ export const main_app = new sst.aws.SolidStart(`MainApp`, {
     wait: false,
   },
   permissions: [
+    {
+      actions: ["iot:Connect", "iot:Subscribe", "iot:Publish", "iot:Receive"],
+      resources: ["*"],
+    },
     {
       actions: ["*"],
       resources: ["*"],

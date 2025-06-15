@@ -24,6 +24,8 @@
     "@napi-rs/canvas": "0.1.70",
     "@node-escpos/core": "^0.6.0",
     "@node-escpos/usb-adapter": "^0.3.1",
+    "@seriousme/opifex": "^1.9.4",
+    "@warehouseoetzidev/core": "workspace:*",
     "mqtt": "^5.13.1"
   }
 }
