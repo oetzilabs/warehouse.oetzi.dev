@@ -1,6 +1,7 @@
 import { Command, FileSystem, Path } from "@effect/platform";
 import { NodeContext, NodeFileSystem, NodeRuntime } from "@effect/platform-node";
 import { Config, Effect } from "effect";
+import * as esbuild from "esbuild";
 import { run_command } from "../utils";
 import { BuildCommandFailed } from "./errors";
 
@@ -25,22 +26,21 @@ class BuildService extends Effect.Service<BuildService>()("@warehouse/printers/b
       Effect.gen(function* (_) {
         const targetName = `${platform}-${target}`;
         const outfile = path.join(process.cwd(), "dist", "release", targetName, "main");
-        const cmd = Command.make(
-          "bun",
-          "build",
-          "--outfile",
-          outfile,
-          "./src/index.ts",
-          "--compile",
-          "--minify",
-          "--target",
-          `bun-${platform}-${target}`,
+        yield* Effect.promise(() =>
+          esbuild.build({
+            entryPoints: ["./src/index.ts"],
+            outfile,
+            bundle: true,
+            minify: true,
+            platform: "node",
+            target: "es2022",
+          }),
+        ).pipe(
+          Effect.catchAll((error) =>
+            Effect.fail(new BuildCommandFailed({ message: `Failed to build for ${targetName}`, cause: error })),
+          ),
         );
-        const _process = yield* run_command(cmd.pipe(env));
-        const exit = yield* _process.exitCode;
-        if (exit !== 0) {
-          return Effect.fail(new BuildCommandFailed({ message: `Failed to build for ${targetName}`, cause: exit }));
-        }
+
         return Effect.succeed(outfile);
       });
 

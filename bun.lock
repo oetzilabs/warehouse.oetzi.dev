@@ -108,6 +108,7 @@
         "@types/qrcode": "^1.5.5",
         "@types/uuid": "10.0.0",
         "cross-env": "7.0.3",
+        "esbuild": "0.25.5",
         "typescript": "5.8.3",
         "vitest": "2.0.5",
       },
@@ -194,8 +195,8 @@
     },
   },
   "trustedDependencies": [
-    "aws-sdk",
     "esbuild",
+    "aws-sdk",
     "msgpackr-extract",
     "@parcel/watcher",
   ],
