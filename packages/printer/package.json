@@ -8,6 +8,7 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
+    "@tsconfig/node22": "22.0.1",
     "@types/mqtt": "^2.5.0",
     "@types/node": "22.15.17",
     "@types/qrcode": "^1.5.5",
