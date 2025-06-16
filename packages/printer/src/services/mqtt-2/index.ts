@@ -27,11 +27,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
             mqttClient.connect({
               url: new URL(brokerUrl),
               options: isSST
-                ? {
-                    clientId: `client_${cliendId}`,
-                    username: "",
-                    password: te.encode(orgId),
-                  }
+                ? { clean: false, clientId: clientId, username: "", password: te.encode(orgId), keepAlive: 60 }
                 : undefined,
             }),
           catch: (error) => {
@@ -63,13 +59,14 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
 
     const subscribe = (client: mqtt.TcpClient, topic: string) =>
       Effect.gen(function* (_) {
-        yield* Console.log("Subscribing to topic", topic);
+        const t = isSST ? topic : topic.replaceAll("#", "*");
+        yield* Console.log("Subscribing to topic", t);
         yield* Effect.tryPromise({
           try: () =>
             client.subscribe({
               subscriptions: [
                 {
-                  topicFilter: topic,
+                  topicFilter: t,
                   qos: 1,
                 },
               ],
@@ -79,6 +76,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
             return Effect.fail(new MQTTSubscribeError({ message: "Failed to subscribe to MQTT" }));
           },
         });
+        yield* Console.log("Subscribed to topic", t, "Returning stream");
         return Stream.fromAsyncIterable(client.messages(), (e) => new Error(String(e)));
       }).pipe(Effect.catchAll((e) => Effect.fail(new MQTTSubscribeError({ message: "Failed to subscribe to MQTT" }))));
 

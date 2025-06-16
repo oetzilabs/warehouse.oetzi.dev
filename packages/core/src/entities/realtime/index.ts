@@ -18,6 +18,7 @@ export type ProductEvent = RealtimeEvent<"product", "created" | "updated" | "del
 export type SaleEvent = RealtimeEvent<"sale", "created" | "updated" | "deleted", string>;
 export type OrderEvent = RealtimeEvent<"order", "created" | "updated" | "deleted", string>;
 export type PrintEvent = RealtimeEvent<"print", "created" | "updated" | "deleted", string>;
+export type PingEvent = RealtimeEvent<"ping", "ignore", string>;
 
 export type RealtimeEvents =
   | UnknownEvent
@@ -28,7 +29,8 @@ export type RealtimeEvents =
   | ProductEvent
   | SaleEvent
   | OrderEvent
-  | PrintEvent;
+  | PrintEvent
+  | PingEvent;
 
 export type RealtimeTopicPattern = `${string}/${string}/realtime/${RealtimeEvents["type"]}/${RealtimeEvents["action"]}`;
 

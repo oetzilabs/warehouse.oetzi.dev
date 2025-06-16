@@ -40,11 +40,7 @@ export const PrinterConfigLive = Layer.succeed(
           ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "PREFIX" })),
         }),
       );
-      const clientId = yield* Config.redacted("CLIENT_ID").pipe(
-        Effect.catchTags({
-          ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "CLIENT_ID" })),
-        }),
-      );
+      const clientId = Redacted.make("local");
       return {
         BrokerUrl: brokerUrl,
         OrgId: org_id,

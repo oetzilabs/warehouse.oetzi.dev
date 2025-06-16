@@ -74,11 +74,12 @@ export const program = Effect.gen(function* (_) {
       ),
     ),
   );
-  yield* Effect.addFinalizer(() => Effect.all([fiber.interruptAsFork(fiber.id()), Console.log("Stopping...")]));
+  // yield* Effect.addFinalizer(() => Effect.all([fiber.interruptAsFork(fiber.id()), Console.log("Stopping...")]));
   // yield* Console.log("AAAAAAAAAA");
 
   const ping = Effect.gen(function* (_) {
-    // yield* mqtt.publish(client, channel, "ignore:ping");
+    yield* Console.log("Pinging...");
+    yield* mqtt.publish(client, channel, "ignore:ping");
     yield* mqtt.publish(client, channel, JSON.stringify({ payload: { message: "hellooo" } }));
     // yield* mqtt.publish(client, pingChannel, "ping");
   });
