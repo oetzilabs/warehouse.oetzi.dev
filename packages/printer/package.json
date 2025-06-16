@@ -6,8 +6,9 @@
     "test": "vitest",
     "test:paths": "vitest src/entities/paths.test.ts",
     "typecheck": "tsc -noEmit",
-    "start": "bun run src/target/bun/index.ts",
-    "start:node": "node --loader ts-node/esm src/target/node/index.ts"
+    "start": "bun run src/target/bun.ts",
+    "start:node": "node --loader ts-node/esm src/target/node.ts",
+    "start:node2": "tsx src/target/node.ts"
   },
   "devDependencies": {
     "@tsconfig/node22": "22.0.1",
@@ -18,7 +19,8 @@
     "cross-env": "7.0.3",
     "typescript": "5.8.3",
     "vitest": "2.0.5",
-    "esbuild": "0.25.5"
+    "esbuild": "0.25.5",
+    "tsx": "4.20.3"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.70",

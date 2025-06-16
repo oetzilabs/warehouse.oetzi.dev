@@ -13,6 +13,7 @@ export const program = Effect.gen(function* (_) {
   const org_id = Redacted.value(config.OrgId);
   const brokerUrl = Redacted.value(config.BrokerUrl);
   const prefix = Redacted.value(config.Prefix);
+  const clientId = Redacted.value(config.ClientId);
   const x = yield* RT.forPrinter(prefix, org_id);
   const channel = x.subscribe[0];
   // const pingChannel = x.publish;
@@ -23,7 +24,7 @@ export const program = Effect.gen(function* (_) {
 
   // yield* Effect.sleep(1000);
 
-  const client = yield* Effect.acquireRelease(mqtt.connect(brokerUrl, org_id), (client, exit) =>
+  const client = yield* Effect.acquireRelease(mqtt.connect(brokerUrl, org_id, prefix, clientId), (client, exit) =>
     Effect.sync(() => mqtt.disconnect(client)),
   );
   const td = new TextDecoder();

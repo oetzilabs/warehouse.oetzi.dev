@@ -1,28 +1,79 @@
+import crypto from "crypto";
 import { Context, Effect, Ref, Schedule, SynchronizedRef } from "effect";
 import mqtt from "mqtt";
 import { MQTTConnectionError, MQTTPublishError, MQTTSubscribeError } from "./errors";
 
 // Constants for retry policy
 const RETRY_DELAY = "1 seconds";
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 0;
 
 export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt", {
   effect: Effect.gen(function* (_) {
-    const connectWithoutRetry = (brokerUrl: string) =>
+    const connectWithoutRetry = (brokerUrl: string, orgId: string, prefix: string, clientId: string) =>
       Effect.async<mqtt.MqttClient, MQTTConnectionError>((resume) => {
-        const mqttClient = mqtt.connect(brokerUrl);
-        mqttClient.on("connect", () => {
-          resume(Effect.succeed(mqttClient));
+        const mqttClient = mqtt.connect(brokerUrl, {
+          protocolVersion: 5,
+          // protocol: "wss",
+          manualConnect: true,
+          username: "", // !! KEEP EMPTY !!
+          password: orgId,
+          // clientId: clientId,
+          keepalive: 30,
+          connectTimeout: 60 * 1000,
+          // reconnectPeriod: 1000, // Reconnect every second
+          // clean: false, // Maintain session
+          resubscribe: true, // Auto resubscribe
+          // will: {
+          //   // Last will message
+          //   topic: `${prefix}/${orgId}/status`,
+          //   payload: "disconnected",
+          //   qos: 1,
+          //   retain: true,
+          // },
+        });
+        let connected = false;
+        mqttClient.on("connect", (connack) => {
+          if (!connected) {
+            console.log("MQTT Client Connected:", connack);
+            connected = true;
+            resume(Effect.succeed(mqttClient));
+          } else {
+            console.log("MQTT Client Reconnected:", connack);
+            // Ensure client is still working after reconnect
+            mqttClient.publish(`${prefix}/${orgId}/status`, "connected", { retain: true });
+          }
+        });
+        mqttClient.on("reconnect", () => {
+          console.log("MQTT Client Reconnecting...");
+        });
+        mqttClient.on("offline", () => {
+          console.log("MQTT Client Offline (attempting to reconnect...)");
+          // Force reconnection attempt
+          mqttClient.reconnect();
         });
         mqttClient.on("error", (error) => {
-          resume(Effect.fail(new MQTTConnectionError({ message: String(error) })));
+          console.error("MQTT Client Error:", error);
+          if (!connected) {
+            resume(Effect.fail(new MQTTConnectionError({ message: String(error) })));
+          } else {
+            console.log("Normal MQTT Client Error:", error);
+          }
         });
+        mqttClient.connect();
       });
 
-    const connect = (brokerUrl: string) =>
+    const connect = (brokerUrl: string, orgId: string, prefix: string, clientId: string) =>
       Effect.gen(function* (_) {
+        // return yield* connectWithoutRetry(brokerUrl, orgId);
         const retryPolicy = Schedule.intersect(Schedule.exponential(RETRY_DELAY), Schedule.recurs(MAX_RETRIES));
-        const client = yield* Effect.retry(connectWithoutRetry(brokerUrl), retryPolicy);
+        const client = yield* Effect.retry(connectWithoutRetry(brokerUrl, orgId, prefix, clientId), retryPolicy);
+        // const ping = Schedule.spaced("1 seconds");
+        // yield* Effect.fork(
+        //   Effect.schedule(
+        //     Effect.sync(() => client.sendPing()),
+        //     ping,
+        //   ),
+        // );
         return yield* Effect.succeed(client);
       });
 
@@ -39,7 +90,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
 
     const subscribe = (client: mqtt.MqttClient, topic: string, callback: (message: string) => Promise<void>) =>
       Effect.async<void, MQTTConnectionError | MQTTSubscribeError>((resume) => {
-        client.subscribe(topic, (error) => {
+        client.subscribe(topic, { qos: 1 }, (error) => {
           if (error) {
             resume(Effect.fail(new MQTTSubscribeError({ message: String(error) })));
             return;
@@ -47,7 +98,11 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
 
           client.on("message", async (receivedTopic, message) => {
             if (receivedTopic === topic) {
-              await callback(message.toString());
+              const td = new TextDecoder();
+              const pl = td.decode(message);
+              await callback(pl);
+            } else {
+              console.log("Received message", receivedTopic);
             }
           });
 

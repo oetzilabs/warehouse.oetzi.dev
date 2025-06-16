@@ -24,9 +24,9 @@ export const testPrint = action(async () => {
 
   const program = Effect.gen(function* (_) {
     const rtService = yield* _(RealtimeService);
-    yield* rtService.publish("print", "create", { message: "testtest" });
+    const result = yield* rtService.publish("local", "print", "create", { message: "testtest" });
 
-    return {};
+    return result;
   }).pipe(Effect.provide(RealtimeLive));
 
   const productExit = await Effect.runPromiseExit(program);

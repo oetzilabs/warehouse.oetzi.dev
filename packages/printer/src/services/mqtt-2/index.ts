@@ -13,11 +13,10 @@ const MAX_RETRIES = 5;
 
 export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt", {
   effect: Effect.gen(function* (_) {
-    console.log(process.env);
     const isSST = Option.isSome(yield* Config.option(Config.string("SST_RESOURCE_App")));
 
     const te = new TextEncoder();
-    const connectWithoutRetry = (brokerUrl: string, orgId: string) =>
+    const connectWithoutRetry = (brokerUrl: string, orgId: string, prefix: string, clientId: string) =>
       Effect.gen(function* (_) {
         const mqttClient = new mqtt.TcpClient();
         const cliendId = crypto.randomUUID();
@@ -29,8 +28,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
               url: new URL(brokerUrl),
               options: isSST
                 ? {
-                    clean: true,
-                    clientId: cliendId,
+                    clientId: `client_${cliendId}`,
                     username: "",
                     password: te.encode(orgId),
                   }
@@ -47,10 +45,10 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
         return mqttClient;
       });
 
-    const connect = (brokerUrl: string, orgId: string) =>
+    const connect = (brokerUrl: string, orgId: string, prefix: string, clientId: string) =>
       Effect.gen(function* (_) {
         const retryPolicy = Schedule.intersect(Schedule.exponential(RETRY_DELAY), Schedule.recurs(MAX_RETRIES));
-        const client = yield* Effect.retry(connectWithoutRetry(brokerUrl, orgId), retryPolicy);
+        const client = yield* Effect.retry(connectWithoutRetry(brokerUrl, orgId, prefix, clientId), retryPolicy);
         return yield* Effect.succeed(client);
       });
 

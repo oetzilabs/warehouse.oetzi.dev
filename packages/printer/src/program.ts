@@ -6,25 +6,26 @@ import { PrinterLive, PrinterService } from "./services/printer";
 
 export const program = Effect.gen(function* (_) {
   yield* Console.log("Preparing...");
-  yield* Effect.addFinalizer(() => Console.log("Stopping..."));
   const C = yield* _(PrinterConfig);
   const RT = yield* _(RealtimeService);
   const config = yield* C.getConfig;
   const org_id = Redacted.value(config.OrgId);
   const brokerUrl = Redacted.value(config.BrokerUrl);
   const prefix = Redacted.value(config.Prefix);
+  const clientId = Redacted.value(config.ClientId);
   const x = yield* RT.forPrinter(prefix, org_id);
   const channel = x.subscribe[0];
 
   const mqtt = yield* _(MQTTService);
   const printer = yield* _(PrinterService);
-  yield* Console.log("Starting...", { brokerUrl, org_id, prefix, channel });
+  yield* Console.log("Starting...", { x });
 
-  yield* Effect.sleep(1000);
+  const client = yield* mqtt.connect(brokerUrl, org_id, prefix, clientId);
+  yield* Effect.addFinalizer(() => Effect.sync(() => mqtt.disconnect(client.unsubscribe(channel))));
 
-  const client = yield* Effect.acquireRelease(mqtt.connect(brokerUrl), (client, exit) =>
-    Effect.sync(() => mqtt.disconnect(client.unsubscribe(channel))),
-  );
+  // const client = yield* Effect.acquireRelease(mqtt.connect(brokerUrl, org_id), (client, exit) =>
+  //   Effect.sync(() => mqtt.disconnect(client.unsubscribe(channel))),
+  // );
 
   yield* mqtt.subscribe(client, channel, async (message) => {
     if (message === "ignore:ping") {
@@ -55,11 +56,11 @@ export const program = Effect.gen(function* (_) {
       },
     });
   });
-  yield* Console.log("Subscribed to channel", channel);
+  yield* Console.log("Subscribed to channel:", channel);
 
   const ping = Effect.gen(function* (_) {
     yield* mqtt.publish(client, channel, "ignore:ping");
-    yield* mqtt.publish(client, channel, "test");
+    yield* mqtt.publish(client, channel, JSON.stringify({ payload: { message: "hellooo" } }));
     // yield* mqtt.publish(client, pingChannel, "ping");
   });
 
