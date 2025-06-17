@@ -89,19 +89,19 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
 
     const subscribe = (client: MqttClient, topic: string) =>
       Effect.gen(function* (_) {
-        const t = isSST ? topic : topic.replaceAll("#", "*");
-        yield* Console.log("Subscribing to topic", t);
+        // const t = isSST ? topic : topic.replaceAll("#", "*");
+        yield* Console.log("Subscribing to topic", topic);
 
         const pubsub = yield* PubSub.bounded<RealtimeEvents>(100);
         const queue = yield* PubSub.subscribe(pubsub);
 
         const unsub = yield* Effect.promise(() =>
-          client.listenSubscribe(t, (message: IncomingListenMessage<RealtimeEvents>) => {
+          client.listenSubscribe(topic, (message: IncomingListenMessage<RealtimeEvents>) => {
             Effect.runFork(PubSub.publish(pubsub, JSON.parse(new TextDecoder().decode(message.payload))));
           }),
         );
 
-        yield* Console.log("Subscribed to topic", t);
+        yield* Console.log("Subscribed to topic", topic);
 
         return {
           unsub,
