@@ -1,4 +1,4 @@
-import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
+// import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
 import { Effect } from "effect";
 import { Resource } from "sst";
 import { RealtimeInvalidPayloadError, RealtimePublishError } from "./errors";
@@ -36,40 +36,6 @@ export type RealtimeTopicPattern = `${string}/${string}/realtime/${RealtimeEvent
 
 export class RealtimeService extends Effect.Service<RealtimeService>()("@warehouse/realtime", {
   effect: Effect.gen(function* (_) {
-    const publish = <T extends string, A extends string, P>(
-      client: string,
-      type: T,
-      action: A,
-      payload: P,
-    ): Effect.Effect<void, RealtimePublishError | RealtimeInvalidPayloadError> =>
-      Effect.gen(function* (_) {
-        const client = new IoTDataPlaneClient();
-        if (!type || !action) {
-          return yield* Effect.fail(
-            new RealtimeInvalidPayloadError({
-              message: "Type and action must be provided, but got " + type + ", " + action,
-            }),
-          );
-        }
-
-        const pl: RealtimeEvent<T, A, P> = { type, action, payload };
-        const command = new PublishCommand({
-          topic: `${Resource.App.name}/${Resource.App.stage}/${client}/realtime`,
-          payload: Buffer.from(JSON.stringify(pl)),
-          qos: 1,
-        });
-
-        const result = yield* Effect.tryPromise({
-          try: () => client.send(command),
-          catch: (error) =>
-            new RealtimePublishError({
-              message: "Failed to publish to MQTT",
-              error: error,
-            }),
-        });
-        return result;
-      });
-
     const createTopics = (prefix: string, orgId: string) =>
       Effect.gen(function* (_) {
         return {
@@ -87,7 +53,6 @@ export class RealtimeService extends Effect.Service<RealtimeService>()("@warehou
       });
 
     return {
-      publish,
       createTopics,
       forPrinter,
     } as const;
