@@ -1,18 +1,11 @@
-import { createId } from "@paralleldrive/cuid2";
-import { RealtimeEvents } from "@warehouseoetzidev/core/src/entities/realtime";
-import { Effect, HashMap, Option, PubSub, Ref, Schedule, Schema } from "effect";
+import { Effect, Option, Ref, Schedule, Schema } from "effect";
 import { MqttClient, TcpTransport } from "mqtts";
-import { MqttListener } from "mqtts/dist/mqtt.listener";
-import { InfallibleEventHandler, RealtimeEventHandler, SubscriptionId } from "../../types";
+import { InfallibleEventHandler } from "../../types";
 import { MQTTConnectionError, MQTTPublishError } from "./errors";
 
 export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt", {
   effect: Effect.gen(function* (_) {
     const clientRef = yield* Ref.make<MqttClient | null>(null);
-    // const subscriptions = HashMap.empty<SubscriptionId, RealtimeEventHandler<any, any, any>>();
-
-    // const pubsub = yield* PubSub.bounded<RealtimeEvents>(100);
-    // const queue = yield* PubSub.subscribe(pubsub);
 
     const connect = (brokerUrl: string, clientId: string) =>
       Effect.gen(function* (_) {
@@ -98,7 +91,6 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
                 );
               }),
             );
-            // HashMap.set(subscriptions, id, { ...handler, unsubscribe: Effect.sync(() => unsub()) });
             unsubbers.push(Effect.sync(() => unsub()));
           }),
         );
