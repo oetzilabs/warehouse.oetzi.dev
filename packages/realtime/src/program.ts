@@ -1,6 +1,6 @@
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { MQTTLive, MQTTService } from "./services/mqtt";
-import { createEventHandler, InfallibleEventHandler } from "./types";
+import { InfallibleEventHandler } from "./types";
 
 export const program = <A, I>(brokerUrl: string, clientId: string, handlers: InfallibleEventHandler<A, I>[]) =>
   Effect.gen(function* (_) {
