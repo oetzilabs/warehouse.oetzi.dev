@@ -4,11 +4,11 @@ import { program } from "./program";
 import { createEventHandler } from "./types";
 
 BunRuntime.runMain(
-  Effect.scoped(
-    Effect.gen(function* () {
-      const brokerUrl = yield* Config.string("BROKER_URL");
-      const clientId = yield* Config.string("CLIENT_ID");
-      return program(brokerUrl, clientId, [
+  Effect.gen(function* () {
+    const brokerUrl = yield* Config.string("BROKER_URL");
+    const clientId = "local";
+    return yield* Effect.scoped(
+      program(brokerUrl, clientId, [
         createEventHandler({
           channel: "realtime/:any",
           schema: Schema.String,
@@ -17,9 +17,9 @@ BunRuntime.runMain(
               yield* Effect.log("Received message for topic", topic, params, data);
             }),
         }),
-      ]);
-    }),
-  ),
+      ]),
+    );
+  }),
 );
 
 export {};
