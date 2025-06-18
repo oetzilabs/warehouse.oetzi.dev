@@ -119,6 +119,31 @@
         "vitest": "2.0.5",
       },
     },
+    "packages/realtime": {
+      "name": "@warehouseoetzidev/realtime",
+      "version": "0.0.0",
+      "dependencies": {
+        "@napi-rs/canvas": "0.1.70",
+        "@node-escpos/core": "^0.6.0",
+        "@node-escpos/usb-adapter": "^0.3.1",
+        "@seriousme/opifex": "^1.9.4",
+        "@warehouseoetzidev/core": "workspace:*",
+        "mqtt": "^5.13.1",
+        "mqtts": "^1.5.0",
+      },
+      "devDependencies": {
+        "@tsconfig/node22": "22.0.1",
+        "@types/mqtt": "^2.5.0",
+        "@types/node": "22.15.17",
+        "@types/qrcode": "^1.5.5",
+        "@types/uuid": "10.0.0",
+        "cross-env": "7.0.3",
+        "esbuild": "0.25.5",
+        "tsx": "4.20.3",
+        "typescript": "5.8.3",
+        "vitest": "2.0.5",
+      },
+    },
     "packages/web": {
       "name": "@warehouseoetzidev/web",
       "version": "0.0.0",
@@ -1192,6 +1217,8 @@
     "@warehouseoetzidev/functions": ["@warehouseoetzidev/functions@workspace:packages/functions"],
 
     "@warehouseoetzidev/printer": ["@warehouseoetzidev/printer@workspace:packages/printer"],
+
+    "@warehouseoetzidev/realtime": ["@warehouseoetzidev/realtime@workspace:packages/realtime"],
 
     "@warehouseoetzidev/web": ["@warehouseoetzidev/web@workspace:packages/web"],
 
