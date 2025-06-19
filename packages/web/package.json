@@ -5,6 +5,7 @@
     "dev": "vinxi dev",
     "build": "vinxi build",
     "start": "vinxi start",
+    "start:bun": "bun run ./.output/server/index.mjs",
     "serve": "vinxi serve"
   },
   "type": "module",
