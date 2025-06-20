@@ -316,7 +316,6 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         );
 
         const childrenCapacity = yield* storageCapacity(storage.id);
-        yield* Console.log({ storageId, childrenCapacity });
 
         const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId, orgId)));
 
