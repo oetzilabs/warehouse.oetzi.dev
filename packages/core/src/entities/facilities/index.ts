@@ -12,6 +12,7 @@ import {
 } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { InventoryLive, InventoryService } from "../inventory";
 import { StorageInfo, StorageLive, StorageService } from "../storages";
 import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 import { UserInvalidId } from "../users/errors";
@@ -45,7 +46,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return facility;
       });
 
-    const findById = (id: string) =>
+    const findById = (id: string, orgId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -81,30 +82,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         if (!facility) {
           return yield* Effect.fail(new FacilityNotFound({ id }));
         }
-
-        const deepStorageChildren = (
-          storage: StorageInfo,
-        ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId> =>
-          Effect.gen(function* (_) {
-            const storageService = yield* _(StorageService);
-            const s = yield* storageService.findById(storage.id);
-            if (!s) {
-              return storage;
-            }
-
-            if (!s.children || s.children.length === 0) {
-              return s;
-            }
-
-            const c_children = yield* Effect.all(
-              s.children.map((child) => Effect.suspend(() => deepStorageChildren(child as StorageInfo))),
-            );
-
-            return {
-              ...s,
-              children: c_children,
-            } satisfies StorageInfo;
-          }).pipe(Effect.provide(StorageLive));
+        const inventoryService = yield* _(InventoryService);
 
         return {
           ...facility,
@@ -113,13 +91,15 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
               Effect.gen(function* (_) {
                 return {
                   ...a,
-                  storages: yield* Effect.all(a.storages.map((s) => Effect.suspend(() => deepStorageChildren(s)))),
+                  storages: yield* Effect.all(
+                    a.storages.map((s) => Effect.suspend(() => inventoryService.storageStatistics(s.id, orgId))),
+                  ),
                 };
               }),
             ),
           ),
         };
-      });
+      }).pipe(Effect.provide(InventoryLive));
 
     const update = (input: InferInput<typeof FacilityUpdateSchema>) =>
       Effect.gen(function* (_) {

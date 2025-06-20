@@ -65,6 +65,14 @@ export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
   if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const service = auth[1];
+  if (!service) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = service.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const warehouse = await Effect.runPromise(
     Effect.gen(function* (_) {
       const whService = yield* _(WarehouseService);
@@ -76,7 +84,7 @@ export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
       if (!wh.facilities.find((f) => f.id === fcid)) {
         return yield* Effect.fail(new WarehouseDoesNotContainFacility({ id: whid, fcid }));
       }
-      return yield* fcService.findById(fcid);
+      return yield* fcService.findById(fcid, orgId);
     }).pipe(Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
   );
   return warehouse;
@@ -184,7 +192,7 @@ export const changeFacilityDimensions = action(
     const warehouse = await Effect.runPromise(
       Effect.gen(function* (_) {
         const service = yield* _(FacilityService);
-        const wh = yield* service.findById(data.id);
+        const wh = yield* service.findById(data.id, orgId);
         if (!wh) {
           return yield* Effect.fail(new Error("Facility not found"));
         }
@@ -226,7 +234,7 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
         return yield* Effect.fail(new Error("Warehouse not found"));
       }
       const facilityService = yield* _(FacilityService);
-      const fc = yield* facilityService.findById(fcId);
+      const fc = yield* facilityService.findById(fcId, orgId);
       if (!fc) {
         return yield* Effect.fail(new Error("Facility not found"));
       }
