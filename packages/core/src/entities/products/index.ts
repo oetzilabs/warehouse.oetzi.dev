@@ -165,6 +165,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
         return {
           ...product.product,
+          minimumStock: product.product.organizations.find((o) => o.organizationId === parsedOrgId.output)
+            ?.minimumStock,
+          maximumStock: product.product.organizations.find((o) => o.organizationId === parsedOrgId.output)
+            ?.maximumStock,
+          reorderPoint: product.product.organizations.find((o) => o.organizationId === parsedOrgId.output)
+            ?.reorderPoint,
           priceHistory:
             product.product.organizations
               .find((o) => o.organizationId === parsedOrgId.output)
@@ -313,6 +319,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             ...op,
             createdAt: op.product.createdAt,
             updatedAt: op.product.updatedAt,
+            minimumStock: op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)
+              ?.minimumStock,
+            maximumStock: op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)
+              ?.maximumStock,
+            reorderPoint: op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)
+              ?.reorderPoint,
             currency: op.product.organizations
               .find((org) => org.organizationId === parsedOrganizationId.output)!
               .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,

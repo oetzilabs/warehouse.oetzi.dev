@@ -5,6 +5,7 @@ import { TB_storage_to_products } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { ProductLive, ProductService } from "../products";
 import { ProductInvalidId, ProductNotFound } from "../products/errors";
 import { StorageInfo } from "../storages";
 import { StorageInvalidId, StorageNotFound } from "../storages/errors";
@@ -12,6 +13,7 @@ import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 export class InventoryService extends Effect.Service<InventoryService>()("@warehouse/inventory", {
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
+    const productService = yield* _(ProductService);
     const db = yield* database.instance;
 
     const statistics = (organizationId: string) =>
@@ -133,7 +135,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           }),
         );
 
-        const storageDeep = yield* Effect.all(storages.map((s) => Effect.suspend(() => storageList(s.id))));
+        const storageDeep = yield* Effect.all(
+          storages.map((s) => Effect.suspend(() => storageList(s.id, organizationId))),
+        );
 
         const c2 = yield* Effect.all(storageDeep.map((s) => Effect.suspend(() => storageCapacity(s.id))));
         const capacity = c2.reduce((acc, a) => acc + a, 0);
@@ -223,6 +227,55 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         };
       });
 
+    const storageStatus = (
+      storageId: string,
+      orgId: string,
+    ): Effect.Effect<
+      "low" | "below-reorder" | "below-capacity" | "optimal" | "empty",
+      StorageInvalidId | StorageNotFound | OrganizationInvalidId | ProductInvalidId | ProductNotFound
+    > =>
+      Effect.gen(function* (_) {
+        const storage = yield* storageBox(storageId);
+        const children = storage.children;
+        const pc = (yield* Effect.all(children.map((c) => Effect.suspend(() => productCountByStorageId(c.id))))).reduce(
+          (acc, c) => acc + c,
+          0,
+        );
+
+        // TODO: Calculate status, based on productsCount and childrenCapacity. Status can be "low", "near-min", "below-reorder", "optimal", "has-products", "empty"
+        let status: "low" | "below-reorder" | "below-capacity" | "optimal" | "empty" = "empty";
+        if (storage.products.length > 0) {
+          status = "low";
+        }
+        const ccp = storage.children.reduce((acc, c) => acc + c.capacity, 0);
+        if (pc < ccp) {
+          status = "below-capacity";
+          return status;
+        }
+
+        const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId, orgId)));
+        const removedDuplicates = products.filter((p, i) => products.findIndex((p2) => p2.id === p.id) === i);
+        const prs = yield* Effect.all(
+          removedDuplicates.map((p) =>
+            Effect.gen(function* () {
+              const pCount = yield* productCountByProductIdAndStorageId(p.id, storage.id);
+              return {
+                ...p,
+                count: pCount[p.id],
+              };
+            }),
+          ),
+        );
+
+        const productsWithCount = prs.filter((p) => p.count > 0);
+
+        status = productsWithCount.some((p) => p.count < (p.reorderPoint ?? p.minimumStock ?? Infinity))
+          ? "below-reorder"
+          : "optimal";
+
+        return status;
+      });
+
     const productCountByStorageId = (storageId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, storageId);
@@ -243,34 +296,67 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
     const storageList = (
       storageId: string,
+      orgId: string,
     ): Effect.Effect<
-      Effect.Effect.Success<ReturnType<typeof storageBox>> & { childrenCapacity: number; productsCount: number },
-      StorageInvalidId | StorageNotFound
+      Omit<Effect.Effect.Success<ReturnType<typeof storageBox>>, "products"> & {
+        // productSummary: ProductSummary[];
+        childrenCapacity: number;
+        productsCount: number;
+        status: Effect.Effect.Success<ReturnType<typeof storageStatus>>;
+        children: Effect.Effect.Success<ReturnType<typeof storageBox>>["children"];
+        products: Effect.Effect.Success<ReturnType<typeof productService.findById>>[];
+      },
+      StorageInvalidId | StorageNotFound | ProductInvalidId | ProductNotFound | OrganizationInvalidId
     > =>
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
 
-        const productsCount = yield* productCountByStorageId(storage.id);
-        if (storage.children.length === 0) {
-          return { ...storage, childrenCapacity: storage.capacity, productsCount };
-        }
-
         const children = yield* Effect.all(
-          storage.children.map((child) => Effect.suspend(() => storageList(child.id))),
+          storage.children.map((child) => Effect.suspend(() => storageList(child.id, orgId))),
         );
 
-        const childrenCapacity = yield* Effect.all(children.map((c) => Effect.suspend(() => storageCapacity(c.id))));
+        const childrenCapacity = yield* storageCapacity(storage.id);
+        yield* Console.log({ storageId, childrenCapacity });
 
-        const pc = yield* Effect.all(children.map((c) => Effect.suspend(() => productCountByStorageId(c.id))));
+        const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId, orgId)));
+
+        const status = yield* storageStatus(storage.id, orgId);
 
         return {
           ...storage,
-          children: children.flat(),
-          childrenCapacity: childrenCapacity.reduce((acc, c) => acc + c, 0),
-          productsCount: pc.reduce((acc, c) => acc + c, 0),
+          products,
+          productsCount: storage.productSummary.reduce((acc, p) => acc + p.count, 0),
+          children,
+          childrenCapacity,
+          status,
         };
       });
 
+    const productCountByProductIdAndStorageId = (storageId: string, productId: string) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, productId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+        }
+        const parsedStorageId = safeParse(prefixed_cuid2, storageId);
+        if (!parsedStorageId.success) {
+          return yield* Effect.fail(new StorageInvalidId({ id: storageId }));
+        }
+
+        const products = yield* Effect.promise(() =>
+          db.query.TB_storage_to_products.findMany({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.productId, parsedId.output),
+                operations.eq(fields.storageId, storageId),
+              ),
+          }),
+        );
+        if (!products) {
+          return yield* Effect.fail(new ProductNotFound({ id: productId }));
+        }
+        return yield* Effect.succeed({ [productId]: products.length });
+      });
     const productCountByProductId = (productId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, productId);
@@ -328,18 +414,16 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return productsWithAlerts;
       });
 
-    const storageStatistics = (storageId: string) =>
+    const storageStatistics = (storageId: string, orgId: string) =>
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
-        const storageDeep = yield* storageList(storage.id);
-        const children = yield* Effect.all(
-          storageDeep.children.map((child) => Effect.suspend(() => storageList(child.id))),
-        );
+        const storageDeep = yield* storageList(storage.id, orgId);
+        const children = yield* Effect.all(storageDeep.children.map((child) => storageList(child.id, orgId)));
 
-        const c2 = yield* Effect.all(children.map((c) => Effect.suspend(() => storageCapacity(c.id))));
+        const c2 = yield* Effect.all(children.map((c) => storageCapacity(c.id)));
 
         return {
-          capacity: c2,
+          capacity: c2.reduce((acc, c) => acc + c, 0),
           storages: children,
         };
       });
@@ -405,7 +489,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         const storages = yield* Effect.all(
           warehouses
             .flatMap((w) => w.warehouse.facilities.flatMap((f) => f.areas.flatMap((a) => a.storages.map((s) => s.id))))
-            .map((sid) => storageList(sid)),
+            .map((sid) => storageList(sid, orgId)),
         );
 
         const xStock = storages.flatMap((s) =>
@@ -424,7 +508,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       getStockForProducts,
     } as const;
   }),
-  dependencies: [DatabaseLive],
+  dependencies: [DatabaseLive, ProductLive],
 }) {}
 
 export const InventoryLive = InventoryService.Default;

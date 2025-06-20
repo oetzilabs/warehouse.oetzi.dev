@@ -17,7 +17,7 @@ export const GenericList = <T,>(props: GenericListProps<T>) => {
   return (
     <div
       class={cn({
-        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4": variant() === "grid",
+        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4": variant() === "grid",
         "flex flex-col gap-4": variant() === "list" || others.data().length === 0,
       })}
     >

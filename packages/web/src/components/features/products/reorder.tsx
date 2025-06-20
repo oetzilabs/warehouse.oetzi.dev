@@ -71,7 +71,7 @@ export const Reorder = (props: ReorderProps) => {
       }}
     >
       <DialogTrigger as={Button} size="sm">
-        Reorder Now
+        <span class="sr-only lg:not-sr-only">Reorder Now</span>
         <CalendarPlus class="size-4" />
       </DialogTrigger>
       <DialogContent class="flex flex-col gap-4">

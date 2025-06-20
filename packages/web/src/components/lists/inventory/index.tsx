@@ -25,15 +25,6 @@ type InventoryListProps = {
 
 export const InventoryList = (props: InventoryListProps) => {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-    },
-    500,
-  );
 
   const summarizeProducts = (products: any[]) => {
     const summary = new Map<string, number>();
@@ -52,7 +43,6 @@ export const InventoryList = (props: InventoryListProps) => {
             value={search()}
             onChange={(e) => {
               setSearch(e);
-              debouncedSearch(e);
             }}
             class="w-full max-w-full"
           >
@@ -111,7 +101,7 @@ export const InventoryList = (props: InventoryListProps) => {
                     </div>
                   </div>
 
-                  <div class="p-4 flex flex-col gap-2">
+                  <div class="p-4 flex flex-col gap-4">
                     <div class="flex justify-between items-center">
                       <h5 class="text-sm font-medium">Products</h5>
                       <Badge variant="secondary">{storage.productsCount}</Badge>
@@ -120,7 +110,7 @@ export const InventoryList = (props: InventoryListProps) => {
                       when={storage.productsCount > 0}
                       fallback={<p class="text-sm text-muted-foreground">No products stored</p>}
                     >
-                      <div class="flex flex-col gap-1">
+                      <div class="flex flex-col gap-2">
                         <For each={storage.productSummary}>
                           {(pc) => (
                             <div class="flex items-center gap-2 text-sm">

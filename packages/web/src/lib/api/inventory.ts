@@ -60,7 +60,8 @@ export const getInventoryFromStorage = query(async (storageId: string) => {
   const inventory = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(InventoryService);
-      const info = yield* service.storageStatistics(storageId);
+      const info = yield* service.storageStatistics(storageId, orgId);
+
       return info;
     }).pipe(Effect.provide(InventoryLive)),
   );

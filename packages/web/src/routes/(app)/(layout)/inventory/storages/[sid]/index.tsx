@@ -4,7 +4,6 @@ import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getInventoryFromStorage } from "@/lib/api/inventory";
 import { createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
-import { OrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";

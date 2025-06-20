@@ -1,54 +1,38 @@
-import { Reorder } from "@/components/features/products/reorder";
-import { LastOrderInfo } from "@/components/last-order-info";
+import { Alerts } from "@/components/features/inventory/alerts";
+import { StorageMap } from "@/components/features/inventory/map";
 import { InventoryList } from "@/components/lists/inventory";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getInventory, getInventoryAlerts } from "@/lib/api/inventory";
-import { cn } from "@/lib/utils";
-import Calendar from "@corvu/calendar";
+import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import { createForm } from "@tanstack/solid-form";
-import { type InventoryAlertInfo } from "@warehouseoetzidev/core/src/entities/inventory";
-import dayjs from "dayjs";
-import ArrowLeft from "lucide-solid/icons/arrow-left";
-import ArrowRight from "lucide-solid/icons/arrow-right";
-import CalendarPlus from "lucide-solid/icons/calendar-plus";
-import Check from "lucide-solid/icons/check";
+import List from "lucide-solid/icons/list";
+import MapIcon from "lucide-solid/icons/map";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import { createSignal, For, Index, Show } from "solid-js";
+import { createSignal, Match, Show, Switch } from "solid-js";
 import { toast } from "solid-sonner";
 
-const { format: formatWeekdayLong } = new Intl.DateTimeFormat("en", { weekday: "long" });
-const { format: formatWeekdayShort } = new Intl.DateTimeFormat("en", { weekday: "short" });
-const { format: formatMonth } = new Intl.DateTimeFormat("en", { month: "long" });
-
 export const route = {
-  preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
-    const sessionToken = getSessionToken();
-    const inventories = getInventory();
-    const alerts = getInventoryAlerts();
+  preload: async (props) => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    const inventories = await getInventory();
+    const alerts = await getInventoryAlerts();
     return { user, sessionToken, inventories, alerts };
   },
 } as RouteDefinition;
 
 export default function InventoryPage() {
   const data = createAsync(() => getInventory(), { deferStream: true });
-  const alertsData = createAsync(() => getInventoryAlerts(), { deferStream: true });
+  const [view, setView] = makePersisted(createSignal<"list" | "map">("list"), {
+    name: "inventory-view",
+    storage: cookieStorage,
+  });
 
   return (
     <Show when={data()}>
-      {(os) => (
+      {(inventory) => (
         <div class="container flex flex-col grow py-4">
           <div class="w-full flex flex-row h-full gap-4">
             <div class="w-full flex flex-col gap-4">
@@ -76,48 +60,38 @@ export default function InventoryPage() {
                 </div>
               </div>
               <div class="flex flex-col gap-4 w-full grow">
-                <Show when={alertsData()}>
-                  {(alerts) => (
-                    <div class="flex flex-col gap-4">
-                      <h2 class="font-semibold text-lg">Alerts</h2>
-                      <div class="flex flex-col items-center w-full border rounded-lg overflow-hidden">
-                        <For each={alerts()}>
-                          {(a) => (
-                            <div class="flex flex-row gap-4 items-center w-full border-b last:border-b-0 p-4">
-                              <div class="flex-1 flex flex-col gap-4">
-                                <div class="flex-1 flex flex-col gap-2">
-                                  <div class="flex flex-row items-center gap-2">
-                                    <div class="flex-1 font-semibold">{a.product.name}</div>
-                                    <div class="text-sm text-muted-foreground">
-                                      {a.count}/{a.product.minimumStock}
-                                    </div>
-                                  </div>
-                                  <div class="flex flex-row items-center gap-2">
-                                    <div class="flex-1 text-sm text-muted-foreground">{a.product.description}</div>
-                                  </div>
-                                </div>
-                                <div class="flex flex-row items-center gap-2">
-                                  <div class="flex-1 text-sm text-muted-foreground">
-                                    <LastOrderInfo product={a.product} />
-                                  </div>
-                                  <div class="flex flex-row items-center gap-2">
-                                    <Reorder
-                                      product={() => ({
-                                        ...a.product,
-                                        preferredDate: a.product.lastPurchase.createdAt,
-                                      })}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </For>
-                      </div>
-                    </div>
-                  )}
-                </Show>
-                <InventoryList inventory={os} />
+                <Alerts />
+                <div class="flex flex-row items-center justify-end gap-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="bg-background"
+                    onClick={() => {
+                      setView((v) => (v === "list" ? "map" : "list"));
+                    }}
+                  >
+                    <Show when={view() === "list"}>
+                      <>
+                        <span>List</span>
+                        <List class="size-4" />
+                      </>
+                    </Show>
+                    <Show when={view() !== "list"}>
+                      <>
+                        <span>Map</span>
+                        <MapIcon class="size-4" />
+                      </>
+                    </Show>
+                  </Button>
+                </div>
+                <Switch>
+                  <Match when={view() === "list"}>
+                    <InventoryList inventory={inventory} />
+                  </Match>
+                  <Match when={view() === "map"}>
+                    <StorageMap inventory={inventory} />
+                  </Match>
+                </Switch>
               </div>
             </div>
           </div>

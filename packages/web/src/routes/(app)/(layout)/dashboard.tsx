@@ -75,7 +75,7 @@ export default function DashboardPage() {
                     <For
                       each={notifs()}
                       fallback={
-                        <Alert>
+                        <Alert class="bg-muted-foreground/10 dark:bg-muted/30">
                           <Check class="size-4" />
                           <AlertTitle>No notifications!</AlertTitle>
                           <AlertDescription>
