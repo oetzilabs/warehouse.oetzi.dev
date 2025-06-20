@@ -54,17 +54,19 @@ export default function PosPage() {
   return (
     <Suspense
       fallback={
-        <div class="flex flex-col gap-4 items-center justify-center">
-          <Loader2 class="size-4 animate-spin" />
-          <span>Loading...</span>
+        <div class="flex flex-col grow w-full h-full">
+          <div class="flex flex-row w-full h-full gap-4">
+            <div class="flex flex-col w-1/2 grow gap-4 select-none touch-none"></div>
+            <div class="flex flex-col w-1/2 grow gap-4"></div>
+          </div>
         </div>
       }
     >
       <Show
         when={cashRegister()}
         fallback={
-          <div class="flex flex-col gap-4 items-center justify-center w-full">
-            <span>This session does not have any items</span>
+          <div class="flex flex-col gap-4 items-center justify-center w-full rounded-lg border">
+            <span class="select-none touch-none">This session does not have any items</span>
           </div>
         }
       >

@@ -21,7 +21,9 @@ export default function PosLayout(props: { children: JSXElement }) {
   const params = useParams();
   const [weeksBack, setWeeksBack] = createSignal(0);
 
-  const sessions = createAsync(() => getCashRegisterSessions(params.sid, weeksBack()), { deferStream: true });
+  const sessions = createAsync(() => getCashRegisterSessions(params.sid, weeksBack()), {
+    deferStream: true,
+  });
 
   const calculateWeeksBackFromSessionList = <T extends { createdAt: Date }>(sessions: T[], wb: number = 0) => {
     if (!sessions.length) {
@@ -38,7 +40,13 @@ export default function PosLayout(props: { children: JSXElement }) {
   return (
     <div class="w-full flex flex-col gap-0 h-full">
       <div class="flex flex-row w-full h-full p-4 gap-4">
-        <Suspense>
+        <Suspense
+          fallback={
+            <div class="w-1/3 h-full flex flex-col overflow-auto">
+              <div class="h-full flex flex-col rounded-lg border"></div>
+            </div>
+          }
+        >
           <Show when={sessions()}>
             {(sess) => (
               <div class="w-1/3 h-full flex flex-col overflow-auto">
@@ -134,7 +142,18 @@ export default function PosLayout(props: { children: JSXElement }) {
             )}
           </Show>
         </Suspense>
-        {props.children}
+        <Suspense
+          fallback={
+            <div class="flex flex-col grow w-full h-full">
+              <div class="flex flex-row w-full h-full gap-4">
+                <div class="flex flex-col w-1/2 grow gap-4 select-none touch-none"></div>
+                <div class="flex flex-col w-1/2 grow gap-4"></div>
+              </div>
+            </div>
+          }
+        >
+          {props.children}
+        </Suspense>
       </div>
     </div>
   );
