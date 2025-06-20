@@ -7,10 +7,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { updateAreaBoundingBox } from "@/lib/api/areas";
-import { cn, getStorageStockStatus } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useAction, useSubmission } from "@solidjs/router";
 import { type FacilityInfo } from "@warehouseoetzidev/core/src/entities/facilities";
-import { type OrganizationInventoryInfo } from "@warehouseoetzidev/core/src/entities/organizations";
+import { type InventoryInfo } from "@warehouseoetzidev/core/src/entities/inventory";
+import { type OrganizationInfo } from "@warehouseoetzidev/core/src/entities/organizations";
 import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import Loader2 from "lucide-solid/icons/loader-2";
@@ -28,9 +29,7 @@ import { isServer } from "solid-js/web";
 import { toast } from "solid-sonner";
 
 // Remove or modify areaBoundingBox as we'll use the actual bounding box
-const calculateCombinedBoundingBox = (
-  facility: OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number],
-) => {
+const calculateCombinedBoundingBox = (facility: OrganizationInfo["whs"][number]["warehouse"]["facilities"][number]) => {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -114,7 +113,7 @@ interface EditorState {
 }
 
 const FacilityEditor = (props: {
-  facility: Accessor<OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number]>;
+  facility: Accessor<OrganizationInfo["whs"][number]["warehouse"]["facilities"][number]>;
 }) => {
   const padding = 20;
   const initialCenter = calculateCombinedBoundingBox(props.facility());
@@ -149,9 +148,7 @@ const FacilityEditor = (props: {
     toast.info("View has been reset");
   };
 
-  const tightenArea = (
-    area: OrganizationInventoryInfo["warehouses"][number]["warehouse"]["facilities"][number]["areas"][number],
-  ) => {
+  const tightenArea = (area: OrganizationInfo["whs"][number]["warehouse"]["facilities"][number]["areas"][number]) => {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -172,26 +169,19 @@ const FacilityEditor = (props: {
   };
 
   const renderEditableStorage = (storage: StorageInfo) => {
-    const status = getStorageStockStatus(storage);
-    const statusColors = {
-      low: "bg-rose-200 dark:bg-rose-600",
-      "near-min": "bg-orange-200 dark:bg-orange-600",
-      "below-reorder": "bg-yellow-200 dark:bg-yellow-600",
-      optimal: "bg-emerald-200 dark:bg-emerald-600",
-      "has-products": "bg-lime-200 dark:bg-lime-600",
-      empty: "bg-muted-foreground/[0.05]",
-    };
-
     return (
       <div
-        class={cn(
-          "absolute border border-neutral-400 dark:border-neutral-500 flex rounded-sm",
-          {
-            "flex-row": storage.variant === "vertical",
-            "flex-col": storage.variant === "horizontal",
-          },
-          statusColors[status],
-        )}
+        class={cn("absolute border border-neutral-400 dark:border-neutral-500 flex rounded-sm", {
+          "flex-row": storage.variant === "vertical",
+          "flex-col": storage.variant === "horizontal",
+          "bg-transparent": storage.status === "empty",
+          "bg-rose-200 dark:bg-rose-600 border-rose-300 dark:border-rose-700": storage.status === "low",
+          "bg-orange-200 dark:bg-orange-600 border-orange-300 dark:border-orange-700":
+            storage.status === "below-capacity",
+          "bg-yellow-200 dark:bg-yellow-600 border-yellow-300 dark:border-yellow-700":
+            storage.status === "below-reorder",
+          "bg-emerald-200 dark:bg-emerald-600 border-emerald-300 dark:border-emerald-700": storage.status === "optimal",
+        })}
         style={{
           top: `${storage.bounding_box.y + padding}px`,
           left: `${storage.bounding_box.x + padding}px`,
@@ -381,26 +371,22 @@ const FacilityEditor = (props: {
                           </Show>
                           <For each={storage.children}>
                             {(child) => {
-                              const status = getStorageStockStatus(child);
-                              const statusColors = {
-                                low: "bg-rose-200 dark:bg-rose-600",
-                                "near-min": "bg-orange-200 dark:bg-orange-600",
-                                "below-reorder": "bg-yellow-200 dark:bg-yellow-600",
-                                optimal: "bg-emerald-200 dark:bg-emerald-600",
-                                "has-products": "bg-lime-200 dark:bg-lime-600",
-                                empty: "bg-muted-foreground/[0.05]",
-                              };
-
                               return (
                                 <div
-                                  class={cn(
-                                    "group/inv relative border-neutral-400 dark:border-neutral-500",
-                                    {
-                                      "border-r last:border-r-0": storage.variant === "vertical",
-                                      "border-b last:border-b-0": storage.variant === "horizontal",
-                                    },
-                                    statusColors[status],
-                                  )}
+                                  class={cn("group/inv relative border-neutral-400 dark:border-neutral-500", {
+                                    "border-r last:border-r-0": storage.variant === "vertical",
+                                    "border-b last:border-b-0": storage.variant === "horizontal",
+
+                                    "bg-transparent": storage.status === "empty",
+                                    "bg-rose-200 dark:bg-rose-600 border-rose-300 dark:border-rose-700":
+                                      storage.status === "low",
+                                    "bg-orange-200 dark:bg-orange-600 border-orange-300 dark:border-orange-700":
+                                      storage.status === "below-capacity",
+                                    "bg-yellow-200 dark:bg-yellow-600 border-yellow-300 dark:border-yellow-700":
+                                      storage.status === "below-reorder",
+                                    "bg-emerald-200 dark:bg-emerald-600 border-emerald-300 dark:border-emerald-700":
+                                      storage.status === "optimal",
+                                  })}
                                   style={
                                     storage.variant === "horizontal"
                                       ? {

@@ -1,23 +1,12 @@
-import FacilityImage from "@/components/FacilityImage";
-import { FilterPopover } from "@/components/filters/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressValueLabel } from "@/components/ui/progress";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter } from "@/lib/filtering";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { InventoryInfo } from "@warehouseoetzidev/core/src/entities/inventory";
-import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
-import { type StorageInfo } from "@warehouseoetzidev/core/src/entities/storages";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Package from "lucide-solid/icons/package";
-import Plus from "lucide-solid/icons/plus";
-import TriangleAlert from "lucide-solid/icons/triangle-alert";
-import { Warning } from "postcss";
 import { Accessor, createSignal, For, Show } from "solid-js";
-import { createStore } from "solid-js/store";
-import FacilityEditor from "../../FacilityEditor";
 
 type InventoryListProps = {
   inventory: Accessor<InventoryInfo>;
