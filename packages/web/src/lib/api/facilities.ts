@@ -46,10 +46,18 @@ export const getFacilityById = query(async (id: string) => {
   if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const service = auth[1];
+  if (!service) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = service.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
   const warehouse = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(FacilityService);
-      return yield* service.findById(id);
+      return yield* service.findById(id, orgId);
     }).pipe(Effect.provide(FacilityLive)),
   );
   return warehouse;
