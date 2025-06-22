@@ -3,7 +3,7 @@ import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/s
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
-import { Console, Effect } from "effect";
+import { Console, Effect, Layer } from "effect";
 
 export async function GET({ params }: { params: { id: string } }) {
   const auth = await withSession();
