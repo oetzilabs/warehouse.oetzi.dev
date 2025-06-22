@@ -2,9 +2,9 @@ import dayjs from "dayjs";
 import { and, gte, lte } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse } from "valibot";
-import { TB_organizations_sales } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationId } from "../organizations/id";
 import { AccountingDateRangeInvalid, AccountingOrganizationInvalidId } from "./errors";
 
 export interface FinancialAmount {
@@ -54,17 +54,14 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const getFinancialSummary = (organizationId: string) =>
+    const getFinancialSummary = () =>
       Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new AccountingOrganizationInvalidId({ organizationId }));
-        }
+        const orgId = yield* OrganizationId;
 
         // Get supplier orders (expenses)
         const purchases = yield* Effect.promise(() =>
           db.query.TB_supplier_purchases.findMany({
-            where: (fields, operations) => operations.eq(fields.organization_id, parsedOrgId.output),
+            where: (fields, operations) => operations.eq(fields.organization_id, orgId),
             with: {
               supplier: true,
               products: {
@@ -94,7 +91,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
         // Get sales directly with a single query
         const sales = yield* Effect.promise(() =>
           db.query.TB_sales.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
             with: {
               items: {
                 with: {
@@ -209,7 +206,7 @@ export class AccountingService extends Effect.Service<AccountingService>()("@war
                   // Find the relevant price from priceHistory that was active at the time of the sale
                   const saleDate = sale.createdAt;
                   const orgPriceHistory = item.product.organizations
-                    .find((org) => org.organizationId === parsedOrgId.output)
+                    .find((org) => org.organizationId === orgId)
                     ?.priceHistory.sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
 
                   if (orgPriceHistory && orgPriceHistory.length > 0) {

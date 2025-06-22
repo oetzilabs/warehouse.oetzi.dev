@@ -46,7 +46,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return facility;
       });
 
-    const findById = (id: string, orgId: string) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
@@ -92,7 +92,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
                 return {
                   ...a,
                   storages: yield* Effect.all(
-                    a.storages.map((s) => Effect.suspend(() => inventoryService.storageStatistics(s.id, orgId))),
+                    a.storages.map((s) => Effect.suspend(() => inventoryService.storageStatistics(s.id))),
                   ),
                 };
               }),

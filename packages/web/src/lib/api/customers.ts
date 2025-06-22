@@ -4,7 +4,8 @@ import {
   CustomerUpdateSchema,
 } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/customers/customers";
 import { CustomerLive, CustomerService } from "@warehouseoetzidev/core/src/entities/customers";
-import { Effect } from "effect";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
+import { Effect, Layer } from "effect";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
@@ -57,6 +58,7 @@ export const getCustomerById = query(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const customer = await Effect.runPromise(
     Effect.gen(function* (_) {
@@ -66,13 +68,13 @@ export const getCustomerById = query(async (id: string) => {
         throw redirect(`/customers/${id}`, { status: 404, statusText: "Not Found" });
       }
 
-      const orders = yield* customerService.getOrdersByCustomerIdAndOrganizationId(customer.id, orgId);
+      const orders = yield* customerService.getOrdersByCustomerId(customer.id);
 
       return {
         customer,
         orders,
       };
-    }).pipe(Effect.provide(CustomerLive)),
+    }).pipe(Effect.provide(CustomerLive), Effect.provide(organizationId)),
   );
   return customer;
 }, "customer-by-id");
@@ -83,16 +85,25 @@ export const createCustomer = action(async (data: Omit<InferInput<typeof Custome
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const customer = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(CustomerService);
-      return yield* service.create(data, session.current_organization_id!);
-    }).pipe(Effect.provide(CustomerLive)),
+      return yield* service.create(data);
+    }).pipe(Effect.provide(CustomerLive), Effect.provide(organizationId)),
   );
   return json(customer, {
     revalidate: [getAuthenticatedUser.key, getCustomers.key],

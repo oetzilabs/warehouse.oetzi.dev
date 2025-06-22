@@ -1,6 +1,7 @@
 import { withSession } from "@/lib/api/session";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
 import { Console, Effect } from "effect";
 
@@ -17,6 +18,7 @@ export async function GET({ params }: { params: { id: string } }) {
   if (!orgId) {
     return new Response("Unauthorized", { status: 401 });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
@@ -26,7 +28,7 @@ export async function GET({ params }: { params: { id: string } }) {
       const sale = yield* saleService.findById(params.id, org.id);
       const pdf = yield* saleService.generatePDF(params.id, org, { page: { size: "A4", orientation: "portrait" } });
       return { pdf, filename: sale.barcode ?? sale.createdAt.toISOString() };
-    }).pipe(Effect.provide(SalesLive), Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(SalesLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
   );
 
   return new Response(result.pdf, {

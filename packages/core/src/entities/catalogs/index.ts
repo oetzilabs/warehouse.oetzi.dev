@@ -4,6 +4,7 @@ import { safeParse, type InferInput } from "valibot";
 import { CatalogCreateSchema, CatalogUpdateSchema, TB_catalog_products, TB_catalogs } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationId } from "../organizations/id";
 import { ProductInvalidId, ProductNotFound } from "../products/errors";
 import {
   CatalogInvalidId,
@@ -52,19 +53,16 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return barcode;
       });
 
-    const create = (input: InferInput<typeof CatalogCreateSchema>, organizationId: string, userId: string) =>
+    const create = (input: InferInput<typeof CatalogCreateSchema>, userId: string) =>
       Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new CatalogOrganizationInvalidId({ organizationId: organizationId }));
-        }
+        const orgId = yield* OrganizationId;
 
         let barcode = yield* ensureBarcodeIsUnique(input.name);
 
         const [catalog] = yield* Effect.promise(() =>
           db
             .insert(TB_catalogs)
-            .values({ ...input, ownerId: userId, organizationId: parsedOrgId.output, barcode })
+            .values({ ...input, ownerId: userId, organizationId: orgId, barcode })
             .returning(),
         );
 
@@ -75,16 +73,18 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return catalog;
       });
 
-    const findById = (id: string, orgId: string) =>
+    /**
+     * Find a catalog by its id
+     * @param id The id of the catalog
+     * @returns The catalog
+     */
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new CatalogInvalidId({ id }));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new CatalogOrganizationInvalidId({ organizationId: orgId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const catalog = yield* Effect.promise(() =>
           db.query.TB_catalogs.findFirst({
@@ -117,19 +117,19 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
             ...p,
             product: {
               ...p.product,
-              organization: p.product.organizations.find((o) => o.organizationId === parsedOrgId.output),
+              organization: p.product.organizations.find((o) => o.organizationId === orgId),
               priceHistory:
                 p.product.organizations
-                  .find((o) => o.organizationId === parsedOrgId.output)
+                  .find((o) => o.organizationId === orgId)
                   ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
               sellingPrice:
                 p.product.organizations
-                  .find((o) => o.organizationId === parsedOrgId.output)
+                  .find((o) => o.organizationId === orgId)
                   ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]
                   ?.sellingPrice || 0,
               currency:
                 p.product.organizations
-                  .find((o) => o.organizationId === parsedOrgId.output)
+                  .find((o) => o.organizationId === orgId)
                   ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ||
                 "USD",
             },

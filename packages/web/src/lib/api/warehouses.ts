@@ -5,11 +5,11 @@ import {
   WarehouseUpdateSchema,
 } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { AddressLive, AddressService } from "@warehouseoetzidev/core/src/entities/addresses";
-import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseTypeLive, WarehouseTypeService } from "@warehouseoetzidev/core/src/entities/warehouse_types";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
@@ -80,6 +80,7 @@ export const createWarehouse = action(
     if (!orgId) {
       throw new Error("You have to be part of an organization to perform this action.");
     }
+    const organizationId = Layer.succeed(OrganizationId, orgId);
     const warehouse = await Effect.runPromise(
       Effect.gen(function* (_) {
         const warehouseService = yield* _(WarehouseService);
@@ -118,6 +119,7 @@ export const createWarehouse = action(
         Effect.provide(AddressLive),
         Effect.provide(SessionLive),
         Effect.provide(UserLive),
+        Effect.provide(organizationId),
       ),
     );
     return redirect("/dashboard", {
@@ -258,6 +260,7 @@ export const changeWarehouse = action(async (whId) => {
   if (!orgId) {
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const warehouse = await Effect.runPromise(
     Effect.gen(function* (_) {
       const sessionService = yield* _(SessionService);
@@ -277,7 +280,7 @@ export const changeWarehouse = action(async (whId) => {
         return yield* Effect.fail(new Error("Warehouse not updated"));
       }
       return wh;
-    }).pipe(Effect.provide(SessionLive), Effect.provide(WarehouseLive)),
+    }).pipe(Effect.provide(SessionLive), Effect.provide(WarehouseLive), Effect.provide(organizationId)),
   );
   return json(warehouse, {
     revalidate: [getAuthenticatedUser.key],

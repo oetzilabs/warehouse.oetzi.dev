@@ -1,8 +1,9 @@
 import { json, query, redirect } from "@solidjs/router";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { withSession } from "./session";
 
 dayjs.extend(isoWeek);
@@ -25,16 +26,17 @@ export const getCashRegister = query(async (sid: string) => {
   if (!orgId) {
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const registerExit = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
       if (!sid) {
         return yield* Effect.succeed(null);
       }
-      const register = yield* salesService.findById(sid, orgId);
+      const register = yield* salesService.findById(sid);
 
       return register;
-    }).pipe(Effect.provide(SalesLive)),
+    }).pipe(Effect.provide(SalesLive), Effect.provide(organizationId)),
   );
   return Exit.match(registerExit, {
     onSuccess: (register) => json(register),
@@ -66,14 +68,14 @@ export const getCashRegisterSessions = query(async (sid: string | undefined, wee
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const registerExit = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
       let ws = weeks;
       if (sid) {
         const sale = yield* salesService
-          .findById(sid, orgId)
+          .findById(sid)
           .pipe(Effect.catchTag("SaleNotFound", () => Effect.succeed(null)));
         if (sale) {
           // get the weeks from the sale
@@ -88,7 +90,7 @@ export const getCashRegisterSessions = query(async (sid: string | undefined, wee
         const end = dayjs(s.createdAt).isBefore(dayjs().subtract(ws, "week").endOf("week"));
         return start && end;
       });
-    }).pipe(Effect.provide(SalesLive)),
+    }).pipe(Effect.provide(SalesLive), Effect.provide(organizationId)),
   );
   return Exit.match(registerExit, {
     onSuccess: (register) => json(register),

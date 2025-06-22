@@ -13,6 +13,7 @@ import {
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import {
   CustomerInvalidId,
   CustomerNotCreated,
@@ -27,8 +28,9 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof CustomerCreateSchema>, orgId: string) =>
+    const create = (input: InferInput<typeof CustomerCreateSchema>) =>
       Effect.gen(function* (_) {
+        const orgId = yield* OrganizationId;
         const [customer] = yield* Effect.promise(() => db.insert(TB_customers).values(input).returning());
         if (!customer) {
           return yield* Effect.fail(new CustomerNotCreated({}));
@@ -47,6 +49,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         if (!parsedId.success) {
           return yield* Effect.fail(new CustomerInvalidId({ id }));
         }
+        const orgId = yield* OrganizationId;
 
         const customer = yield* Effect.promise(() =>
           db.query.TB_customers.findFirst({
@@ -93,12 +96,33 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
           return yield* Effect.fail(new CustomerNotFound({ id }));
         }
 
-        return customer;
+        return {
+          ...customer,
+          organizations: customer.organizations.filter((o) => o.organization_id === orgId).map((co) => co.organization),
+        };
       });
 
     const getSalesHistory = (id: string) =>
       Effect.gen(function* (_) {
-        const customer = yield* findById(id);
+        const customer = yield* Effect.promise(() =>
+          db.query.TB_customers.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, id),
+            with: {
+              sales: {
+                with: {
+                  items: {
+                    with: {
+                      product: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        if (!customer) {
+          return yield* Effect.fail(new CustomerNotFound({ id }));
+        }
         return customer.sales;
       });
 
@@ -185,22 +209,19 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
         return orgCustomers.map((orgCustomer) => orgCustomer.customer);
       });
 
-    const getOrdersByCustomerIdAndOrganizationId = (customerId: string, organizationId: string) =>
+    const getOrdersByCustomerId = (customerId: string) =>
       Effect.gen(function* (_) {
+        const orgId = yield* OrganizationId;
         const parsedCustomerId = safeParse(prefixed_cuid2, customerId);
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedCustomerId.success) {
           return yield* Effect.fail(new CustomerInvalidId({ id: customerId }));
-        }
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
         }
         const orders = yield* Effect.promise(() =>
           db.query.TB_customer_orders.findMany({
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.customer_id, parsedCustomerId.output),
-                operations.eq(fields.organization_id, parsedOrganizationId.output),
+                operations.eq(fields.organization_id, orgId),
               ),
             with: {
               sale: {
@@ -259,18 +280,16 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
             ...p,
             product: {
               ...p.product,
-              organizations: p.product.organizations.filter(
-                (org) => org.organizationId === parsedOrganizationId.output,
-              ),
+              organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
               priceHistory:
                 p.product.organizations
-                  .find((o) => o.organizationId === parsedOrganizationId.output)
+                  .find((o) => o.organizationId === orgId)
                   ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
               currency: p.product.organizations
-                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
               sellingPrice: p.product.organizations
-                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
@@ -431,7 +450,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       findByOrganizationId,
       remove,
       safeRemove,
-      getOrdersByCustomerIdAndOrganizationId,
+      getOrdersByCustomerId,
       addPreferredDeliveryDateTime,
       removePreferredDeliveryDateTime,
       addPreferredPickupDateTime,

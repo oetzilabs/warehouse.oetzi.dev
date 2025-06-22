@@ -10,9 +10,10 @@ import {
   OrganizationLive,
   OrganizationService,
 } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { withSession } from "./session";
 
 export const getDashboardData = query(async () => {
@@ -34,6 +35,7 @@ export const getDashboardData = query(async () => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const dashboardDataExit = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
@@ -41,7 +43,7 @@ export const getDashboardData = query(async () => {
       const orderService = yield* _(CustomerOrderService);
       const notificationService = yield* _(NotificationService);
 
-      const organization = yield* organizationService.getDashboardData(orgId);
+      const organization = yield* organizationService.getDashboardData();
       if (!organization) {
         throw new Error("Organization not found");
       }
@@ -107,7 +109,12 @@ export const getDashboardData = query(async () => {
         popularProductsChartData,
         notifications,
       };
-    }).pipe(Effect.provide(OrganizationLive), Effect.provide(CustomerOrderLive), Effect.provide(NotificationLive)),
+    }).pipe(
+      Effect.provide(OrganizationLive),
+      Effect.provide(CustomerOrderLive),
+      Effect.provide(NotificationLive),
+      Effect.provide(organizationId),
+    ),
   );
 
   return Exit.match(dashboardDataExit, {

@@ -7,8 +7,9 @@ import {
   SupplierNoteCreateSchema,
   SupplierNoteUpdateSchema,
 } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/suppliers/suppliers_notes";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
-import { Console, Effect } from "effect";
+import { Console, Effect, Layer } from "effect";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
 import { withSession } from "./session";
@@ -32,13 +33,13 @@ export const getSuppliers = query(async () => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const suppliers = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
       const suppliers = yield* supplierService.findByOrganizationId(orgId);
       return suppliers;
-    }).pipe(Effect.provide(SupplierLive)),
+    }).pipe(Effect.provide(SupplierLive), Effect.provide(organizationId)),
   );
   return suppliers;
 }, "suppliers-by-organization");
@@ -61,11 +62,11 @@ export const getSupplierById = query(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const supplier = await Effect.runPromise(
     Effect.gen(function* (_) {
       const supplierService = yield* _(SupplierService);
-      const supplierFromDb = yield* supplierService.findById(id, orgId);
+      const supplierFromDb = yield* supplierService.findById(id);
       if (!supplierFromDb) {
         throw redirect(`/suppliers/${id}`, { status: 404, statusText: "Not Found" });
       }
@@ -78,9 +79,9 @@ export const getSupplierById = query(async (id: string) => {
           isInSortiment: p.product.organizations.find((po) => po.organizationId === orgId)?.deletedAt,
         })),
       };
-      const purchases = yield* supplierService.getPurchasesBySupplierIdAndOrganizationId(supplier.id, orgId);
+      const purchases = yield* supplierService.getPurchasesBySupplierId(supplier.id);
       return { supplier, purchases };
-    }).pipe(Effect.provide(SupplierLive)),
+    }).pipe(Effect.provide(SupplierLive), Effect.provide(organizationId)),
   );
   return supplier;
 }, "supplier-by-id");
@@ -91,16 +92,24 @@ export const createSupplier = action(async (data: InferInput<typeof SupplierCrea
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const supplier = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(SupplierService);
-      return yield* service.create(data, session.current_organization_id!);
-    }).pipe(Effect.provide(SupplierLive)),
+      return yield* service.create(data);
+    }).pipe(Effect.provide(SupplierLive), Effect.provide(organizationId)),
   );
   return json(supplier, {
     revalidate: [getAuthenticatedUser.key, getSuppliers.key],
@@ -149,7 +158,11 @@ export const addNote = action(async (sid: string, data: InferInput<typeof Suppli
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
   if (!session) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
@@ -157,12 +170,13 @@ export const addNote = action(async (sid: string, data: InferInput<typeof Suppli
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const note = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(SupplierService);
-      return yield* service.addNote(sid, orgId, data);
-    }).pipe(Effect.provide(SupplierLive)),
+      return yield* service.addNote(sid, data);
+    }).pipe(Effect.provide(SupplierLive), Effect.provide(organizationId)),
   );
   return json(note, {
     revalidate: [getAuthenticatedUser.key, getSuppliers.key, getSupplierById.keyFor(sid)],

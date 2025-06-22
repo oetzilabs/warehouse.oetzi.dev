@@ -7,12 +7,13 @@ import {
   OrganizationProductNotAdded,
   OrganizationProductNotFound,
 } from "@warehouseoetzidev/core/src/entities/organizations/errors";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
 import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
 import { SupplierNotFound } from "@warehouseoetzidev/core/src/entities/suppliers/errors";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { withSession } from "./session";
 
 export const getProducts = query(async () => {
@@ -93,17 +94,18 @@ export const getProductById = query(async (pid: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
       const orgService = yield* _(OrganizationService);
       const org = yield* orgService.findById(orgId);
       const productService = yield* _(ProductService);
-      const product = yield* productService.findById(pid, orgId);
-      const orgP = yield* orgService.findProductById(orgId, pid);
-      const stock = yield* productService.getStockCount(product.id, orgId);
+      const product = yield* productService.findById(pid);
+      const orgP = yield* orgService.findProductById(pid);
+      const stock = yield* productService.getStockCount(product.id);
 
       return { ...product, isInSortiment: orgP.deletedAt === null, stock };
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
   );
   return product;
 }, "product-by-id");
@@ -126,22 +128,16 @@ export const deleteProduct = action(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
       const productService = yield* _(ProductService);
       const orgService = yield* _(OrganizationService);
       const org = yield* orgService.findById(orgId);
-      if (!org) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-      }
-      const product = yield* productService.findById(id, orgId);
-      if (!product) {
-        return yield* Effect.fail(new ProductNotFound({ id }));
-      }
-      const p = yield* orgService.removeProduct(org.id, product.id);
-      return p;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+      const product = yield* productService.findById(id);
+      return yield* orgService.removeProduct(product.id);
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
   );
   return json(product, {
     revalidate: [getProductById.keyFor(id), getProducts.key],
@@ -173,18 +169,13 @@ export const downloadProductSheet = action(
     if (!orgId) {
       throw redirect("/", { status: 403, statusText: "Forbidden" });
     }
+    const organizationId = Layer.succeed(OrganizationId, orgId);
     const productExit = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
         const productService = yield* _(ProductService);
-        const product = yield* productService.findById(pid, orgId);
-        if (!product) {
-          return yield* Effect.fail(new ProductNotFound({ id: pid }));
-        }
+        const product = yield* productService.findById(pid);
         const orgService = yield* _(OrganizationService);
         const org = yield* orgService.findById(orgId);
-        if (!org) {
-          return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-        }
 
         const pdf = yield* productService.generatePDF(product, org, {
           type: options.type === "full" ? "full" : [options.type],
@@ -195,7 +186,12 @@ export const downloadProductSheet = action(
           pdf: pdf.toString("base64"),
           name: product.name,
         });
-      }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(SupplierLive)),
+      }).pipe(
+        Effect.provide(ProductLive),
+        Effect.provide(OrganizationLive),
+        Effect.provide(SupplierLive),
+        Effect.provide(organizationId),
+      ),
     );
 
     return Exit.match(productExit, {
@@ -232,11 +228,12 @@ export const addLabelsToProduct = action(async (id: string, labels: string[]) =>
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id, orgId);
+      const product = yield* service.findById(id);
       const prodlabels = product.labels.map((l) => l.label.id);
       const toAdd = labels.filter((l) => !prodlabels.includes(l));
       for (const label of toAdd) {
@@ -249,7 +246,7 @@ export const addLabelsToProduct = action(async (id: string, labels: string[]) =>
       }
 
       return true;
-    }).pipe(Effect.provide(ProductLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
   );
   return json(result, {
     revalidate: [getProductById.keyFor(id), getProducts.key],
@@ -274,11 +271,11 @@ export const removeLabelsFromProduct = action(async (id: string, labelId: string
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id, orgId);
+      const product = yield* service.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
@@ -286,7 +283,7 @@ export const removeLabelsFromProduct = action(async (id: string, labelId: string
       yield* service.removeLabel(id, labelId);
 
       return true;
-    }).pipe(Effect.provide(ProductLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
   );
   return json(result, {
     revalidate: [getProductById.keyFor(id), getProducts.key],
@@ -339,17 +336,17 @@ export const assignBrand = action(async (id: string, brandId: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id, orgId);
+      const product = yield* service.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
 
       return yield* service.update(product.id, { id: product.id, brand_id: brandId });
-    }).pipe(Effect.provide(ProductLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
   );
   return json(result, {
     revalidate: [getProductById.keyFor(id), getProducts.key],
@@ -386,16 +383,16 @@ export const updateProductStock = action(
     if (!orgId) {
       throw redirect("/", { status: 403, statusText: "Forbidden" });
     }
+    const organizationId = Layer.succeed(OrganizationId, orgId);
 
     const result = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
         const orgService = yield* _(OrganizationService);
         const productService = yield* _(ProductService);
-        const org = yield* orgService.findById(orgId);
-        const product = yield* productService.findById(id, orgId);
+        const product = yield* productService.findById(id);
 
-        return yield* orgService.updateProduct(product.id, org.id, { minimumStock, maximumStock, reorderPoint });
-      }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive)),
+        return yield* orgService.updateProduct(product.id, { minimumStock, maximumStock, reorderPoint });
+      }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive), Effect.provide(organizationId)),
     );
     return Exit.match(result, {
       onSuccess: (result) => {
@@ -433,16 +430,16 @@ export const reAddProduct = action(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const result = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id, orgId);
+      const product = yield* service.findById(id);
       const orgService = yield* _(OrganizationService);
-      const org = yield* orgService.findById(orgId);
-      const p = yield* orgService.reAddProduct(org.id, product.id);
+      const p = yield* orgService.reAddProduct(product.id);
       return p;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
   );
 
   return Exit.match(result, {
@@ -480,17 +477,18 @@ export const getLatestPricesByProductId = query(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
       const orgService = yield* _(OrganizationService);
       const productService = yield* _(ProductService);
       const org = yield* orgService.findById(orgId);
-      const product = yield* productService.findById(id, orgId);
-      const orgP = yield* orgService.findProductById(orgId, id);
-      const currentPrices = yield* productService.getPriceHistory(product.id, org.id);
+      const product = yield* productService.findById(id);
+      const orgP = yield* orgService.findProductById(id);
+      const currentPrices = yield* productService.getPriceHistory(product.id);
 
       return currentPrices;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
   );
   return product;
 }, "product-by-id");
@@ -513,11 +511,12 @@ export const clearBrand = action(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const result = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const service = yield* _(ProductService);
-      const product = yield* service.findById(id, orgId);
+      const product = yield* service.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
@@ -525,7 +524,7 @@ export const clearBrand = action(async (id: string) => {
       yield* service.update(product.id, { id: product.id, brand_id: null });
 
       return true;
-    }).pipe(Effect.provide(ProductLive)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
   );
   return Exit.match(result, {
     onSuccess: (result) => {
@@ -562,18 +561,24 @@ export const getProductStock = query(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const product = await Effect.runPromise(
     Effect.gen(function* (_) {
       const orgService = yield* _(OrganizationService);
       const productService = yield* _(ProductService);
       const inventoryService = yield* _(InventoryService);
-      const org = yield* orgService.findById(orgId);
-      const product = yield* productService.findById(id, org.id);
-      const orgP = yield* orgService.findProductById(org.id, id);
-      const stock = yield* inventoryService.getStockForProducts([id], org.id);
+      yield* orgService.findById(orgId);
+      yield* productService.findById(id);
+      yield* orgService.findProductById(id);
+      const stock = yield* inventoryService.getStockForProducts([id]);
 
       return stock[0].stock;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(InventoryLive)),
+    }).pipe(
+      Effect.provide(ProductLive),
+      Effect.provide(OrganizationLive),
+      Effect.provide(InventoryLive),
+      Effect.provide(organizationId),
+    ),
   );
   return product;
 }, "product-stock-by-id");

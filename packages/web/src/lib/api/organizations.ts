@@ -1,8 +1,9 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { OrganizationCreateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { getRequestEvent } from "solid-js/web";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
@@ -163,12 +164,17 @@ export const disconnectFromOrganization = action(async (orgId: string) => {
   if (!user) {
     throw new Error("You have to be logged in to perform this action.");
   }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const removedFromOrganization = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(OrganizationService);
-      return yield* service.removeUser(orgId, user.id);
-    }).pipe(Effect.provide(OrganizationLive)),
+      return yield* service.removeUser(user.id);
+    }).pipe(Effect.provide(OrganizationLive), Effect.provide(organizationId)),
   );
   return removedFromOrganization;
 });

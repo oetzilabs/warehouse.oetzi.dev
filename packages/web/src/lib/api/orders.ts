@@ -96,7 +96,7 @@ export const getOrderById = query(async (oid: string) => {
   const order = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const orderService = yield* _(CustomerOrderService);
-      const order = yield* orderService.findById(oid, orgId);
+      const order = yield* orderService.findById(oid);
       return order;
     }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
   );
@@ -179,7 +179,7 @@ export const convertToSale = action(
     const order = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
         const orderService = yield* _(CustomerOrderService);
-        return yield* orderService.convertToSale(id, cid, orgId, products);
+        return yield* orderService.convertToSale(id, cid, products);
       }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
     );
     return Exit.match(order, {
@@ -222,7 +222,7 @@ export const downloadOrderSheet = action(async (id: string) => {
   const order = await Effect.runPromise(
     Effect.gen(function* (_) {
       const orderService = yield* _(CustomerOrderService);
-      const order = yield* orderService.findById(id, orgId);
+      const order = yield* orderService.findById(id);
       const organizationService = yield* _(OrganizationService);
       const org = yield* organizationService.findById(orgId);
       const pdf = yield* orderService.generatePDF(id, org, { page: { size: "A4", orientation: "portrait" } });
