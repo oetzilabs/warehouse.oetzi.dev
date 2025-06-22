@@ -6,6 +6,7 @@ import {
   ProductCreateSchema,
   ProductUpdateSchema,
   TB_organization_product_price_history,
+  TB_organizations_products,
   TB_products,
   TB_products_to_labels,
   TB_supplier_product_price_history,
@@ -15,7 +16,8 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { DeviceInfo } from "../devices";
 import { DeviceInvalidId, DeviceNotOnline, DeviceNotPrinter } from "../devices/errors";
 import { OrganizationInfo } from "../organizations";
-import { OrganizationInvalidId } from "../organizations/errors";
+import { OrganizationInvalidId, OrganizationProductNotAdded } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
 import { SupplierInfo, SupplierLive, SupplierService } from "../suppliers";
 import { SupplierInvalidId } from "../suppliers/errors";
@@ -37,32 +39,41 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof ProductCreateSchema>, orgId: string) =>
+    const create = (input: InferInput<typeof ProductCreateSchema>) =>
       Effect.gen(function* (_) {
+        const orgId = yield* OrganizationId;
         const [product] = yield* Effect.promise(() => db.insert(TB_products).values(input).returning());
         if (!product) {
           return yield* Effect.fail(new ProductNotCreated({}));
         }
-        return findById(product.id, orgId);
+        const [org_product] = yield* Effect.promise(() =>
+          db.insert(TB_organizations_products).values({ organizationId: orgId, productId: product.id }).returning(),
+        );
+        if (!org_product) {
+          return yield* Effect.fail(
+            new OrganizationProductNotAdded({
+              organizationId: orgId,
+              productId: product.id,
+            }),
+          );
+        }
+        return findById(product.id);
       });
 
-    const findById = (id: string, orgId: string) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new ProductInvalidId({ id }));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const product = yield* Effect.promise(() =>
           db.query.TB_organizations_products.findFirst({
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.productId, parsedId.output),
-                operations.eq(fields.organizationId, parsedOrgId.output),
+                operations.eq(fields.organizationId, orgId),
               ),
             with: {
               product: {
@@ -165,21 +176,18 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
         return {
           ...product.product,
-          minimumStock: product.product.organizations.find((o) => o.organizationId === parsedOrgId.output)
-            ?.minimumStock,
-          maximumStock: product.product.organizations.find((o) => o.organizationId === parsedOrgId.output)
-            ?.maximumStock,
-          reorderPoint: product.product.organizations.find((o) => o.organizationId === parsedOrgId.output)
-            ?.reorderPoint,
+          minimumStock: product.product.organizations.find((o) => o.organizationId === orgId)?.minimumStock,
+          maximumStock: product.product.organizations.find((o) => o.organizationId === orgId)?.maximumStock,
+          reorderPoint: product.product.organizations.find((o) => o.organizationId === orgId)?.reorderPoint,
           priceHistory:
             product.product.organizations
-              .find((o) => o.organizationId === parsedOrgId.output)
+              .find((o) => o.organizationId === orgId)
               ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
           currency: product.product.organizations
-            .find((org) => org.organizationId === parsedOrgId.output)!
+            .find((org) => org.organizationId === orgId)!
             .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
           sellingPrice: product.product.organizations
-            .find((org) => org.organizationId === parsedOrgId.output)!
+            .find((org) => org.organizationId === orgId)!
             .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
         };
       });
@@ -622,7 +630,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         const orgProduct = yield* Effect.promise(() =>
           db.query.TB_organizations_products.findFirst({
             where: (products, { and, eq }) =>
-              and(eq(products.productId, parsedProductId.output), eq(products.organizationId, parsedOrgId.output)),
+              and(eq(products.productId, parsedProductId.output), eq(products.organizationId, orgId)),
           }),
         );
 
@@ -633,7 +641,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         // Get all warehouses belonging to the organization
         const orgWarehouses = yield* Effect.promise(() =>
           db.query.TB_organizations_warehouses.findMany({
-            where: (ow, { eq }) => eq(ow.organizationId, parsedOrgId.output),
+            where: (ow, { eq }) => eq(ow.organizationId, orgId),
             with: {
               warehouse: {
                 with: {

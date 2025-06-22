@@ -5,6 +5,7 @@ import { TB_storage_to_products } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import { ProductLive, ProductService } from "../products";
 import { ProductInvalidId, ProductNotFound } from "../products/errors";
 import { StorageInfo } from "../storages";
@@ -16,16 +17,13 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
     const productService = yield* _(ProductService);
     const db = yield* database.instance;
 
-    const statistics = (organizationId: string) =>
+    const statistics = () =>
       Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const products = yield* Effect.promise(() =>
           db.query.TB_organizations_products.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedId.output),
+            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
           }),
         );
 
@@ -84,11 +82,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
               return {
                 product: {
                   ...product!,
-                  organizations: product!.organizations.filter((o) => o.organizationId === parsedId.output),
-                  reorderPoint:
-                    product!.organizations.find((o) => o.organizationId === parsedId.output)?.reorderPoint ?? 0,
-                  minimumStock:
-                    product!.organizations.find((o) => o.organizationId === parsedId.output)?.minimumStock ?? 0,
+                  organizations: product!.organizations.filter((o) => o.organizationId === orgId),
+                  reorderPoint: product!.organizations.find((o) => o.organizationId === orgId)?.reorderPoint ?? 0,
+                  minimumStock: product!.organizations.find((o) => o.organizationId === orgId)?.minimumStock ?? 0,
                 },
                 count: p.count,
               };
@@ -98,7 +94,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
         const warehouses = yield* Effect.promise(() =>
           db.query.TB_organizations_warehouses.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedId.output),
+            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
           }),
         );
 
@@ -135,9 +131,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           }),
         );
 
-        const storageDeep = yield* Effect.all(
-          storages.map((s) => Effect.suspend(() => storageList(s.id, organizationId))),
-        );
+        const storageDeep = yield* Effect.all(storages.map((s) => Effect.suspend(() => storageList(s.id))));
 
         const c2 = yield* Effect.all(storageDeep.map((s) => Effect.suspend(() => storageCapacity(s.id))));
         const capacity = c2.reduce((acc, a) => acc + a, 0);
@@ -229,10 +223,10 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
     const storageStatus = (
       storageId: string,
-      orgId: string,
     ): Effect.Effect<
       "low" | "below-reorder" | "below-capacity" | "optimal" | "empty",
-      StorageInvalidId | StorageNotFound | OrganizationInvalidId | ProductInvalidId | ProductNotFound
+      StorageInvalidId | StorageNotFound | OrganizationInvalidId | ProductInvalidId | ProductNotFound,
+      OrganizationId
     > =>
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
@@ -253,7 +247,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           return status;
         }
 
-        const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId, orgId)));
+        const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId)));
         const removedDuplicates = products.filter((p, i) => products.findIndex((p2) => p2.id === p.id) === i);
         const prs = yield* Effect.all(
           removedDuplicates.map((p) =>
@@ -296,7 +290,6 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
     const storageList = (
       storageId: string,
-      orgId: string,
     ): Effect.Effect<
       Omit<Effect.Effect.Success<ReturnType<typeof storageBox>>, "products"> & {
         // productSummary: ProductSummary[];
@@ -306,20 +299,21 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         children: Effect.Effect.Success<ReturnType<typeof storageBox>>["children"];
         products: Effect.Effect.Success<ReturnType<typeof productService.findById>>[];
       },
-      StorageInvalidId | StorageNotFound | ProductInvalidId | ProductNotFound | OrganizationInvalidId
+      StorageInvalidId | StorageNotFound | ProductInvalidId | ProductNotFound | OrganizationInvalidId,
+      OrganizationId
     > =>
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
 
         const children = yield* Effect.all(
-          storage.children.map((child) => Effect.suspend(() => storageList(child.id, orgId))),
+          storage.children.map((child) => Effect.suspend(() => storageList(child.id))),
         );
 
         const childrenCapacity = yield* storageCapacity(storage.id);
 
-        const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId, orgId)));
+        const products = yield* Effect.all(storage.products.map((p) => productService.findById(p.productId)));
 
-        const status = yield* storageStatus(storage.id, orgId);
+        const status = yield* storageStatus(storage.id);
 
         return {
           ...storage,
@@ -389,9 +383,10 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return childrenCapacity.reduce((acc, c) => acc + c, 0);
       });
 
-    const alerts = (organizationId: string) =>
+    const alerts = () =>
       Effect.gen(function* (_) {
-        const { products } = yield* statistics(organizationId);
+        const orgId = yield* OrganizationId;
+        const { products } = yield* statistics();
 
         const productsWithAlerts = products
           .filter((p) => p.count < (p.product.reorderPoint ?? p.product.minimumStock))
@@ -402,7 +397,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
               lastPurchase: p.product.suppliers
                 .flatMap((s) => s.supplier.purchases)
                 // First get purchases for this organization
-                .filter((po) => po.organization_id === organizationId)
+                .filter((po) => po.organization_id === orgId)
                 // Then filter completed ones
                 .filter((po) => po.status === "completed")
                 // Sort by date descending (most recent first)
@@ -413,11 +408,11 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return productsWithAlerts;
       });
 
-    const storageStatistics = (storageId: string, orgId: string) =>
+    const storageStatistics = (storageId: string) =>
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
-        const storageDeep = yield* storageList(storage.id, orgId);
-        const children = yield* Effect.all(storageDeep.children.map((child) => storageList(child.id, orgId)));
+        const storageDeep = yield* storageList(storage.id);
+        const children = yield* Effect.all(storageDeep.children.map((child) => storageList(child.id)));
 
         const c2 = yield* Effect.all(children.map((c) => storageCapacity(c.id)));
 
@@ -427,16 +422,13 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         };
       });
 
-    const getStockForProducts = (productIds: string[], orgId: string) =>
+    const getStockForProducts = (productIds: string[]) =>
       Effect.gen(function* (_) {
         const parsedIds = safeParse(array(prefixed_cuid2), productIds);
         if (!parsedIds.success) {
           return yield* Effect.fail(new Error("Invalid product ids"));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
-        }
+        const orgId = yield* OrganizationId;
         const products = yield* Effect.promise(() =>
           db.query.TB_products.findMany({
             where: (fields, operations) => operations.inArray(fields.id, parsedIds.output),
@@ -452,10 +444,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           const orgProduct = yield* Effect.promise(() =>
             db.query.TB_organizations_products.findFirst({
               where: (fields, operations) =>
-                operations.and(
-                  operations.eq(fields.productId, productId),
-                  operations.eq(fields.organizationId, parsedOrgId.output),
-                ),
+                operations.and(operations.eq(fields.productId, productId), operations.eq(fields.organizationId, orgId)),
             }),
           );
           if (orgProduct) {
@@ -466,7 +455,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         // get all the root storages of all warehouses in the organization
         const warehouses = yield* Effect.promise(() =>
           db.query.TB_organizations_warehouses.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
             with: {
               warehouse: {
                 with: {
@@ -488,7 +477,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         const storages = yield* Effect.all(
           warehouses
             .flatMap((w) => w.warehouse.facilities.flatMap((f) => f.areas.flatMap((a) => a.storages.map((s) => s.id))))
-            .map((sid) => storageList(sid, orgId)),
+            .map((sid) => storageList(sid)),
         );
 
         const xStock = storages.flatMap((s) =>

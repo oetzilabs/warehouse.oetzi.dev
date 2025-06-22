@@ -1,8 +1,9 @@
 import { query, redirect } from "@solidjs/router";
 import { InventoryLive, InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { withSession } from "./session";
 
 export const getInventory = query(async () => {
@@ -26,12 +27,13 @@ export const getInventory = query(async () => {
     }
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
   const inventory = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(InventoryService);
-      const info = yield* service.statistics(orgId);
+      const info = yield* service.statistics();
       return info;
-    }).pipe(Effect.provide(InventoryLive)),
+    }).pipe(Effect.provide(InventoryLive), Effect.provide(organizationIdLayer)),
   );
   return inventory;
 }, "organization-inventory");
@@ -57,13 +59,14 @@ export const getInventoryFromStorage = query(async (storageId: string) => {
     }
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
   const inventory = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(InventoryService);
-      const info = yield* service.storageStatistics(storageId, orgId);
+      const info = yield* service.storageStatistics(storageId);
 
       return info;
-    }).pipe(Effect.provide(InventoryLive)),
+    }).pipe(Effect.provide(InventoryLive), Effect.provide(organizationIdLayer)),
   );
   return inventory;
 }, "storage-inventory");
@@ -120,12 +123,13 @@ export const getInventoryAlerts = query(async () => {
     }
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
   const inventory = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(InventoryService);
-      const info = yield* service.alerts(orgId);
+      const info = yield* service.alerts();
       return info;
-    }).pipe(Effect.provide(InventoryLive)),
+    }).pipe(Effect.provide(InventoryLive), Effect.provide(organizationIdLayer)),
   );
   return inventory;
 }, "organization-inventory-alerts");
