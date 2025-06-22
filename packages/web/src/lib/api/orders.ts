@@ -2,11 +2,9 @@ import { action, json, query, redirect } from "@solidjs/router";
 import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
-import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { WarehouseNotFound } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
-import { Cause, Chunk, Effect, Exit } from "effect";
-import { getPurchases } from "./purchases";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { getSales } from "./sales";
 import { withSession } from "./session";
 
@@ -94,12 +92,13 @@ export const getOrderById = query(async (oid: string) => {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
+  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
   const order = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const orderService = yield* _(CustomerOrderService);
       const order = yield* orderService.findById(oid, orgId);
       return order;
-    }).pipe(Effect.provide(CustomerOrderLive)),
+    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
   );
 
   return Exit.match(order, {
@@ -176,11 +175,12 @@ export const convertToSale = action(
       throw redirect("/", { status: 403, statusText: "Forbidden" });
     }
 
+    const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
     const order = await Effect.runPromiseExit(
       Effect.gen(function* (_) {
         const orderService = yield* _(CustomerOrderService);
         return yield* orderService.convertToSale(id, cid, orgId, products);
-      }).pipe(Effect.provide(CustomerOrderLive)),
+      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
     );
     return Exit.match(order, {
       onSuccess: (order) => {
@@ -218,21 +218,19 @@ export const downloadOrderSheet = action(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
   const order = await Effect.runPromise(
     Effect.gen(function* (_) {
       const orderService = yield* _(CustomerOrderService);
       const order = yield* orderService.findById(id, orgId);
       const organizationService = yield* _(OrganizationService);
       const org = yield* organizationService.findById(orgId);
-      if (!org) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
-      }
       const pdf = yield* orderService.generatePDF(id, org, { page: { size: "A4", orientation: "portrait" } });
       return yield* Effect.succeed({
         pdf: pdf.toString("base64"),
         name: order.barcode ?? order.createdAt.toISOString(),
       });
-    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive)),
+    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive), Effect.provide(organizationIdLayer)),
   );
   return json(order);
 });

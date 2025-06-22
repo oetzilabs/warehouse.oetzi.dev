@@ -12,6 +12,7 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { InventoryLive, InventoryService } from "../inventory";
 import { OrganizationInfo } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import { PaperOrientation, PaperSize, PDFLive } from "../pdf";
 import {
   PurchaseInvalidId,
@@ -26,16 +27,13 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (userInput: InferInput<typeof SupplierPurchaseCreateSchema>, organizationId: string) =>
+    const create = (userInput: InferInput<typeof SupplierPurchaseCreateSchema>) =>
       Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
+        const orgId = yield* OrganizationId;
         const [order] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_purchases)
-            .values({ ...userInput, organization_id: parsedOrgId.output })
+            .values({ ...userInput, organization_id: orgId })
             .returning(),
         );
         if (!order) {
@@ -44,18 +42,14 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         return order;
       });
 
-    const findById = (id: string, organizationId: string) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const inventoryService = yield* _(InventoryService);
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new PurchaseInvalidId({ id }));
         }
-
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const order = yield* Effect.promise(() =>
           db.query.TB_supplier_purchases.findFirst({
@@ -101,12 +95,12 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
             ...p,
             product: {
               ...p.product,
-              organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+              organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
               currency: p.product.organizations
-                .find((org) => org.organizationId === parsedOrgId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
               sellingPrice: p.product.organizations
-                .find((org) => org.organizationId === parsedOrgId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
@@ -114,7 +108,6 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
 
         const productStocks = yield* inventoryService.getStockForProducts(
           filteredOrder.products.map((p) => p.productId),
-          organizationId,
         );
 
         const orderWithProductStocks = {

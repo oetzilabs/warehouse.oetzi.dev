@@ -1,8 +1,7 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
-import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { PurchasesLive, PurchasesService } from "@warehouseoetzidev/core/src/entities/purchases";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { withSession } from "./session";
 
 export const getPurchases = query(async () => {
@@ -104,12 +103,14 @@ export const getPurchaseById = query(async (pid: string) => {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
+  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
+
   const purchase = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const purchaseService = yield* _(PurchasesService);
-      const purchase = yield* purchaseService.findById(pid, orgId);
+      const purchase = yield* purchaseService.findById(pid);
       return purchase;
-    }).pipe(Effect.provide(PurchasesLive)),
+    }).pipe(Effect.provide(PurchasesLive), Effect.provide(organizationIdLayer)),
   );
 
   return Exit.match(purchase, {
