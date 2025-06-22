@@ -103,7 +103,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
                 <div class="flex flex-col gap-2 w-full h-full">
                   <span class="text-sm font-medium">{product.name}</span>
                   <span class="text-xs text-muted-foreground">
-                    Price: {product.sellingPrice?.toFixed(2) ?? "0.00"} {product.currency ?? "USD"}
+                    Price: {product.sellingPrice.toFixed(2)} {product.currency}
                   </span>
                   <span class="text-xs text-muted-foreground">{product.sku}</span>
                 </div>

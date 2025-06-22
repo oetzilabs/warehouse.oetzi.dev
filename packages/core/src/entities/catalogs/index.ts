@@ -284,21 +284,23 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return removed;
       });
 
-    const findByOrganizationId = (organizationId: string) =>
+    const findAll = () =>
       Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new CatalogOrganizationInvalidId({ organizationId }));
-        }
+        const orgId = yield* OrganizationId;
 
-        return yield* Effect.promise(() =>
+        const catalogs = yield* Effect.promise(() =>
           db.query.TB_catalogs.findMany({
-            where: (catalogs, operations) => operations.eq(catalogs.organizationId, parsedOrgId.output),
+            where: (catalogs, operations) => operations.eq(catalogs.organizationId, orgId),
             with: {
               products: {
                 with: {
                   product: {
                     with: {
+                      organizations: {
+                        with: {
+                          priceHistory: true,
+                        },
+                      },
                       brands: true,
                       saleItems: {
                         with: {
@@ -329,6 +331,30 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
             orderBy: (fields, operations) => [operations.desc(fields.createdAt), operations.desc(fields.deletedAt)],
           }),
         );
+        return catalogs.map((catalog) => ({
+          ...catalog,
+          products: catalog.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organization: p.product.organizations.find((o) => o.organizationId === orgId),
+              priceHistory:
+                p.product.organizations
+                  .find((o) => o.organizationId === orgId)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
+              sellingPrice:
+                p.product.organizations
+                  .find((o) => o.organizationId === orgId)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]
+                  ?.sellingPrice || 0,
+              currency:
+                p.product.organizations
+                  .find((o) => o.organizationId === orgId)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ||
+                "USD",
+            },
+          })),
+        }));
       });
 
     const printSheet = (catalogId: string, deviceId: string, productId: string) =>
@@ -437,7 +463,7 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       safeRemove,
       addProduct,
       removeProduct,
-      findByOrganizationId,
+      findAll,
       getProducts,
       printSheet,
       downloadSheet,

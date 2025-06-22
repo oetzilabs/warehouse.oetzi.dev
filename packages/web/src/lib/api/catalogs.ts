@@ -19,16 +19,25 @@ export const getCatalogs = query(async () => {
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!user || !session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const catalogs = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(CatalogService);
-      return yield* service.findByOrganizationId(session.current_organization_id!);
-    }).pipe(Effect.provide(CatalogLive)),
+      return yield* service.findAll();
+    }).pipe(Effect.provide(CatalogLive), Effect.provide(organizationId)),
   );
   return catalogs;
 }, "organization-catalogs");
