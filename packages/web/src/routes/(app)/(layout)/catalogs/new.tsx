@@ -149,13 +149,7 @@ export default function NewCatalogPage() {
           form.handleSubmit();
         }}
       >
-        <form.Field
-          name="name"
-          validators={{
-            onChange: pipe(string(), minLength(3)),
-            onBlur: pipe(string(), minLength(3)),
-          }}
-        >
+        <form.Field name="name">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">
@@ -167,13 +161,10 @@ export default function NewCatalogPage() {
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>
-        <form.Field name="description" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="description">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Description</TextFieldLabel>
@@ -183,9 +174,6 @@ export default function NewCatalogPage() {
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>

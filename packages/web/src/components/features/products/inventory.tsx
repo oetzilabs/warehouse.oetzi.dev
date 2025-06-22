@@ -76,10 +76,9 @@ export const Inventory = (props: InventoryProps) => {
         <Reorder
           product={() => ({
             ...props.product(),
-            preferredDate: props.product().purchases.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-              .supplierPurchase.createdAt,
-            reorderPoint: props.product().organizations[0].reorderPoint ?? 0,
-            minimumStock: props.product().organizations[0].minimumStock,
+            preferredDate: props.product().preferredDate ?? dayjs().add(3, "days").toDate(),
+            reorderPoint: props.product().reorderPoint ?? 0,
+            minimumStock: props.product().minimumStock ?? 0,
           })}
         />
       </div>

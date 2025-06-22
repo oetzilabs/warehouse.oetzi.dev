@@ -1,8 +1,8 @@
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { action, json, query, redirect } from "@solidjs/router";
 import { AccountingLive, AccountingService } from "@warehouseoetzidev/core/src/entities/accounting";
-import { SessionLive } from "@warehouseoetzidev/core/src/entities/sessions";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { InferInput } from "valibot";
 import { withSession } from "./session";
 
@@ -23,12 +23,13 @@ export const getAccountingList = query(async () => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const list = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(AccountingService);
-      return yield* service.getFinancialSummary(orgId);
-    }).pipe(Effect.provide(AccountingLive)),
+      return yield* service.getFinancialSummary();
+    }).pipe(Effect.provide(AccountingLive), Effect.provide(organizationId)),
   );
   return list;
 }, "organization-accounting");
