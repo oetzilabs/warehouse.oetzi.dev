@@ -189,6 +189,9 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           sellingPrice: product.product.organizations
             .find((org) => org.organizationId === orgId)!
             .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+          preferredDate:
+            product.product.purchases.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())?.[0]
+              ?.supplierPurchase?.createdAt ?? dayjs().add(3, "days").toDate(),
         };
       });
 
