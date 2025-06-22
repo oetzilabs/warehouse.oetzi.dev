@@ -15,6 +15,7 @@ import {
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
   SupplierContactNotCreated,
@@ -34,8 +35,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof SupplierCreateSchema>, orgId: string) =>
+    const create = (input: InferInput<typeof SupplierCreateSchema>) =>
       Effect.gen(function* (_) {
+        const orgId = yield* OrganizationId;
         const [supplier] = yield* Effect.promise(() => db.insert(TB_suppliers).values(input).returning());
         if (!supplier) {
           return yield* Effect.fail(new SupplierNotCreated({}));
@@ -43,26 +45,23 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         yield* Effect.promise(() =>
           db.insert(TB_organization_suppliers).values({ supplier_id: supplier.id, organization_id: orgId }).returning(),
         );
-        return yield* findById(supplier.id, orgId);
+        return yield* findById(supplier.id);
       });
 
-    const findById = (id: string, orgId: string) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new SupplierInvalidId({ id }));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const supplier = yield* Effect.promise(() =>
           db.query.TB_organization_suppliers.findFirst({
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.supplier_id, parsedId.output),
-                operations.eq(fields.organization_id, parsedOrgId.output),
+                operations.eq(fields.organization_id, orgId),
               ),
             with: {
               supplier: {
@@ -110,7 +109,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
             ...p,
             product: {
               ...p.product,
-              organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+              organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
             },
           })),
         };
@@ -138,9 +137,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return updated;
       });
 
-    const addContact = (supplierId: string, orgId: string, input: InferInput<typeof SupplierContactCreateSchema>) =>
+    const addContact = (supplierId: string, input: InferInput<typeof SupplierContactCreateSchema>) =>
       Effect.gen(function* (_) {
-        const supplier = yield* findById(supplierId, orgId);
+        const supplier = yield* findById(supplierId);
         const [contact] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_contacts)
@@ -155,9 +154,9 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return contact;
       });
 
-    const addNote = (supplierId: string, orgId: string, input: InferInput<typeof SupplierNoteCreateSchema>) =>
+    const addNote = (supplierId: string, input: InferInput<typeof SupplierNoteCreateSchema>) =>
       Effect.gen(function* (_) {
-        const supplier = yield* findById(supplierId, orgId);
+        const supplier = yield* findById(supplierId);
         const [note] = yield* Effect.promise(() =>
           db
             .insert(TB_supplier_notes)
@@ -200,22 +199,20 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return orgSuppliers.map((orgSupplier) => orgSupplier.supplier);
       });
 
-    const getPurchasesBySupplierIdAndOrganizationId = (supplierId: string, organizationId: string) =>
+    const getPurchasesBySupplierId = (supplierId: string) =>
       Effect.gen(function* (_) {
         const parsedSupplierId = safeParse(prefixed_cuid2, supplierId);
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedSupplierId.success) {
-          return yield* Effect.fail(new SupplierInvalidId({ id: supplierId }));
+          return yield* Effect.fail(new SupplierNotFound({ id: supplierId }));
         }
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
+        const orgId = yield* OrganizationId;
+
         return yield* Effect.promise(() =>
           db.query.TB_supplier_purchases.findMany({
             where: (fields, operations) =>
               operations.and(
                 operations.eq(fields.supplier_id, parsedSupplierId.output),
-                operations.eq(fields.organization_id, parsedOrganizationId.output),
+                operations.eq(fields.organization_id, orgId),
               ),
             with: {
               products: {
@@ -354,7 +351,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       findByOrganizationId,
       remove,
       safeRemove,
-      getPurchasesBySupplierIdAndOrganizationId,
+      getPurchasesBySupplierId,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -363,6 +360,6 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
 export const SupplierLive = SupplierService.Default;
 export type SupplierInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findById"]>>>>;
 export type SupplierPurchaseInfo = NonNullable<
-  Awaited<Effect.Effect.Success<ReturnType<SupplierService["getPurchasesBySupplierIdAndOrganizationId"]>>>
+  Awaited<Effect.Effect.Success<ReturnType<SupplierService["getPurchasesBySupplierId"]>>>
 >[number];
 export type SupplierNoteInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SupplierService["findNoteById"]>>>>;

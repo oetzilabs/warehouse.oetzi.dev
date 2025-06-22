@@ -5,10 +5,11 @@ import { CatalogLive, CatalogService } from "@warehouseoetzidev/core/src/entitie
 import { CatalogNotFound } from "@warehouseoetzidev/core/src/entities/catalogs/errors";
 import { DeviceLive, DeviceService } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { SessionLive } from "@warehouseoetzidev/core/src/entities/sessions";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { InferInput } from "valibot";
 import { withSession } from "./session";
 
@@ -38,12 +39,24 @@ export const getCatalogById = query(async (id: string) => {
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const catalog = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(CatalogService);
       return yield* service.findById(id);
-    }).pipe(Effect.provide(CatalogLive)),
+    }).pipe(Effect.provide(CatalogLive), Effect.provide(organizationId)),
   );
   return catalog;
 }, "catalog-by-id");
@@ -54,16 +67,25 @@ export const createCatalog = action(async (data: InferInput<typeof CatalogCreate
   if (!auth) {
     throw new Error("You have to be logged in to perform this action.");
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
-    throw new Error("You have to be part of an organization to perform this action.");
-  }
 
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const catalog = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(CatalogService);
-      return yield* service.create(data, session.current_organization_id!, user.id);
-    }).pipe(Effect.provide(CatalogLive)),
+      return yield* service.create(data, user.id);
+    }).pipe(Effect.provide(CatalogLive), Effect.provide(organizationId)),
   );
   return json(catalog, {
     revalidate: [getAuthenticatedUser.key, getCatalogs.key],
@@ -124,22 +146,21 @@ export const printSheet = action(async (id: string, deviceId: string, productId:
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const catalog = await Effect.runPromise(
     Effect.gen(function* (_) {
       const catalogService = yield* _(CatalogService);
       const deviceService = yield* _(DeviceService);
       const productService = yield* _(ProductService);
       const device = yield* deviceService.findById(deviceId);
-      if (!device) {
-        return yield* Effect.fail(new DeviceNotFound({ id: deviceId }));
-      }
-      const product = yield* productService.findById(productId, orgId);
-      if (!product) {
-        return yield* Effect.fail(new ProductNotFound({ id: productId }));
-      }
+      const product = yield* productService.findById(productId);
       return yield* catalogService.printSheet(id, deviceId, productId);
-    }).pipe(Effect.provide(CatalogLive), Effect.provide(DeviceLive), Effect.provide(ProductLive)),
+    }).pipe(
+      Effect.provide(CatalogLive),
+      Effect.provide(DeviceLive),
+      Effect.provide(ProductLive),
+      Effect.provide(organizationId),
+    ),
   );
   return catalog;
 });
@@ -183,18 +204,23 @@ export const addProductsToCatalog = action(async (id: string, products: string[]
   if (!auth) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-  const [user, session] = auth;
-  if (!session.current_organization_id) {
+  const user = auth[0];
+  if (!user) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(CatalogService);
       const catalog = yield* service.findById(id);
-      if (!catalog) {
-        return yield* Effect.fail(new CatalogNotFound({ id }));
-      }
       const prods = yield* service.getProducts(catalog.id);
       const toAdd = products.filter((p) => !prods.map((pp) => pp.id).includes(p));
       for (const product of toAdd) {
@@ -205,7 +231,7 @@ export const addProductsToCatalog = action(async (id: string, products: string[]
         yield* service.removeProduct(catalog.id, product);
       }
       return true;
-    }).pipe(Effect.provide(CatalogLive)),
+    }).pipe(Effect.provide(CatalogLive), Effect.provide(organizationId)),
   );
   return json(result, {
     revalidate: [getCatalogById.keyFor(id), getCatalogs.key],

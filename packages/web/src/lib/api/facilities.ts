@@ -7,11 +7,12 @@ import {
 import { AddressLive, AddressService } from "@warehouseoetzidev/core/src/entities/addresses";
 import { FacilityLive, FacilityService } from "@warehouseoetzidev/core/src/entities/facilities";
 import { FacilityNotFound } from "@warehouseoetzidev/core/src/entities/facilities/errors";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { WarehouseDoesNotContainFacility } from "@warehouseoetzidev/core/src/entities/warehouses/errors";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { InferInput } from "valibot";
 import { getEvent } from "vinxi/http";
 import { getAuthenticatedUser } from "./auth";
@@ -54,11 +55,12 @@ export const getFacilityById = query(async (id: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const warehouse = await Effect.runPromise(
     Effect.gen(function* (_) {
       const service = yield* _(FacilityService);
-      return yield* service.findById(id, orgId);
-    }).pipe(Effect.provide(FacilityLive)),
+      return yield* service.findById(id);
+    }).pipe(Effect.provide(FacilityLive), Effect.provide(organizationId)),
   );
   return warehouse;
 }, "warehouse-by-id");
@@ -81,6 +83,7 @@ export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const warehouse = await Effect.runPromise(
     Effect.gen(function* (_) {
       const whService = yield* _(WarehouseService);
@@ -92,8 +95,8 @@ export const getFacilityByWarehouseId = query(async (whid, fcid: string) => {
       if (!wh.facilities.find((f) => f.id === fcid)) {
         return yield* Effect.fail(new WarehouseDoesNotContainFacility({ id: whid, fcid }));
       }
-      return yield* fcService.findById(fcid, orgId);
-    }).pipe(Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
+      return yield* fcService.findById(fcid);
+    }).pipe(Effect.provide(FacilityLive), Effect.provide(WarehouseLive), Effect.provide(organizationId)),
   );
   return warehouse;
 }, "warehouse-by-id");
@@ -197,16 +200,17 @@ export const changeFacilityDimensions = action(
     if (!orgId) {
       throw new Error("You have to be part of an organization to perform this action.");
     }
+    const organizationId = Layer.succeed(OrganizationId, orgId);
     const warehouse = await Effect.runPromise(
       Effect.gen(function* (_) {
         const service = yield* _(FacilityService);
-        const wh = yield* service.findById(data.id, orgId);
+        const wh = yield* service.findById(data.id);
         if (!wh) {
           return yield* Effect.fail(new Error("Facility not found"));
         }
         const d = { dimensions: { width: data.width, height: data.height }, id: data.id };
         return yield* service.update(d);
-      }).pipe(Effect.provide(FacilityLive)),
+      }).pipe(Effect.provide(FacilityLive), Effect.provide(organizationId)),
     );
     return warehouse;
   },
@@ -233,6 +237,7 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
   if (!orgId) {
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const result = await Effect.runPromise(
     Effect.gen(function* (_) {
       const sessionService = yield* _(SessionService);
@@ -242,7 +247,7 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
         return yield* Effect.fail(new Error("Warehouse not found"));
       }
       const facilityService = yield* _(FacilityService);
-      const fc = yield* facilityService.findById(fcId, orgId);
+      const fc = yield* facilityService.findById(fcId);
       if (!fc) {
         return yield* Effect.fail(new Error("Facility not found"));
       }
@@ -257,7 +262,12 @@ export const changeFacility = action(async (whId: string, fcId: string) => {
         return yield* Effect.fail(new Error("Facility not updated"));
       }
       return { wh, fc };
-    }).pipe(Effect.provide(SessionLive), Effect.provide(FacilityLive), Effect.provide(WarehouseLive)),
+    }).pipe(
+      Effect.provide(SessionLive),
+      Effect.provide(FacilityLive),
+      Effect.provide(WarehouseLive),
+      Effect.provide(organizationId),
+    ),
   );
 
   newUrl = currentUrl.replace(session.current_warehouse_facility_id!, result.fc.id);

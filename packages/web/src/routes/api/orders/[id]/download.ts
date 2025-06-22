@@ -2,7 +2,8 @@ import { withSession } from "@/lib/api/session";
 import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
-import { Effect } from "effect";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
+import { Effect, Layer } from "effect";
 
 export async function GET({ params }: { params: { id: string } }) {
   const auth = await withSession();
@@ -17,19 +18,19 @@ export async function GET({ params }: { params: { id: string } }) {
   if (!orgId) {
     return new Response("Unauthorized", { status: 401 });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   try {
     const result = await Effect.runPromise(
       Effect.gen(function* (_) {
-        const orderService = yield* _(CustomerOrderService);
-        const organizationService = yield* _(OrganizationService);
-        const org = yield* _(organizationService.findById(orgId));
-        const order = yield* orderService.findById(params.id, org.id);
-        const pdf = yield* _(
-          orderService.generatePDF(params.id, org, { page: { size: "A4", orientation: "portrait" } }),
-        );
+        const orderService = yield* CustomerOrderService;
+        const organizationService = yield* OrganizationService;
+        const org = yield* organizationService.findById(orgId);
+        const order = yield* orderService.findById(params.id);
+        const pdf = yield* orderService.generatePDF(params.id, org, { page: { size: "A4", orientation: "portrait" } });
+
         return { pdf, filename: order.barcode ?? order.createdAt.toISOString() };
-      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive)),
+      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
     );
 
     return new Response(result.pdf, {

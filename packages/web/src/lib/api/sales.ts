@@ -1,8 +1,9 @@
 import { action, json, query, redirect } from "@solidjs/router";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { withSession } from "./session";
 
 export const getSalesLastFewMonths = query(async () => {
@@ -26,6 +27,7 @@ export const getSalesLastFewMonths = query(async () => {
     }
     throw new Error("You have to be part of an organization to perform this action.");
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   // create a date range of the last few months
   const months = new Array(6)
     .fill(0)
@@ -36,12 +38,12 @@ export const getSalesLastFewMonths = query(async () => {
   const sales = await Effect.runPromise(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
-      const sales = yield* salesService.findWithinRange(orgId, range[0], range[5]);
+      const sales = yield* salesService.findWithinRange(range[0], range[5]);
       if (!sales) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
       return sales;
-    }).pipe(Effect.provide(SalesLive)),
+    }).pipe(Effect.provide(SalesLive), Effect.provide(organizationId)),
   );
 
   const obj = {
@@ -110,16 +112,16 @@ export const getSaleById = query(async (sid: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
-
+  const organizationId = Layer.succeed(OrganizationId, orgId);
   const sale = await Effect.runPromise(
     Effect.gen(function* (_) {
       const salesService = yield* _(SalesService);
-      const sale = yield* salesService.findById(sid, orgId);
+      const sale = yield* salesService.findById(sid);
       if (!sale) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
       return sale;
-    }).pipe(Effect.provide(SalesLive)),
+    }).pipe(Effect.provide(SalesLive), Effect.provide(organizationId)),
   );
   return sale;
 }, "sale-by-id");

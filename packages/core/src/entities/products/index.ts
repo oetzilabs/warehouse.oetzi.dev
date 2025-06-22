@@ -615,16 +615,14 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return generatedPdf;
       }).pipe(Effect.provide(PDFLive));
 
-    const getStockCount = (productId: string, orgId: string) =>
+    const getStockCount = (productId: string) =>
       Effect.gen(function* (_) {
         const parsedProductId = safeParse(prefixed_cuid2, productId);
         if (!parsedProductId.success) {
           return yield* Effect.fail(new ProductInvalidId({ id: productId }));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
-        }
+
+        const orgId = yield* OrganizationId;
 
         // First check if product belongs to organization
         const orgProduct = yield* Effect.promise(() =>
@@ -682,16 +680,13 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
         return count;
       });
 
-    const getPriceHistory = (productId: string, orgId: string) =>
+    const getPriceHistory = (productId: string) =>
       Effect.gen(function* (_) {
         const parsedProductId = safeParse(prefixed_cuid2, productId);
         if (!parsedProductId.success) {
           return yield* Effect.fail(new ProductInvalidId({ id: productId }));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const supplierService = yield* _(SupplierService);
 
@@ -723,7 +718,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           pricing: (typeof latestPurchasePrices)[number];
         }[] = [];
         for (const purchasePrice of latestPurchasePrices) {
-          const supplier = yield* supplierService.findById(purchasePrice.supplierId, orgId);
+          const supplier = yield* supplierService.findById(purchasePrice.supplierId);
           supplierPricesMap.push({
             supplier: supplier,
             pricing: purchasePrice,

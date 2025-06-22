@@ -15,6 +15,7 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrderNotFound } from "../orders/errors";
 import { OrganizationInfo, OrganizationLive, OrganizationService } from "../organizations";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import { PaperOrientation, PaperSize, PDFLive, PDFService } from "../pdf";
 import { ProductLive, ProductService } from "../products";
 import {
@@ -50,24 +51,18 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         // return yield* findById(sale.id, saleInput.organizationId);
       });
 
-    const findById = (id: string, orgId: string) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new SaleInvalidId({ id }));
         }
-        const parsedOrgId = safeParse(prefixed_cuid2, orgId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: orgId }));
-        }
+        const orgId = yield* OrganizationId;
 
         const sale = yield* Effect.promise(() =>
           db.query.TB_sales.findFirst({
             where: (fields, operations) =>
-              operations.and(
-                operations.eq(fields.id, parsedId.output),
-                operations.eq(fields.organizationId, parsedOrgId.output),
-              ),
+              operations.and(operations.eq(fields.id, parsedId.output), operations.eq(fields.organizationId, orgId)),
             with: {
               items: {
                 with: {
@@ -108,12 +103,12 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
             ...item,
             product: {
               ...item.product,
-              organizations: item.product.organizations.filter((org) => org.organizationId === parsedOrgId.output),
+              organizations: item.product.organizations.filter((org) => org.organizationId === orgId),
               currency: item.product.organizations
-                .find((org) => org.organizationId === parsedOrgId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
               sellingPrice: item.product.organizations
-                .find((org) => org.organizationId === parsedOrgId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
             },
           })),
@@ -156,24 +151,21 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return deletedSale;
       });
 
-    const calculateTotal = (id: string, orgId: string) =>
+    const calculateTotal = (id: string) =>
       Effect.gen(function* (_) {
-        const sale = yield* findById(id, orgId);
+        const sale = yield* findById(id);
         if (!sale) {
           return yield* Effect.fail(new SaleNotFound({ id }));
         }
         return sale.items.reduce((total, item) => total + item.quantity * item.price, 0);
       });
 
-    const findWithinRange = (orgId: string, start: Date, end: Date) =>
+    const findWithinRange = (start: Date, end: Date) =>
       Effect.gen(function* (_) {
-        const org = yield* organizationsService.findById(orgId);
-        if (!org) {
-          return yield* Effect.fail(new SaleOrganizationNotFound({ orgId }));
-        }
+        const orgId = yield* OrganizationId;
         const sales = yield* Effect.promise(() =>
           db.query.TB_organizations_sales.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, org.id),
+            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
             with: {
               sale: {
                 with: {
@@ -293,7 +285,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       },
     ) =>
       Effect.gen(function* (_) {
-        const sale = yield* findById(id, organization.id);
+        const sale = yield* findById(id);
         if (!sale) {
           return yield* Effect.fail(new OrderNotFound({ id }));
         }
@@ -309,7 +301,6 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
     const addProduct = (
       saleId: string,
       productId: string,
-      orgId: string,
       data: Omit<InferInput<typeof SaleItemCreateSchema>, "saleId" | "productId">,
     ) =>
       Effect.gen(function* (_) {
@@ -323,9 +314,9 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           return yield* Effect.fail(new SaleProductInvalidId({ id: productId }));
         }
 
-        const product = yield* productService.findById(productId, orgId);
+        const product = yield* productService.findById(productId);
 
-        const sale = yield* findById(saleId, orgId);
+        const sale = yield* findById(saleId);
         // is the status allowed to change the product items?
         if (
           (["cancelled", "deleted", "delivered", "shipped", "confirmed"] as (typeof sale.status)[]).includes(
@@ -360,7 +351,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return added;
       });
 
-    const removeProduct = (saleId: string, productId: string, orgId: string) =>
+    const removeProduct = (saleId: string, productId: string) =>
       Effect.gen(function* (_) {
         const parsedSaleId = safeParse(prefixed_cuid2, saleId);
         if (!parsedSaleId.success) {
@@ -372,9 +363,9 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           return yield* Effect.fail(new SaleProductInvalidId({ id: productId }));
         }
 
-        const product = yield* productService.findById(productId, orgId);
+        const product = yield* productService.findById(productId);
 
-        const sale = yield* findById(saleId, orgId);
+        const sale = yield* findById(saleId);
         // is the status allowed to change the product items?
         if (
           (["cancelled", "deleted", "delivered", "shipped", "confirmed"] as (typeof sale.status)[]).includes(
