@@ -40,8 +40,6 @@ export default function BarcodeScanner(props: { onScan: (data: string) => void }
         scanner?.clear();
         scanner = undefined;
       });
-    } else {
-      toast.error("No scanner found");
     }
     setOpen(false);
     scanMutation.reset();
