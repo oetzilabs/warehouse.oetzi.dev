@@ -1,3 +1,4 @@
+import { join } from "path";
 import { prefix } from "@effect/platform/KeyValueStore";
 import { RealtimeLive, RealtimeService } from "@warehouseoetzidev/core/src/entities/realtime";
 import { Cause, Chunk, Console, Effect, Exit, Redacted, Schedule, Stream } from "effect";
@@ -25,7 +26,7 @@ export const program = Effect.gen(function* (_) {
   // yield* Effect.sleep(1000);
 
   const client = yield* Effect.acquireRelease(mqtt.connect(brokerUrl, org_id, prefix, clientId), (client, exit) =>
-    mqtt.disconnect(client),
+    mqtt.disconnect(client)
   );
 
   const subscription = yield* mqtt.subscribe(client, channel);
@@ -51,18 +52,79 @@ export const program = Effect.gen(function* (_) {
           yield* printer.print(device, {
             text: [
               {
-                content: `Print messages with length ${json.messages.length}`,
+                content: "",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "OetziLabs",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "Teststrasse 1",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "12345 Test City",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "UID Nr.: DE123456789",
+                align: "ct",
+                style: "normal",
+              },
+              {
+                content: "",
+                align: "ct",
+                style: "normal",
+              },
+              ...json.messages.map((message:string) => ({
+                content: message,
+                align: "lt",
+                style: "normal",
+              })),
+              {
+                content: "Date: 2022-01-01",
                 align: "lt",
                 style: "normal",
               },
               {
-                content: json.messages.join(", "),
-                style: "normal",
+                content: "Time: 12:00 AM",
                 align: "lt",
+                style: "normal",
               },
+              {
+                content: "Receipt No.: 001",
+                align: "lt",
+                style: "normal",
+              },
+              {
+                content: "Trace No.: 001",
+                align: "lt",
+                style: "normal",
+              },
+              {
+                content: "",
+                align: "ct",
+                style: "normal",
+              },
+
             ],
           });
-        }),
+        })
       );
     }
   });
@@ -85,7 +147,7 @@ export const program = Effect.gen(function* (_) {
   });
 
   yield* Effect.addFinalizer(() =>
-    Effect.all([Console.log("Cleaning up..."), Effect.sync(() => subscription.unsub())]),
+    Effect.all([Console.log("Cleaning up..."), Effect.sync(() => subscription.unsub())])
   );
 
   const schedule = Schedule.spaced("1 seconds");
@@ -96,5 +158,5 @@ export const program = Effect.gen(function* (_) {
   Effect.provide(MQTTLive),
   Effect.provide(PrinterLive),
   Effect.provide(PrinterConfigLive),
-  Effect.provide(RealtimeLive),
+  Effect.provide(RealtimeLive)
 );
