@@ -1,4 +1,4 @@
-import { count, inArray } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { Console, Effect } from "effect";
 import { array, safeParse } from "valibot";
 import { TB_storage_to_products } from "../../drizzle/sql/schema";
@@ -174,6 +174,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
                 },
               },
               children: true,
+              type: true,
               labels: true,
             },
           }),
@@ -216,6 +217,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
         return {
           ...storage,
+          products: storage.products ?? [],
           productSummary,
           children: childrenStorages,
         };
@@ -487,6 +489,71 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return xStock;
       });
 
+    const updateInventoryForProduct = (productId: string, data: { storageId: string; amount: number }) =>
+      Effect.gen(function* (_) {
+        const parsedId = safeParse(prefixed_cuid2, productId);
+        if (!parsedId.success) {
+          return yield* Effect.fail(new Error("Invalid product id"));
+        }
+        const product = yield* Effect.promise(() =>
+          db.query.TB_products.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          }),
+        );
+        if (!product) {
+          return yield* Effect.fail(new Error("Product not found"));
+        }
+        const parsedStorageId = safeParse(prefixed_cuid2, data.storageId);
+        if (!parsedStorageId.success) {
+          return yield* Effect.fail(new Error("Invalid storage id"));
+        }
+        const storage = yield* storageBox(parsedStorageId.output);
+        if (!storage) {
+          return yield* Effect.fail(new StorageNotFound({ id: data.storageId }));
+        }
+        // we gotta update the junction table of the storage to product, by checking how many products are in the storage.
+        const storageProducts = yield* Effect.promise(() =>
+          db.query.TB_storage_to_products.findMany({
+            where: (fields, operations) =>
+              operations.and(
+                operations.eq(fields.productId, parsedId.output),
+                operations.eq(fields.storageId, parsedStorageId.output),
+              ),
+          }),
+        );
+        if (storageProducts.length === data.amount) {
+          // nothing to update
+          return yield* Effect.succeed(data);
+        }
+        if (storageProducts.length > data.amount) {
+          // we need to remove some products
+          const productsToRemove = storageProducts.slice(data.amount);
+          const productsToRemoveIds = productsToRemove.map((p) => p.productId);
+          yield* Effect.promise(() =>
+            db
+              .delete(TB_storage_to_products)
+              .where(
+                and(
+                  eq(TB_storage_to_products.storageId, parsedStorageId.output),
+                  inArray(TB_storage_to_products.productId, productsToRemoveIds),
+                ),
+              )
+              .returning(),
+          );
+          return yield* Effect.succeed({ ...data, amount: storageProducts.length });
+        }
+        if (storageProducts.length < data.amount) {
+          // we need to add some products
+          const productsToAddIds = Array.from({ length: data.amount - storageProducts.length }, () => ({
+            productId: parsedId.output,
+            storageId: parsedStorageId.output,
+          }));
+
+          yield* Effect.promise(() => db.insert(TB_storage_to_products).values(productsToAddIds).returning());
+          return yield* Effect.succeed({ ...data, amount: storageProducts.length });
+        }
+      });
+
     return {
       storageStatistics,
       statistics,
@@ -494,6 +561,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       storageCapacity,
       productCountByStorageId,
       getStockForProducts,
+      updateInventoryForProduct,
     } as const;
   }),
   dependencies: [DatabaseLive, ProductLive],

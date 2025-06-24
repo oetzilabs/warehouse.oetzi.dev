@@ -38,7 +38,7 @@ export const Codes = (props: CodesProps) => {
           </Button>
         </div>
       </div>
-      <div class="flex flex-row gap-10 items-center justify-center p-4">
+      <div class="flex flex-col md:flex-row gap-10 items-center justify-center p-4">
         <Barcode
           value={props.product().sku ?? ""}
           fallback={

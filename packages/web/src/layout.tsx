@@ -15,7 +15,7 @@ export const AppLayout = (props: ParentProps) => {
     >
       <main class="w-full h-full flex flex-col md:border md:border-neutral-200 md:dark:border-neutral-800 md:rounded-xl md:overflow-clip bg-background md:drop-shadow-2xl">
         <Header />
-        <div class="h-[calc(100svh-83px)] w-full">{props.children}</div>
+        <div class="h-[calc(100svh)] md:h-[calc(100svh-83px)] w-full">{props.children}</div>
       </main>
     </div>
   );

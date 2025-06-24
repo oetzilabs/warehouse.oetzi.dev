@@ -171,7 +171,7 @@ export default function DevicePage() {
               </div>
             </div>
             <div class="">
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
@@ -183,7 +183,7 @@ export default function DevicePage() {
                 }
               >
                 Test Print
-              </Button>
+              </Button> */}
             </div>
           </div>
         )}
