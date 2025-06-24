@@ -67,7 +67,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
   const filteredData = useFilter(props.data, filterConfig);
 
   const renderCatalogItem = (catalog: CatalogInfo) => (
-    <div class="flex flex-col w-full h-content">
+    <div class="flex flex-col w-full h-full">
       <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
         <div class="flex flex-col gap-0.5">
           <span class="text-sm font-medium">{catalog.name}</span>
@@ -85,7 +85,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
         <Show
           when={catalog.deletedAt === null}
           fallback={
-            <div class="text-sm text-muted-foreground flex flex-col items-center justify-center p-8">
+            <div class="text-sm text-muted-foreground flex flex-col items-center justify-center p-8 h-full w-full">
               This catalog has been deleted
             </div>
           }
@@ -93,7 +93,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
           <For
             each={catalog.products.map((p) => p.product)}
             fallback={
-              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground">
+              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground h-full w-full">
                 No products added
               </div>
             }

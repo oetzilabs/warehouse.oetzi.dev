@@ -96,7 +96,9 @@ export default function ProductPage() {
               <div class="flex flex-col gap-4 p-4 rounded-lg w-full bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                 <div class="flex flex-row items-center gap-4 justify-between">
                   <div class="flex flex-row gap-2 items-center">
-                    <h2 class="text-2xl font-bold tracking-wide uppercase">{productInfo().name}</h2>
+                    <h2 class="md:text-2xl font-bold md:tracking-wide uppercase truncate w-full max-w-[280px] md:max-w-full">
+                      {productInfo().name}
+                    </h2>
                     <Show when={productInfo().deletedAt}>
                       <Badge variant="outline" class="bg-rose-500 border-0">
                         Deleted
@@ -108,7 +110,7 @@ export default function ProductPage() {
                       </Badge>
                     </Show>
                   </div>
-                  <div class="flex flex-col items-end gap-2 min-w-[200px]">
+                  <div class="flex flex-col items-end gap-2 md:min-w-[200px]">
                     <div class="flex flex-row items-center gap-2">
                       <DropdownMenu placement="bottom-end">
                         <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">

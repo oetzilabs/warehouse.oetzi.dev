@@ -83,32 +83,16 @@ export const ProductsList = (props: ProductsListProps) => {
         <div class="flex flex-row items-center">
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row items-center gap-2">
-              <span class="text-sm font-medium truncate">{truncateText(item.product.name, 40)}</span>
-              <Show when={item.deletedAt}>
-                <Badge variant="outline" class="bg-rose-500 border-0 text-white">
-                  Not in Sortiment
-                </Badge>
-              </Show>
-              <Show when={item.product.deletedAt}>
-                <Badge variant="outline" class="bg-rose-500 border-0">
-                  Deleted
-                </Badge>
-              </Show>
+              <span class="text-sm font-medium truncate">{item.product.name}</span>
             </div>
             <span class="text-xs text-muted-foreground">
               {dayjs(item.product.updatedAt ?? item.product.createdAt).format("MMM DD, YYYY - h:mm A")}
             </span>
           </div>
         </div>
-        <div class="flex flex-row gap-2 w-max">
-          <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2">
-            Open
-            <ArrowUpRight class="size-4" />
-          </Button>
-        </div>
       </div>
 
-      <div class="flex flex-col p-4 gap-4">
+      <div class="flex flex-col p-4 gap-4 border-b">
         <div class="flex flex-row items-center justify-between">
           <div class="flex flex-col gap-0.5">
             <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
@@ -132,6 +116,26 @@ export const ProductsList = (props: ProductsListProps) => {
               {item.sellingPrice.toFixed(2)} {item.currency}
             </span>
           </div>
+        </div>
+      </div>
+      <div class="flex flex-row items-center justify-between p-4">
+        <div class="flex flex-row gap-2 w-max">
+          <Show when={item.deletedAt}>
+            <Badge variant="outline" class="bg-rose-500 border-0 text-white">
+              Not in Sortiment
+            </Badge>
+          </Show>
+          <Show when={item.product.deletedAt}>
+            <Badge variant="outline" class="bg-rose-500 border-0">
+              Deleted
+            </Badge>
+          </Show>
+        </div>
+        <div class="flex flex-row gap-2 w-max shrink-0">
+          <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2">
+            Open
+            <ArrowUpRight class="size-4" />
+          </Button>
         </div>
       </div>
     </>
