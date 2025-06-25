@@ -153,13 +153,7 @@ export default function CustomerOrderPage() {
                             variant="destructive"
                             disabled={isDeletingOrder.pending}
                             onClick={() => {
-                              const promise = new Promise(async (resolve, reject) => {
-                                const p = await deleteOrderAction(orderInfo().id).catch(reject);
-                                setDeleteDialogOpen(false);
-                                navigate(`/suppliers/${params.spid}`);
-                                return resolve(p);
-                              });
-                              toast.promise(promise, {
+                              toast.promise(deleteOrderAction(orderInfo().id), {
                                 loading: "Deleting order...",
                                 success: "Order deleted",
                                 error: "Failed to delete order",
