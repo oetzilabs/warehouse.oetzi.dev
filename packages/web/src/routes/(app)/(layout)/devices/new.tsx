@@ -66,13 +66,7 @@ export default function NewDevicePage() {
           form.handleSubmit();
         }}
       >
-        <form.Field
-          name="name"
-          validators={{
-            onChange: pipe(string(), minLength(1, "Device name is required")),
-            onBlur: pipe(string(), minLength(1, "Device name is required")),
-          }}
-        >
+        <form.Field name="name">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">
@@ -85,9 +79,6 @@ export default function NewDevicePage() {
                 onBlur={field().handleBlur}
                 required
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>

@@ -436,9 +436,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
             where: (fields, operations) => operations.inArray(fields.id, parsedIds.output),
           }),
         );
-        if (products.length === 0) {
-          return yield* Effect.fail(new Error("No products found"));
-        }
+        // if (products.length === 0) {
+        //   return yield* Effect.fail(new Error("No products found"));
+        // }
         const ids = products.map((p) => p.id);
 
         const productsInOrganization = [];

@@ -43,7 +43,13 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (userInput: InferInput<typeof CustomerOrderCreateSchema>) =>
+    const create = (
+      userInput: InferInput<typeof CustomerOrderCreateSchema>,
+      products: {
+        product_id: string;
+        quantity: number;
+      }[],
+    ) =>
       Effect.gen(function* (_) {
         const orgId = yield* OrganizationId;
         const [order] = yield* Effect.promise(() =>
@@ -55,6 +61,13 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         if (!order) {
           return yield* Effect.fail(new OrderNotCreated({}));
         }
+        // Insert products
+        const productsToInsert = products.map((p) => ({
+          customerOrderId: order.id,
+          productId: p.product_id,
+          quantity: p.quantity,
+        }));
+        yield* Effect.promise(() => db.insert(TB_customer_order_products).values(productsToInsert).returning());
         return order;
       });
 
@@ -908,3 +921,6 @@ export const CustomerOrderLive = CustomerOrderService.Default;
 export type CustomerOrderInfo = NonNullable<
   Awaited<Effect.Effect.Success<ReturnType<CustomerOrderService["findById"]>>>
 >;
+export type CustomerOrderByOrganizationIdInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<CustomerOrderService["findByOrganizationId"]>>>
+>[number];

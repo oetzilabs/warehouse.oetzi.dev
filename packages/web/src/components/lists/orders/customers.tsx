@@ -5,7 +5,7 @@ import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
-import { type CustomerOrderInfo } from "@warehouseoetzidev/core/src/entities/orders";
+import { type CustomerOrderByOrganizationIdInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import { Accessor, createSignal, For, Show } from "solid-js";
@@ -13,7 +13,7 @@ import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
 type CustomersOrdersListProps = {
-  data: Accessor<CustomerOrderInfo[]>;
+  data: Accessor<CustomerOrderByOrganizationIdInfo[]>;
 };
 
 export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
@@ -42,9 +42,9 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         },
       },
     ],
-  } as FilterConfig<CustomerOrderInfo>["sort"];
+  } as FilterConfig<CustomerOrderByOrganizationIdInfo>["sort"];
 
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CustomerOrderInfo>>({
+  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CustomerOrderByOrganizationIdInfo>>({
     disabled: () => props.data().length === 0,
     dateRange: {
       start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
@@ -67,7 +67,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
 
   const filteredData = useFilter(props.data, filterConfig);
 
-  const renderCustomerOrderItem = (item: CustomerOrderInfo) => (
+  const renderCustomerOrderItem = (item: CustomerOrderByOrganizationIdInfo) => (
     <>
       <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
         <div class="flex flex-row gap-4 items-center">

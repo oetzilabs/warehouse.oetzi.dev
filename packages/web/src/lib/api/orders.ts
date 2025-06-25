@@ -234,3 +234,54 @@ export const downloadOrderSheet = action(async (id: string) => {
   );
   return json(order);
 });
+
+export const createOrder = action(
+  async (data: {
+    customer_id: string;
+    products: {
+      product_id: string;
+      quantity: number;
+    }[];
+  }) => {
+    "use server";
+    const auth = await withSession();
+    if (!auth) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const user = auth[0];
+    if (!user) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const session = auth[1];
+    if (!session) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const orgId = session.current_organization_id;
+    if (!orgId) {
+      throw redirect("/", { status: 403, statusText: "Forbidden" });
+    }
+    const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
+    const order = await Effect.runPromiseExit(
+      Effect.gen(function* (_) {
+        const orderService = yield* _(CustomerOrderService);
+        const barcode = `order-${Math.floor(Math.random() * 1000000)}`;
+        const order = yield* orderService.create(
+          { customer_id: data.customer_id, title: "New Order", description: "", barcode },
+          data.products,
+        );
+        return order;
+      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
+    );
+    return Exit.match(order, {
+      onSuccess: (order) => {
+        return json(order);
+      },
+      onFailure: (cause) => {
+        console.log(cause);
+        const causes = Cause.failures(cause);
+        const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
+        throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      },
+    });
+  },
+);
