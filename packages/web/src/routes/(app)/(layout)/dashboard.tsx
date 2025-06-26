@@ -1,26 +1,27 @@
-import ArrowBadge from "@/components/badges/arrow";
 import { OrderStatusBadge } from "@/components/badges/order-status";
+import { LastSoldProducts } from "@/components/features/dashboard/last-sold-prodcuts";
+import { MostSoldProducts } from "@/components/features/dashboard/most-sold-products";
+import { useDashboardFeatures } from "@/components/providers/Dashboard";
 import { Alert, AlertClose, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { LineChart } from "@/components/ui/charts";
 import { getAuthenticatedUser } from "@/lib/api/auth";
-import { getDashboardData } from "@/lib/api/dashboard";
+import { getDashboardData, getLastSoldProducts, getMostPopularProducts } from "@/lib/api/dashboard";
 import { getInventory } from "@/lib/api/inventory";
 import { acceptNotification, getNotifications } from "@/lib/api/notifications";
 import { getPendingPurchases } from "@/lib/api/purchases";
 import { getSchedules } from "@/lib/api/schedules";
-import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
+import { A, createAsync, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import CalendarClock from "lucide-solid/icons/calendar-clock";
 import Check from "lucide-solid/icons/check";
 import ClockFading from "lucide-solid/icons/clock-fading";
 import Info from "lucide-solid/icons/info";
+import Loader2 from "lucide-solid/icons/loader-2";
 import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
-import RotateCw from "lucide-solid/icons/rotate-cw";
 import Workflow from "lucide-solid/icons/workflow";
-import { For, Show } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
@@ -39,36 +40,15 @@ export default function DashboardPage() {
 
   const acceptNotificationAction = useAction(acceptNotification);
   const isAcceptingNotification = useSubmission(acceptNotification);
+  const { dashboardFeatures } = useDashboardFeatures();
+  const hasMissingData = createMemo(() => Object.values(dashboardFeatures).some((v) => !v.enabled));
 
   return (
-    <div class="flex flex-col w-full grow py-4">
+    <div class="flex flex-col w-full grow py-8">
       <div class="flex flex-col gap-4 w-full grow container">
-        <div class="flex flex-row gap-4 items-center justify-between">
-          <div class="flex flex-row items-baseline gap-4 py-2">
-            <span class="font-semibold leading-none">Overview</span>
-          </div>
-          <div class="w-max">
-            <Button
-              size="sm"
-              onClick={() => {
-                toast.promise(
-                  revalidate([getNotifications.key, getDashboardData.key, getInventory.key, getPendingPurchases.key]),
-                  {
-                    loading: "Refreshing dashboard...",
-                    success: "Refreshed dashboard",
-                    error: "Failed to refresh dashboard",
-                  },
-                );
-              }}
-            >
-              <RotateCw class="size-4" />
-              Refresh
-            </Button>
-          </div>
-        </div>
         <div class="flex flex-col w-full h-content">
           <div class="w-full h-content">
-            <div class="flex flex-col w-full h-content gap-4">
+            <div class="flex flex-col w-full h-content gap-8">
               <Show when={notifications()}>
                 {(notifs) => (
                   <div class="flex flex-col w-full h-content gap-4">
@@ -176,17 +156,14 @@ export default function DashboardPage() {
               </div>
               <Show when={data()}>
                 {(d) => (
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full grow ">
+                  <div class="flex flex-col gap-4 w-full grow ">
                     <div class="flex flex-col w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
-                      <div class="flex flex-row items-center justify-between p-4">
+                      <div class="flex flex-row items-center justify-between p-2 pl-4 bg-muted-foreground/5 dark:bg-muted/30">
                         <div class="flex flex-row gap-4">
                           <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Customer Orders</h3>
-                          <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                            <ArrowBadge value={d().orders.customers.deltaPercentageLastWeek} class="hidden md:block" />
-                          </span>
                         </div>
                         <div class="flex flex-row gap-2">
-                          <Button size="sm" as={A} href="/orders/new" disabled variant="secondary">
+                          <Button size="sm" as={A} href="/orders/new" disabled variant="outline" class="bg-background">
                             Create
                             <Plus class="size-4" />
                           </Button>
@@ -197,109 +174,50 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
-                        <Show
-                          when={d().orders.customers.chartData.some((v) => v > 0)}
-                          fallback={
-                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5 grow">
-                              <span class="text-sm select-none text-muted-foreground">No customer orders added</span>
-                            </div>
-                          }
-                        >
-                          <>
-                            <div class="h-[200px] p-4">
-                              <LineChart
-                                height={180}
-                                data={{
-                                  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                                  datasets: [
-                                    {
-                                      label: "Orders",
-                                      data: d().orders.customers.chartData || [],
-                                      fill: false,
-                                      pointRadius: 0,
-                                      backgroundColor: "rgba(59, 130, 246, 0.1)",
-                                      borderColor: "rgb(59, 130, 246)",
-                                      tension: 0.3,
-                                    },
-                                  ],
-                                }}
-                                options={{
-                                  responsive: true,
-                                  maintainAspectRatio: false,
-                                  plugins: {
-                                    legend: {
-                                      display: false,
-                                    },
-                                  },
-                                  scales: {
-                                    x: {
-                                      grid: {
-                                        display: false, // Hide vertical grid lines entirely
-                                      },
-                                      border: {
-                                        display: false, // Hide x-axis line
-                                      },
-                                      ticks: {
-                                        display: false,
-                                      },
-                                    },
-                                    y: {
-                                      border: {
-                                        dash: [4, 4], // Keep dashed grid lines
-                                        display: false, // Hide y-axis line (vertical line on the left)
-                                      },
-                                      grid: {
-                                        display: false,
-                                      },
-                                      ticks: {
-                                        display: false,
-                                      },
-                                    },
-                                  },
-                                }}
-                              />
-                            </div>
-                            <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
-                              <For each={d().orders.customers.values}>
-                                {(item) => (
-                                  <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                                    <OrderStatusBadge status={item.order.status} />
-                                    <div class="flex flex-col grow">
-                                      <span class="font-medium text-neutral-900 dark:text-neutral-100">
-                                        {item.order.title}
-                                      </span>
-                                      <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                                        {dayjs(item.order.createdAt).format("MMM D, YYYY")}
-                                      </span>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      as={A}
-                                      variant="outline"
-                                      class="bg-background"
-                                      href={`/orders/${item.order.id}`}
-                                    >
-                                      Open
-                                      <ArrowUpRight class="size-4" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                          </>
-                        </Show>
+                        <div class="flex flex-col grow h-full">
+                          <For each={d().orders.customers.values}>
+                            {(item) => (
+                              <div class="flex flex-row items-center gap-3 p-4 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-muted-foreground/[0.025] dark:hover:bg-muted/15 transition-colors h-full">
+                                <OrderStatusBadge status={item.order.status} />
+                                <div class="flex flex-col grow">
+                                  <span class="font-medium text-neutral-900 dark:text-neutral-100">
+                                    {item.order.title}
+                                  </span>
+                                  <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                                    {dayjs(item.order.createdAt).format("MMM D, YYYY")}, {item.order.products.length}{" "}
+                                    {item.order.products.length > 1 ? "Products" : "Product"}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  as={A}
+                                  variant="outline"
+                                  class="bg-background"
+                                  href={`/orders/${item.order.id}`}
+                                >
+                                  Open
+                                  <ArrowUpRight class="size-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </For>
+                        </div>
                       </div>
                     </div>
                     <div class="flex flex-col w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
-                      <div class="flex flex-row items-center justify-between p-4">
+                      <div class="flex flex-row items-center justify-between p-2 pl-4 bg-muted-foreground/5 dark:bg-muted/30">
                         <div class="flex flex-row gap-2">
                           <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Purchases</h3>
-                          <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                            <ArrowBadge value={d().orders.suppliers.deltaPercentageLastWeek} class="hidden md:block" />
-                          </span>
                         </div>
                         <div class="flex flex-row gap-2">
-                          <Button size="sm" as={A} href="/purchases/new" disabled variant="secondary">
+                          <Button
+                            size="sm"
+                            as={A}
+                            href="/purchases/new"
+                            disabled
+                            variant="outline"
+                            class="bg-background"
+                          >
                             Create
                             <Plus class="size-4" />
                           </Button>
@@ -310,128 +228,26 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
-                        <Show
-                          when={d().orders.suppliers.chartData.some((v) => v > 0)}
-                          fallback={
-                            <div class="flex flex-row gap-4 items-center justify-center p-4 h-[200px] bg-muted-foreground/5">
-                              <span class="text-sm select-none text-muted-foreground">No supplier orders added</span>
-                            </div>
-                          }
-                        >
-                          <>
-                            <div class="h-[200px] p-4">
-                              <LineChart
-                                height={180}
-                                data={{
-                                  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                                  datasets: [
-                                    {
-                                      label: "Supplier Orders",
-                                      data: d().orders.suppliers.chartData || [],
-                                      fill: false,
-                                      pointRadius: 0,
-                                      backgroundColor: "rgba(236, 72, 153, 0.1)",
-                                      borderColor: "rgb(236, 72, 153)",
-                                      tension: 0.3,
-                                    },
-                                  ],
-                                }}
-                                options={{
-                                  responsive: true,
-                                  maintainAspectRatio: false,
-                                  plugins: {
-                                    legend: {
-                                      display: false,
-                                    },
-                                  },
-                                  scales: {
-                                    x: {
-                                      grid: {
-                                        display: false, // Hide vertical grid lines entirely
-                                      },
-                                      border: {
-                                        display: false, // Hide x-axis line
-                                      },
-                                      ticks: {
-                                        display: false,
-                                      },
-                                    },
-                                    y: {
-                                      border: {
-                                        dash: [4, 4], // Keep dashed grid lines
-                                        display: false, // Hide y-axis line (vertical line on the left)
-                                      },
-                                      grid: {
-                                        display: false,
-                                      },
-                                      ticks: {
-                                        display: false,
-                                      },
-                                    },
-                                  },
-                                }}
-                              />
-                            </div>
-                            <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
-                              <For each={d().orders.suppliers.values}>
-                                {(item) => (
-                                  <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                                    <OrderStatusBadge status={item.order.status} />
-                                    <div class="flex flex-col grow">
-                                      <span class="font-medium text-neutral-900 dark:text-neutral-100">
-                                        {item.order.title}
-                                      </span>
-                                      <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                                        {dayjs(item.order.createdAt).format("MMM D, YYYY")}
-                                      </span>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      as={A}
-                                      variant="outline"
-                                      class="bg-background"
-                                      href={`/purchases/${item.order.id}`}
-                                    >
-                                      Open
-                                      <ArrowUpRight class="size-4" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                          </>
-                        </Show>
-                      </div>
-                    </div>
-                    <div class="flex flex-col  w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
-                      <div class="flex flex-row items-center justify-between p-4">
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Most Popular Products</h3>
-                        <div class="flex flex-row gap-2">
-                          <Button size="sm" as={A} href="/products">
-                            View All
-                            <ArrowUpRight class="size-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div class="flex flex-col grow">
-                        <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
-                          <For each={d().mostPopularProductsFromOrders}>
-                            {(product) => (
-                              <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
+                        <div class="flex flex-col  grow">
+                          <For each={d().orders.suppliers.values}>
+                            {(item) => (
+                              <div class="flex flex-row items-center gap-3 p-4 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-muted-foreground/[0.025] dark:hover:bg-muted/15 transition-colors">
+                                <OrderStatusBadge status={item.order.status} />
                                 <div class="flex flex-col grow">
                                   <span class="font-medium text-neutral-900 dark:text-neutral-100">
-                                    {product.product.name}
+                                    {item.order.title}
                                   </span>
                                   <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                                    {product.orderCount} orders
+                                    {dayjs(item.order.createdAt).format("MMM D, YYYY")}, {item.order.products.length}{" "}
+                                    {item.order.products.length > 1 ? "Products" : "Product"}
                                   </span>
                                 </div>
                                 <Button
                                   size="sm"
                                   as={A}
-                                  href={`/products/${product.product.id}`}
                                   variant="outline"
                                   class="bg-background"
+                                  href={`/purchases/${item.order.id}`}
                                 >
                                   Open
                                   <ArrowUpRight class="size-4" />
@@ -442,43 +258,38 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    <div class="flex flex-col  w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
-                      <div class="flex flex-row items-center justify-between p-4">
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Last Sold Products</h3>
-                        <div class="flex flex-row gap-2">
-                          <Button size="sm" as={A} href="/products/new">
-                            Create
-                            <Plus class="size-4" />
-                          </Button>
+                    <Show when={dashboardFeatures.mostPopularProducts.enabled}>
+                      <MostSoldProducts />
+                    </Show>
+                    <Show when={dashboardFeatures.lastSoldProducts.enabled}>
+                      <LastSoldProducts />
+                    </Show>
+                    <Show
+                      when={hasMissingData()}
+                      fallback={
+                        <div class="flex flex-row items-center justify-center gap-2 text-sm py-4">
+                          <span>Too much information?</span>
+                          <A
+                            href="/settings"
+                            class="flex flex-row gap-2 items-center justify-center text-neutral-500 dark:text-neutral-400 "
+                          >
+                            Configure
+                            <ArrowUpRight class="size-4" />
+                          </A>
                         </div>
+                      }
+                    >
+                      <div class="flex flex-row items-center justify-center gap-2 text-sm py-4">
+                        <span>Missing some information?</span>
+                        <A
+                          href="/settings"
+                          class="flex flex-row gap-2 items-center justify-center text-neutral-500 dark:text-neutral-400 "
+                        >
+                          Configure
+                          <ArrowUpRight class="size-4" />
+                        </A>
                       </div>
-                      <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
-                        <div class="flex flex-col grow">
-                          <For each={d().lastUsedProductsFromCustomers}>
-                            {(product) => (
-                              <div class="flex flex-row items-center gap-3 p-3 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                                <div class="flex flex-col grow">
-                                  <span class="font-medium text-neutral-900 dark:text-neutral-100">{product.name}</span>
-                                  <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                                    {dayjs(product.createdAt).format("MMM D, YYYY")}
-                                  </span>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  as={A}
-                                  href={`/products/${product.id}`}
-                                  variant="outline"
-                                  class="bg-background"
-                                >
-                                  Open
-                                  <ArrowUpRight class="size-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </For>
-                        </div>
-                      </div>
-                    </div>
+                    </Show>
                   </div>
                 )}
               </Show>

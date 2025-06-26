@@ -19,6 +19,7 @@ import { AppLayout } from "./layout";
 import "@fontsource/pacifico";
 import "@fontsource-variable/geist-mono";
 import "@fontsource/lisu-bosa";
+import { DashboardProvider } from "./components/providers/Dashboard";
 import { Button } from "./components/ui/button";
 
 export default function App() {
@@ -117,7 +118,9 @@ export default function App() {
                     }}
                   >
                     <UserProvider>
-                      <AppLayout>{props.children}</AppLayout>
+                      <DashboardProvider>
+                        <AppLayout>{props.children}</AppLayout>
+                      </DashboardProvider>
                     </UserProvider>
                   </div>
                 </ColorModeProvider>

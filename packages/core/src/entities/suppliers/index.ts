@@ -207,8 +207,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
           return yield* Effect.fail(new SupplierNotFound({ id: supplierId }));
         }
         const orgId = yield* OrganizationId;
-
-        return yield* Effect.promise(() =>
+        const x = yield* Effect.promise(() =>
           db.query.TB_supplier_purchases.findMany({
             where: (fields, operations) =>
               operations.and(
@@ -242,6 +241,26 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
             },
           }),
         );
+        return x.map((x) => ({
+          ...x,
+          products: x.products.map((p) => ({
+            ...p,
+            product: {
+              ...p.product,
+              organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
+              priceHistory:
+                p.product.organizations
+                  .find((o) => o.organizationId === orgId)
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
+              currency: p.product.organizations
+                .find((org) => org.organizationId === orgId)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+              sellingPrice: p.product.organizations
+                .find((org) => org.organizationId === orgId)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+            },
+          })),
+        }));
       });
 
     const remove = (id: string) =>

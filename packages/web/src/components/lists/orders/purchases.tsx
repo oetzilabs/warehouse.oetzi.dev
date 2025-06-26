@@ -81,10 +81,10 @@ export const PurchasesList = (props: PurchasesListProps) => {
     <>
       <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
         <div class="flex flex-row gap-4 items-center">
+          <OrderStatusBadge status={item.status} />
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row gap-2">
               <span class="text-sm font-medium">{item.title}</span>
-              <OrderStatusBadge status={item.status} />
             </div>
             <span class="text-xs text-muted-foreground">
               {dayjs(item.updatedAt ?? item.createdAt).format("MMM DD, YYYY - h:mm A")}

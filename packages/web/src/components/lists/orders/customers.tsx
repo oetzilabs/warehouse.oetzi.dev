@@ -7,8 +7,9 @@ import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type CustomerOrderByOrganizationIdInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
+import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import { Accessor, createSignal, For, Show } from "solid-js";
+import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
@@ -18,63 +19,15 @@ type CustomersOrdersListProps = {
 
 export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const defaultSort = {
-    default: "date",
-    current: "date",
-    direction: "desc" as const,
-    variants: [
-      {
-        field: "date",
-        label: "Date",
-        fn: (a, b) => {
-          return dayjs(a.createdAt).diff(dayjs(b.createdAt));
-        },
-      },
-      {
-        field: "price",
-        label: "Price",
-        fn: (a, b) => {
-          const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-          const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-          return aTotal - bTotal;
-        },
-      },
-    ],
-  } as FilterConfig<CustomerOrderByOrganizationIdInfo>["sort"];
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CustomerOrderByOrganizationIdInfo>>({
-    disabled: () => props.data().length === 0,
-    dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
-      preset: "clear",
-    },
-    search: { term: dsearch() },
-    sort: defaultSort,
-    filter: {
-      default: null,
-      current: null,
-      variants: [],
-    },
-  });
-
-  // Add a handler for resetting sort
-  const resetSort = () => {
-    setFilterConfig("sort", defaultSort);
-  };
-
-  const filteredData = useFilter(props.data, filterConfig);
 
   const renderCustomerOrderItem = (item: CustomerOrderByOrganizationIdInfo) => (
     <>
       <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30">
         <div class="flex flex-row gap-4 items-center">
+          <OrderStatusBadge status={item.status} />
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row gap-2">
               <span class="text-sm font-medium">{item.title}</span>
-              <OrderStatusBadge status={item.status} />
             </div>
             <span class="text-xs text-muted-foreground">
               {dayjs(item.updatedAt ?? item.createdAt).format("MMM DD, YYYY - h:mm A")}
@@ -91,7 +44,9 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         <For
           each={item.products.slice(0, 5)}
           fallback={
-            <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">No products added</div>
+            <div class="flex items-center justify-center p-8 text-sm text-muted-foreground select-none">
+              No products added
+            </div>
           }
         >
           {(p) => (
@@ -137,6 +92,22 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
     </>
   );
 
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.data();
+    if (!term) {
+      return set;
+    }
+    const options: IFuseOptions<CustomerOrderByOrganizationIdInfo> = {
+      isCaseSensitive: false,
+      threshold: 0.4,
+      minMatchCharLength: 1,
+      keys: ["title", "status", "products.product.name", "products.product.sku"],
+    };
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -149,9 +120,6 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         >
           <TextFieldInput placeholder="Search orders" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
-        </div>
       </div>
 
       <GenericList
@@ -160,7 +128,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         renderItem={renderCustomerOrderItem}
         emptyMessage="No orders have been added"
         noResultsMessage="No orders have been found"
-        searchTerm={() => filterConfig.search.term}
+        searchTerm={() => search()}
       />
     </div>
   );
