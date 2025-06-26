@@ -48,7 +48,7 @@ export default function DashboardPage() {
       <div class="flex flex-col gap-4 w-full grow container">
         <div class="flex flex-col w-full h-content">
           <div class="w-full h-content">
-            <div class="flex flex-col w-full h-content gap-8">
+            <div class="flex flex-col w-full h-content gap-4">
               <Show when={notifications()}>
                 {(notifs) => (
                   <div class="flex flex-col w-full h-content gap-4">
