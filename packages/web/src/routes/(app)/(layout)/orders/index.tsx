@@ -27,7 +27,7 @@ export default function CustomerOrdersPage() {
       <div class="w-full flex flex-row h-full gap-4">
         <div class="w-full flex flex-col gap-4">
           <div class="flex items-center gap-4 justify-between w-full">
-            <div class="flex flex-row items-center gap-4 py-2">
+            <div class="flex flex-row items-center gap-4">
               <Button size="sm" as={A} href="/dashboard" variant="outline" class="bg-background">
                 <ArrowLeft class="size-4" />
                 Back

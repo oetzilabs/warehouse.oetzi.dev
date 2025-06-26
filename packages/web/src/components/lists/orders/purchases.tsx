@@ -1,14 +1,11 @@
 import { OrderStatusBadge } from "@/components/badges/order-status";
-import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter } from "@/lib/filtering";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type SupplierPurchaseInfo } from "@warehouseoetzidev/core/src/entities/suppliers";
 import dayjs from "dayjs";
-import { Accessor, createSignal, For, Show } from "solid-js";
-import { createStore } from "solid-js/store";
+import Fuse, { IFuseOptions } from "fuse.js";
+import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
 import { GenericList } from "../default";
 
 type PurchasesListProps = {
@@ -17,65 +14,6 @@ type PurchasesListProps = {
 
 export const PurchasesList = (props: PurchasesListProps) => {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const defaultSort = {
-    default: "date",
-    current: "date",
-    direction: "desc" as const,
-    variants: [
-      {
-        field: "date",
-        label: "Date",
-        fn: (a, b) => {
-          const aTime = dayjs(a.createdAt).valueOf();
-          const bTime = dayjs(b.createdAt).valueOf();
-          return aTime - bTime;
-        },
-      },
-      {
-        field: "price",
-        label: "Price",
-        fn: (a, b) => {
-          const aTotal = a.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-          const bTotal = b.products.reduce((acc, p) => acc + p.quantity * p.product.sellingPrice, 0);
-          return aTotal - bTotal;
-        },
-      },
-    ],
-  } as FilterConfig<SupplierPurchaseInfo>["sort"];
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<SupplierPurchaseInfo>>({
-    disabled: () => props.data().length === 0,
-    dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
-      preset: "clear",
-    },
-    search: { term: dsearch() },
-    sort: defaultSort,
-    filter: {
-      default: null,
-      current: null,
-      variants: [],
-    },
-  });
-
-  // Add a handler for resetting sort
-  const resetSort = () => {
-    setFilterConfig("sort", defaultSort);
-  };
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
-  const filteredData = useFilter(props.data, filterConfig);
 
   const renderPurchaseItem = (item: SupplierPurchaseInfo) => (
     <>
@@ -161,6 +99,22 @@ export const PurchasesList = (props: PurchasesListProps) => {
     </>
   );
 
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.data();
+    if (!term) {
+      return set;
+    }
+    const options: IFuseOptions<SupplierPurchaseInfo> = {
+      isCaseSensitive: false,
+      threshold: 0.4,
+      minMatchCharLength: 1,
+      keys: ["title", "status", "products.product.name", "products.product.sku"],
+    };
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -168,15 +122,11 @@ export const PurchasesList = (props: PurchasesListProps) => {
           value={search()}
           onChange={(e) => {
             setSearch(e);
-            debouncedSearch(e);
           }}
           class="w-full max-w-full "
         >
-          <TextFieldInput placeholder="Search orders" class="w-full max-w-full rounded-lg px-4" />
+          <TextFieldInput placeholder="Search purchases" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
-        </div>
       </div>
 
       <GenericList
@@ -185,7 +135,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
         renderItem={renderPurchaseItem}
         emptyMessage="No orders have been added"
         noResultsMessage="No orders have been found"
-        searchTerm={() => filterConfig.search.term}
+        searchTerm={() => search()}
       />
     </div>
   );
