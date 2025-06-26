@@ -94,7 +94,7 @@ export default function NewCatalogPage() {
   };
 
   return (
-    <div class="container flex flex-col grow py-4 gap-4">
+    <div class="container flex flex-col grow py-8 gap-4">
       <div class="flex items-center gap-4 justify-between w-full">
         <div class="flex items-center gap-4">
           <Button size="sm" variant="outline" onClick={() => navigate(-1)}>

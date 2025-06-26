@@ -4,9 +4,10 @@ import { Progress, ProgressValueLabel } from "@/components/ui/progress";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { A } from "@solidjs/router";
 import { InventoryInfo } from "@warehouseoetzidev/core/src/entities/inventory";
+import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Package from "lucide-solid/icons/package";
-import { Accessor, createSignal, For, Show } from "solid-js";
+import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
 
 type InventoryListProps = {
   inventory: Accessor<InventoryInfo>;
@@ -23,6 +24,22 @@ export const InventoryList = (props: InventoryListProps) => {
     });
     return Array.from(summary.entries());
   };
+
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.inventory().storages;
+    if (!term) {
+      return set;
+    }
+    const options: IFuseOptions<InventoryInfo["storages"][number]> = {
+      isCaseSensitive: false,
+      threshold: 0.4,
+      minMatchCharLength: 1,
+      keys: ["name", "description", "productSummary.product.name", "productSummary.product.sku"],
+    };
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
 
   return (
     <div class="w-full flex flex-col gap-4">
@@ -41,10 +58,14 @@ export const InventoryList = (props: InventoryListProps) => {
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Show
-            when={props.inventory().storages.length > 0}
-            fallback={<div class="col-span-full p-8 text-center text-muted-foreground">No storages found</div>}
+            when={filteredData().length > 0}
+            fallback={
+              <div class="col-span-full p-8 text-center text-muted-foreground select-none text-sm">
+                No storages found
+              </div>
+            }
           >
-            <For each={props.inventory().storages}>
+            <For each={filteredData()}>
               {(storage) => (
                 <div class="border rounded-lg flex flex-col overflow-hidden bg-card">
                   <div class="flex flex-row items-center justify-between p-4 border-b bg-muted-foreground/5 dark:bg-muted/30">

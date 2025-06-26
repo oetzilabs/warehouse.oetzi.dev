@@ -33,9 +33,9 @@ export default function InventoryPage() {
   return (
     <Show when={data()}>
       {(inventory) => (
-        <div class="container flex flex-col grow py-4">
+        <div class="container flex flex-col grow py-8">
           <div class="w-full flex flex-row h-full gap-4">
-            <div class="w-full flex flex-col gap-4">
+            <div class="w-full flex flex-col gap-8">
               <div class="flex items-center gap-4 justify-between w-full">
                 <h1 class="font-semibold leading-none">Inventory Summary</h1>
                 <div class="flex items-center gap-0">
@@ -59,9 +59,9 @@ export default function InventoryPage() {
                   </Button>
                 </div>
               </div>
+              <Alerts />
               <div class="flex flex-col gap-4 w-full grow">
-                <Alerts />
-                <div class="flex flex-row items-center justify-end gap-4">
+                {/* <div class="flex flex-row items-center justify-end gap-4">
                   <Button
                     size="sm"
                     variant="outline"
@@ -83,15 +83,16 @@ export default function InventoryPage() {
                       </>
                     </Show>
                   </Button>
-                </div>
-                <Switch>
+                </div> */}
+                <InventoryList inventory={inventory} />
+                {/* <Switch>
                   <Match when={view() === "list"}>
-                    <InventoryList inventory={inventory} />
+                    
                   </Match>
                   <Match when={view() === "map"}>
                     <StorageMap inventory={inventory} />
                   </Match>
-                </Switch>
+                </Switch> */}
               </div>
             </div>
           </div>

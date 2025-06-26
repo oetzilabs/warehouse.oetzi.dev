@@ -23,7 +23,7 @@ export default function CustomerOrdersPage() {
   const data = createAsync(() => getCustomerOrders(), { deferStream: false });
 
   return (
-    <div class="container flex flex-col grow py-4">
+    <div class="container flex flex-col grow py-8">
       <div class="w-full flex flex-row h-full gap-4">
         <div class="w-full flex flex-col gap-4">
           <div class="flex items-center gap-4 justify-between w-full">

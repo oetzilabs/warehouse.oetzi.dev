@@ -2,14 +2,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressValueLabel } from "@/components/ui/progress";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { A } from "@solidjs/router";
 import { type StorageStatisticsInfo } from "@warehouseoetzidev/core/src/entities/inventory";
+import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import List from "lucide-solid/icons/list";
 import Package from "lucide-solid/icons/package";
-import { Accessor, createSignal, For, Match, Show, Switch } from "solid-js";
+import { Accessor, createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
 
 type StorageStatisticsListProps = {
   storages: Accessor<StorageStatisticsInfo>;
@@ -22,7 +22,7 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
     storage: cookieStorage,
   });
 
-  const summarizeProducts = (products: any[]) => {
+  const summarizeProducts = (products: { product: { name: string; sku: string } }[]) => {
     const summary = new Map<string, number>();
     products.forEach((p) => {
       const name = p.product.name;
@@ -30,6 +30,22 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
     });
     return Array.from(summary.entries()) as [string, number][];
   };
+
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.storages().storages;
+    if (!term) {
+      return set;
+    }
+    const options: IFuseOptions<StorageStatisticsInfo["storages"][number]> = {
+      isCaseSensitive: false,
+      threshold: 0.4,
+      minMatchCharLength: 3,
+      keys: ["name", "description", "productSummary.product.name", "productSummary.product.sku"],
+    };
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
 
   return (
     <div class="w-full flex flex-col gap-4">
@@ -61,13 +77,13 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
         </div>
 
         <Show
-          when={props.storages().storages.length > 0}
+          when={filteredData().length > 0}
           fallback={<div class="col-span-full p-8 text-center text-muted-foreground">No storages found</div>}
         >
           <Switch>
             <Match when={view() === "space"}>
               <div class="flex flex-row border overflow-hidden rounded-lg">
-                <For each={props.storages().storages}>
+                <For each={filteredData()}>
                   {(storage) => (
                     <Switch>
                       <Match when={storage.type.name === "rack"}>
@@ -88,7 +104,12 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
                                 }}
                               >
                                 <div class="flex flex-col items-center justify-center">
-                                  <For each={summarizeProducts(child.products)}>
+                                  <For
+                                    each={
+                                      // @ts-ignore
+                                      summarizeProducts(child.products)
+                                    }
+                                  >
                                     {([name, amount]) => (
                                       <div class="flex flex-col items-center justify-center">
                                         <span class="text-sm font-medium">
@@ -190,7 +211,7 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
                               {(pc) => (
                                 <div class="flex items-center gap-2 text-sm">
                                   <Package class="size-4 shrink-0" />
-                                  <span class="truncate font-['Geist_Mono_Variable']">
+                                  <span class="truncate font-['Geist_Mono_Variable']" title={pc.product.name}>
                                     {pc.count}x {pc.product.name}
                                   </span>
                                 </div>
