@@ -6,7 +6,11 @@ import { getAccountingList } from "@/lib/api/accounting";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import { AccountingInfo } from "@warehouseoetzidev/core/src/entities/accounting";
+import {
+  AccountingCurrencyTotalsEntry,
+  AccountingInfo,
+  AccountingTotalsByCurrency,
+} from "@warehouseoetzidev/core/src/entities/accounting";
 import dayjs from "dayjs";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
@@ -54,21 +58,22 @@ export default function AccountingPage() {
       (acc, transaction) => {
         const date = dayjs(transaction.date).format("YYYY-MM-DD");
 
-        transaction.amounts.forEach(({ bought, sold, currency }) => {
-          if (!acc[currency]) {
-            acc[currency] = {};
+        transaction.amounts.forEach((data) => {
+          const { amount, currency } = data.value;
+          if (!acc[data.value.currency]) {
+            acc[data.value.currency] = {};
           }
-          if (!acc[currency][date]) {
+          if (!acc[data.value.currency][date]) {
             // Find the last known total for this currency
             const previousDates = Object.keys(acc[currency]).sort();
             const lastTotal =
               previousDates.length > 0 ? acc[currency][previousDates[previousDates.length - 1]].total : 0;
 
-            acc[currency][date] = { total: lastTotal };
+            acc[data.value.currency][date] = { total: lastTotal };
           }
 
           // Add today's transactions to the running total
-          acc[currency][date].total += sold - bought;
+          acc[data.value.currency][date].total += amount;
         });
 
         return acc;
@@ -176,26 +181,46 @@ export default function AccountingPage() {
                     </TableHeader>
                     <TableBody>
                       <For each={Object.entries(accountingList().totalsByCurrency)}>
-                        {([currency, values]) => (
+                        {([currency, values]: [string, AccountingCurrencyTotalsEntry]) => (
                           <TableRow class="border-b-0 font-['Geist_Mono_Variable']">
                             <TableCell class="font-semibold p-4 h-auto">{currency}</TableCell>
                             <TableCell class="text-right p-4 h-auto">
                               <div class="flex flex-row gap-2 items-baseline justify-end">
-                                <span class="text-emerald-500">{values.income.toFixed(2)}</span>
+                                <span class="text-emerald-500">
+                                  {values.incomes
+                                    .filter((e) => e.value.amount > 0)
+                                    .reduce((a, b) => a + b.value.amount, 0)
+                                    .toFixed(2)}
+                                </span>
                                 {/* <span class="text-xs text-muted-foreground">({values.uniqueProductsIncome}x)</span> */}
                               </div>
                             </TableCell>
                             <TableCell class="text-right p-4 h-auto">
                               <div class="flex flex-row gap-2 items-baseline justify-end">
-                                <span class="text-rose-500">{values.expenses.toFixed(2)}</span>
+                                <span class="text-rose-500">
+                                  {values.expenses
+                                    .filter((e) => e.value.amount > 0)
+                                    .reduce((a, b) => a + b.value.amount, 0)
+                                    .toFixed(2)}
+                                </span>
                                 {/* <span class="text-xs text-muted-foreground">({values.uniqueProductsExpenses}x)</span> */}
                               </div>
                             </TableCell>
                             <TableCell class="text-right p-4 h-auto hidden md:table-cell">
                               <div class="flex flex-row gap-2 items-baseline justify-end">
-                                <span class="text-rose-300 text-sm">{values.stornos.income.toFixed(2)}*</span>
+                                <span class="text-rose-300 text-sm">
+                                  {values.incomes
+                                    .filter((e) => e.value.amount < 0)
+                                    .reduce((a, b) => a - b.value.amount, 0)
+                                    .toFixed(2)}
+                                  *
+                                </span>
                                 <span class="text-muted-foreground text-sm">
-                                  {values.stornos.expenses.toFixed(2)}**
+                                  {values.expenses
+                                    .filter((e) => e.value.amount < 0)
+                                    .reduce((a, b) => a - b.value.amount, 0)
+                                    .toFixed(2)}
+                                  **
                                 </span>
                               </div>
                             </TableCell>

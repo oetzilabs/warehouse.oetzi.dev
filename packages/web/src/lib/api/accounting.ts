@@ -2,7 +2,9 @@ import { getAuthenticatedUser } from "@/lib/api/auth";
 import { action, json, query, redirect } from "@solidjs/router";
 import { AccountingLive, AccountingService } from "@warehouseoetzidev/core/src/entities/accounting";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
-import { Cause, Chunk, Effect, Exit, Layer } from "effect";
+import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
+import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
+import { Cause, Chunk, Console, Effect, Exit, Layer } from "effect";
 import { InferInput } from "valibot";
 import { withSession } from "./session";
 
@@ -27,9 +29,29 @@ export const getAccountingList = query(async () => {
 
   const list = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const service = yield* _(AccountingService);
-      return yield* service.getFinancialSummary();
-    }).pipe(Effect.provide(AccountingLive), Effect.provide(organizationId)),
+      const accounting = yield* _(AccountingService);
+      const salesService = yield* _(SalesService);
+      const supplierService = yield* _(SupplierService);
+
+      // Fetch sales and supplier purchases for the organization
+      const sales = yield* salesService.listIncomes();
+      const income = {
+        sales,
+      };
+      const boughtBySuppliers = yield* supplierService.getPurchases();
+      const expenses = {
+        bought: boughtBySuppliers,
+      };
+      const s = yield* accounting.summarize({ income, expenses });
+      // yield* Console.log(s);
+      return s;
+    }).pipe(
+      Effect.provide(AccountingLive),
+      Effect.provide(SalesLive),
+      Effect.provide(SupplierLive),
+      Effect.provide(organizationId),
+      // Provide other services as needed
+    ),
   );
   return list;
 }, "organization-accounting");
