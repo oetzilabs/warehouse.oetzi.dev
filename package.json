@@ -22,10 +22,11 @@
     "typescript": "5.8.3"
   },
   "peerDependencies": {
-    "@effect/language-service": "0.21.3",
-    "@effect/platform": "0.85.2",
-    "@effect/platform-bun": "0.70.4",
-    "@effect/platform-node": "0.86.4",
+    "@effect/language-service": "0.23.0",
+    "@effect/platform": "0.87.0",
+    "@effect/platform-bun": "0.72.2",
+    "@effect/platform-node": "0.88.2",
+    "@effect/vitest": "0.23.9",
     "dayjs": "1.11.13",
     "effect": "3.16.8",
     "valibot": "1.1.0"
@@ -39,6 +40,7 @@
     "canvas",
     "esbuild",
     "msgpackr-extract",
-    "sharp"
+    "sharp",
+    "usb"
   ]
 }

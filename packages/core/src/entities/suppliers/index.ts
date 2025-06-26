@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
@@ -339,6 +340,60 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return note;
       });
 
+    const getPurchases = () =>
+      Effect.gen(function* () {
+        const orgId = yield* OrganizationId;
+        const suppliers = yield* Effect.promise(() =>
+          db.query.TB_organization_suppliers.findMany({
+            where: (fields, operations) => operations.eq(fields.organization_id, orgId),
+            with: {
+              supplier: {
+                with: {
+                  products: {
+                    with: {
+                      priceHistory: true,
+                    },
+                  },
+                  purchases: {
+                    with: {
+                      products: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        const s = suppliers.map((supplier) => supplier.supplier);
+
+        const products = s.flatMap((supplier) => supplier.products);
+        const purchases = s.flatMap((supplier) => supplier.purchases);
+        // for each purchase, match each product with its latest priceHistory (by effectiveDate). use the `products` array to find the matching product.
+        const result = purchases.flatMap((purchase) =>
+          purchase.products.map((prod) => {
+            const sp = products.find((sp) => sp.productId === prod.productId)!;
+
+            // Find the latest priceHistory entry (by effectiveDate)
+            const priceHistorySorted = sp.priceHistory.toSorted(
+              (a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime(),
+            );
+            const latestPrice = priceHistorySorted[0];
+            return {
+              name: prod.productId,
+              value: latestPrice ? latestPrice.supplierPrice * Math.abs(prod.quantity) : 0,
+              currency: latestPrice ? latestPrice.currency : "USD",
+              date: purchase.updatedAt ?? purchase.createdAt,
+              metadata: {
+                purchaseId: purchase.id,
+                quantity: prod.quantity,
+                createdAt: purchase.createdAt,
+              },
+            };
+          }),
+        );
+        return result;
+      });
+
     return {
       create,
       findById,
@@ -352,6 +407,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       remove,
       safeRemove,
       getPurchasesBySupplierId,
+      getPurchases,
     } as const;
   }),
   dependencies: [DatabaseLive],

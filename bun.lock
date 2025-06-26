@@ -12,10 +12,11 @@
         "typescript": "5.8.3",
       },
       "peerDependencies": {
-        "@effect/language-service": "0.21.3",
-        "@effect/platform": "0.85.2",
-        "@effect/platform-bun": "0.70.4",
-        "@effect/platform-node": "0.86.4",
+        "@effect/language-service": "0.23.0",
+        "@effect/platform": "0.87.0",
+        "@effect/platform-bun": "0.72.2",
+        "@effect/platform-node": "0.88.2",
+        "@effect/vitest": "0.23.9",
         "dayjs": "1.11.13",
         "effect": "3.16.8",
         "valibot": "1.1.0",
@@ -230,6 +231,7 @@
     "esbuild",
     "aws-sdk",
     "msgpackr-extract",
+    "usb",
     "@parcel/watcher",
   ],
   "packages": {
@@ -436,6 +438,8 @@
     "@effect/rpc": ["@effect/rpc@0.61.15", "", { "peerDependencies": { "@effect/platform": "^0.84.11", "effect": "^3.16.7" } }, "sha512-1PdFubnHanzyswxEzYTiPhTaNpnzS+ssm8xsOKIjE1CP+f54mx/5rJl7BY1VqBVcxw9faqq0g5+biMh9e2RN/Q=="],
 
     "@effect/sql": ["@effect/sql@0.37.12", "", { "dependencies": { "@opentelemetry/semantic-conventions": "^1.33.0", "uuid": "^11.0.3" }, "peerDependencies": { "@effect/experimental": "^0.48.12", "@effect/platform": "^0.84.11", "effect": "^3.16.7" } }, "sha512-DZarU+4NTwIYO8MALaRVg1rRN5gdrJW7nJLECl6nSTwbXRamo6GSarXUiACqE4csZZ7C2K6Jtu99UbEqZ3Iomw=="],
+
+    "@effect/vitest": ["@effect/vitest@0.23.9", "", { "peerDependencies": { "effect": "^3.16.9", "vitest": "^3.0.0" } }, "sha512-m9VsciDymwbuzJy/w0B5rV+05bSRD/f5VZdsw2AR6i8IWhfG2Ry9SViKcUqVtfoSMESAtZ0ZFKcLUMkqbPwgoA=="],
 
     "@effect/workflow": ["@effect/workflow@0.1.14", "", { "peerDependencies": { "@effect/platform": "^0.84.11", "@effect/rpc": "^0.61.15", "effect": "^3.16.7" } }, "sha512-0BTIbCp1rJMOzXGUfk9E7IHU9up6rzLztbjVUGDlnKhAtus04GUeA95wP5t8qdhg/I7Q7FlkKfa07WFppkNCsQ=="],
 

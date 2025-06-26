@@ -1,304 +1,264 @@
+// --- Service Implementation ---
+
 import dayjs from "dayjs";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { OrganizationId } from "../organizations/id";
+
+// --- Unified Accounting Types ---
+
+export type AccountingTransactionType = "income" | "expense" | "mixed";
 
 export interface FinancialAmount {
   amount: number;
   currency: string;
+  metadata?: any;
+}
+
+export interface FinancialTransactionAmount {
+  value: FinancialAmount;
+  category: string;
+  date: Date;
+  type: AccountingTransactionType;
+  metadata: any;
 }
 
 export interface FinancialTransaction {
+  id: string;
   date: Date;
-  amounts: {
-    currency: string;
-    bought: number;
-    sold: number;
-    stornosBought: number; // Amount of cancelled purchases
-    stornosSold: number; // Amount of cancelled sales
-  }[];
-  productAmounts: {
-    bought: number;
-    sold: number;
-    stornosBought: number; // Number of products from cancelled purchases
-    stornosSold: number; // Number of products from cancelled sales
-  };
-  type: "income" | "expense" | "mixed";
+  amounts: FinancialTransactionAmount[];
   description: string;
+  category: string;
+  type: AccountingTransactionType;
+  metadata: any;
 }
 
+export interface AccountingCurrencyTotalsEntry {
+  incomes: FinancialTransactionAmount[];
+  expenses: FinancialTransactionAmount[];
+  netIncome: number;
+  uniqueProductsIncome: number;
+  uniqueProductsExpenses: number;
+  stornos: {
+    income: number;
+    expenses: number;
+  };
+}
+
+export type AccountingTotalsByCurrency = Record<string, AccountingCurrencyTotalsEntry>;
+
 export interface FinancialSummary {
-  totalsByCurrency: Record<
-    string,
-    {
-      income: number;
-      expenses: number;
-      netIncome: number;
-      uniqueProductsIncome: number;
-      uniqueProductsExpenses: number;
-      stornos: {
-        income: number; // Total amount of cancelled sales
-        expenses: number; // Total amount of cancelled purchases
-      };
-    }
-  >;
+  totalsByCurrency: AccountingTotalsByCurrency;
   transactions: FinancialTransaction[];
+  metadata?: any;
+  date?: Date;
 }
 
 export class AccountingService extends Effect.Service<AccountingService>()("@warehouse/accounting", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
-
-    const getFinancialSummary = () =>
-      Effect.gen(function* (_) {
-        const orgId = yield* OrganizationId;
-
-        // Get supplier orders (expenses)
-        const purchases = yield* Effect.promise(() =>
-          db.query.TB_supplier_purchases.findMany({
-            where: (fields, operations) => operations.eq(fields.organization_id, orgId),
-            with: {
-              supplier: true,
-              products: {
-                with: {
-                  product: {
-                    with: {
-                      labels: true,
-                      brands: true,
-                      suppliers: {
-                        with: {
-                          priceHistory: true,
-                        },
-                      },
-                      organizations: {
-                        with: {
-                          priceHistory: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        );
-
-        // Get sales directly with a single query
-        const sales = yield* Effect.promise(() =>
-          db.query.TB_sales.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-            with: {
-              items: {
-                with: {
-                  product: {
-                    with: {
-                      labels: true,
-                      brands: true,
-                      organizations: {
-                        with: {
-                          priceHistory: true,
-                          tg: {
-                            with: {
-                              crs: {
-                                with: {
-                                  tr: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              customer: true,
-              discounts: {
-                with: {
-                  discount: true,
-                },
-              },
-            },
-          }),
-        );
-
-        // Group transactions by date
-        const transactionsByDay = new Map<
+    const summarize = ({
+      income,
+      expenses,
+      metadata = {},
+    }: {
+      income: Record<string, Array<{ name: string; value: number; currency: string; metadata?: any; date: Date }>>;
+      expenses: Record<string, Array<{ name: string; value: number; currency: string; metadata?: any; date: Date }>>;
+      metadata?: any;
+    }) =>
+      Effect.sync(() => {
+        // Helper to accumulate totals by currency and category
+        const currencyTotals: Record<
           string,
           {
-            sales: typeof sales;
-            orders: typeof purchases;
+            incomes: Record<string, { total: number; count: number; items: FinancialTransactionAmount[] }>;
+            expenses: Record<string, { total: number; count: number; items: FinancialTransactionAmount[] }>;
           }
-        >();
+        > = {};
 
-        // Group sales by day
-        sales.forEach((sale) => {
-          const day = dayjs(sale.createdAt).format("YYYY-MM-DD");
-          if (!transactionsByDay.has(day)) {
-            transactionsByDay.set(day, { sales: [], orders: [] });
-          }
-          transactionsByDay.get(day)!.sales.push(sale);
-        });
-
-        // Group supplier orders by day
-        purchases.forEach((order) => {
-          const day = dayjs(order.createdAt).format("YYYY-MM-DD");
-          if (!transactionsByDay.has(day)) {
-            transactionsByDay.set(day, { sales: [], orders: [] });
-          }
-          transactionsByDay.get(day)!.orders.push(order);
-        });
-
-        const transactions: FinancialTransaction[] = Array.from(transactionsByDay.entries())
-          .map(([day, { sales, orders }]) => {
-            const currencyMap = new Map<
-              string,
-              { bought: number; sold: number; stornosBought: number; stornosSold: number }
-            >();
-            let totalProductsBought = 0;
-            let totalProductsSold = 0;
-            let totalProductsStornoBought = 0;
-            let totalProductsStornoSold = 0;
-
-            // Process orders (bought)
-            orders
-              .filter((s) => s.status === "completed")
-              .forEach((so) => {
-                so.products.forEach((prod) => {
-                  // Find the relevant price from priceHistory that was active at the time of the order
-                  const orderDate = so.createdAt;
-                  const orgPriceHistory = prod.product.suppliers
-                    .find((org) => org.supplierId === so.supplier_id)
-                    ?.priceHistory.sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
-
-                  if (orgPriceHistory && orgPriceHistory.length > 0) {
-                    const applicablePrice =
-                      orgPriceHistory.find((ph) => ph.effectiveDate <= orderDate) ??
-                      orgPriceHistory[orgPriceHistory.length - 1];
-
-                    const currency = applicablePrice.currency;
-                    if (!currencyMap.has(currency)) {
-                      currencyMap.set(currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
-                    }
-
-                    const amount = applicablePrice.supplierPrice * Math.abs(prod.quantity);
-                    if (prod.quantity < 0) {
-                      currencyMap.get(currency)!.stornosBought += amount;
-                      totalProductsStornoBought += Math.abs(prod.quantity);
-                    } else {
-                      currencyMap.get(currency)!.bought += amount;
-                      totalProductsBought += prod.quantity;
-                    }
-                  }
-                });
-              });
-
-            // Process sales (sold)
-            sales
-              .filter((s) => s.status === "confirmed")
-              .forEach((sale) => {
-                sale.items.forEach((item) => {
-                  // Find the relevant price from priceHistory that was active at the time of the sale
-                  const saleDate = sale.createdAt;
-                  const orgPriceHistory = item.product.organizations
-                    .find((org) => org.organizationId === orgId)
-                    ?.priceHistory.sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
-
-                  if (orgPriceHistory && orgPriceHistory.length > 0) {
-                    const applicablePrice =
-                      orgPriceHistory.find((ph) => ph.effectiveDate <= saleDate) ??
-                      orgPriceHistory[orgPriceHistory.length - 1];
-
-                    const currency = applicablePrice.currency;
-                    if (!currencyMap.has(currency)) {
-                      currencyMap.set(currency, { bought: 0, sold: 0, stornosBought: 0, stornosSold: 0 });
-                    }
-
-                    const amount = item.price * Math.abs(item.quantity);
-                    if (item.quantity < 0) {
-                      currencyMap.get(currency)!.stornosSold += amount;
-                      totalProductsStornoSold += Math.abs(item.quantity);
-                    } else {
-                      currencyMap.get(currency)!.sold += amount;
-                      totalProductsSold += item.quantity;
-                    }
-                  }
-                });
-              });
-
-            const type: FinancialTransaction["type"] =
-              sales.filter((s) => s.status === "confirmed").length > 0 &&
-              orders.filter((s) => s.status === "completed").length > 0
-                ? "mixed"
-                : sales.filter((s) => s.status === "confirmed").length > 0
-                  ? "income"
-                  : "expense";
-
-            return {
-              date: new Date(day),
-              amounts: Array.from(currencyMap.entries()).map(([currency, amounts]) => ({
-                currency,
-                bought: amounts.bought,
-                sold: amounts.sold,
-                stornosBought: amounts.stornosBought,
-                stornosSold: amounts.stornosSold,
-              })),
-              productAmounts: {
-                bought: totalProductsBought,
-                sold: totalProductsSold,
-                stornosBought: totalProductsStornoBought,
-                stornosSold: totalProductsStornoSold,
+        // Process incomes
+        Object.entries(income).forEach(([category, items]) => {
+          items.forEach((item) => {
+            if (!currencyTotals[item.currency]) {
+              currencyTotals[item.currency] = { incomes: {}, expenses: {} };
+            }
+            if (!currencyTotals[item.currency].incomes[category]) {
+              currencyTotals[item.currency].incomes[category] = { total: 0, count: 0, items: [] };
+            }
+            currencyTotals[item.currency].incomes[category].total += item.value;
+            currencyTotals[item.currency].incomes[category].count += 1;
+            currencyTotals[item.currency].incomes[category].items.push({
+              ...item,
+              value: {
+                amount: item.value,
+                currency: item.currency,
+                metadata: item.metadata,
               },
-              type,
-              description: `Daily summary for ${day}`,
-            };
-          })
-          .sort((a, b) => b.date.getTime() - a.date.getTime());
-
-        // Update totals calculation
-        const totalsByCurrency = transactions.reduce(
-          (acc, t) => {
-            t.amounts.forEach(({ currency, bought, sold, stornosBought, stornosSold }) => {
-              if (!acc[currency]) {
-                acc[currency] = {
-                  income: 0,
-                  expenses: 0,
-                  netIncome: 0,
-                  uniqueProductsIncome: 0,
-                  uniqueProductsExpenses: 0,
-                  stornos: { income: 0, expenses: 0 },
-                };
-              }
-              acc[currency].income += sold;
-              acc[currency].expenses += bought;
-              acc[currency].stornos.income += stornosSold;
-              acc[currency].stornos.expenses += stornosBought;
-              acc[currency].netIncome =
-                acc[currency].income -
-                acc[currency].stornos.income -
-                (acc[currency].expenses - acc[currency].stornos.expenses);
+              metadata: item.metadata,
+              category,
+              type: item.value > 0 ? "income" : "expense",
             });
-            return acc;
-          },
-          {} as FinancialSummary["totalsByCurrency"],
-        );
+          });
+        });
+
+        // Process expenses
+        Object.entries(expenses).forEach(([category, items]) => {
+          items.forEach((item) => {
+            if (!currencyTotals[item.currency]) {
+              currencyTotals[item.currency] = { incomes: {}, expenses: {} };
+            }
+            if (!currencyTotals[item.currency].expenses[category]) {
+              currencyTotals[item.currency].expenses[category] = { total: 0, count: 0, items: [] };
+            }
+            currencyTotals[item.currency].expenses[category].total += item.value;
+            currencyTotals[item.currency].expenses[category].count += 1;
+            currencyTotals[item.currency].expenses[category].items.push({
+              ...item,
+              value: {
+                amount: item.value,
+                currency: item.currency,
+                metadata: item.metadata,
+              },
+              metadata: item.metadata,
+              category,
+              type: item.value > 0 ? "income" : "expense",
+            });
+          });
+        });
+
+        // Flatten all items into transactions
+        const transactions: FinancialTransaction[] = [];
+        Object.entries(income).forEach(([category, items]) => {
+          items.forEach((item) => {
+            transactions.push({
+              id: `${category}-income-${item.name}`,
+              date: item.date,
+              amounts: [
+                {
+                  value: { amount: item.value, currency: item.currency, metadata: item.metadata },
+                  category,
+                  date: item.date,
+                  type: "income",
+                  metadata: item.metadata,
+                },
+              ],
+              description: `Income: ${item.name}`,
+              category,
+              type: "income",
+              metadata: item.metadata,
+            });
+          });
+        });
+        Object.entries(expenses).forEach(([category, items]) => {
+          items.forEach((item) => {
+            transactions.push({
+              id: `${category}-expense-${item.name}`,
+              date: item.date,
+              amounts: [
+                {
+                  value: { amount: item.value, currency: item.currency, metadata: item.metadata },
+                  category,
+                  date: item.date,
+                  type: "expense",
+                  metadata: item.metadata,
+                },
+              ],
+              description: `Expense: ${item.name}`,
+              category,
+              type: "expense",
+              metadata: item.metadata,
+            });
+          });
+        });
+
+        // Detect mixed transactions (same category and date with both income and expense)
+        const grouped = new Map<string, { txs: FinancialTransaction[]; key: string; date: Date; category: string }>();
+        for (const tx of transactions) {
+          const key = `${tx.category}-${dayjs(tx.date).format("YYYY-MM-DD")}`;
+          if (!grouped.has(key)) {
+            grouped.set(key, { txs: [], key, date: tx.date, category: tx.category });
+          }
+          grouped.get(key)!.txs.push(tx);
+        }
+        const mixedTransactions: FinancialTransaction[] = [];
+        for (const { txs, date, category } of grouped.values()) {
+          const hasIncome = txs.some((t) => t.type === "income");
+          const hasExpense = txs.some((t) => t.type === "expense");
+          if (hasIncome && hasExpense) {
+            // Merge into a mixed transaction
+            mixedTransactions.push({
+              id: `${category}-mixed-${dayjs(date).format("YYYY-MM-DD")}`,
+              date,
+              amounts: txs.flatMap((t) => t.amounts),
+              description: `Mixed: ${category}`,
+              category,
+              type: "mixed",
+              metadata: txs.flatMap((t) => t.metadata),
+            });
+          } else {
+            mixedTransactions.push(...txs);
+          }
+        }
+
+        // --- Build frontend-compatible totalsByCurrency ---
+        const allByCurrency: Record<
+          string,
+          {
+            incomes: FinancialTransactionAmount[];
+            expenses: FinancialTransactionAmount[];
+          }
+        > = {};
+
+        for (const tx of mixedTransactions) {
+          for (const amt of tx.amounts) {
+            const { amount, currency, metadata } = amt.value;
+            if (!allByCurrency[currency]) {
+              allByCurrency[currency] = { incomes: [], expenses: [] };
+            }
+            if (amt.type === "income" || (tx.type === "income" && amt.type !== "expense")) {
+              allByCurrency[currency].incomes.push({ ...amt, value: { amount, currency, metadata } });
+            }
+            if (amt.type === "expense" || (tx.type === "expense" && amt.type !== "income")) {
+              allByCurrency[currency].expenses.push({ ...amt, value: { amount, currency, metadata } });
+            }
+          }
+        }
+
+        const totalsByCurrency: AccountingTotalsByCurrency = {};
+
+        for (const [currency, { incomes, expenses }] of Object.entries(allByCurrency)) {
+          const incomeSum = incomes.filter((e) => e.value.amount > 0).reduce((a, b) => a + b.value.amount, 0);
+          const expenseSum = expenses.filter((e) => e.value.amount > 0).reduce((a, b) => a + b.value.amount, 0);
+          const netIncome = incomeSum - expenseSum;
+          const stornosIncome = incomes.filter((e) => e.value.amount < 0).reduce((a, b) => a + b.value.amount, 0);
+          const stornosExpenses = expenses.filter((e) => e.value.amount < 0).reduce((a, b) => a + b.value.amount, 0);
+
+          totalsByCurrency[currency] = {
+            incomes,
+            expenses,
+            netIncome,
+            uniqueProductsIncome: 0,
+            uniqueProductsExpenses: 0,
+            stornos: {
+              income: stornosIncome,
+              expenses: stornosExpenses,
+            },
+          };
+        }
 
         return {
           totalsByCurrency,
-          transactions: transactions.sort((a, b) => b.date.getTime() - a.date.getTime()),
-        } satisfies FinancialSummary;
+          transactions: mixedTransactions,
+          metadata,
+        };
       });
 
     return {
-      getFinancialSummary,
+      summarize,
     } as const;
   }),
-  dependencies: [DatabaseLive],
+  dependencies: [],
 }) {}
 
 export const AccountingLive = AccountingService.Default;
 
-export type AccountingInfo = NonNullable<
-  Awaited<Effect.Effect.Success<ReturnType<AccountingService["getFinancialSummary"]>>>
->;
+export type AccountingInfo = Effect.Effect.Success<ReturnType<AccountingService["summarize"]>>;

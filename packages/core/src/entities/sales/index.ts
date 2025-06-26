@@ -274,6 +274,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
 
         return deleted;
       });
+
     const generatePDF = (
       id: string,
       organization: OrganizationInfo,
@@ -389,6 +390,74 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return removed;
       });
 
+    const listIncomes = () =>
+      Effect.gen(function* (_) {
+        const orgId = yield* OrganizationId;
+        const sales = yield* Effect.promise(() =>
+          db.query.TB_organizations_sales.findMany({
+            where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+            with: {
+              sale: {
+                with: {
+                  customer: true,
+                  items: {
+                    with: {
+                      product: {
+                        with: {
+                          organizations: {
+                            with: {
+                              priceHistory: true,
+                              tg: {
+                                with: {
+                                  crs: {
+                                    with: {
+                                      tr: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                          brands: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        // Flatten all sale items and products
+        const allSales = sales.map((s) => s.sale);
+        const allItems = allSales.flatMap((sale) => sale.items);
+
+        // For each sale, for each item, find the latest priceHistory for the product in this org and calculate value
+        const result = allSales.flatMap((sale) =>
+          sale.items.map((item) => {
+            // Find the organization-specific product data
+            const orgProduct = item.product.organizations.find((org) => org.organizationId === orgId);
+            // Find the latest priceHistory entry (by effectiveDate)
+            const priceHistorySorted =
+              orgProduct?.priceHistory?.toSorted((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime()) ?? [];
+            const latestPrice = priceHistorySorted[0];
+            return {
+              name: item.productId,
+              value: latestPrice ? latestPrice.sellingPrice * Math.abs(item.quantity) : 0,
+              currency: latestPrice ? latestPrice.currency : "USD",
+              date: sale.updatedAt ?? sale.createdAt,
+              metadata: {
+                saleId: sale.id,
+                quantity: item.quantity,
+                createdAt: sale.createdAt,
+                customerId: sale.customerId,
+              },
+            };
+          }),
+        );
+        return result;
+      });
+
     return {
       create,
       findById,
@@ -401,6 +470,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       removeProduct,
       findByOrganizationId,
       generatePDF,
+      listIncomes,
     } as const;
   }),
   dependencies: [DatabaseLive, OrganizationLive, ProductLive],

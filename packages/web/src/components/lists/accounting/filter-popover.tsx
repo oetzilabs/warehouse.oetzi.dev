@@ -1,24 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FilterConfig, WithDates, WithSimpleDates } from "@/lib/filtering";
-import { type AccountingInfo } from "@warehouseoetzidev/core/src/entities/accounting";
 import dayjs from "dayjs";
 import quarter from "dayjs/plugin/quarterOfYear";
 import { Accessor } from "solid-js";
 
 dayjs.extend(quarter);
 
-type AccoutingTransaction = AccountingInfo["transactions"][number];
+// Use the new flat transaction type
+type AccoutingTransaction = {
+  name: string;
+  value: number;
+  currency: string;
+  metadata: {
+    saleId?: string;
+    purchaseId?: string;
+    quantity: number;
+    createdAt: Date | string;
+    customerId?: string;
+  };
+};
 
-type AccountingFilterPopoverProps<T extends WithSimpleDates & AccoutingTransaction> = {
+type AccountingFilterPopoverProps<T extends AccoutingTransaction> = {
   config: FilterConfig<T>;
   onChange: (config: FilterConfig<T>) => void;
   data: Accessor<T[]>;
 };
 
-export const AccountingFilterPopover = <T extends WithSimpleDates & AccoutingTransaction>(
-  props: AccountingFilterPopoverProps<T>,
-) => {
+export const AccountingFilterPopover = <T extends AccoutingTransaction>(props: AccountingFilterPopoverProps<T>) => {
   return (
     <Popover placement="bottom-end">
       <PopoverTrigger as={Button} size="lg" disabled={props.config.disabled()} class="h-10 px-5">
@@ -99,6 +108,7 @@ export const AccountingFilterPopover = <T extends WithSimpleDates & AccoutingTra
               </Button>
             </div>
           </div>
+          {/* Optionally, you can add a filter for positive/negative values (income/expense) */}
           <div class="space-y-2">
             <h4 class="font-medium leading-none">Transaction Type</h4>
             <div class="grid grid-cols-2 gap-2">
@@ -140,21 +150,21 @@ export const AccountingFilterPopover = <T extends WithSimpleDates & AccoutingTra
                 },
                 search: { term: "" },
                 sort: {
-                  default: "date",
-                  current: "date",
+                  default: "createdAt",
+                  current: "createdAt",
                   direction: "desc",
                   variants: [
                     {
-                      field: "date",
+                      field: "createdAt",
                       label: "Date",
-                      fn: (a, b) => dayjs(b.date).unix() - dayjs(a.date).unix(),
+                      fn: (a, b) => dayjs(b.metadata.createdAt).unix() - dayjs(a.metadata.createdAt).unix(),
                     },
                   ],
                 },
                 filter: {
-                  default: props.config.filter.default,
-                  current: props.config.filter.current,
-                  variants: props.config.filter.variants,
+                  default: null,
+                  current: null,
+                  variants: [],
                 },
               });
             }}
