@@ -5,6 +5,7 @@ import { Console, Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import {
   CustomerOrderCreateSchema,
+  CustomerOrderSelect,
   CustomerOrderUpdateSchema,
   SaleItemCreate,
   TB_customer_order_products,
@@ -52,23 +53,38 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
     ) =>
       Effect.gen(function* (_) {
         const orgId = yield* OrganizationId;
-        const [order] = yield* Effect.promise(() =>
-          db
-            .insert(TB_customer_orders)
-            .values({ ...userInput, organization_id: orgId })
-            .returning(),
-        );
-        if (!order) {
-          return yield* Effect.fail(new OrderNotCreated({}));
-        }
-        // Insert products
-        const productsToInsert = products.map((p) => ({
-          customerOrderId: order.id,
-          productId: p.product_id,
-          quantity: p.quantity,
-        }));
-        yield* Effect.promise(() => db.insert(TB_customer_order_products).values(productsToInsert).returning());
-        return order;
+        const r = yield* Effect.async<CustomerOrderSelect, OrderNotCreated>((resume) => {
+          db.transaction(async (tx) => {
+            try {
+              const [order] = await tx
+                .insert(TB_customer_orders)
+                .values({ ...userInput, organization_id: orgId })
+                .returning();
+
+              if (!order) throw new Error("Failed to create order");
+
+              const productsToInsert = products.map((p) => ({
+                customerOrderId: order.id,
+                productId: p.product_id,
+                quantity: p.quantity,
+              }));
+
+              await tx.insert(TB_customer_order_products).values(productsToInsert).returning();
+
+              resume(Effect.succeed(order));
+            } catch (error) {
+              resume(
+                Effect.fail(
+                  new OrderNotCreated({
+                    message: error instanceof Error ? error.message : "Unknown error during order creation",
+                  }),
+                ),
+              );
+              return tx.rollback();
+            }
+          });
+        });
+        return r;
       });
 
     const findById = (id: string) =>
@@ -352,6 +368,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
 
         const orders = yield* Effect.promise(() =>
           db.query.TB_customer_orders.findMany({
+            orderBy: (fields, operators) => [operators.desc(fields.createdAt), operators.desc(fields.updatedAt)],
             where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
             with: {
               organization: true,

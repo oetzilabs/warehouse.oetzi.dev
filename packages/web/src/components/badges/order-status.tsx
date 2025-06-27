@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Component, ParentProps, splitProps } from "solid-js";
 
-type OrderStatusType = "pending" | "processing" | "completed" | "cancelled" | "draft";
+type OrderStatusType = "pending" | "processing" | "completed" | "cancelled" | "draft" | "deleted";
 
 type OrderStatusBadgeProps = {
   status: OrderStatusType;
@@ -34,6 +34,12 @@ const statusColorMap: Record<OrderStatusType, { text: string; bg: string; bg2: s
     ring: "ring-red-500",
   },
   draft: {
+    text: "text-neutral-700 dark:text-neutral-500",
+    bg: "bg-neutral-500",
+    bg2: "bg-neutral-500",
+    ring: "ring-neutral-500",
+  },
+  deleted: {
     text: "text-neutral-700 dark:text-neutral-500",
     bg: "bg-neutral-500",
     bg2: "bg-neutral-500",

@@ -132,7 +132,8 @@ export const deleteOrder = action(async (oid: string) => {
   const result = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
       const orderService = yield* _(CustomerOrderService);
-      yield* orderService.safeRemove(oid);
+
+      yield* orderService.update({ id: oid, status: "deleted", deletedAt: new Date() });
       return true;
     }).pipe(Effect.provide(CustomerOrderLive)),
   );
@@ -274,7 +275,12 @@ export const createOrder = action(
     );
     return Exit.match(order, {
       onSuccess: (order) => {
-        return json(order);
+        return json(order, {
+          revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(order.id)],
+          headers: {
+            Location: `/orders/${order.id}`,
+          },
+        });
       },
       onFailure: (cause) => {
         console.log(cause);

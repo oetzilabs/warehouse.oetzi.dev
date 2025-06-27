@@ -52,7 +52,7 @@ export function ConvertToSaleDialog(props: ConvertToSaleDialogProps) {
 
   const convertForm = createForm(() => ({
     defaultValues: {
-      products: props.products.map((p) => ({
+      products: (props.products ?? []).map((p) => ({
         id: p.product.id,
         quantity: Math.min(p.quantity, p.product.stock),
       })),

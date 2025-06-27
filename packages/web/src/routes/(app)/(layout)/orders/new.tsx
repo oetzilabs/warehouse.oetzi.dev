@@ -69,7 +69,12 @@ function NewOrderForm(props: {
   const formOps = formOptions({
     defaultValues: {
       customer: { value: "", label: "Select customer..." },
-      products: [] as { product: ProductSelect; quantity: number }[],
+      products: [
+        {
+          product: { value: "", label: "Select product...", price: 0, currency: "" },
+          quantity: 1,
+        },
+      ] as { product: ProductSelect; quantity: number }[],
     },
     defaultState: {
       canSubmit: false,
@@ -141,6 +146,7 @@ function NewOrderForm(props: {
                       <form.Field name={`products[${i}].product`}>
                         {(productField) => (
                           <Select<ProductSelect>
+                            class="w-full max-w-full"
                             value={productField().state.value}
                             onChange={(value) => {
                               if (!value) return;
@@ -164,7 +170,7 @@ function NewOrderForm(props: {
                               </SelectItem>
                             )}
                           >
-                            <SelectTrigger aria-label="Product" class="w-64">
+                            <SelectTrigger aria-label="Product" class="w-full max-w-full">
                               <SelectValue<ProductSelect>>
                                 {(state) => state.selectedOption()?.label || "Select product..."}
                               </SelectValue>
@@ -190,10 +196,10 @@ function NewOrderForm(props: {
                       <Button
                         type="button"
                         size="icon"
-                        variant="ghost"
-                        class="text-red-500"
+                        variant="destructive"
                         onClick={() => field().removeValue(i)}
                         title="Remove"
+                        class="!size-9 p-3"
                       >
                         <Trash class="size-4" />
                       </Button>
@@ -252,7 +258,7 @@ export default function NewOrderPage() {
       </div>
       <Suspense
         fallback={
-          <div class="flex items-center justify-center p-8 text-sm text-muted-foreground">
+          <div class="flex items-center justify-center p-8 gap-2 text-sm text-muted-foreground">
             <Loader2 class="size-4 animate-spin" />
             <span class="text-sm">Loading customers & products...</span>
           </div>

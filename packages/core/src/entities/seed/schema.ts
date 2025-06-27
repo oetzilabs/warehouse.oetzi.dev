@@ -177,10 +177,8 @@ export const CustomerOrderSchema = object({
 export const SupplierProductPriceHistorySchema = object({
   ...omit(SupplierProductPriceHistoryCreateSchema, ["supplierId", "productId"]).entries,
   effectiveDate: pipe(
-    pipe(
-      string(),
-      transform((v) => dayjs(v).toDate()),
-    ),
+    string(),
+    transform((v) => dayjs(v).toDate()),
   ),
 });
 
@@ -205,10 +203,8 @@ export const SupplierPurchaseSchema = object({
 export const OrganizationProductPriceHistorySchema = object({
   ...omit(OrganizationProductPriceHistoryCreateSchema, ["organizationId", "productId"]).entries,
   effectiveDate: pipe(
-    pipe(
-      string(),
-      transform((v) => dayjs(v).toDate()),
-    ),
+    string(),
+    transform((v) => dayjs(v).toDate()),
   ),
 });
 

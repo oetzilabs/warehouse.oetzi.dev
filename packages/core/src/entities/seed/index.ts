@@ -144,6 +144,7 @@ export class SeedService extends Effect.Service<SeedService>()("@warehouse/seed"
             }),
           );
         }
+        yield* Console.log("seed data parsed");
 
         // Add device types seeding before other resources
         for (const deviceType of seedData.output.device_types) {

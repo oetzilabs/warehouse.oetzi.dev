@@ -13,43 +13,33 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  NumberField,
-  NumberFieldDecrementTrigger,
-  NumberFieldGroup,
-  NumberFieldIncrementTrigger,
-  NumberFieldInput,
-} from "@/components/ui/number-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices } from "@/lib/api/devices";
 import { getDiscounts } from "@/lib/api/discounts";
-import { convertToSale, deleteOrder, downloadOrderSheet, getOrderById } from "@/lib/api/orders";
-import { cn } from "@/lib/utils";
+import { deleteOrder, downloadOrderSheet, getOrderById } from "@/lib/api/orders";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
-import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import Pen from "lucide-solid/icons/pen";
 import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import Receipt from "lucide-solid/icons/receipt";
 import Send from "lucide-solid/icons/send";
 import Tag from "lucide-solid/icons/tag";
-import Tickets from "lucide-solid/icons/tickets";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: (props) => {
-    const user = getAuthenticatedUser();
-    const sessionToken = getSessionToken();
-    const order = getOrderById(props.params.oid);
+  preload: async (props) => {
+    const user = await getAuthenticatedUser();
+    const sessionToken = await getSessionToken();
+    const order = await getOrderById(props.params.oid);
     return { user, sessionToken, order };
   },
 } as RouteDefinition;
@@ -155,7 +145,11 @@ export default function CustomerOrderPage() {
                             onClick={() => {
                               toast.promise(deleteOrderAction(orderInfo().id), {
                                 loading: "Deleting order...",
-                                success: "Order deleted",
+                                success: (data) => {
+                                  setDeleteDialogOpen(false);
+                                  navigate(`/orders`);
+                                  return "Order deleted";
+                                },
                                 error: "Failed to delete order",
                               });
                             }}
@@ -187,9 +181,16 @@ export default function CustomerOrderPage() {
                 <span class="text-sm text-muted-foreground dark:text-primary-foreground">
                   Created: {dayjs(orderInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
                 </span>
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Updated: {dayjs(orderInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
-                </span>
+                <Show when={orderInfo().updatedAt}>
+                  <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                    Updated: {dayjs(orderInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
+                  </span>
+                </Show>
+                <Show when={orderInfo().deletedAt}>
+                  <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                    Updated: {dayjs(orderInfo().deletedAt).format("MMM DD, YYYY - h:mm A")}
+                  </span>
+                </Show>
                 <span class="text-sm text-muted-foreground dark:text-primary-foreground">
                   Total Items:{" "}
                   {orderInfo()
@@ -205,11 +206,24 @@ export default function CustomerOrderPage() {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
                 <div class="flex flex-col border rounded-lg overflow-clip">
-                  <div class="w-full p-4 border-b bg-muted/30">
+                  <div class="flex flex-row items-center justify-between w-full p-4 border-b bg-muted/30">
                     <h2 class="font-medium">Products</h2>
+                    <div class="flex flex-row">
+                      <Button size="sm">
+                        <Pen class="size-4" />
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                   <div class="flex flex-col gap-0">
-                    <For each={orderInfo().products}>
+                    <For
+                      each={orderInfo().products}
+                      fallback={
+                        <div class="flex items-center justify-center py-4">
+                          <span class="text-sm text-muted-foreground">No products added</span>
+                        </div>
+                      }
+                    >
                       {(product) => (
                         <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
                           <div class="flex flex-row items-center justify-between">

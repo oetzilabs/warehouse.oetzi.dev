@@ -516,7 +516,7 @@
                               "typeId": "storagetype_m2semzowvyisprcl0rrp5fgd",
                               "name": "A1-1",
                               "description": "Bin A1-1",
-                              "capacity": 200,
+                              "capacity": 100,
                               "variant": "horizontal",
                               "bounding_box": {
                                 "x": 0,
@@ -552,7 +552,7 @@
                               "typeId": "storagetype_m2semzowvyisprcl0rrp5fgd",
                               "name": "A1-2",
                               "description": "Bin A1-2",
-                              "capacity": 500,
+                              "capacity": 100,
                               "variant": "horizontal",
                               "barcode": "A1-2",
                               "parentId": "storage_cpdcggmd0amupzy8iaqcobzj",

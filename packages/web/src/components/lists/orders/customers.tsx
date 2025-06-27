@@ -9,6 +9,8 @@ import { type CustomerOrderByOrganizationIdInfo } from "@warehouseoetzidev/core/
 import dayjs from "dayjs";
 import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import Eye from "lucide-solid/icons/eye";
+import EyeOff from "lucide-solid/icons/eye-off";
 import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
@@ -19,6 +21,7 @@ type CustomersOrdersListProps = {
 
 export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
   const [search, setSearch] = createSignal("");
+  const [withDeleted, setWithDeleted] = createSignal(false);
 
   const renderCustomerOrderItem = (item: CustomerOrderByOrganizationIdInfo) => (
     <>
@@ -94,7 +97,11 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
 
   const filteredData = createMemo(() => {
     const term = search();
-    const set = props.data();
+    let set = props.data();
+    const wd = withDeleted();
+    if (!wd) {
+      set = set.filter((o) => o.status !== "deleted" || o.deletedAt === null);
+    }
     if (!term) {
       return set;
     }
@@ -120,6 +127,29 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         >
           <TextFieldInput placeholder="Search orders" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
+        <div class="flex flex-row items-center gap-4">
+          <Button
+            size="sm"
+            variant="outline"
+            class="bg-background"
+            onClick={() => {
+              setWithDeleted((v) => !v);
+            }}
+          >
+            <Show
+              when={!withDeleted()}
+              fallback={
+                <>
+                  <EyeOff class="size-4" />
+                  <span>All orders</span>
+                </>
+              }
+            >
+              <Eye class="size-4" />
+              <span>Without deleted orders</span>
+            </Show>
+          </Button>
+        </div>
       </div>
 
       <GenericList

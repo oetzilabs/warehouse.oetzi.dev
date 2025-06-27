@@ -15,7 +15,12 @@ export const generate = new sst.x.DevCommand("DatabaseGenerate", {
     directory: "packages/core",
     autostart: false,
   },
-  link: [secret.SECRET_DATABASE_URL, secret.SECRET_DATABASE_PROVIDER],
+  link: [
+    secret.SECRET_DATABASE_URL,
+    secret.SECRET_DATABASE_PROVIDER,
+    secret.SECRET_JWT_SECRET_1,
+    secret.SECRET_JWT_SECRET_2,
+  ],
 });
 
 export const studio = new sst.x.DevCommand("DatabaseStudio", {
@@ -24,7 +29,12 @@ export const studio = new sst.x.DevCommand("DatabaseStudio", {
     directory: "packages/core",
     autostart: false,
   },
-  link: [secret.SECRET_DATABASE_URL, secret.SECRET_DATABASE_PROVIDER],
+  link: [
+    secret.SECRET_DATABASE_URL,
+    secret.SECRET_DATABASE_PROVIDER,
+    secret.SECRET_JWT_SECRET_1,
+    secret.SECRET_JWT_SECRET_2,
+  ],
 });
 
 // export const snapshotBackup = new sst.x.DevCommand("DatabaseSnapshotBackup", {
@@ -57,7 +67,12 @@ export const seed = new sst.x.DevCommand("DatabaseSeed", {
     directory: "packages/core",
     autostart: false,
   },
-  link: [secret.SECRET_DATABASE_URL, secret.SECRET_DATABASE_PROVIDER],
+  link: [
+    secret.SECRET_DATABASE_URL,
+    secret.SECRET_DATABASE_PROVIDER,
+    secret.SECRET_JWT_SECRET_1,
+    secret.SECRET_JWT_SECRET_2,
+  ],
 });
 
 export const drizzleKitUp = new sst.x.DevCommand("DatabaseDrizzleKitUp", {
@@ -66,5 +81,10 @@ export const drizzleKitUp = new sst.x.DevCommand("DatabaseDrizzleKitUp", {
     directory: "packages/core",
     autostart: false,
   },
-  link: [secret.SECRET_DATABASE_URL, secret.SECRET_DATABASE_PROVIDER],
+  link: [
+    secret.SECRET_DATABASE_URL,
+    secret.SECRET_DATABASE_PROVIDER,
+    secret.SECRET_JWT_SECRET_1,
+    secret.SECRET_JWT_SECRET_2,
+  ],
 });

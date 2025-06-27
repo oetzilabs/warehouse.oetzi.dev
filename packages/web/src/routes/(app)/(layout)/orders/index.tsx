@@ -20,7 +20,7 @@ export const route = {
 } as RouteDefinition;
 
 export default function CustomerOrdersPage() {
-  const data = createAsync(() => getCustomerOrders(), { deferStream: false });
+  const data = createAsync(() => getCustomerOrders(), { deferStream: true });
 
   return (
     <div class="container flex flex-col grow py-8">
@@ -49,7 +49,7 @@ export default function CustomerOrdersPage() {
               >
                 <RotateCw class="size-4" />
               </Button>
-              <Button size="sm" class="pl-2.5 rounded-l-none">
+              <Button size="sm" class="pl-2.5 rounded-l-none" as={A} href="/orders/new">
                 <Plus class="size-4" />
                 Create
               </Button>

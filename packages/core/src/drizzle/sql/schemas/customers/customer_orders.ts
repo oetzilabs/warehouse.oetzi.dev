@@ -17,6 +17,7 @@ export const customer_order_status = schema.enum("customer_order_status", [
   "processing",
   "completed",
   "cancelled",
+  "deleted",
 ]);
 
 export const TB_customer_orders = commonTable(
