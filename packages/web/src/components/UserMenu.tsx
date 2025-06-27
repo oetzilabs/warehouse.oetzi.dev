@@ -70,7 +70,7 @@ export default function UserMenu() {
                     <MessagesSquare class="size-4" />
                     <span>Messages</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem as={A} class="cursor-pointer" href="/profile/settings">
+                  <DropdownMenuItem as={A} class="cursor-pointer" href="/settings">
                     <Settings class="size-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>

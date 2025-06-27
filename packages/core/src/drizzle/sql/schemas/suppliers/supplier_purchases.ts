@@ -15,6 +15,7 @@ export const supplier_purchase_status = schema.enum("supplier_purchase_status", 
   "processing",
   "completed",
   "cancelled",
+  "deleted",
 ]);
 
 export const TB_supplier_purchases = commonTable(

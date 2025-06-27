@@ -15,6 +15,13 @@
       "when": 1751030195481,
       "tag": "0001_square_carnage",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751036889417,
+      "tag": "0002_dear_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

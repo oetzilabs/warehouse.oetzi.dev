@@ -93,8 +93,8 @@ export default function NewProductPage() {
     ...formOps,
   }));
   return (
-    <div class="container flex flex-row grow py-4">
-      <div class="w-full py-4 flex flex-col gap-4 border rounded-xl">
+    <div class="container flex flex-row grow py-8">
+      <div class="w-full py-4 flex flex-col gap-4">
         <div class="flex px-4 items-center gap-4 justify-between w-full">
           <h1 class="font-semibold leading-none">New Product</h1>
           <div class="flex items-center gap-4">
@@ -105,7 +105,7 @@ export default function NewProductPage() {
           </div>
         </div>
         <div class="w-full grow flex flex-col">
-          <Tabs defaultValue="basic-info" class="w-full border-t overflow-clip h-full">
+          <Tabs defaultValue="basic-info" class="w-full  overflow-clip h-full">
             <TabsList class="flex flex-row gap-0 w-full items-center justify-start h-max rounded-none bg-transparent p-0 !py-0">
               <TabsTrigger
                 value="basic-info"
@@ -147,7 +147,7 @@ export default function NewProductPage() {
               </div>
             </TabsList>
             <form class="w-full grow flex flex-col gap-4">
-              <TabsContent value="basic-info">
+              <TabsContent value="basic-info" class="pt-2">
                 <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <form.Field name="name">
                     {(field) => (
@@ -231,7 +231,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="labels">
+              <TabsContent value="labels" class="pt-2">
                 <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <div class="grid  gap-4 w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     <Suspense>
@@ -339,7 +339,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="conditions">
+              <TabsContent value="conditions" class="pt-2">
                 <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <div class="grid grid-cols-6 gap-4 w-full">
                     <Suspense>
@@ -428,7 +428,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="certificates">
+              <TabsContent value="certificates" class="pt-2">
                 <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <div class="grid grid-cols-6 gap-4 w-full">
                     <Suspense>
@@ -513,7 +513,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="suppliers">
+              <TabsContent value="suppliers" class="pt-2">
                 <div class="w-full flex flex-col gap-4 py-2 pb-4 px-4">
                   <div class="grid grid-cols-6 gap-4 w-full">
                     <Suspense>
