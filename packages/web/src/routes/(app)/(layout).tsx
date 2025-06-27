@@ -118,7 +118,9 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                           <Tags class="size-4" />
                           Customer Orders
                           <SidebarMenuBadge class="mr-1">
-                            {org().customerOrders.length > 99 ? "99+" : org().customerOrders.length}
+                            {org().customerOrders.length > 99
+                              ? "99+"
+                              : org().customerOrders.filter((x) => x.deletedAt === null).length}
                           </SidebarMenuBadge>
                         </Link>
                       </SidebarMenuItem>

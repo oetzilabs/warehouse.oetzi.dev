@@ -342,7 +342,12 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             sellingPrice: op.product.organizations
               .find((org) => org.organizationId === parsedOrganizationId.output)!
               .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
-          }));
+            taxGroupName: op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)!.tg
+              ?.name,
+            taxGroupRate: op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)!.tg
+              ?.crs[0]?.tr.rate,
+          }))
+          .filter((p) => p.taxGroupName !== undefined && p.taxGroupRate !== undefined);
       });
 
     const findByWarehouseId = (warehouseId: string) =>

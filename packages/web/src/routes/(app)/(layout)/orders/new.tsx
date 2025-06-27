@@ -1,4 +1,14 @@
 import { Button } from "@/components/ui/button";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxControl,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxItemIndicator,
+  ComboboxItemLabel,
+  ComboboxTrigger,
+} from "@/components/ui/combobox";
 import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TextField, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
 import { getCustomers } from "@/lib/api/customers";
@@ -22,49 +32,65 @@ type ProductSelect = {
   label: string;
   price: number;
   currency: string;
+  taxGroupName: string;
+  taxGroupRate: number;
 };
 
-// --- CustomerSelect component ---
-function CustomerSelect(props: {
+function CustomerCombobox(props: {
   value: CustomerSelect;
   onChange: (value: CustomerSelect) => void;
   customers: { id: string; name: string }[];
 }) {
+  const options = props.customers.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
   return (
     <div class="flex flex-col gap-2">
-      <Select<CustomerSelect>
+      <label class="capitalize pl-1 font-medium">
+        Customer <span class="text-red-500">*</span>
+      </label>
+      <Combobox<CustomerSelect>
+        options={options}
+        optionValue="value"
+        optionTextValue="label"
+        optionLabel="label"
+        placeholder="Select customer..."
         value={props.value}
         onChange={(value) => {
           if (!value) return;
           props.onChange(value);
         }}
-        options={props.customers.map((c) => ({
-          value: c.id,
-          label: c.name,
-        }))}
-        optionValue="value"
-        optionTextValue="label"
-        placeholder="Select customer..."
-        itemComponent={(props) => <SelectItem item={props.item}>{props.item.rawValue.label}</SelectItem>}
+        itemComponent={(props) => (
+          <ComboboxItem item={props.item}>
+            <ComboboxItemLabel>{props.item.rawValue.label}</ComboboxItemLabel>
+            <ComboboxItemIndicator />
+          </ComboboxItem>
+        )}
       >
-        <SelectLabel class="capitalize pl-1">
-          Customer <span class="text-red-500">*</span>
-        </SelectLabel>
-        <SelectTrigger aria-label="Customer" class="w-full">
-          <SelectValue<CustomerSelect>>{(state) => state.selectedOption()?.label || "Select customer..."}</SelectValue>
-        </SelectTrigger>
-        <SelectContent />
-      </Select>
+        <ComboboxControl aria-label="Customer" class="w-full">
+          <ComboboxInput />
+          <ComboboxTrigger />
+        </ComboboxControl>
+        <ComboboxContent />
+      </Combobox>
     </div>
   );
 }
 
 function NewOrderForm(props: {
   customers: { id: string; name: string }[];
-  products: { product: { id: string; name: string }; sellingPrice: number; currency: string }[];
+  products: {
+    product: { id: string; name: string };
+    sellingPrice: number;
+    currency: string;
+    taxGroupName: string;
+    taxGroupRate: number;
+  }[];
 }) {
   const createOrderAction = useAction(createOrder);
   const isCreatingOrder = useSubmission(createOrder);
+  const navigate = useNavigate();
 
   const formOps = formOptions({
     defaultValues: {
@@ -94,7 +120,10 @@ function NewOrderForm(props: {
         }),
         {
           loading: "Creating order...",
-          success: "Order created successfully",
+          success: (data) => {
+            navigate(`/orders/${data.id}`);
+            return "Order created successfully";
+          },
           error: "Failed to create order",
         },
       );
@@ -103,7 +132,7 @@ function NewOrderForm(props: {
 
   return (
     <form
-      class="space-y-4 w-full max-w-2xl"
+      class="space-y-4 w-full"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
@@ -111,7 +140,7 @@ function NewOrderForm(props: {
     >
       <form.Field name="customer">
         {(field) => (
-          <CustomerSelect
+          <CustomerCombobox
             value={field().state.value}
             onChange={(value) => field().handleChange(() => value)}
             customers={props.customers}
@@ -122,14 +151,21 @@ function NewOrderForm(props: {
         {(field) => (
           <div class="flex flex-col gap-2">
             <div class="flex flex-row items-center justify-between">
-              <label class="capitalize pl-1">Products</label>
+              <label class="capitalize pl-1 font-medium">Products</label>
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={() =>
                   field().pushValue({
-                    product: { value: "", label: "Select product...", price: 0, currency: "" },
+                    product: {
+                      value: "",
+                      label: "Select product...",
+                      price: 0,
+                      currency: "",
+                      taxGroupName: "",
+                      taxGroupRate: 0,
+                    },
                     quantity: 1,
                   })
                 }
@@ -145,7 +181,7 @@ function NewOrderForm(props: {
                     <div class="flex flex-row gap-2 items-center mb-2">
                       <form.Field name={`products[${i}].product`}>
                         {(productField) => (
-                          <Select<ProductSelect>
+                          <Combobox<ProductSelect>
                             class="w-full max-w-full"
                             value={productField().state.value}
                             onChange={(value) => {
@@ -157,26 +193,31 @@ function NewOrderForm(props: {
                               label: p.product.name,
                               price: p.sellingPrice,
                               currency: p.currency,
+                              taxGroupName: p.taxGroupName!,
+                              taxGroupRate: p.taxGroupRate!,
                             }))}
                             optionValue="value"
                             optionTextValue="label"
+                            optionLabel="label"
                             placeholder="Select product..."
                             itemComponent={(props) => (
-                              <SelectItem item={props.item}>
-                                {props.item.rawValue.label}{" "}
-                                <span class="text-xs text-muted-foreground">
-                                  ({props.item.rawValue.price?.toFixed(2)} {props.item.rawValue.currency})
-                                </span>
-                              </SelectItem>
+                              <ComboboxItem item={props.item}>
+                                <ComboboxItemLabel>
+                                  {props.item.rawValue.label}{" "}
+                                  <span class="text-xs text-muted-foreground">
+                                    ({props.item.rawValue.price?.toFixed(2)} {props.item.rawValue.currency})
+                                  </span>
+                                </ComboboxItemLabel>
+                                <ComboboxItemIndicator />
+                              </ComboboxItem>
                             )}
                           >
-                            <SelectTrigger aria-label="Product" class="w-full max-w-full">
-                              <SelectValue<ProductSelect>>
-                                {(state) => state.selectedOption()?.label || "Select product..."}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent />
-                          </Select>
+                            <ComboboxControl aria-label="Product" class="w-full max-w-full">
+                              <ComboboxInput />
+                              <ComboboxTrigger />
+                            </ComboboxControl>
+                            <ComboboxContent />
+                          </Combobox>
                         )}
                       </form.Field>
                       <form.Field name={`products[${i}].quantity`}>
@@ -216,10 +257,58 @@ function NewOrderForm(props: {
           canSubmit: state.canSubmit,
           isSubmitting: state.isSubmitting,
           errors: state.errors,
+          totalGroupedByCurrency: state.values.products.reduce(
+            (acc, p) => {
+              const currency = p.product.currency!;
+              if (!acc[currency]) {
+                acc[currency] = {
+                  subtotal: 0,
+                  total: 0,
+                  tax: {
+                    [p.product.taxGroupName]: p.product.taxGroupRate,
+                  },
+                };
+              }
+
+              const amount = p.product.price * p.quantity;
+              acc[currency].subtotal += amount;
+              acc[currency].total += amount;
+
+              return acc;
+            },
+            {} as Record<
+              string,
+              {
+                subtotal: number;
+                tax: {
+                  [key: string]: number;
+                };
+                total: number;
+              }
+            >,
+          ),
         })}
       >
         {(state) => (
           <>
+            <div class="flex flex-col gap-2">
+              <div class="flex flex-row items-center justify-between">
+                <label class="capitalize pl-1 font-medium">Total</label>
+                <div class="flex flex-col items-center gap-2">
+                  <For each={Object.entries(state().totalGroupedByCurrency)}>
+                    {([currency, amounts]) => (
+                      <div class="flex flex-col gap-1">
+                        <span class="text-sm font-medium">{currency}</span>
+                        <span class="text-sm text-muted-foreground">Subtotal</span>
+                        <span class="text-sm font-medium">
+                          {amounts.subtotal.toFixed(2)} {currency}
+                        </span>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </div>
+            </div>
             <Show when={state().errors.length > 0}>
               <div>
                 <em>There was an error on the form: {state().errors.join(", ")}</em>
@@ -271,6 +360,8 @@ export default function NewOrderPage() {
               product: { id: p.product.id, name: p.product.name },
               sellingPrice: p.sellingPrice,
               currency: p.currency,
+              taxGroupName: p.taxGroupName!,
+              taxGroupRate: p.taxGroupRate!,
             }))}
           />
         </Show>

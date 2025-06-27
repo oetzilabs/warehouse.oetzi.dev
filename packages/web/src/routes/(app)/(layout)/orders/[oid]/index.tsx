@@ -225,7 +225,7 @@ export default function CustomerOrderPage() {
                       }
                     >
                       {(product) => (
-                        <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
+                        <div class="flex flex-col border-b last:border-b-0 p-4 gap-4">
                           <div class="flex flex-row items-center justify-between">
                             <div class="flex flex-col gap-0.5">
                               <span class="font-medium">{product.product.name}</span>

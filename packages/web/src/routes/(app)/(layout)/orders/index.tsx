@@ -1,6 +1,7 @@
 import { CustomersOrdersList } from "@/components/lists/orders";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCustomerOrders } from "@/lib/api/orders";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
@@ -11,10 +12,10 @@ import { Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
-    const sessionToken = getSessionToken();
-    const orders = getCustomerOrders();
+  preload: async (props) => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    const orders = await getCustomerOrders();
     return { user, sessionToken, orders };
   },
 } as RouteDefinition;
@@ -67,7 +68,32 @@ export default function CustomerOrdersPage() {
                 </div>
               }
             >
-              <Show when={data()}>{(os) => <CustomersOrdersList data={os} />}</Show>
+              <Show when={data()}>
+                {(os) => (
+                  <Tabs defaultValue="all" class="w-full max-w-full">
+                    <TabsList class="w-max">
+                      <TabsTrigger value="all">
+                        All Non-Delted Orders ({os().filter((o) => o.status !== "deleted" || !o.deletedAt).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="completed">
+                        Completed ({os().filter((o) => o.status === "completed").length})
+                      </TabsTrigger>
+                      <TabsTrigger value="deleted">
+                        Deleted ({os().filter((o) => o.status === "deleted" || o.deletedAt).length})
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="all">
+                      <CustomersOrdersList data={() => os().filter((o) => o.status !== "deleted" || !o.deletedAt)} />
+                    </TabsContent>
+                    <TabsContent value="completed">
+                      <CustomersOrdersList data={() => os().filter((o) => o.status === "completed")} />
+                    </TabsContent>
+                    <TabsContent value="deleted">
+                      <CustomersOrdersList data={() => os().filter((o) => o.status === "deleted" || o.deletedAt)} />
+                    </TabsContent>
+                  </Tabs>
+                )}
+              </Show>
             </Suspense>
           </div>
         </div>

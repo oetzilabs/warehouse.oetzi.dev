@@ -21,7 +21,6 @@ type CustomersOrdersListProps = {
 
 export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
   const [search, setSearch] = createSignal("");
-  const [withDeleted, setWithDeleted] = createSignal(false);
 
   const renderCustomerOrderItem = (item: CustomerOrderByOrganizationIdInfo) => (
     <>
@@ -31,6 +30,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row gap-2">
               <span class="text-sm font-medium">{item.title}</span>
+              <span class="text-sm text-muted-foreground">{item.barcode}</span>
             </div>
             <span class="text-xs text-muted-foreground">
               {dayjs(item.updatedAt ?? item.createdAt).format("MMM DD, YYYY - h:mm A")}
@@ -98,10 +98,6 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
   const filteredData = createMemo(() => {
     const term = search();
     let set = props.data();
-    const wd = withDeleted();
-    if (!wd) {
-      set = set.filter((o) => o.status !== "deleted" || o.deletedAt === null);
-    }
     if (!term) {
       return set;
     }
@@ -109,7 +105,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
       isCaseSensitive: false,
       threshold: 0.4,
       minMatchCharLength: 1,
-      keys: ["title", "status", "products.product.name", "products.product.sku"],
+      keys: ["title", "barcode", "products.product.name", "products.product.sku"],
     };
     const fuse = new Fuse(set, options);
     return fuse.search(term).map((d) => d.item);
@@ -127,29 +123,6 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         >
           <TextFieldInput placeholder="Search orders" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="flex flex-row items-center gap-4">
-          <Button
-            size="sm"
-            variant="outline"
-            class="bg-background"
-            onClick={() => {
-              setWithDeleted((v) => !v);
-            }}
-          >
-            <Show
-              when={!withDeleted()}
-              fallback={
-                <>
-                  <EyeOff class="size-4" />
-                  <span>All orders</span>
-                </>
-              }
-            >
-              <Eye class="size-4" />
-              <span>Without deleted orders</span>
-            </Show>
-          </Button>
-        </div>
       </div>
 
       <GenericList

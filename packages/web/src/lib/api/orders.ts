@@ -5,6 +5,7 @@ import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organ
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { Cause, Chunk, Effect, Exit, Layer } from "effect";
+import { getAuthenticatedUser } from "./auth";
 import { getSales } from "./sales";
 import { withSession } from "./session";
 
@@ -143,7 +144,12 @@ export const deleteOrder = action(async (oid: string) => {
       return json(
         { success: true },
         {
-          revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(oid)],
+          revalidate: [
+            getCustomerOrders.key,
+            getOrdersByUserId.key,
+            getOrderById.keyFor(oid),
+            getAuthenticatedUser.key,
+          ],
         },
       );
     },
@@ -276,10 +282,12 @@ export const createOrder = action(
     return Exit.match(order, {
       onSuccess: (order) => {
         return json(order, {
-          revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(order.id)],
-          headers: {
-            Location: `/orders/${order.id}`,
-          },
+          revalidate: [
+            getCustomerOrders.key,
+            getOrdersByUserId.key,
+            getOrderById.keyFor(order.id),
+            getAuthenticatedUser.key,
+          ],
         });
       },
       onFailure: (cause) => {
