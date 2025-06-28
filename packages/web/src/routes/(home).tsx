@@ -36,12 +36,13 @@ export default function IndexPage() {
                   Warehouse is a platform that provides a simple and intuitive management of your inventory, orders, and
                   shipments.
                 </p>
-                <div class="mt-10 flex items-center justify-center gap-x-6">
+                <div class="mt-10 flex items-center justify-center gap-4">
                   <Button as={A} href="/dashboard">
                     Get started
                   </Button>
-                  <Button as={A} href="/blog/learn-more" variant="ghost">
-                    Learn more <span aria-hidden="true">→</span>
+                  <Button as={A} href="/blog/learn-more" variant="outline" class="bg-background">
+                    Learn more
+                    <ArrowUpRight class="size-4" />
                   </Button>
                 </div>
               </div>
