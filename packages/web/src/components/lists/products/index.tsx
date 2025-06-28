@@ -18,7 +18,7 @@ export const ProductsList = (props: ProductsListProps) => {
 
   const renderProductItem = (item: OrganizationProductInfo) => (
     <div class="group flex flex-col bg-muted p-1 gap-1 grow">
-      <div class="relative w-full aspect-[4/3] flex items-center justify-center">
+      <A class="relative w-full aspect-[4/3] flex items-center justify-center" href={`./${item.product.id}`}>
         <Show
           when={item.product.images && item.product.images.length > 0}
           fallback={
@@ -48,13 +48,17 @@ export const ProductsList = (props: ProductsListProps) => {
             </Show>
           </div>
         </Show>
-      </div>
+      </A>
       <div class="flex flex-col px-4 py-3 gap-4 bg-background dark:bg-background/50 rounded-md border grow">
         <div class="flex flex-col flex-1">
           <div class="flex flex-row items-baseline justify-between gap-2">
-            <span class="text-base font-semibold truncate block max-w-full" title={item.product.name}>
+            <A
+              class="text-base font-semibold truncate block max-w-full hover:underline"
+              title={item.product.name}
+              href={`./${item.product.id}`}
+            >
               {item.product.name}
-            </span>
+            </A>
             <span class="text-sm font-['Geist_Mono_Variable'] font-medium text-primary whitespace-nowrap">
               {item.sellingPrice.toFixed(2)} {item.currency}
             </span>
