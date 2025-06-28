@@ -1,26 +1,22 @@
 import { Basics } from "@/components/forms/products/new/basics";
+import { Brand } from "@/components/forms/products/new/brands";
 import { Certificates } from "@/components/forms/products/new/certificates";
 import { Conditions } from "@/components/forms/products/new/conditions";
+import { Images } from "@/components/forms/products/new/images";
 import { Labels } from "@/components/forms/products/new/labels";
 import { Suppliers } from "@/components/forms/products/new/suppliers";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCertificates } from "@/lib/api/certificates";
-import { getProductBrands, getProductLabels } from "@/lib/api/products";
+import { getProductLabels } from "@/lib/api/products";
 import { getStorageConditions } from "@/lib/api/storage_conditions";
 import { getSuppliers } from "@/lib/api/suppliers";
-import { cn } from "@/lib/utils";
-import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import { createForm, formOptions } from "@tanstack/solid-form";
-import { type ProductCreate } from "@warehouseoetzidev/core/src/drizzle/sql/schemas/products/products";
-import dayjs from "dayjs";
+import { A, RouteDefinition } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
-import RotateCw from "lucide-solid/icons/rotate-cw";
-
-// TODO: import other section components as you create them
+import Sparkles from "lucide-solid/icons/sparkles";
+import { createSignal, Show } from "solid-js";
 
 export const route = {
   preload: (props) => {
@@ -34,70 +30,10 @@ export const route = {
 } as RouteDefinition;
 
 export default function NewProductPage() {
-  const suppliers = createAsync(() => getSuppliers(), { deferStream: true });
-  const labels = createAsync(() => getProductLabels(), { deferStream: true });
-  const certificates = createAsync(() => getCertificates(), { deferStream: true });
-  const conditions = createAsync(() => getStorageConditions(), { deferStream: true });
-  const brands = createAsync(() => getProductBrands(), { deferStream: true });
-  const formOps = formOptions({
-    defaultValues: {
-      name: "",
-      barcode: "",
-      sku: "",
-      description: "",
-      dimensions: {
-        depth: 0,
-        width: 0,
-        height: 0,
-        unit: "cm",
-      },
-      weight: {
-        value: 0.0,
-        unit: "kg",
-      },
-
-      customsTariffNumber: "unknown",
-      countryOfOrigin: "unknown",
-
-      brand_id: null,
-
-      labels: [],
-      catalogs: [],
-      certificates: [],
-      conditions: [],
-      suppliers: [],
-    } as {
-      name: string;
-      barcode: string;
-      sku: string;
-      description: string;
-      dimensions: {
-        depth: number;
-        width: number;
-        height: number;
-        unit: "cm" | "in" | (string & {});
-      };
-      weight: {
-        value: number;
-        unit: "kg" | "lb";
-      };
-      customsTariffNumber: string;
-      countryOfOrigin: string;
-      brand_id: string | null;
-      labels: string[];
-      catalogs: string[];
-      certificates: string[];
-      conditions: string[];
-      suppliers: string[];
-    },
-  });
-  const form = createForm(() => ({
-    ...formOps,
-  }));
-
+  const [withAI, setWithAI] = createSignal(false);
   return (
-    <div class="container flex flex-row grow py-4">
-      <div class="w-full py-4 flex flex-col gap-4">
+    <div class="container flex flex-row grow py-8">
+      <div class="w-full flex flex-col gap-4">
         <div class="flex items-center gap-4 justify-between w-full">
           <div class="flex items-center gap-4">
             <Button size="sm" variant="outline" class="bg-background" as={A} href="/products">
@@ -106,15 +42,38 @@ export default function NewProductPage() {
             </Button>
             <h1 class="font-semibold leading-none">New Product</h1>
           </div>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <Show when={withAI()}>
+              <Tooltip>
+                <TooltipTrigger
+                  as={Button}
+                  size="sm"
+                  variant="outline"
+                  class="bg-gradient-to-r from-indigo-400 to-purple-500 text-white"
+                  disabled
+                >
+                  <Sparkles class="size-4" />
+                  Use AI
+                </TooltipTrigger>
+                <TooltipContent class="w-80 rounded-lg bg-background p-4 shadow-lg">
+                  <p class="text-sm text-muted-foreground">
+                    Generate product details using AI. This feature is still in development.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </Show>
             <Button size="sm" onClick={() => {}}>
               <Plus class="size-4" />
               Add
             </Button>
           </div>
         </div>
-        <form class="w-full grow flex flex-col">
+        <form class="w-full grow flex flex-col pb-10">
           <Basics />
+          <div class="border-b my-8" />
+          <Brand />
+          <div class="border-b my-8" />
+          <Images />
           <div class="border-b my-8" />
           <Labels />
           <div class="border-b my-8" />

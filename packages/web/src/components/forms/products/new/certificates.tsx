@@ -13,12 +13,13 @@ export const Certificates = () => {
   const form = useNewProductForm();
   const certificates = createAsync(() => getCertificates(), { deferStream: true });
   return (
-    <section class="p-0 grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="flex flex-col gap-2">
+    <section class="p-0 grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div class="flex flex-col gap-2 col-span-2">
+        {" "}
         <h2 class="text-lg font-semibold">Certificates</h2>
         <p class="text-muted-foreground text-sm">Attach certificates relevant to this product.</p>
       </div>
-      <div>
+      <div class="col-span-3">
         <form.Field name="certificates" mode="array">
           {(certificatesField) => (
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
@@ -32,7 +33,7 @@ export const Certificates = () => {
                           <span class="text-muted-foreground text-sm">
                             There are currently no certificates in the system, please create one.
                           </span>
-                          <div class="flex flex-row gap-4 items-center justify-center">
+                          <div class="flex flex-row gap-2 items-center justify-center">
                             <Button
                               size="sm"
                               class="bg-background"

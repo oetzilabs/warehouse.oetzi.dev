@@ -13,14 +13,15 @@ export const Suppliers = () => {
   const form = useNewProductForm();
   const suppliers = createAsync(() => getSuppliers(), { deferStream: true });
   return (
-    <section class="p-0 grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="flex flex-col gap-2">
+    <section class="p-0 grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div class="flex flex-col gap-2 col-span-2">
+        {" "}
         <h2 class="text-lg font-semibold">Suppliers</h2>
         <p class="text-muted-foreground text-sm">
           Select suppliers for this product. You can choose multiple suppliers.
         </p>
       </div>
-      <div>
+      <div class="col-span-3">
         <form.Field name="suppliers" mode="array">
           {(suppliersField) => (
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">

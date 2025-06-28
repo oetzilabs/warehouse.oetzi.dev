@@ -28,6 +28,8 @@ export const formOps = formOptions({
     certificates: [],
     conditions: [],
     suppliers: [],
+
+    images: [],
   } as {
     name: string;
     barcode: string;
@@ -51,6 +53,8 @@ export const formOps = formOptions({
     certificates: string[];
     conditions: string[];
     suppliers: string[];
+
+    images: File[];
   },
 });
 export const createProductForm = createForm(() => ({

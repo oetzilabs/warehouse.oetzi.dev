@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { createAsync, revalidate } from "@solidjs/router";
 import dayjs from "dayjs";
 import RotateCw from "lucide-solid/icons/rotate-cw";
+import TextSelect from "lucide-solid/icons/text-select";
 import { For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 import { useNewProductForm } from "./form";
@@ -12,12 +13,12 @@ export const Conditions = () => {
   const form = useNewProductForm();
   const conditions = createAsync(() => getStorageConditions(), { deferStream: true });
   return (
-    <section class="p-0 grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="flex flex-col gap-2">
+    <section class="p-0 grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div class="flex flex-col gap-2 col-span-2">
         <h2 class="text-lg font-semibold">Storage Conditions</h2>
         <p class="text-muted-foreground text-sm">Specify the storage conditions required for this product.</p>
       </div>
-      <div>
+      <div class="col-span-3">
         <form.Field name="conditions" mode="array">
           {(conditionsField) => (
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
@@ -31,7 +32,7 @@ export const Conditions = () => {
                           <span class="text-muted-foreground text-sm">
                             There are currently no conditions in the system, please contact the administrator.
                           </span>
-                          <div class="flex flex-row gap-4 items-center justify-center">
+                          <div class="flex flex-row gap-2 items-center justify-center">
                             <Button
                               size="sm"
                               class="bg-background"
@@ -46,6 +47,10 @@ export const Conditions = () => {
                             >
                               <RotateCw class="size-4" />
                               Refresh
+                            </Button>
+                            <Button size="sm" onClick={() => {}}>
+                              <TextSelect class="size-4" />
+                              Derive from Labels
                             </Button>
                           </div>
                         </div>
