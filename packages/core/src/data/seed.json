@@ -393,6 +393,18 @@
                       "effectiveDate": "2025-05-01T10:00:00.000Z"
                     }
                   ]
+                },
+                {
+                  "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
+                  "quantity": 5,
+                  "id": "ordprod_it1jjm0bny1iztldtbxcd0w8",
+                  "pricing": [
+                    {
+                      "supplierPrice": 12.99,
+                      "currency": "EUR",
+                      "effectiveDate": "2025-05-01T10:00:00.000Z"
+                    }
+                  ]
                 }
               ]
             },
@@ -455,6 +467,11 @@
                   "productId": "prod_rljvumttoz3f2v122kw7bf4x",
                   "quantity": 5,
                   "id": "ordprod_yltrkzqyzhcy34edm7jg18hd"
+                },
+                {
+                  "productId": "prod_qgjolvdci0g8f0g6dq851dtf",
+                  "quantity": 1,
+                  "id": "ordprod_it1jjm0bny1iztldtbxcd0w8"
                 }
               ],
               "saleId": null,

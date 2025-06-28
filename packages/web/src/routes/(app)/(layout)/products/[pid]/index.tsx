@@ -1,5 +1,6 @@
 import { Actions } from "@/components/features/products/actions";
 import { Brand } from "@/components/features/products/brand";
+import { Certificates } from "@/components/features/products/certificates";
 import { Codes } from "@/components/features/products/code";
 import { Conditions } from "@/components/features/products/conditions";
 import { ProductImages } from "@/components/features/products/images";
@@ -253,6 +254,7 @@ export default function ProductPage() {
                 <TabsTrigger value="codes">Codes</TabsTrigger>
                 <TabsTrigger value="labels">Labels</TabsTrigger>
                 <TabsTrigger value="conditions">Conditions</TabsTrigger>
+                <TabsTrigger value="certificates">Certificates</TabsTrigger>
                 <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
                 <TabsTrigger value="pricing_history">Pricing History</TabsTrigger>
               </TabsList>
@@ -264,6 +266,9 @@ export default function ProductPage() {
               </TabsContent>
               <TabsContent value="labels">
                 <Labels product={productInfo} />
+              </TabsContent>
+              <TabsContent value="certificates">
+                <Certificates product={productInfo} />
               </TabsContent>
               <TabsContent value="conditions">
                 <Conditions product={productInfo} />

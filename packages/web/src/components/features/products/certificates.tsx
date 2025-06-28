@@ -21,33 +21,33 @@ import Plus from "lucide-solid/icons/plus";
 import { Accessor, createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
-type ConditionsProps = {
+type CertificatesProps = {
   product: Accessor<ProductInfo>;
 };
 
-export const Conditions = (props: ConditionsProps) => {
+export const Certificates = (props: CertificatesProps) => {
   return (
     <div class="flex flex-col gap-4 py-2">
       <div class="flex flex-row items-center gap-4 justify-between ">
         <div class="flex flex-row items-center gap-2 justify-end w-full">
           <Button variant="outline" size="sm" class="bg-background" disabled>
             <Plus class="size-4" />
-            Add Condition
+            Add Certificate
           </Button>
         </div>
       </div>
       <div class="flex flex-col rounded-lg border">
         <For
-          each={props.product().stco}
+          each={props.product().certs}
           fallback={
             <div class="flex flex-col items-center justify-center p-8">
-              <span class="text-sm text-muted-foreground">No conditions added.</span>
+              <span class="text-sm text-muted-foreground">No certificates added.</span>
             </div>
           }
         >
-          {(stco) => (
+          {(cert) => (
             <div class="flex flex-col gap-1 p-4">
-              <span class="text-sm text-muted-foreground">{stco.condition?.name ?? "N/A"}</span>
+              <span class="text-sm text-muted-foreground">{cert.cert?.name ?? "N/A"}</span>
             </div>
           )}
         </For>
