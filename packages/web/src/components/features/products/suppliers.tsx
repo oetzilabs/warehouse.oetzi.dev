@@ -31,7 +31,7 @@ export const Suppliers = (props: SuppliersProps) => {
     <div class="flex flex-col gap-4 py-2">
       <div class="flex flex-row items-center gap-4 justify-between">
         <div class="flex flex-row items-center gap-2 justify-end w-full">
-          <Button variant="outline" size="sm" class="bg-background">
+          <Button variant="outline" size="sm" class="bg-background" disabled>
             <Plus class="size-4" />
             Add Supplier
           </Button>
@@ -41,7 +41,7 @@ export const Suppliers = (props: SuppliersProps) => {
         <For
           each={props.product().suppliers}
           fallback={
-            <div class="flex flex-col items-center justify-center p-8">
+            <div class="flex flex-col items-center justify-center p-8 bg-muted-foreground/5 dark:bg-muted/30">
               <span class="text-sm text-muted-foreground">No suppliers added.</span>
             </div>
           }

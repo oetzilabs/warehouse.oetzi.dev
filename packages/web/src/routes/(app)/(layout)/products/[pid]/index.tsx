@@ -184,10 +184,10 @@ export default function ProductPage() {
                 <div class="flex flex-col w-full">
                   <div class="flex flex-col gap-2 w-full">
                     <div class="flex flex-col w-full gap-4">
-                      <div class="flex flex-col w-full gap-2 pt-10">
+                      <div class="flex flex-col w-full gap-2">
                         <h2 class="md:text-2xl font-bold uppercase text-wrap">{productInfo().name}</h2>
                         <span class="text-sm text-muted-foreground">
-                          {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY")}
+                          {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - HH:mm A")}
                         </span>
                       </div>
                       <span class="text-muted-foreground">{productInfo().description}</span>

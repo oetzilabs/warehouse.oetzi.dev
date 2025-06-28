@@ -40,7 +40,7 @@ export const Conditions = (props: ConditionsProps) => {
         <For
           each={props.product().stco}
           fallback={
-            <div class="flex flex-col items-center justify-center p-8">
+            <div class="flex flex-col items-center justify-center p-8 bg-muted-foreground/5 dark:bg-muted/30">
               <span class="text-sm text-muted-foreground">No conditions added.</span>
             </div>
           }

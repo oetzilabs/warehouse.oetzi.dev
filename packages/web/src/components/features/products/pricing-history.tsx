@@ -51,7 +51,7 @@ export const PricingHistory = (props: PricingHistoryProps) => {
         when={priceData().hasHistory}
         fallback={
           <div class="flex flex-col items-center justify-center p-8 bg-muted-foreground/5 dark:bg-muted/30 rounded-lg border">
-            <span class="text-sm text-muted-foreground">There is no price history for this product.</span>
+            <span class="text-sm text-muted-foreground">There is no history for this product.</span>
           </div>
         }
       >
