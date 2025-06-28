@@ -1,6 +1,8 @@
+import { createProduct } from "@/lib/api/products";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import { type NewProductFormData } from "@warehouseoetzidev/core/src/entities/products/schemas";
 import { createContext, JSXElement, useContext } from "solid-js";
+import { toast } from "solid-sonner";
 
 const formOps = formOptions({
   defaultValues: {
@@ -36,6 +38,13 @@ const formOps = formOptions({
 });
 const createProductForm = createForm(() => ({
   ...formOps,
+  onSubmit: (props) => {
+    toast.promise(createProduct(props.value), {
+      loading: "Creating product...",
+      success: "Product created successfully!",
+      error: "Something went wrong while creating the product.",
+    });
+  },
 }));
 
 export const NewProductFormContext = createContext<{
