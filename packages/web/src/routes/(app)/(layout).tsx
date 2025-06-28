@@ -68,18 +68,18 @@ export default function DashboardLayout(props: { children: JSXElement }) {
 
   return (
     <div class="w-full flex flex-col gap-0 h-full bg-muted">
-      <SidebarProvider class="!border-r-0">
-        <Sidebar class="bg-muted !border-r-0">
+      <SidebarProvider class="!border-r-0 !pr-0">
+        <Sidebar class="bg-muted !border-r-0 !pr-0">
           <Show when={user.currentOrganization()}>
             {(org) => (
-              <SidebarContent class="gap-0 !border-r-0">
+              <SidebarContent class="gap-0 !border-r-0  !pr-0">
                 <SidebarGroup>
                   <div class="bg-background w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
                     <span class="">Search</span>
                     <Search class="size-4" />
                   </div>
                 </SidebarGroup>
-                <SidebarGroup class="flex flex-col gap-0">
+                <SidebarGroup class="flex flex-col gap-0 !pr-0">
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <Link href="/dashboard">
@@ -113,7 +113,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroup>
-                <SidebarGroup>
+                <SidebarGroup class="!pr-0">
                   <SidebarGroupLabel>Orders, Sales & More</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
@@ -158,7 +158,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
-                <SidebarGroup>
+                <SidebarGroup class="!pr-0">
                   <SidebarGroupLabel>People & Papers</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
@@ -216,7 +216,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
-                <SidebarGroup>
+                <SidebarGroup class="!pr-0">
                   <SidebarGroupLabel>Communication</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
