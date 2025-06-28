@@ -78,7 +78,7 @@ export default function ProductPage() {
     >
       <Show when={product()}>
         {(productInfo) => (
-          <div class="container flex flex-col gap-4 py-4">
+          <div class="container flex flex-col gap-4">
             <div class="flex flex-row items-center justify-between gap-4">
               <div class="flex flex-row items-center gap-4">
                 <Button variant="outline" size="sm" as={A} href="/products">
@@ -203,7 +203,7 @@ export default function ProductPage() {
                       </Badge>
                     </Show>
                   </div>
-                  <div class="flex flex-col gap-1 border-b py-8">
+                  <div class="flex flex-col gap-1 border-b py-0">
                     <div class="flex flex-col gap-1 pb-10">
                       <span class="text-3xl font-bold font-['Geist_Mono_Variable']">
                         {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
@@ -244,7 +244,7 @@ export default function ProductPage() {
                       )}
                     </Show>
                   </div>
-                  <div class="flex flex-col gap-1 border-b py-8">
+                  <div class="flex flex-col gap-1 border-b py-0">
                     <Inventory product={productInfo} />
                   </div>
                   <div class="flex flex-col gap-1 pt-8">

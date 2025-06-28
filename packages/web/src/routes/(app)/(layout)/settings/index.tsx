@@ -4,7 +4,7 @@ import { For } from "solid-js";
 
 export default function SettingsPage() {
   return (
-    <div class="flex flex-col container h-full grow py-8">
+    <div class="flex flex-col container h-full grow py-0">
       <div class="flex flex-col w-full h-full grow">
         <DashboardFeatures />
       </div>

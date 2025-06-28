@@ -32,7 +32,7 @@ export const route = {
 export default function NewProductPage() {
   const [withAI, setWithAI] = createSignal(false);
   return (
-    <div class="container flex flex-row grow py-8">
+    <div class="container flex flex-row grow py-0">
       <div class="w-full flex flex-col gap-4">
         <div class="flex items-center gap-4 justify-between w-full">
           <div class="flex items-center gap-4">

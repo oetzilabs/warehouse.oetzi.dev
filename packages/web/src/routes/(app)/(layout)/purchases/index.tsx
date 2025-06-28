@@ -25,7 +25,7 @@ export default function PurchasesPage() {
   const data = createAsync(() => getPurchases(), { deferStream: true });
 
   return (
-    <div class="container flex flex-col grow py-8">
+    <div class="container flex flex-col grow py-0">
       <div class="w-full flex flex-row h-full gap-4">
         <div class="w-full flex flex-col gap-4">
           <div class="flex items-center gap-4 justify-between w-full">

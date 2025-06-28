@@ -60,8 +60,8 @@ export function Footer() {
   const isSubscribing = useSubmission(subscribe);
 
   return (
-    <footer class="w-full">
-      <div class="w-full p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
+    <footer class="w-full z-0">
+      <div class="w-full p-4 bg-background">
         <div class="container p-4">
           <div class="flex flex-col xl:flex-row gap-6 w-full">
             <div class="flex flex-col gap-4 items-center justify-center md:items-start md:justify-start col-span-full sm:col-span-1 w-full">

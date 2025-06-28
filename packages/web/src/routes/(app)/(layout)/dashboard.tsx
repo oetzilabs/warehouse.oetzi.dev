@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const hasMissingData = createMemo(() => Object.values(dashboardFeatures).some((v) => !v.enabled));
 
   return (
-    <div class="flex flex-col w-full grow py-8">
+    <div class="flex flex-col w-full grow py-0">
       <div class="flex flex-col gap-4 w-full grow container">
         <div class="flex flex-col w-full h-content">
           <div class="w-full h-content">

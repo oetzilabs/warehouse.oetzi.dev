@@ -1,4 +1,5 @@
 import { useUser } from "@/components/providers/User";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { A, useLocation, useNavigate, useResolvedPath } from "@solidjs/router";
@@ -25,6 +27,8 @@ import Notebook from "lucide-solid/icons/notebook";
 import PackageOpen from "lucide-solid/icons/package-open";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Search from "lucide-solid/icons/search";
+import SidebarClose from "lucide-solid/icons/sidebar-close";
+import SidebarOpen from "lucide-solid/icons/sidebar-open";
 import Tags from "lucide-solid/icons/tags";
 import TriangleAlert from "lucide-solid/icons/triangle-alert";
 import UsersRound from "lucide-solid/icons/users-round";
@@ -63,14 +67,14 @@ export default function DashboardLayout(props: { children: JSXElement }) {
   const navigate = useNavigate();
 
   return (
-    <div class="w-full flex flex-col gap-0 h-full">
-      <SidebarProvider>
-        <Sidebar>
+    <div class="w-full flex flex-col gap-0 h-full bg-muted">
+      <SidebarProvider class="!border-r-0">
+        <Sidebar class="bg-muted !border-r-0">
           <Show when={user.currentOrganization()}>
             {(org) => (
-              <SidebarContent class="gap-0">
+              <SidebarContent class="gap-0 !border-r-0">
                 <SidebarGroup>
-                  <div class="w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
+                  <div class="bg-background w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
                     <span class="">Search</span>
                     <Search class="size-4" />
                   </div>
@@ -236,19 +240,42 @@ export default function DashboardLayout(props: { children: JSXElement }) {
             )}
           </Show>
         </Sidebar>
-        <div class="w-full h-full flex flex-col overflow-auto">
-          <Suspense
-            fallback={
-              <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-                <Loader2 class="size-4 animate-spin" />
-                <span class="text-sm">Loading...</span>
-              </div>
-            }
-          >
-            {props.children}
-          </Suspense>
+        <div class="w-full h-full flex flex-col p-2">
+          <div class="relative w-full h-full flex flex-col overflow-auto border rounded-lg bg-background">
+            <div class="sticky top-0 left-0 z-50 w-max h-max flex p-2">
+              <SidebarButtonTrigger />
+            </div>
+            <Suspense
+              fallback={
+                <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+                  <Loader2 class="size-4 animate-spin" />
+                  <span class="text-sm">Loading...</span>
+                </div>
+              }
+            >
+              {props.children}
+            </Suspense>
+          </div>
         </div>
       </SidebarProvider>
     </div>
   );
 }
+
+const SidebarButtonTrigger = () => {
+  const { toggleSidebar, open } = useSidebar();
+  return (
+    <Button
+      onClick={() => {
+        toggleSidebar();
+      }}
+      size="icon"
+      variant="ghost"
+      class="bg-background"
+    >
+      <Show when={open()} fallback={<SidebarOpen class="size-4" />}>
+        <SidebarClose class="size-4" />
+      </Show>
+    </Button>
+  );
+};
