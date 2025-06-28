@@ -1,4 +1,5 @@
 import { action, json, query, redirect } from "@solidjs/router";
+import { ProductCreateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { BrandLive, BrandService } from "@warehouseoetzidev/core/src/entities/brands";
 import { InventoryLive, InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
@@ -11,9 +12,11 @@ import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizatio
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
+import { NewProductFormData } from "@warehouseoetzidev/core/src/entities/products/schemas";
 import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
 import { SupplierNotFound } from "@warehouseoetzidev/core/src/entities/suppliers/errors";
 import { Cause, Chunk, Effect, Exit, Layer } from "effect";
+import { InferInput } from "valibot";
 import { withSession } from "./session";
 
 export const getProducts = query(async () => {
@@ -582,3 +585,49 @@ export const getProductStock = query(async (id: string) => {
   );
   return product;
 }, "product-stock-by-id");
+
+export const createProduct = action(async (data: NewProductFormData) => {
+  "use server";
+  const auth = await withSession();
+  if (!auth) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const user = auth[0];
+  if (!user) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const session = auth[1];
+  if (!session) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const orgId = session.current_organization_id;
+  if (!orgId) {
+    throw redirect("/", { status: 403, statusText: "Forbidden" });
+  }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
+  const { product, ...additional } = data;
+
+  const createProductExit = await Effect.runPromiseExit(
+    Effect.gen(function* (_) {
+      const service = yield* _(ProductService);
+
+      const result = yield* service.create(product, additional);
+      return result;
+    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
+  );
+  return Exit.match(createProductExit, {
+    onSuccess: (result) => {
+      return json(result, {
+        revalidate: [getProductById.keyFor(result.id), getProducts.key],
+      });
+    },
+    onFailure: (cause) => {
+      console.error("Failed to create product:", cause);
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return c.message;
+      });
+      throw new Error(`Some error(s) occurred at 'create product': ${errors.join(", ")}`);
+    },
+  });
+});

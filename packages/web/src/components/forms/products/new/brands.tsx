@@ -1,11 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getProductBrands } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
 import { createAsync } from "@solidjs/router";
 import { type BrandInfo } from "@warehouseoetzidev/core/src/entities/brands";
 import Fuse, { IFuseOptions } from "fuse.js";
 import { createSignal, For, Show, Suspense } from "solid-js";
-import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { useNewProductForm } from "./form";
 
 export const Brand = () => {
@@ -40,7 +40,7 @@ export const Brand = () => {
         <TextField value={search()} onChange={(e) => setSearch(e)} class="w-full max-w-full">
           <TextFieldInput placeholder="Search brands" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <form.Field name="brand_id">
+        <form.Field name="product.brand_id">
           {(field) => (
             <div class="gap-2 flex flex-col">
               <span class="capitalize pl-1 text-sm font-medium">Brand</span>

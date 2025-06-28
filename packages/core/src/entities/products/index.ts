@@ -4,12 +4,16 @@ import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
 import {
   ProductCreateSchema,
+  ProductSelect,
   ProductUpdateSchema,
   TB_organization_product_price_history,
   TB_organizations_products,
   TB_products,
+  TB_products_to_certifications,
   TB_products_to_labels,
+  TB_products_to_storage_conditions,
   TB_supplier_product_price_history,
+  TB_supplier_products,
 } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
@@ -33,31 +37,97 @@ import {
   ProductNotFound,
   ProductNotUpdated,
 } from "./errors";
+import { NewProductFormData } from "./schemas";
 
 export class ProductService extends Effect.Service<ProductService>()("@warehouse/products", {
   effect: Effect.gen(function* (_) {
     const database = yield* _(DatabaseService);
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof ProductCreateSchema>) =>
+    const create = (
+      input: InferInput<typeof ProductCreateSchema>,
+      additions: Omit<NewProductFormData, "product">, // 'additions' is not directly used in the current transaction logic, but keeping it for consistency if it's used elsewhere
+    ) =>
       Effect.gen(function* (_) {
-        const orgId = yield* OrganizationId;
-        const [product] = yield* Effect.promise(() => db.insert(TB_products).values(input).returning());
-        if (!product) {
-          return yield* Effect.fail(new ProductNotCreated({}));
-        }
-        const [org_product] = yield* Effect.promise(() =>
-          db.insert(TB_organizations_products).values({ organizationId: orgId, productId: product.id }).returning(),
-        );
-        if (!org_product) {
-          return yield* Effect.fail(
-            new OrganizationProductNotAdded({
-              organizationId: orgId,
-              productId: product.id,
-            }),
-          );
-        }
-        return findById(product.id);
+        const orgId = yield* OrganizationId; // Run the Effect to get orgId
+        const r = yield* Effect.async<ProductSelect, ProductNotCreated | OrganizationProductNotAdded>((resume) => {
+          db.transaction(async (tx) => {
+            try {
+              const [product] = await tx.insert(TB_products).values(input).returning();
+
+              if (!product) {
+                throw new ProductNotCreated({});
+              }
+
+              const [org_product] = await tx
+                .insert(TB_organizations_products)
+                .values({ organizationId: orgId, productId: product.id })
+                .returning();
+
+              if (!org_product) {
+                throw new OrganizationProductNotAdded({
+                  organizationId: orgId,
+                  productId: product.id,
+                });
+              }
+              if (additions.images.length > 0) {
+                // upload the image
+                // assume its uploaded.
+                /*
+                for (const image of additions.images) {
+                  const image = await uploadImage(additions.images);
+                  await tx.insert(TB_product_images).values({ productId: product.id, imageId: image.id }).returning();
+                }
+                */
+              }
+              if (additions.labels.length > 0) {
+                // add labels
+                for (const labelId of additions.labels) {
+                  await tx
+                    .insert(TB_products_to_labels)
+                    .values({ productId: product.id, labelId: labelId })
+                    .returning();
+                }
+              }
+              for (const supplierId of additions.suppliers) {
+                await tx
+                  .insert(TB_supplier_products)
+                  .values({ productId: product.id, supplierId: supplierId })
+                  .returning();
+              }
+              for (const certificateId of additions.certificates) {
+                await tx
+                  .insert(TB_products_to_certifications)
+                  .values({ productId: product.id, certificationId: certificateId })
+                  .returning();
+              }
+              for (const conditionId of additions.conditions) {
+                await tx
+                  .insert(TB_products_to_storage_conditions)
+                  .values({ productId: product.id, conditionId: conditionId })
+                  .returning();
+              }
+
+              resume(Effect.succeed(product));
+            } catch (error) {
+              if (error instanceof ProductNotCreated) {
+                resume(Effect.fail(error));
+              } else if (error instanceof OrganizationProductNotAdded) {
+                resume(Effect.fail(error));
+              } else {
+                resume(
+                  Effect.fail(
+                    new ProductNotCreated({
+                      message: `An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"}`,
+                    }),
+                  ),
+                );
+              }
+              await tx.rollback();
+            }
+          });
+        });
+        return r;
       });
 
     const findById = (id: string) =>

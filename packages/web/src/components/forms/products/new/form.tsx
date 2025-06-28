@@ -1,28 +1,30 @@
 import { createForm, formOptions } from "@tanstack/solid-form";
+import { type NewProductFormData } from "@warehouseoetzidev/core/src/entities/products/schemas";
 import { createContext, JSXElement, useContext } from "solid-js";
 
-export const formOps = formOptions({
+const formOps = formOptions({
   defaultValues: {
-    name: "",
-    barcode: "",
-    sku: "",
-    description: "",
-    dimensions: {
-      depth: 0,
-      width: 0,
-      height: 0,
-      unit: "cm",
+    product: {
+      name: "",
+      barcode: "",
+      sku: "",
+      description: "",
+      dimensions: {
+        depth: 0,
+        width: 0,
+        height: 0,
+        unit: "cm",
+      },
+      weight: {
+        value: 0.0,
+        unit: "kg",
+      },
+
+      customsTariffNumber: "unknown",
+      countryOfOrigin: "unknown",
+
+      brand_id: null,
     },
-    weight: {
-      value: 0.0,
-      unit: "kg",
-    },
-
-    customsTariffNumber: "unknown",
-    countryOfOrigin: "unknown",
-
-    brand_id: null,
-
     labels: [],
     catalogs: [],
     certificates: [],
@@ -30,34 +32,9 @@ export const formOps = formOptions({
     suppliers: [],
 
     images: [],
-  } as {
-    name: string;
-    barcode: string;
-    sku: string;
-    description: string;
-    dimensions: {
-      depth: number;
-      width: number;
-      height: number;
-      unit: "cm" | "in" | (string & {});
-    };
-    weight: {
-      value: number;
-      unit: "kg" | "lb";
-    };
-    customsTariffNumber: string;
-    countryOfOrigin: string;
-    brand_id: string | null;
-    labels: string[];
-    catalogs: string[];
-    certificates: string[];
-    conditions: string[];
-    suppliers: string[];
-
-    images: File[];
-  },
+  } as NewProductFormData,
 });
-export const createProductForm = createForm(() => ({
+const createProductForm = createForm(() => ({
   ...formOps,
 }));
 

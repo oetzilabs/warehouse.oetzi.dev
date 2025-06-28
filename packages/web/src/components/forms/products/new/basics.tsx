@@ -18,7 +18,7 @@ export const Basics = () => {
         </p>
       </div>
       <div class="flex flex-col gap-4  col-span-3">
-        <form.Field name="name">
+        <form.Field name="product.name">
           {(field) => (
             <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">
@@ -28,7 +28,7 @@ export const Basics = () => {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="barcode">
+        <form.Field name="product.barcode">
           {(field) => (
             <div class="gap-2 flex flex-row items-end justify-center">
               <TextField
@@ -47,7 +47,7 @@ export const Basics = () => {
             </div>
           )}
         </form.Field>
-        <form.Field name="sku">
+        <form.Field name="product.sku">
           {(field) => (
             <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">SKU</TextFieldLabel>
@@ -55,7 +55,7 @@ export const Basics = () => {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="description">
+        <form.Field name="product.description">
           {(field) => (
             <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Description</TextFieldLabel>
@@ -63,7 +63,7 @@ export const Basics = () => {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="customsTariffNumber">
+        <form.Field name="product.customsTariffNumber">
           {(field) => (
             <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Customs Tariff Number</TextFieldLabel>
@@ -71,7 +71,7 @@ export const Basics = () => {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="countryOfOrigin">
+        <form.Field name="product.countryOfOrigin">
           {(field) => (
             <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Country of Origin</TextFieldLabel>

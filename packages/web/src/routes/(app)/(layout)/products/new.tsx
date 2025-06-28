@@ -2,6 +2,7 @@ import { Basics } from "@/components/forms/products/new/basics";
 import { Brand } from "@/components/forms/products/new/brands";
 import { Certificates } from "@/components/forms/products/new/certificates";
 import { Conditions } from "@/components/forms/products/new/conditions";
+import { useNewProductForm } from "@/components/forms/products/new/form";
 import { Images } from "@/components/forms/products/new/images";
 import { Labels } from "@/components/forms/products/new/labels";
 import { Suppliers } from "@/components/forms/products/new/suppliers";
@@ -19,18 +20,27 @@ import Sparkles from "lucide-solid/icons/sparkles";
 import { createSignal, Show } from "solid-js";
 
 export const route = {
-  preload: (props) => {
-    getAuthenticatedUser();
-    getSessionToken();
-    getSuppliers();
-    getProductLabels();
-    getCertificates();
-    getStorageConditions();
+  preload: async (props) => {
+    const user = await getAuthenticatedUser();
+    const sessionToken = await getSessionToken();
+    const suppliers = await getSuppliers();
+    const productLabels = await getProductLabels();
+    const certs = await getCertificates();
+    const storageConditions = await getStorageConditions();
+    return {
+      user,
+      sessionToken,
+      suppliers,
+      productLabels,
+      certs,
+      storageConditions,
+    };
   },
 } as RouteDefinition;
 
 export default function NewProductPage() {
   const [withAI, setWithAI] = createSignal(false);
+  const form = useNewProductForm();
   return (
     <div class="container flex flex-row grow py-0">
       <div class="w-full flex flex-col gap-4">
@@ -68,7 +78,13 @@ export default function NewProductPage() {
             </Button>
           </div>
         </div>
-        <form class="w-full grow flex flex-col pb-10">
+        <form
+          class="w-full grow flex flex-col pb-10"
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(e);
+          }}
+        >
           <Basics />
           <div class="border-b my-8" />
           <Brand />
