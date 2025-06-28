@@ -44,10 +44,9 @@ export const Labels = (props: LabelsProps) => {
   const removeLabelsFromProductAction = useAction(removeLabelsFromProduct);
   const isRemovingLabelsFromProduct = useSubmission(removeLabelsFromProduct);
   return (
-    <div class="flex flex-col border rounded-lg overflow-clip">
-      <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
-        <h2 class="font-medium">Labels</h2>
-        <div class="flex flex-row items-center gap-2">
+    <div class="flex flex-col gap-4 py-2">
+      <div class="flex flex-row items-center gap-4 justify-between">
+        <div class="flex flex-row items-center gap-2 justify-end w-full">
           <Dialog open={addLabelDialogOpen()} onOpenChange={setAddLabelDialogOpen}>
             <DialogTrigger as={Button} variant="outline" size="sm" class="bg-background">
               <Plus class="size-4" />
@@ -173,83 +172,86 @@ export const Labels = (props: LabelsProps) => {
           </Dialog>
         </div>
       </div>
-      <For
-        each={props.product().labels}
-        fallback={
-          <div class="flex flex-col items-center justify-center p-8">
-            <span class="text-sm text-muted-foreground">No labels added.</span>
-          </div>
-        }
-      >
-        {(label) => (
-          <div class="flex flex-row gap-2 p-4 items-center border-b last:border-b-0 justify-between">
-            <div class="flex flex-row items-center gap-2">
-              <Show when={label.label.image && label.label.image.length > 0 && label.label.image}>
-                {(src) => <img src={src()} alt={label.label.name} class="size-16 object-cover rounded-md" />}
-              </Show>
-              <div class="flex flex-col gap-1">
-                <span class="text-sm ">{label.label.name ?? "N/A"}</span>
-                <span class="text-xs text-muted-foreground">{label.label.description ?? "N/A"}</span>
+      <div class="flex flex-col rounded-lg border">
+        <For
+          each={props.product().labels}
+          fallback={
+            <div class="flex flex-col items-center justify-center p-8 bg-muted-foreground/5 dark:bg-muted/30">
+              <span class="text-sm text-muted-foreground">No labels added.</span>
+            </div>
+          }
+        >
+          {(label) => (
+            <div class="flex flex-row gap-2 p-4 items-center border-b last:border-b-0 justify-between">
+              <div class="flex flex-row items-center gap-2">
+                <Show when={label.label.image && label.label.image.length > 0 && label.label.image}>
+                  {(src) => <img src={src()} alt={label.label.name} class="size-16 object-cover rounded-md" />}
+                </Show>
+                <div class="flex flex-col gap-1">
+                  <span class="text-sm ">{label.label.name ?? "N/A"}</span>
+                  <span class="text-xs text-muted-foreground">{label.label.description ?? "N/A"}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 h-full">
+                <Dialog
+                  open={deleteLabelDialogOpen().isOpen && deleteLabelDialogOpen().labelId === label.label.id}
+                  onOpenChange={(open) =>
+                    setDeleteLabelDialogOpen({
+                      isOpen: open,
+                      labelId: open ? label.label.id : null,
+                      labelName: open ? label.label.name : null,
+                    })
+                  }
+                >
+                  <DialogTrigger as={Button} variant="outline" class="bg-background size-6" size="icon">
+                    <X class="!size-3" />
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Remove Label</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to remove the label "{deleteLabelDialogOpen().labelName}" from this
+                        product?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setDeleteLabelDialogOpen({ isOpen: false, labelId: null, labelName: null });
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        disabled={isRemovingLabelsFromProduct.pending}
+                        onClick={() => {
+                          toast.promise(
+                            removeLabelsFromProductAction(props.product().id, label.label.id).then(() => {
+                              setDeleteLabelDialogOpen({ isOpen: false, labelId: null, labelName: null });
+                            }),
+                            {
+                              loading: "Removing label...",
+                              success: "Label removed",
+                              error: "Failed to remove label",
+                            },
+                          );
+                        }}
+                      >
+                        <Show when={isRemovingLabelsFromProduct.pending} fallback={<X class="size-4" />}>
+                          <Loader2 class="size-4 animate-spin" />
+                        </Show>
+                        Remove
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-            <div class="flex items-center gap-2 h-full">
-              <Dialog
-                open={deleteLabelDialogOpen().isOpen && deleteLabelDialogOpen().labelId === label.label.id}
-                onOpenChange={(open) =>
-                  setDeleteLabelDialogOpen({
-                    isOpen: open,
-                    labelId: open ? label.label.id : null,
-                    labelName: open ? label.label.name : null,
-                  })
-                }
-              >
-                <DialogTrigger as={Button} variant="outline" class="bg-background size-6" size="icon">
-                  <X class="!size-3" />
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Remove Label</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to remove the label "{deleteLabelDialogOpen().labelName}" from this product?
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setDeleteLabelDialogOpen({ isOpen: false, labelId: null, labelName: null });
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      disabled={isRemovingLabelsFromProduct.pending}
-                      onClick={() => {
-                        toast.promise(
-                          removeLabelsFromProductAction(props.product().id, label.label.id).then(() => {
-                            setDeleteLabelDialogOpen({ isOpen: false, labelId: null, labelName: null });
-                          }),
-                          {
-                            loading: "Removing label...",
-                            success: "Label removed",
-                            error: "Failed to remove label",
-                          },
-                        );
-                      }}
-                    >
-                      <Show when={isRemovingLabelsFromProduct.pending} fallback={<X class="size-4" />}>
-                        <Loader2 class="size-4 animate-spin" />
-                      </Show>
-                      Remove
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        )}
-      </For>
+          )}
+        </For>
+      </div>
     </div>
   );
 };

@@ -23,6 +23,7 @@ import { type BrandInfo } from "@warehouseoetzidev/core/src/entities/brands";
 import { type ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
 import Fuse from "fuse.js";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Loader2 from "lucide-solid/icons/loader-2";
 import Pencil from "lucide-solid/icons/pencil";
 import Plus from "lucide-solid/icons/plus";
@@ -40,39 +41,38 @@ type InventoryProps = {
 export const Inventory = (props: InventoryProps) => {
   const productStockData = createAsync(() => getProductStock(props.product().id), { deferStream: true });
   return (
-    <div class="flex flex-col border rounded-lg overflow-clip">
-      <div class="flex flex-row items-center justify-between gap-2 border-b bg-muted-foreground/5 dark:bg-muted/30 p-4">
-        <h2 class="font-medium ">Inventory</h2>
-        <StockDialog
-          id={props.product().id}
-          minimumStock={props.product().organizations[0].minimumStock ?? 0}
-          maximumStock={props.product().organizations[0].maximumStock ?? 0}
-          reorderPoint={props.product().organizations[0].reorderPoint ?? 0}
-        />
-      </div>
-      <div class="flex flex-col gap-1 p-4 border-b">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
         <Show when={productStockData()}>
           {(productStock) => (
             <div class="flex justify-between">
-              <span class="text-sm font-medium">Stock:</span>
-              <span class="text-sm">{productStock() ?? "N/A"}</span>
+              <span class="text-sm font-medium">Stock</span>
+              <div class="flex flex-row items-center gap-2">
+                <span class="text-sm text-muted-foreground">{productStock() ?? "N/A"}</span>
+                <Button variant="outline" size="icon" class="bg-background size-6" disabled>
+                  <Pencil class="!size-3" />
+                </Button>
+              </div>
             </div>
           )}
         </Show>
         <div class="flex justify-between">
-          <span class="text-sm font-medium">Min Stock:</span>
-          <span class="text-sm">{props.product().organizations[0].minimumStock}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-sm font-medium">Max Stock:</span>
-          <span class="text-sm">{props.product().organizations[0].maximumStock ?? "N/A"}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-sm font-medium">Reordering At:</span>
-          <span class="text-sm">{props.product().organizations[0].reorderPoint ?? "N/A"}</span>
+          <span class="text-sm font-medium">Min/Max/Reorder</span>
+          <div class="flex flex-row items-center gap-2">
+            <span class="text-sm text-muted-foreground">
+              {props.product().minimumStock}/{props.product().maximumStock ?? "N/A"}/
+              {props.product().reorderPoint ?? "N/A"}
+            </span>
+            <StockDialog
+              id={props.product().id}
+              minimumStock={props.product().organizations[0].minimumStock ?? 0}
+              maximumStock={props.product().organizations[0].maximumStock ?? 0}
+              reorderPoint={props.product().organizations[0].reorderPoint ?? 0}
+            />
+          </div>
         </div>
       </div>
-      <div class="flex flex-col p-4">
+      {/* <div class="flex flex-col">
         <Reorder
           product={() => ({
             ...props.product(),
@@ -81,7 +81,7 @@ export const Inventory = (props: InventoryProps) => {
             minimumStock: props.product().minimumStock ?? 0,
           })}
         />
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -106,9 +106,8 @@ const StockDialog = (props: StockDialogProps) => {
 
   return (
     <Dialog open={stockDialogOpen()} onOpenChange={setStockDialogOpen}>
-      <DialogTrigger as={Button} variant="outline" size="sm" class="bg-background">
-        <Settings class="!size-4" />
-        Change Stock
+      <DialogTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">
+        <Settings class="!size-3" />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

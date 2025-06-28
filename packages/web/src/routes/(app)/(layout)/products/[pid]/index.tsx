@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { deleteProduct, getProductById, reAddProduct } from "@/lib/api/products";
 import { A, createAsync, RouteDefinition, useAction, useNavigate, useParams, useSubmission } from "@solidjs/router";
@@ -90,15 +91,107 @@ export default function ProductPage() {
                   <Map class="size-4" />
                   Show on Map
                 </Button>
+                <DropdownMenu placement="bottom-end">
+                  <DropdownMenuTrigger as={Button} variant="outline" size="sm" class="bg-background">
+                    <MoreHorizontal class="size-4" />
+                    Settings
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href={`./edit`}>
+                      <Edit class="size-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <Show
+                      when={!productInfo().isInSortiment}
+                      fallback={
+                        <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
+                          <DialogTrigger
+                            as={DropdownMenuItem}
+                            class="!text-red-500 gap-2 cursor-pointer"
+                            closeOnSelect={false}
+                            onSelect={() => {
+                              setTimeout(() => setDeleteDialogOpen(true), 10);
+                            }}
+                            disabled={productInfo().deletedAt !== null}
+                          >
+                            <X class="size-4" />
+                            Remove from Sortiment
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Are you sure you want to delete this product?</DialogTitle>
+                              <DialogDescription>
+                                This action cannot be undone. This will permanently delete the product and all its data.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setDeleteDialogOpen(false);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={() => {
+                                  const promise = new Promise(async (resolve, reject) => {
+                                    const p = await deleteProductAction(productInfo().id).catch(reject);
+                                    setDeleteDialogOpen(false);
+                                    return resolve(p);
+                                  });
+                                  toast.promise(promise, {
+                                    loading: "Deleting product...",
+                                    success: "Product deleted",
+                                    error: "Failed to delete product",
+                                  });
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      }
+                    >
+                      <DropdownMenuItem
+                        class="cursor-pointer"
+                        onSelect={() => {
+                          toast.promise(reAddProductAction(productInfo().id), {
+                            loading: "Adding product back to Sortiment...",
+                            success: "Product added back to Sortiment",
+                            error: "Failed to add product back to Sortiment",
+                          });
+                        }}
+                      >
+                        <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
+                          <Loader2 class="size-4 animate-spin" />
+                        </Show>
+                        Readd to Sortiment
+                      </DropdownMenuItem>
+                    </Show>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-            <div class="flex flex-col gap-4 w-full">
-              <div class="flex flex-col gap-4 p-4 rounded-lg w-full bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
-                <div class="flex flex-row items-center gap-4 justify-between">
-                  <div class="flex flex-row gap-2 items-center">
-                    <h2 class="md:text-2xl font-bold md:tracking-wide uppercase truncate w-full max-w-[280px] md:max-w-full">
-                      {productInfo().name}
-                    </h2>
+            <div class="grid grid-cols-5 w-full grow gap-10">
+              <div class="col-span-3 grow flex">
+                <ProductImages product={productInfo} />
+              </div>
+              <div class="col-span-2 w-full">
+                <div class="flex flex-col w-full">
+                  <div class="flex flex-col gap-2 w-full">
+                    <div class="flex flex-col w-full gap-4">
+                      <div class="flex flex-col w-full gap-2 pt-10">
+                        <h2 class="md:text-2xl font-bold uppercase text-wrap">{productInfo().name}</h2>
+                        <span class="text-sm text-muted-foreground">
+                          {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY")}
+                        </span>
+                      </div>
+                      <span class="text-muted-foreground">{productInfo().description}</span>
+                    </div>
                     <Show when={productInfo().deletedAt}>
                       <Badge variant="outline" class="bg-rose-500 border-0">
                         Deleted
@@ -110,165 +203,75 @@ export default function ProductPage() {
                       </Badge>
                     </Show>
                   </div>
-                  <div class="flex flex-col items-end gap-2 md:min-w-[200px]">
-                    <div class="flex flex-row items-center gap-2">
-                      <DropdownMenu placement="bottom-end">
-                        <DropdownMenuTrigger as={Button} variant="outline" size="icon" class="bg-background size-6">
-                          <MoreHorizontal class="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href={`./edit`}>
-                            <Edit class="size-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <Show
-                            when={!productInfo().isInSortiment}
-                            fallback={
-                              <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
-                                <DialogTrigger
-                                  as={DropdownMenuItem}
-                                  class="!text-red-500 gap-2 cursor-pointer"
-                                  closeOnSelect={false}
-                                  onSelect={() => {
-                                    setTimeout(() => setDeleteDialogOpen(true), 10);
-                                  }}
-                                  disabled={productInfo().deletedAt !== null}
-                                >
-                                  <X class="size-4" />
-                                  Remove from Sortiment
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Are you sure you want to delete this product?</DialogTitle>
-                                    <DialogDescription>
-                                      This action cannot be undone. This will permanently delete the product and all its
-                                      data.
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <DialogFooter>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        setDeleteDialogOpen(false);
-                                      }}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      variant="destructive"
-                                      onClick={() => {
-                                        const promise = new Promise(async (resolve, reject) => {
-                                          const p = await deleteProductAction(productInfo().id).catch(reject);
-                                          setDeleteDialogOpen(false);
-                                          return resolve(p);
-                                        });
-                                        toast.promise(promise, {
-                                          loading: "Deleting product...",
-                                          success: "Product deleted",
-                                          error: "Failed to delete product",
-                                        });
-                                      }}
-                                    >
-                                      Delete
-                                    </Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-                            }
-                          >
-                            <DropdownMenuItem
-                              class="cursor-pointer"
-                              onSelect={() => {
-                                toast.promise(reAddProductAction(productInfo().id), {
-                                  loading: "Adding product back to Sortiment...",
-                                  success: "Product added back to Sortiment",
-                                  error: "Failed to add product back to Sortiment",
-                                });
-                              }}
-                            >
-                              <Show when={isReAddingProduct.pending} fallback={<Plus class="size-4" />}>
-                                <Loader2 class="size-4 animate-spin" />
-                              </Show>
-                              Readd to Sortiment
-                            </DropdownMenuItem>
-                          </Show>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  <div class="flex flex-col gap-1 border-b py-8">
+                    <div class="flex flex-col gap-1 pb-10">
+                      <span class="text-3xl font-bold font-['Geist_Mono_Variable']">
+                        {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
+                      </span>
                     </div>
-                  </div>
-                </div>
-                <div class="flex flex-row items-center gap-4 w-full justify-between">
-                  <div class="flex flex-col items-start gap-1">
-                    <span class="text-xl font-semibold">
-                      Selling Price: {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
-                    </span>
                     <Show when={productInfo().suppliers}>
                       {(suppliers) => (
                         <div class="flex flex-col gap-1">
-                          <div class="flex flex-row gap-1">
-                            <span class="text-sm text-muted-foreground">Supplier Prices:</span>
-                            <For each={suppliers().flatMap((s) => s.priceHistory)}>
-                              {(p, i) => (
-                                <>
-                                  <span class="text-sm text-muted-foreground">
-                                    {(p.supplierPrice ?? 0).toFixed(2)} {productInfo().currency}
-                                  </span>
-                                  <Show when={i() < suppliers().length - 1}>
-                                    <span class="text-sm text-muted-foreground">/</span>
-                                  </Show>
-                                </>
-                              )}
-                            </For>
+                          <div class="flex flex-row gap-1 items-center justify-between">
+                            <span class="text-sm font-medium">Bought at</span>
+                            <div class="flex flex-row gap-1">
+                              <For each={suppliers().flatMap((s) => s.priceHistory)}>
+                                {(p, i) => (
+                                  <div class="flex flex-row">
+                                    <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
+                                      {(p.supplierPrice ?? 0).toFixed(2)} {productInfo().currency}
+                                    </span>
+                                    <Show when={i() < suppliers().length - 1}>
+                                      <span class="text-sm text-muted-foreground">/</span>
+                                    </Show>
+                                  </div>
+                                )}
+                              </For>
+                            </div>
                           </div>
-                          <span class="text-sm text-muted-foreground">
-                            Margin: <MarginRange suppliers={suppliers()} sellingPrice={productInfo().sellingPrice} />%
-                          </span>
+                          <div class="flex flex-row gap-1 items-center justify-between">
+                            <span class="text-sm font-medium">Margin</span>
+                            <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
+                              <MarginRange suppliers={suppliers()} sellingPrice={productInfo().sellingPrice} />%
+                            </span>
+                          </div>
                         </div>
                       )}
                     </Show>
-
-                    {/* <span class="text-sm text-muted-foreground">
-                      Stock: {productInfo().space.length}/
-                      {productInfo()
-                        .space.map((sp) => sp.storage.capacity)
-                        .reduce((a, b) => a + b, 0) ?? 0}
-                    </span> */}
                   </div>
-                  <div class="px-4 flex flex-row items-center gap-4">
-                    <div class="flex flex-col justify-between items-center gap-1 text-muted-foreground">
-                      <RulerDimensionLine class="size-6" />
-                      <span class="text-sm font-medium">
-                        <Show when={productInfo().dimensions} fallback="N/A">
-                          {(w) => `${w().width}/${w().height}/${w().depth}/${w().unit}`}
-                        </Show>
-                      </span>
-                    </div>
-                    <div class="flex flex-col justify-between items-center gap-1 text-muted-foreground">
-                      <Weight class="size-6" />
-                      <span class="text-sm font-medium">
-                        <Show when={productInfo().weight}>{(w) => `${w().value} ${w().unit}`}</Show>
-                      </span>
-                    </div>
+                  <div class="flex flex-col gap-1 border-b py-8">
+                    <Inventory product={productInfo} />
+                  </div>
+                  <div class="flex flex-col gap-1 pt-8">
+                    <Actions product={productInfo} />
                   </div>
                 </div>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
+            <Tabs defaultValue="codes" class="w-full max-w-full">
+              <TabsList class="flex flex-row w-full items-center justify-start h-max">
+                <TabsTrigger value="codes">Codes</TabsTrigger>
+                <TabsTrigger value="labels">Labels</TabsTrigger>
+                <TabsTrigger value="conditions">Conditions</TabsTrigger>
+                <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+                <TabsTrigger value="pricing_history">Pricing History</TabsTrigger>
+              </TabsList>
+              <TabsContent value="pricing_history">
                 <PricingHistory product={productInfo} />
-                <ProductImages product={productInfo} />
+              </TabsContent>
+              <TabsContent value="codes">
                 <Codes product={productInfo} />
-                <Brand product={productInfo} />
+              </TabsContent>
+              <TabsContent value="labels">
                 <Labels product={productInfo} />
+              </TabsContent>
+              <TabsContent value="conditions">
                 <Conditions product={productInfo} />
+              </TabsContent>
+              <TabsContent value="suppliers">
                 <Suppliers product={productInfo} />
-              </div>
-              <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <Inventory product={productInfo} />
-                <Actions product={productInfo} />
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </Show>

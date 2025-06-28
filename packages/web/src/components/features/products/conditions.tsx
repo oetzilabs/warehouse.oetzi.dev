@@ -27,30 +27,31 @@ type ConditionsProps = {
 
 export const Conditions = (props: ConditionsProps) => {
   return (
-    <div class="flex flex-col gap-2 border rounded-lg overflow-clip">
-      <div class="flex flex-row items-center gap-4 justify-between border-b bg-muted-foreground/5 dark:bg-muted/30 p-4 ">
-        <h2 class="font-medium">Condition</h2>
-        <div class="flex flex-row items-center gap-2">
+    <div class="flex flex-col gap-4 py-2">
+      <div class="flex flex-row items-center gap-4 justify-between ">
+        <div class="flex flex-row items-center gap-2 justify-end w-full">
           <Button variant="outline" size="sm" class="bg-background">
             <Plus class="size-4" />
             Add Condition
           </Button>
         </div>
       </div>
-      <For
-        each={props.product().stco}
-        fallback={
-          <div class="flex flex-col items-center justify-center p-8">
-            <span class="text-sm text-muted-foreground">No conditions added.</span>
-          </div>
-        }
-      >
-        {(stco) => (
-          <div class="flex flex-col gap-1 p-4">
-            <span class="text-sm text-muted-foreground">{stco.condition?.name ?? "N/A"}</span>
-          </div>
-        )}
-      </For>
+      <div class="flex flex-col rounded-lg border">
+        <For
+          each={props.product().stco}
+          fallback={
+            <div class="flex flex-col items-center justify-center p-8">
+              <span class="text-sm text-muted-foreground">No conditions added.</span>
+            </div>
+          }
+        >
+          {(stco) => (
+            <div class="flex flex-col gap-1 p-4">
+              <span class="text-sm text-muted-foreground">{stco.condition?.name ?? "N/A"}</span>
+            </div>
+          )}
+        </For>
+      </div>
     </div>
   );
 };
