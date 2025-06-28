@@ -17,67 +17,79 @@ export const ProductsList = (props: ProductsListProps) => {
   const [search, setSearch] = createSignal("");
 
   const renderProductItem = (item: OrganizationProductInfo) => (
-    <>
-      <div class="flex flex-row items-center justify-between p-4 border-b bg-muted/30 w-full">
-        <div class="flex flex-row items-center">
-          <div class="flex flex-col gap-0.5">
-            <div class="flex flex-row items-center gap-2">
-              <span class="text-sm font-medium truncate">{item.product.name}</span>
+    <div class="group flex flex-col bg-muted p-1 gap-1 grow">
+      <div class="relative w-full aspect-[4/3] flex items-center justify-center">
+        <Show
+          when={item.product.images && item.product.images.length > 0}
+          fallback={
+            <div class="flex items-center justify-center w-full h-full text-muted-foreground text-xs select-none rounded-md bg-gradient-to-b from-neutral-200 dark:from-neutral-900 to-transparent">
+              No Image
             </div>
-            <span class="text-xs text-muted-foreground">
-              {dayjs(item.product.updatedAt ?? item.product.createdAt).format("MMM DD, YYYY - h:mm A")}
+          }
+        >
+          <img
+            src={item.product.images[0].image.url}
+            alt={item.product.name}
+            class="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
+            loading="lazy"
+          />
+        </Show>
+        <Show when={item.deletedAt || item.product.deletedAt}>
+          <div class="absolute top-2 left-2 flex flex-col gap-1 z-10">
+            <Show when={item.deletedAt}>
+              <Badge variant="outline" class="bg-rose-500 border-0 text-white shadow">
+                Not in Sortiment
+              </Badge>
+            </Show>
+            <Show when={item.product.deletedAt}>
+              <Badge variant="outline" class="bg-rose-500 border-0 text-white shadow">
+                Deleted
+              </Badge>
+            </Show>
+          </div>
+        </Show>
+      </div>
+      <div class="flex flex-col px-4 py-3 gap-4 bg-background dark:bg-background/50 rounded-md border grow">
+        <div class="flex flex-col flex-1">
+          <div class="flex flex-row items-baseline justify-between gap-2">
+            <span class="text-base font-semibold truncate block max-w-full" title={item.product.name}>
+              {item.product.name}
+            </span>
+            <span class="text-sm font-['Geist_Mono_Variable'] font-medium text-primary whitespace-nowrap">
+              {item.sellingPrice.toFixed(2)} {item.currency}
             </span>
           </div>
-        </div>
-      </div>
-
-      <div class="flex flex-col p-4 gap-4 border-b">
-        <div class="flex flex-row items-center justify-between">
-          <div class="flex flex-col gap-0.5">
-            <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
+          <div class="flex flex-row items-center gap-2">
+            <span class="text-xs text-muted-foreground truncate" title={item.product.sku}>
+              SKU: {item.product.sku}
+            </span>
             <Show when={item.product.weight}>
               {(weight) => (
                 <span class="text-xs text-muted-foreground">
-                  Weight: {weight().value} {weight().unit}
+                  • {weight().value} {weight().unit}
                 </span>
               )}
             </Show>
             <Show when={item.product.dimensions}>
               {(dimension) => (
                 <span class="text-xs text-muted-foreground">
-                  Width: {dimension().width} {dimension().unit}
+                  • {dimension().width} {dimension().unit}
                 </span>
               )}
             </Show>
           </div>
-          <div class="flex flex-col items-end">
-            <span class="text-sm font-medium font-['Geist_Mono_Variable']">
-              {item.sellingPrice.toFixed(2)} {item.currency}
-            </span>
-          </div>
         </div>
-      </div>
-      <div class="flex flex-row items-center justify-between p-4">
-        <div class="flex flex-row gap-2 w-max">
-          <Show when={item.deletedAt}>
-            <Badge variant="outline" class="bg-rose-500 border-0 text-white">
-              Not in Sortiment
-            </Badge>
-          </Show>
-          <Show when={item.product.deletedAt}>
-            <Badge variant="outline" class="bg-rose-500 border-0">
-              Deleted
-            </Badge>
-          </Show>
-        </div>
-        <div class="flex flex-row gap-2 w-max shrink-0">
-          <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2">
+        <div class="flex flex-row items-center justify-between w-full">
+          <span class="text-xs text-muted-foreground">
+            {dayjs(item.product.updatedAt ?? item.product.createdAt).format("MMM DD, YYYY")}
+          </span>
+          <Button as={A} href={`./${item.product.id}`} size="sm" class="gap-2 ">
             Open
             <ArrowUpRight class="size-4" />
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 
   const filteredData = createMemo(() => {
@@ -118,6 +130,7 @@ export const ProductsList = (props: ProductsListProps) => {
         noResultsMessage="No products have been found"
         searchTerm={search}
         variant="grid"
+        itemClass="hover:shadow-md !rounded-lg"
       />
     </div>
   );

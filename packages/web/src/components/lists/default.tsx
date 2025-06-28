@@ -9,17 +9,22 @@ interface GenericListProps<T> {
   noResultsMessage?: JSXElement;
   searchTerm?: () => string;
   variant?: "list" | "grid";
+  gridClass?: string;
+  itemClass?: string;
 }
 
 export const GenericList = <T,>(props: GenericListProps<T>) => {
-  const [local, others] = splitProps(props, ["variant"]);
+  const [local, others] = splitProps(props, ["variant", "gridClass", "itemClass"]);
   const variant = () => local.variant ?? "list";
   return (
     <div
-      class={cn({
-        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4": variant() === "grid",
-        "flex flex-col gap-4": variant() === "list" || others.data().length === 0,
-      })}
+      class={cn(
+        {
+          "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4": variant() === "grid",
+          "flex flex-col gap-4": variant() === "list" || others.data().length === 0,
+        },
+        local.gridClass,
+      )}
     >
       <For
         each={others.filteredData()}
@@ -35,7 +40,12 @@ export const GenericList = <T,>(props: GenericListProps<T>) => {
         }
       >
         {(item) => (
-          <div class="flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all">
+          <div
+            class={cn(
+              "flex flex-col w-full bg-background border rounded-lg overflow-hidden hover:shadow-sm transition-all",
+              local.itemClass,
+            )}
+          >
             {others.renderItem(item)}
           </div>
         )}
