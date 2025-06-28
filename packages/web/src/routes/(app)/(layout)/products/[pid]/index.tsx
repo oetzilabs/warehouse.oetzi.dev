@@ -1,5 +1,4 @@
 import { Actions } from "@/components/features/products/actions";
-import { Brand } from "@/components/features/products/brand";
 import { Certificates } from "@/components/features/products/certificates";
 import { Codes } from "@/components/features/products/code";
 import { Conditions } from "@/components/features/products/conditions";
@@ -177,7 +176,7 @@ export default function ProductPage() {
                 </DropdownMenu>
               </div>
             </div>
-            <div class="grid grid-cols-5 w-full grow gap-10">
+            <div class="grid grid-cols-5 w-full grow gap-4">
               <div class="col-span-3 grow flex">
                 <ProductImages product={productInfo} />
               </div>
@@ -216,7 +215,12 @@ export default function ProductPage() {
                           <div class="flex flex-row gap-1 items-center justify-between">
                             <span class="text-sm font-medium">Bought at</span>
                             <div class="flex flex-row gap-1">
-                              <For each={suppliers().flatMap((s) => s.priceHistory)}>
+                              <For
+                                each={suppliers().flatMap((s) => s.priceHistory)}
+                                fallback={
+                                  <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">N/A</span>
+                                }
+                              >
                                 {(p, i) => (
                                   <div class="flex flex-row">
                                     <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
@@ -256,11 +260,8 @@ export default function ProductPage() {
                 <TabsTrigger value="conditions">Conditions</TabsTrigger>
                 <TabsTrigger value="certificates">Certificates</TabsTrigger>
                 <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-                <TabsTrigger value="pricing_history">Pricing History</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
               </TabsList>
-              <TabsContent value="pricing_history">
-                <PricingHistory product={productInfo} />
-              </TabsContent>
               <TabsContent value="codes">
                 <Codes product={productInfo} />
               </TabsContent>
@@ -275,6 +276,9 @@ export default function ProductPage() {
               </TabsContent>
               <TabsContent value="suppliers">
                 <Suppliers product={productInfo} />
+              </TabsContent>
+              <TabsContent value="history">
+                <PricingHistory product={productInfo} />
               </TabsContent>
             </Tabs>
           </div>
