@@ -17,6 +17,9 @@ export const MarginRange = (props: MarginRangeProps) => {
   // If only one unique price, show single margin
   if (uniquePrices.length === 1) {
     const margin = ((props.sellingPrice - uniquePrices[0]) / props.sellingPrice) * 100;
+    if (Number.isNaN(margin)) {
+      return "N/A";
+    }
     return `${margin.toFixed(1)}`;
   }
 
@@ -26,6 +29,8 @@ export const MarginRange = (props: MarginRangeProps) => {
 
   const lowestMargin = ((props.sellingPrice - highestPrice) / props.sellingPrice) * 100;
   const highestMargin = ((props.sellingPrice - lowestPrice) / props.sellingPrice) * 100;
-
-  return `${lowestMargin.toFixed(1)}% - ${highestMargin.toFixed(1)}`;
+  if (Number.isNaN(lowestMargin) || Number.isNaN(highestMargin)) {
+    return "N/A";
+  }
+  return `${lowestMargin.toFixed(1)}% - ${highestMargin.toFixed(1)}%`;
 };

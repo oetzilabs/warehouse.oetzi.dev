@@ -73,7 +73,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
           <Show when={user.currentOrganization()}>
             {(org) => (
               <SidebarContent class="gap-0 !border-r-0  !pr-0">
-                <SidebarGroup>
+                <SidebarGroup class="!pr-0">
                   <div class="bg-background w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
                     <span class="">Search</span>
                     <Search class="size-4" />

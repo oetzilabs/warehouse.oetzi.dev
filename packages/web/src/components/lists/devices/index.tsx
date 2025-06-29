@@ -6,8 +6,9 @@ import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { DeviceInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import dayjs from "dayjs";
+import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import { Accessor, createSignal, For, Show } from "solid-js";
+import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
@@ -17,72 +18,6 @@ type DevicesListProps = {
 
 export function DevicesList(props: DevicesListProps) {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const defaultSort = {
-    default: "date",
-    current: "date",
-    direction: "desc" as const,
-    variants: [
-      {
-        field: "date",
-        label: "Date",
-        fn: (a: DeviceInfo, b: DeviceInfo) => dayjs(a.createdAt).diff(dayjs(b.createdAt)),
-      },
-      {
-        field: "name",
-        label: "Name",
-        fn: (a: DeviceInfo, b: DeviceInfo) => a.name.localeCompare(b.name),
-      },
-    ],
-  } as FilterConfig<DeviceInfo>["sort"];
-
-  // Create a Map to store unique device types
-  const uniqueTypesMap = new Map<string, DeviceInfo["type"]>();
-  props.data().forEach((di) => {
-    if (!uniqueTypesMap.has(di.type.id)) {
-      uniqueTypesMap.set(di.type.id, di.type);
-    }
-  });
-
-  // Convert the unique types from the Map into the desired format
-  const uniqueTypeVariants = Array.from(uniqueTypesMap.values()).map((t) => ({
-    type: `device_type:${t.code}`,
-    label: t.name,
-    // This fn still checks against the original data, which seems to be your intention
-    fn: (item: DeviceInfo) => t.id === item.type.id,
-  }));
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<DeviceInfo>>({
-    disabled: () => props.data().length === 0,
-    dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
-      preset: "clear",
-    },
-    search: {
-      term: dsearch(),
-      fields: ["name", "description"],
-      fuseOptions: { keys: ["name", "type.name", "description"] },
-    },
-    sort: defaultSort,
-    filter: {
-      default: null,
-      current: null,
-      variants: uniqueTypeVariants,
-    },
-  });
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
-  const filteredData = useFilter(props.data, filterConfig);
 
   const renderDeviceItem = (device: DeviceInfo) => (
     <div class="flex flex-col w-full h-content">
@@ -103,6 +38,23 @@ export function DevicesList(props: DevicesListProps) {
     </div>
   );
 
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.data();
+    if (term.length === 0) {
+      return set;
+    }
+
+    const options: IFuseOptions<DeviceInfo> = {
+      keys: ["name", "type.name", "description"],
+      includeScore: true,
+      threshold: 0.3,
+    };
+
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -110,15 +62,11 @@ export function DevicesList(props: DevicesListProps) {
           value={search()}
           onChange={(e) => {
             setSearch(e);
-            debouncedSearch(e);
           }}
           class="w-full max-w-full"
         >
           <TextFieldInput placeholder="Search devices" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
-        </div>
       </div>
 
       <GenericList
@@ -127,7 +75,7 @@ export function DevicesList(props: DevicesListProps) {
         renderItem={renderDeviceItem}
         emptyMessage="No devices have been added"
         noResultsMessage="No devices have been found"
-        searchTerm={() => filterConfig.search.term}
+        searchTerm={search}
       />
     </div>
   );

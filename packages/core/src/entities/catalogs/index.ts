@@ -94,11 +94,17 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
                 with: {
                   product: {
                     with: {
+                      images: {
+                        with: {
+                          image: true,
+                        },
+                      },
                       organizations: {
                         with: {
                           priceHistory: true,
                         },
                       },
+                      brands: true,
                     },
                   },
                 },
@@ -121,17 +127,17 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
               priceHistory:
                 p.product.organizations
                   .find((o) => o.organizationId === orgId)
-                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) ?? [],
               sellingPrice:
                 p.product.organizations
                   .find((o) => o.organizationId === orgId)
                   ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]
-                  ?.sellingPrice || 0,
+                  ?.sellingPrice ?? 0.0,
               currency:
                 p.product.organizations
                   .find((o) => o.organizationId === orgId)
-                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ||
-                "USD",
+                  ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ??
+                "unknown",
             },
           })),
         };
@@ -296,6 +302,11 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
                 with: {
                   product: {
                     with: {
+                      images: {
+                        with: {
+                          image: true,
+                        },
+                      },
                       organizations: {
                         with: {
                           priceHistory: true,

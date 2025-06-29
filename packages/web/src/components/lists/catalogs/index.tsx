@@ -1,14 +1,11 @@
-import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter } from "@/lib/filtering";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { CatalogInfo } from "@warehouseoetzidev/core/src/entities/catalogs";
 import dayjs from "dayjs";
+import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import { Accessor, createSignal, For, Show } from "solid-js";
-import { createStore } from "solid-js/store";
+import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
 import { GenericList } from "../default";
 
 type CatalogsListProps = {
@@ -17,54 +14,6 @@ type CatalogsListProps = {
 
 export const CatalogsList = (props: CatalogsListProps) => {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<CatalogInfo>>({
-    disabled: () => props.data().length === 0,
-    dateRange: {
-      start: props.data().length === 0 ? new Date() : props.data()[0].createdAt,
-      end: props.data().length === 0 ? new Date() : props.data()[props.data().length - 1].createdAt,
-      preset: "clear",
-    },
-    search: {
-      term: dsearch(),
-      fields: ["name", "description"],
-      fuseOptions: { keys: ["name", "description"] },
-    },
-    sort: {
-      default: "date",
-      current: "date",
-      direction: "desc",
-      variants: [
-        {
-          field: "date",
-          label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
-        },
-        {
-          field: "name",
-          label: "Name",
-          fn: (a, b) => a.name.localeCompare(b.name),
-        },
-      ],
-    },
-    filter: {
-      default: null,
-      current: null,
-      variants: [],
-    },
-  });
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
-  const filteredData = useFilter(props.data, filterConfig);
 
   const renderCatalogItem = (catalog: CatalogInfo) => (
     <div class="flex flex-col w-full h-full">
@@ -115,6 +64,23 @@ export const CatalogsList = (props: CatalogsListProps) => {
     </div>
   );
 
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.data();
+    if (term.length === 0) {
+      return set;
+    }
+
+    const options: IFuseOptions<CatalogInfo> = {
+      keys: ["name", "description"],
+      includeScore: true,
+      threshold: 0.3,
+    };
+
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
+
   return (
     <div class="w-full flex flex-col gap-4">
       <div class="flex flex-row items-center justify-between gap-4">
@@ -122,15 +88,11 @@ export const CatalogsList = (props: CatalogsListProps) => {
           value={search()}
           onChange={(e) => {
             setSearch(e);
-            debouncedSearch(e);
           }}
           class="w-full max-w-full"
         >
           <TextFieldInput placeholder="Search catalogs" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
-        </div>
       </div>
 
       <GenericList
@@ -139,7 +101,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
         renderItem={renderCatalogItem}
         emptyMessage="No catalogs have been added"
         noResultsMessage="No catalogs have been found"
-        searchTerm={() => filterConfig.search.term}
+        searchTerm={search}
         variant="grid"
       />
     </div>

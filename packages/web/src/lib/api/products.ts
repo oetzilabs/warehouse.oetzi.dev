@@ -54,10 +54,10 @@ export const getProducts = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw new Error(`Some error(s) occurred at 'getProducts': ${errors.join(", ")}`);
     },
   });
-}, "order-by-warehouse-id");
+}, "products");
 
 export const getProductLabels = query(async () => {
   "use server";

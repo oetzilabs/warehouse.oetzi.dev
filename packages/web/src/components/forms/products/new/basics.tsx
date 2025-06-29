@@ -8,7 +8,7 @@ import { For, Show, Suspense } from "solid-js";
 import { useNewProductForm } from "./form";
 
 export const Basics = () => {
-  const form = useNewProductForm();
+  const { form } = useNewProductForm();
   return (
     <section class="p-0 grid grid-cols-1 md:grid-cols-5 gap-8">
       <div class="flex flex-col gap-2 col-span-2">
@@ -24,7 +24,7 @@ export const Basics = () => {
               <TextFieldLabel class="capitalize pl-1">
                 Name <span class="text-red-500">*</span>
               </TextFieldLabel>
-              <TextFieldInput class="h-9" placeholder="Product Name" />
+              <TextFieldInput class="h-9" placeholder="Product Name" required />
             </TextField>
           )}
         </form.Field>
@@ -36,8 +36,10 @@ export const Basics = () => {
                 onChange={(e) => field().setValue(e)}
                 class="gap-2 flex flex-col w-full"
               >
-                <TextFieldLabel class="capitalize pl-1">Barcode</TextFieldLabel>
-                <TextFieldInput class="w-full" placeholder="Barcode" />
+                <TextFieldLabel class="capitalize pl-1">
+                  Barcode<span class="text-red-500">*</span>
+                </TextFieldLabel>
+                <TextFieldInput class="w-full" placeholder="Barcode" required />
               </TextField>
               <BarcodeScanner
                 onScan={(data) => {
@@ -50,8 +52,10 @@ export const Basics = () => {
         <form.Field name="product.sku">
           {(field) => (
             <TextField value={field().state.value} onChange={(e) => field().setValue(e)} class="gap-2 flex flex-col">
-              <TextFieldLabel class="capitalize pl-1">SKU</TextFieldLabel>
-              <TextFieldInput class="h-9" placeholder="SKU" />
+              <TextFieldLabel class="capitalize pl-1">
+                SKU<span class="text-red-500">*</span>
+              </TextFieldLabel>
+              <TextFieldInput class="h-9" placeholder="SKU" required />
             </TextField>
           )}
         </form.Field>

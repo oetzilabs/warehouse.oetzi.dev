@@ -9,7 +9,7 @@ import { createSignal, For, Show, Suspense } from "solid-js";
 import { useNewProductForm } from "./form";
 
 export const Brand = () => {
-  const form = useNewProductForm();
+  const { form } = useNewProductForm();
   const brands = createAsync(() => getProductBrands(), { deferStream: true });
   const [search, setSearch] = createSignal("");
 

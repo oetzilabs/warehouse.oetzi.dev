@@ -180,8 +180,8 @@ export default function ProductPage() {
               <div class="col-span-3 grow flex">
                 <ProductImages product={productInfo} />
               </div>
-              <div class="col-span-2 w-full">
-                <div class="flex flex-col w-full">
+              <div class="col-span-2 w-full grow flex gap-4">
+                <div class="flex flex-col w-full grow gap-4">
                   <div class="flex flex-col gap-2 w-full">
                     <div class="flex flex-col w-full gap-4">
                       <div class="flex flex-col w-full gap-2">
@@ -211,7 +211,7 @@ export default function ProductPage() {
                     </div>
                     <Show when={productInfo().suppliers}>
                       {(suppliers) => (
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-1 py-4">
                           <div class="flex flex-row gap-1 items-center justify-between">
                             <span class="text-sm font-medium">Bought at</span>
                             <div class="flex flex-row gap-1">
@@ -237,14 +237,14 @@ export default function ProductPage() {
                           <div class="flex flex-row gap-1 items-center justify-between">
                             <span class="text-sm font-medium">Margin</span>
                             <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
-                              <MarginRange suppliers={suppliers()} sellingPrice={productInfo().sellingPrice} />%
+                              <MarginRange suppliers={suppliers()} sellingPrice={productInfo().sellingPrice} />
                             </span>
                           </div>
                         </div>
                       )}
                     </Show>
                   </div>
-                  <div class="flex flex-col gap-1 border-b py-0">
+                  <div class="flex flex-col gap-1 border-b py-4">
                     <Inventory product={productInfo} />
                   </div>
                   <div class="flex flex-col gap-1 pt-8">

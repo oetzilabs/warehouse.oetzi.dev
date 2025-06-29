@@ -12,17 +12,17 @@ import { toast } from "solid-sonner";
 import { useNewProductForm } from "./form";
 
 export const Labels = () => {
-  const form = useNewProductForm();
+  const { form } = useNewProductForm();
   const labels = createAsync(() => getProductLabels(), { deferStream: true });
 
   const [search, setSearch] = createSignal("");
 
-  const filteredLabels = (set: ProductLabelInfo[]) => {
+  const filteredLabels = (set: Omit<ProductLabelInfo, "products">[]) => {
     const term = search();
     if (!term) {
       return set;
     }
-    const options: IFuseOptions<ProductLabelInfo> = {
+    const options: IFuseOptions<Omit<ProductLabelInfo, "products">> = {
       isCaseSensitive: false,
       threshold: 0.4,
       minMatchCharLength: 1,
@@ -31,6 +31,7 @@ export const Labels = () => {
     const fuse = new Fuse(set, options);
     return fuse.search(term).map((d) => d.item);
   };
+
   return (
     <section class="p-0 grid grid-cols-1 md:grid-cols-5 gap-8">
       <div class="flex flex-col gap-2 col-span-2">
@@ -51,7 +52,7 @@ export const Labels = () => {
                   <Show when={labels()}>
                     {(labelsList) => (
                       <For
-                        each={labelsList().sort((a, b) => {
+                        each={filteredLabels(labelsList()).sort((a, b) => {
                           const aHasImage = a.image?.length ?? 0;
                           const bHasImage = b.image?.length ?? 0;
                           const aIsNewer = (a.updatedAt ?? a.createdAt) > (b.updatedAt ?? b.createdAt);

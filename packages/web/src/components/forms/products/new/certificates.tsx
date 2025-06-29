@@ -10,7 +10,7 @@ import { toast } from "solid-sonner";
 import { useNewProductForm } from "./form";
 
 export const Certificates = () => {
-  const form = useNewProductForm();
+  const { form } = useNewProductForm();
   const certificates = createAsync(() => getCertificates(), { deferStream: true });
   return (
     <section class="p-0 grid grid-cols-1 md:grid-cols-5 gap-8">

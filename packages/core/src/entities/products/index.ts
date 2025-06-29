@@ -246,19 +246,27 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
 
         return {
           ...product.product,
-          minimumStock: product.product.organizations.find((o) => o.organizationId === orgId)?.minimumStock,
-          maximumStock: product.product.organizations.find((o) => o.organizationId === orgId)?.maximumStock,
-          reorderPoint: product.product.organizations.find((o) => o.organizationId === orgId)?.reorderPoint,
+          taxGroupName:
+            product.product.organizations.find((org) => org.organizationId === orgId)?.tg?.name ?? "unknown",
+          taxGroupRate:
+            product.product.organizations.find((org) => org.organizationId === orgId)?.tg?.crs[0]?.tr.rate ?? "unknown",
+          minimumStock: product.product.organizations.find((o) => o.organizationId === orgId)?.minimumStock ?? 0,
+          maximumStock: product.product.organizations.find((o) => o.organizationId === orgId)?.maximumStock ?? 0,
+          reorderPoint: product.product.organizations.find((o) => o.organizationId === orgId)?.reorderPoint ?? 0,
           priceHistory:
             product.product.organizations
               .find((o) => o.organizationId === orgId)
               ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
-          currency: product.product.organizations
-            .find((org) => org.organizationId === orgId)!
-            .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
-          sellingPrice: product.product.organizations
-            .find((org) => org.organizationId === orgId)!
-            .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+          currency:
+            product.product.organizations
+              .find((org) => org.organizationId === orgId)
+              ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ??
+            "unknown",
+          sellingPrice:
+            product.product.organizations
+              .find((org) => org.organizationId === orgId)
+              ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.sellingPrice ??
+            0.0,
           preferredDate:
             product.product.purchases.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())?.[0]
               ?.supplierPurchase?.createdAt ?? dayjs().add(3, "days").toDate(),
@@ -400,22 +408,28 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             ...op,
             createdAt: op.product.createdAt,
             updatedAt: op.product.updatedAt,
-            minimumStock: op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)
-              ?.minimumStock,
-            maximumStock: op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)
-              ?.maximumStock,
-            reorderPoint: op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)
-              ?.reorderPoint,
-            currency: op.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)!
-              .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
-            sellingPrice: op.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)!
-              .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
-            taxGroupName: op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)!.tg
-              ?.name,
-            taxGroupRate: op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)!.tg
-              ?.crs[0]?.tr.rate,
+            minimumStock:
+              op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)?.minimumStock ?? 0,
+            maximumStock:
+              op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)?.maximumStock ?? 0,
+            reorderPoint:
+              op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)?.reorderPoint ?? 0,
+            currency:
+              op.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)
+                ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ??
+              "unknown",
+            sellingPrice:
+              op.product.organizations
+                .find((org) => org.organizationId === parsedOrganizationId.output)
+                ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.sellingPrice ??
+              0.0,
+            taxGroupName:
+              op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)?.tg?.name ??
+              "unknown",
+            taxGroupRate:
+              op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)?.tg?.crs[0]?.tr
+                .rate ?? "unknown",
           }))
           .filter((p) => p.taxGroupName !== undefined && p.taxGroupRate !== undefined);
       });

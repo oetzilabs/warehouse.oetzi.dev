@@ -9,7 +9,7 @@ import { toast } from "solid-sonner";
 import { useNewProductForm } from "./form";
 
 export const Images = () => {
-  const form = useNewProductForm();
+  const { form } = useNewProductForm();
   const [uploadedFiles, setUploadedFiles] = createSignal<File[]>([]); // To store files selected by the user
 
   const handleFileChange = (event: Event) => {

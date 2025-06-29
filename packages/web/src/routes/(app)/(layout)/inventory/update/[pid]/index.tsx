@@ -114,7 +114,7 @@ const UpdateProductInventoryForm = (props: UpdateProductInventoryFormProps) => {
 
   return (
     <form
-      class="space-y-4 w-full max-w-2xl"
+      class="space-y-4 w-full"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
@@ -130,7 +130,7 @@ const UpdateProductInventoryForm = (props: UpdateProductInventoryFormProps) => {
                 </TextFieldLabel>
                 <TextFieldInput
                   placeholder="Please scan a storage-barcode"
-                  class="w-full"
+                  class="w-full max-w-full"
                   value={field().state.value}
                   required
                   disabled
@@ -160,7 +160,7 @@ const UpdateProductInventoryForm = (props: UpdateProductInventoryFormProps) => {
         }}
       >
         {(field) => (
-          <TextField class="gap-2 flex flex-col">
+          <TextField class="gap-2 flex flex-col w-full">
             <TextFieldLabel class="capitalize pl-1">
               Amount <span class="text-red-500">*</span>
             </TextFieldLabel>
@@ -168,6 +168,7 @@ const UpdateProductInventoryForm = (props: UpdateProductInventoryFormProps) => {
               type="number"
               min={0}
               placeholder="Enter inventory amount"
+              class="w-full max-w-full"
               value={field().state.value}
               onInput={(e) => field().handleChange(Number(e.currentTarget.value))}
               onBlur={field().handleBlur}

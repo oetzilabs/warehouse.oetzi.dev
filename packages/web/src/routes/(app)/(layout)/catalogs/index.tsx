@@ -1,20 +1,15 @@
-import { FilterPopover } from "@/components/filters/popover";
 import { CatalogsList } from "@/components/lists/catalogs";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
-import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCatalogs } from "@/lib/api/catalogs";
-import { FilterConfig, useFilter } from "@/lib/filtering";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { CatalogInfo } from "@warehouseoetzidev/core/src/entities/catalogs";
 import dayjs from "dayjs";
-import PackageSearch from "lucide-solid/icons/package-search";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { createSignal, Show } from "solid-js";
-import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 
 export const route = {
@@ -65,7 +60,13 @@ export default function CatalogsPage() {
           <div class="w-full flex flex-row h-full">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="font-semibold leading-none">Catalogs</h1>
+                <div class="flex flex-row items-center gap-4">
+                  <Button variant="outline" size="sm" as={A} href="/dashboard" class="w-max">
+                    <ArrowLeft class="size-4" />
+                    Dashboard
+                  </Button>
+                  <h1 class="font-medium">Catalog</h1>
+                </div>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
