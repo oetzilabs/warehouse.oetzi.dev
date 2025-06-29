@@ -38,7 +38,10 @@ export const getDiscounts = query(async () => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "discounts");

@@ -39,7 +39,10 @@ export const getPurchases = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 'getPurchases': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getPurchases`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "purchased-orders");
@@ -79,7 +82,10 @@ export const getPendingPurchases = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 'getPendingPurchases': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getPendingPurchases`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "sales-order-by-warehouse-id");
@@ -121,7 +127,10 @@ export const getPurchaseById = query(async (pid: string) => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred at 'getPurchaseById': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getPurchaseById`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "purchase-by-id");
@@ -162,7 +171,10 @@ export const deletePurchase = action(async (pid: string) => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred at 'deletePurchase': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=deletePurchase`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });

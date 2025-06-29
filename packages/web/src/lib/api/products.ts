@@ -54,7 +54,10 @@ export const getProducts = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 'getProducts': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getProducts`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "products");
@@ -207,7 +210,10 @@ export const downloadProductSheet = action(
         const errors = Chunk.toReadonlyArray(causes).map((c) => {
           return c.message;
         });
-        throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
+          status: 500,
+          statusText: `Internal Server Error: ${errors.join(", ")}`,
+        });
       },
     });
   },
@@ -409,7 +415,10 @@ export const updateProductStock = action(
         const errors = Chunk.toReadonlyArray(causes).map((c) => {
           return c.message;
         });
-        throw new Error(`Some error(s) occurred at 'updateProduct': ${errors.join(", ")}`);
+        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=updateProduct`, {
+          status: 500,
+          statusText: `Internal Server Error: ${errors.join(", ")}`,
+        });
       },
     });
   },
@@ -457,7 +466,10 @@ export const reAddProduct = action(async (id: string) => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 're-add product': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=re-add product`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });
@@ -541,7 +553,10 @@ export const clearBrand = action(async (id: string) => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 're-add product': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=re-add product`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });
@@ -627,7 +642,10 @@ export const createProduct = action(async (data: NewProductFormData) => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 'create product': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=create product`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });

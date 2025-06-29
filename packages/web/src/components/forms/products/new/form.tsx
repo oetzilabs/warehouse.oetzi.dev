@@ -51,6 +51,11 @@ export const NewProductFormProvider = (props: { children: JSXElement }) => {
 
         brand_id: null,
       },
+      price: {
+        sellingPrice: 0.0,
+        currency: "EUR",
+        purchasePrice: 0.0,
+      },
       labels: [],
       catalogs: [],
       certificates: [],

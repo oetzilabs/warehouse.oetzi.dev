@@ -122,7 +122,10 @@ export const loginViaEmail = action(async (email: string, password: string) => {
         return c.message;
       });
       console.log(errors);
-      throw new Error(`Some error(s) occurred at 'loginViaEmail': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=loginViaEmail`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });
@@ -174,7 +177,10 @@ export const signupViaEmail = action(async (email: string, password: string, pas
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });

@@ -1,10 +1,15 @@
 import BarcodeScanner from "@/components/features/scanner/barcodescanner";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  NumberField,
+  NumberFieldDecrementTrigger,
+  NumberFieldErrorMessage,
+  NumberFieldGroup,
+  NumberFieldIncrementTrigger,
+  NumberFieldInput,
+  NumberFieldLabel,
+} from "@/components/ui/number-field";
+import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TextField, TextFieldInput, TextFieldLabel, TextFieldTextArea } from "@/components/ui/text-field";
-import { getProductBrands } from "@/lib/api/products";
-import { cn } from "@/lib/utils";
-import { createAsync } from "@solidjs/router";
-import { For, Show, Suspense } from "solid-js";
 import { useNewProductForm } from "./form";
 
 export const Basics = () => {
@@ -81,6 +86,44 @@ export const Basics = () => {
               <TextFieldLabel class="capitalize pl-1">Country of Origin</TextFieldLabel>
               <TextFieldInput class="h-9" placeholder="Country of Origin" />
             </TextField>
+          )}
+        </form.Field>
+        <form.Field name="price.sellingPrice">
+          {(field) => (
+            <NumberField
+              value={field().state.value}
+              onRawValueChange={(e) => field().setValue(e)}
+              class="w-full"
+              minValue={0}
+              step={0.01}
+            >
+              <NumberFieldLabel>Price</NumberFieldLabel>
+              <NumberFieldGroup>
+                <NumberFieldInput placeholder="Price" class="w-full" />
+                <NumberFieldIncrementTrigger />
+                <NumberFieldDecrementTrigger />
+              </NumberFieldGroup>
+            </NumberField>
+          )}
+        </form.Field>
+        <form.Field name="price.currency">
+          {(field) => (
+            <Select
+              value={field().state.value}
+              onChange={(e) => {
+                if (!e) return;
+                field().setValue(e);
+              }}
+              options={["EUR", "USD", "GBP", "JPY", "CAD", "AUD", "CHF", "NZD", "SEK", "DKK", "NOK", "BRL"]}
+              placeholder="Select a currency..."
+              itemComponent={(props) => <SelectItem item={props.item}>{props.item.rawValue}</SelectItem>}
+            >
+              <SelectLabel>Currency</SelectLabel>
+              <SelectTrigger aria-label="Currency" class="w-full">
+                <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+              </SelectTrigger>
+              <SelectContent />
+            </Select>
           )}
         </form.Field>
       </div>

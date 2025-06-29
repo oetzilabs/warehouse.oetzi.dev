@@ -23,11 +23,19 @@ export const NewProductFormSchema = Schema.mutable(
         brand_id: Schema.NullOr(Schema.String),
       }),
     ),
-
+    price: Schema.mutable(Schema.Struct({ sellingPrice: Schema.Number, currency: Schema.String })),
     labels: Schema.mutable(Schema.Array(Schema.String)),
     certificates: Schema.mutable(Schema.Array(Schema.String)),
     conditions: Schema.mutable(Schema.Array(Schema.String)),
-    suppliers: Schema.mutable(Schema.Array(Schema.String)),
+    suppliers: Schema.mutable(
+      Schema.Array(
+        Schema.Struct({
+          supplier: Schema.String,
+          purchasePrice: Schema.Number,
+          currency: Schema.String,
+        }),
+      ),
+    ),
     images: Schema.mutable(Schema.Array(Schema.instanceOf(File))),
   }),
 );

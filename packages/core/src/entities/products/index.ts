@@ -70,6 +70,36 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                   productId: product.id,
                 });
               }
+              // add the price to the price history
+              await tx
+                .insert(TB_organization_product_price_history)
+                .values({
+                  productId: product.id,
+                  organizationId: orgId,
+                  effectiveDate: new Date(),
+                  currency: additions.price.currency,
+                  sellingPrice: additions.price.sellingPrice,
+                })
+                .returning();
+              // add the purchase price to the price history of the supplier of the product
+              if (additions.suppliers.length > 0) {
+                for (const supplier of additions.suppliers) {
+                  await tx
+                    .insert(TB_supplier_products)
+                    .values({ productId: product.id, supplierId: supplier.supplier })
+                    .returning();
+                  await tx
+                    .insert(TB_supplier_product_price_history)
+                    .values({
+                      productId: product.id,
+                      supplierId: supplier.supplier,
+                      effectiveDate: new Date(),
+                      currency: supplier.currency ?? "EUR",
+                      supplierPrice: supplier.purchasePrice ?? 0.0,
+                    })
+                    .returning();
+                }
+              }
               if (additions.images.length > 0) {
                 // upload the image
                 // assume its uploaded.
@@ -88,12 +118,6 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
                     .values({ productId: product.id, labelId: labelId })
                     .returning();
                 }
-              }
-              for (const supplierId of additions.suppliers) {
-                await tx
-                  .insert(TB_supplier_products)
-                  .values({ productId: product.id, supplierId: supplierId })
-                  .returning();
               }
               for (const certificateId of additions.certificates) {
                 await tx

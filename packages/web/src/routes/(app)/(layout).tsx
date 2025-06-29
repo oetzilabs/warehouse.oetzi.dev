@@ -27,6 +27,7 @@ import Notebook from "lucide-solid/icons/notebook";
 import PackageOpen from "lucide-solid/icons/package-open";
 import PackageSearch from "lucide-solid/icons/package-search";
 import Search from "lucide-solid/icons/search";
+import ShoppingCart from "lucide-solid/icons/shopping-cart";
 import SidebarClose from "lucide-solid/icons/sidebar-close";
 import SidebarOpen from "lucide-solid/icons/sidebar-open";
 import Tags from "lucide-solid/icons/tags";
@@ -119,7 +120,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     <SidebarMenu>
                       <SidebarMenuItem>
                         <Link href="/orders">
-                          <Tags class="size-4" />
+                          <ShoppingCart class="size-4" />
                           Customer Orders
                           <SidebarMenuBadge class="mr-1">
                             {org().customerOrders.length > 99

@@ -44,7 +44,10 @@ export const getCustomerOrders = query(async () => {
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
         return c.message;
       });
-      throw new Error(`Some error(s) occurred at 'getCustomerOrders': ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getCustomerOrders`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "customer-order-by-warehouse-id");
@@ -93,6 +96,10 @@ export const getOrderById = query(async (oid: string) => {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
 
+  if (!oid) {
+    throw redirect(`/404`, { status: 404, statusText: "Not Found" });
+  }
+
   const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
   const order = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
@@ -110,7 +117,10 @@ export const getOrderById = query(async (oid: string) => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getOrderById`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 }, "order-by-id");
@@ -157,7 +167,10 @@ export const deleteOrder = action(async (oid: string) => {
       console.log(cause);
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
+        status: 500,
+        statusText: `Internal Server Error: ${errors.join(", ")}`,
+      });
     },
   });
 });
@@ -201,7 +214,10 @@ export const convertToSale = action(
         const errors = Chunk.toReadonlyArray(causes).map((c) => {
           return c.message;
         });
-        throw new Error(`Some error(s) occurred at 'convertToSale': ${errors.join(", ")}`);
+        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=convertToSale`, {
+          status: 500,
+          statusText: `Internal Server Error: ${errors.join(", ")}`,
+        });
       },
     });
   },
@@ -294,7 +310,10 @@ export const createOrder = action(
         console.log(cause);
         const causes = Cause.failures(cause);
         const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-        throw new Error(`Some error(s) occurred: ${errors.join(", ")}`);
+        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
+          status: 500,
+          statusText: `Internal Server Error: ${errors.join(", ")}`,
+        });
       },
     });
   },
