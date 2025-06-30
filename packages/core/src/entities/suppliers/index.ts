@@ -108,6 +108,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
           product: {
             ...p.product,
             organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
+            isInSortiment: p.product.organizations.find((org) => org.organizationId === orgId)?.deletedAt,
           },
         })),
       };

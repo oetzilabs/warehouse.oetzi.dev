@@ -19,6 +19,7 @@ import {
   CustomerNotCreated,
   CustomerNotDeleted,
   CustomerNoteInvalidId,
+  CustomerNoteNotFound,
   CustomerNotFound,
   CustomerNotUpdated,
 } from "./errors";
@@ -144,16 +145,11 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       return updated;
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/customers/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/customers/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
       const orgCustomers = yield* Effect.promise(() =>
         db.query.TB_organization_customers.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
           with: {
             customer: {
               with: {
@@ -388,6 +384,26 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       );
     });
 
+    const findNoteById = Effect.fn("@warehouse/customers/findNoteById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new CustomerInvalidId({ id }));
+      }
+
+      const note = yield* Effect.promise(() =>
+        db.query.TB_customer_notes.findFirst({
+          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          with: {
+            customer: true,
+          },
+        }),
+      );
+      if (!note) {
+        return yield* Effect.fail(new CustomerNoteNotFound({ id }));
+      }
+      return note;
+    });
+
     const addNote = Effect.fn("@warehouse/customers/addNote")(function* (
       title: string,
       content: string,
@@ -452,6 +468,7 @@ export class CustomerService extends Effect.Service<CustomerService>()("@warehou
       removePreferredDeliveryDateTime,
       addPreferredPickupDateTime,
       removePreferredPickupDateTime,
+      findNoteById,
       addNote,
       updateNote,
       removeNote,
