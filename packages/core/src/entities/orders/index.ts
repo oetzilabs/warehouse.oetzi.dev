@@ -357,18 +357,13 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       );
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/customer-orders/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/customer-orders/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
 
       const orders = yield* Effect.promise(() =>
         db.query.TB_customer_orders.findMany({
           orderBy: (fields, operators) => [operators.desc(fields.createdAt), operators.desc(fields.updatedAt)],
-          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
           with: {
             organization: true,
             customer: {
@@ -429,12 +424,12 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
           ...p,
           product: {
             ...p.product,
-            organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrganizationId.output),
+            organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
             currency: p.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)!
+              .find((org) => org.organizationId === orgId)!
               .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
             sellingPrice: p.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)!
+              .find((org) => org.organizationId === orgId)!
               .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
           },
         })),
@@ -443,13 +438,8 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       return filteredOrders;
     });
 
-    const findMostPopularProductsByOrganizationId = Effect.fn(
-      "@warehouse/customer-orders/findMostPopularProductsByOrganizationId",
-    )(function* (organizationId: string) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findMostPopularProducts = Effect.fn("@warehouse/customer-orders/findMostPopularProducts")(function* () {
+      const orgId = yield* OrganizationId;
 
       return yield* Effect.promise(() =>
         db
@@ -486,10 +476,10 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
             TB_organizations_products,
             and(
               eq(TB_organizations_products.productId, TB_products.id),
-              eq(TB_organizations_products.organizationId, parsedOrganizationId.output),
+              eq(TB_organizations_products.organizationId, orgId),
             ),
           )
-          .where(eq(TB_customer_orders.organization_id, parsedOrganizationId.output))
+          .where(eq(TB_customer_orders.organization_id, orgId))
           .groupBy(
             TB_products.id,
             TB_products.name,
@@ -504,211 +494,39 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       );
     });
 
-    const percentageCustomerOrdersLastWeekByOrganizationId = Effect.fn(
-      "@warehouse/customer-orders/percentageCustomerOrdersLastWeekByOrganizationId",
-    )(function* (organizationId: string) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const percentageCustomerOrdersLastWeek = Effect.fn("@warehouse/customer-orders/percentageCustomerOrdersLastWeek")(
+      function* () {
+        const orgId = yield* OrganizationId;
 
-      const twoWeeksAgo = dayjs().subtract(14, "day").toDate();
-      const aWeekAgo = dayjs().subtract(7, "day").toDate();
-      const from2WeeksToAWeekAgoData = yield* Effect.promise(() =>
-        db.$count(
-          TB_customer_orders,
-          and(
-            eq(TB_customer_orders.organization_id, parsedOrganizationId.output),
-            gte(TB_customer_orders.createdAt, twoWeeksAgo),
-            lt(TB_customer_orders.createdAt, aWeekAgo),
-          ),
-        ),
-      );
-
-      const fromAWeekToTodayData = yield* Effect.promise(() =>
-        db.$count(
-          TB_customer_orders,
-          and(
-            eq(TB_customer_orders.organization_id, parsedOrganizationId.output),
-            gte(TB_customer_orders.createdAt, aWeekAgo),
-          ),
-        ),
-      );
-
-      if (from2WeeksToAWeekAgoData === 0) {
-        return 0;
-      }
-
-      const delta = from2WeeksToAWeekAgoData - fromAWeekToTodayData;
-
-      const percentage = Math.round((delta / from2WeeksToAWeekAgoData) * 100);
-
-      return percentage;
-    });
-
-    const getCustomerOrdersChartData = Effect.fn("@warehouse/customer-orders/getCustomerOrdersChartData")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
-
-      const sixMonthsAgo = dayjs().subtract(6, "month").startOf("month");
-      const orders = yield* Effect.promise(() =>
-        db
-          .select({
-            // Get month from createdAt using PostgreSQL's date_trunc
-            month: sql<string>`date_trunc('month', ${TB_customer_orders.createdAt})`,
-            // Count total orders per month
-            count: sql<number>`count(*)`,
-          })
-          .from(TB_customer_orders)
-          .where(
+        const twoWeeksAgo = dayjs().subtract(14, "day").toDate();
+        const aWeekAgo = dayjs().subtract(7, "day").toDate();
+        const from2WeeksToAWeekAgoData = yield* Effect.promise(() =>
+          db.$count(
+            TB_customer_orders,
             and(
-              eq(TB_customer_orders.organization_id, parsedOrganizationId.output),
-              // Only get orders from last 6 months
-              gte(TB_customer_orders.createdAt, sixMonthsAgo.toDate()),
+              eq(TB_customer_orders.organization_id, orgId),
+              gte(TB_customer_orders.createdAt, twoWeeksAgo),
+              lt(TB_customer_orders.createdAt, aWeekAgo),
             ),
-          )
-          // Group by month to get monthly totals
-          .groupBy(sql`date_trunc('month', ${TB_customer_orders.createdAt})`)
-          // Order by month ascending
-          .orderBy(sql`date_trunc('month', ${TB_customer_orders.createdAt})`),
-      );
+          ),
+        );
 
-      const monthLabels = Array.from({ length: 6 }, (_, i) =>
-        dayjs()
-          .subtract(5 - i, "month")
-          .format("MMM"),
-      );
-      const data = monthLabels.map((month) => {
-        const foundMonth = orders.find((o) => dayjs(o.month).format("MMM") === month);
-        return foundMonth?.count || 0;
-      });
+        const fromAWeekToTodayData = yield* Effect.promise(() =>
+          db.$count(
+            TB_customer_orders,
+            and(eq(TB_customer_orders.organization_id, orgId), gte(TB_customer_orders.createdAt, aWeekAgo)),
+          ),
+        );
 
-      return data;
-    });
-
-    const getSupplierPurchaseChartData = Effect.fn("@warehouse/customer-orders/getSupplierPurchaseChartData")(
-      function* (organizationId: string) {
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        if (from2WeeksToAWeekAgoData === 0) {
+          return 0;
         }
 
-        const sixMonthsAgo = dayjs().subtract(6, "month").startOf("month");
-        const purchases = yield* Effect.promise(() =>
-          db
-            .select({
-              month: sql<string>`date_trunc('month', ${TB_supplier_purchases.createdAt})`,
-              count: sql<number>`count(*)`,
-            })
-            .from(TB_supplier_purchases)
-            .where(
-              and(
-                eq(TB_supplier_purchases.organization_id, parsedOrganizationId.output),
-                gte(TB_supplier_purchases.createdAt, sixMonthsAgo.toDate()),
-              ),
-            )
-            .groupBy(sql`date_trunc('month', ${TB_supplier_purchases.createdAt})`)
-            .orderBy(sql`date_trunc('month', ${TB_supplier_purchases.createdAt})`),
-        );
+        const delta = from2WeeksToAWeekAgoData - fromAWeekToTodayData;
 
-        const monthLabels = Array.from({ length: 6 }, (_, i) =>
-          dayjs()
-            .subtract(5 - i, "month")
-            .format("MMM"),
-        );
-        const data = monthLabels.map((month) => {
-          const foundMonth = purchases.find((p) => dayjs(p.month).format("MMM") === month);
-          return foundMonth?.count || 0;
-        });
+        const percentage = Math.round((delta / from2WeeksToAWeekAgoData) * 100);
 
-        return data;
-      },
-    );
-
-    const getPopularProductsChartData = Effect.fn("@warehouse/customer-orders/getPopularProductsChartData")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
-
-      const products = yield* Effect.promise(() =>
-        db
-          .select({
-            name: TB_products.name,
-            // Count distinct orders to get total orders per product
-            count: sql<number>`count(distinct ${TB_customer_orders.id})`,
-          })
-          .from(TB_customer_orders)
-          .innerJoin(TB_customer_order_products, eq(TB_customer_orders.id, TB_customer_order_products.customerOrderId))
-          .innerJoin(TB_products, eq(TB_customer_order_products.productId, TB_products.id))
-          .where(eq(TB_customer_orders.organization_id, parsedOrganizationId.output))
-          .groupBy(TB_products.id)
-          // Order by order count descending to get most popular first
-          .orderBy(sql`count(distinct ${TB_customer_orders.id}) desc`)
-          // Limit to top 5 products
-          .limit(5),
-      );
-
-      return {
-        labels: products.map((p) => p.name),
-        data: products.map((p) => p.count),
-      };
-    });
-
-    const getLastSoldProductsChartData = Effect.fn("@warehouse/customer-orders/getLastSoldProductsChartData")(
-      function* (organizationId: string) {
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
-
-        const thirtyDaysAgo = dayjs().subtract(30, "days").startOf("day");
-        const sales = yield* Effect.promise(() =>
-          db
-            .select({
-              // Get day from createdAt using PostgreSQL's date_trunc
-              date: sql<string>`date_trunc('day', ${TB_customer_orders.createdAt})`,
-              // Sum quantities sold per day
-              count: sql<number>`sum(${TB_customer_order_products.quantity})`,
-            })
-            .from(TB_customer_orders)
-            .innerJoin(
-              TB_customer_order_products,
-              eq(TB_customer_orders.id, TB_customer_order_products.customerOrderId),
-            )
-            .where(
-              and(
-                eq(TB_customer_orders.organization_id, parsedOrganizationId.output),
-                // Only get sales from last 30 days
-                gte(TB_customer_orders.createdAt, thirtyDaysAgo.toDate()),
-              ),
-            )
-            // Group by day to get daily totals
-            .groupBy(sql`date_trunc('day', ${TB_customer_orders.createdAt})`)
-            // Order by day ascending
-            .orderBy(sql`date_trunc('day', ${TB_customer_orders.createdAt})`),
-        );
-
-        const dayLabels = Array.from({ length: 7 }, (_, i) =>
-          dayjs()
-            .subtract(6 - i, "days")
-            .format("DD MMM"),
-        );
-        const data = dayLabels.map((day) => {
-          const foundDay = sales.find((s) => dayjs(s.date).format("DD MMM") === day);
-          return foundDay?.count || 0;
-        });
-
-        return {
-          labels: dayLabels,
-          data,
-        };
+        return percentage;
       },
     );
 
@@ -828,13 +646,10 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       (effect) => effect.pipe(Effect.provide(PDFLive)),
     );
 
-    const percentageSupplierPurchasesLastWeekByOrganizationId = Effect.fn(
-      "@warehouse/customer-orders/percentageSupplierPurchasesLastWeekByOrganizationId",
-    )(function* (organizationId: string) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const percentageSupplierPurchasesLastWeek = Effect.fn(
+      "@warehouse/customer-orders/percentageSupplierPurchasesLastWeek",
+    )(function* () {
+      const orgId = yield* OrganizationId;
 
       const twoWeeksAgo = dayjs().subtract(14, "day").toDate();
       const aWeekAgo = dayjs().subtract(7, "day").toDate();
@@ -842,7 +657,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         db.$count(
           TB_supplier_purchases,
           and(
-            eq(TB_supplier_purchases.organization_id, parsedOrganizationId.output),
+            eq(TB_supplier_purchases.organization_id, orgId),
             gte(TB_supplier_purchases.createdAt, twoWeeksAgo),
             lt(TB_supplier_purchases.createdAt, aWeekAgo),
           ),
@@ -852,10 +667,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       const fromAWeekToTodayData = yield* Effect.promise(() =>
         db.$count(
           TB_supplier_purchases,
-          and(
-            eq(TB_supplier_purchases.organization_id, parsedOrganizationId.output),
-            gte(TB_supplier_purchases.createdAt, aWeekAgo),
-          ),
+          and(eq(TB_supplier_purchases.organization_id, orgId), gte(TB_supplier_purchases.createdAt, aWeekAgo)),
         ),
       );
       if (from2WeeksToAWeekAgoData === 0) {
@@ -868,16 +680,11 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       return percentage;
     });
 
-    const findSupplierPurchasesByOrganizationId = Effect.fn(
-      "@warehouse/customer-orders/findSupplierPurchasesByOrganizationId",
-    )(function* (organizationId: string) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findSupplierPurchases = Effect.fn("@warehouse/customer-orders/findSupplierPurchases")(function* () {
+      const orgId = yield* OrganizationId;
       const orgPurchases = yield* Effect.promise(() =>
         db.query.TB_supplier_purchases.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
           with: {
             supplier: true,
             products: {
@@ -918,15 +725,11 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       safeRemove,
       findByUserId,
       findByOrganizationId,
-      findSupplierPurchasesByOrganizationId,
-      findMostPopularProductsByOrganizationId,
-      percentageCustomerOrdersLastWeekByOrganizationId,
-      percentageSupplierPurchasesLastWeekByOrganizationId,
+      findSupplierPurchases,
+      findMostPopularProducts,
+      percentageCustomerOrdersLastWeek,
+      percentageSupplierPurchasesLastWeek,
       all,
-      getCustomerOrdersChartData,
-      getSupplierPurchaseChartData,
-      getPopularProductsChartData,
-      getLastSoldProductsChartData,
       convertToSale,
       generatePDF,
     } as const;

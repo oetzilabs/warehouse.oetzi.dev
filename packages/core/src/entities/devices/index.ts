@@ -5,6 +5,7 @@ import { DeviceCreateSchema, DeviceUpdateSchema, TB_devices } from "../../drizzl
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId, OrganizationNotFound } from "../organizations/errors";
+import { OrganizationId } from "../organizations/id";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, DeviceNotUpdated } from "./errors";
 
@@ -13,8 +14,16 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
     const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    const create = Effect.fn("@warehouse/devices/create")(function* (input: InferInput<typeof DeviceCreateSchema>) {
-      const [device] = yield* Effect.promise(() => db.insert(TB_devices).values(input).returning());
+    const create = Effect.fn("@warehouse/devices/create")(function* (
+      input: Omit<InferInput<typeof DeviceCreateSchema>, "organization_id">,
+    ) {
+      const orgId = yield* OrganizationId;
+      const [device] = yield* Effect.promise(() =>
+        db
+          .insert(TB_devices)
+          .values({ ...input, organization_id: orgId })
+          .returning(),
+      );
 
       if (!device) {
         return yield* Effect.fail(new DeviceNotCreated({}));
@@ -87,17 +96,12 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return yield* Effect.promise(() => db.query.TB_devices.findMany());
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/devices/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/devices/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
       // look into all the facilites of the warehouse
       const orgs = yield* Effect.promise(() =>
         db.query.TB_organizations.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.id, orgId),
           with: {
             devices: {
               with: {
@@ -109,7 +113,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         }),
       );
       if (!orgs) {
-        return yield* Effect.fail(new OrganizationNotFound({ id: organizationId }));
+        return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
       return orgs.devices;
     });

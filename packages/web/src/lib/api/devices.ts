@@ -1,177 +1,80 @@
-import { action, json, query, redirect } from "@solidjs/router";
+import { action, json, query } from "@solidjs/router";
 import { DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
-import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { Cause, Chunk, Effect, Exit, Layer } from "effect";
-import { withSession } from "./session";
+import { Effect } from "effect";
+import { run } from "./utils";
 
-export const printProductSheet = action(async (did: string, pid: string) => {
+export const printProductSheet = action((did: string, pid: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
+  return run(
+    "@action/print-product-sheet",
+    Effect.gen(function* (_) {
+      const productService = yield* ProductService;
+      const deviceService = yield* DeviceService;
+      const product = yield* productService.findById(pid);
+      if (!product) {
+        return yield* Effect.fail(new ProductNotFound({ id: pid }));
+      }
+      const device = yield* deviceService.findById(did);
+      if (!device) {
+        return yield* Effect.fail(new DeviceNotFound({ id: pid }));
+      }
 
-  const program = Effect.gen(function* (_) {
-    const productService = yield* _(ProductService);
-    const deviceService = yield* _(DeviceService);
-    const product = yield* productService.findById(pid);
-    if (!product) {
-      return yield* Effect.fail(new ProductNotFound({ id: pid }));
-    }
-    const device = yield* deviceService.findById(did);
-    if (!device) {
-      return yield* Effect.fail(new DeviceNotFound({ id: pid }));
-    }
+      const result = yield* productService.printProductSheet(device, product);
 
-    const result = yield* productService.printProductSheet(device, product);
-
-    return result;
-  }).pipe(
-    Effect.provide(ProductLive),
-    Effect.provide(DeviceLive),
-    Effect.provide(organizationId),
-    Effect.provide(createOtelLayer("print-product-sheet")),
+      return result;
+    }).pipe(Effect.provide(ProductLive), Effect.provide(DeviceLive)),
+    json(undefined),
   );
-
-  const productExit = await Effect.runPromiseExit(program);
-
-  return Exit.match(productExit, {
-    onSuccess: (prods) => {
-      return json(prods);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 });
 
-export const getDevices = query(async () => {
+export const getDevices = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  if (!session.current_organization_id) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const devices = await Effect.runPromise(
+  return run(
+    "@query/get-devices",
     Effect.gen(function* (_) {
       const deviceService = yield* DeviceService;
-      const devices = yield* deviceService.findByOrganizationId(session.current_organization_id!);
-      return devices;
-    }).pipe(Effect.provide(WarehouseLive), Effect.provide(DeviceLive), Effect.provide(createOtelLayer("get-devices"))),
+      return yield* deviceService.findByOrganizationId();
+    }).pipe(Effect.provide(WarehouseLive), Effect.provide(DeviceLive)),
+    json([]),
   );
-  return devices;
 }, "get-devices");
 
-export const createDevice = action(async (data: { name: string; typeId: string }) => {
+export const createDevice = action((data: { name: string; typeId: string }) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const device = await Effect.runPromise(
+  return run(
+    "@action/create-device",
     Effect.gen(function* (_) {
       const deviceService = yield* DeviceService;
       return yield* deviceService.create({
         ...data,
         type_id: data.typeId,
-        organization_id: orgId,
       });
-    }).pipe(Effect.provide(DeviceLive), Effect.provide(createOtelLayer("create-device"))),
+    }).pipe(Effect.provide(DeviceLive)),
+    json(undefined),
   );
-
-  return device;
 });
 
-export const getDeviceTypes = query(async () => {
+export const getDeviceTypes = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const deviceTypes = await Effect.runPromise(
+  return run(
+    "@query/get-device-types",
     Effect.gen(function* (_) {
       const deviceService = yield* _(DeviceService);
       return yield* deviceService.getDeviceTypes();
     }).pipe(Effect.provide(DeviceLive)),
+    json([]),
   );
-  return deviceTypes;
 }, "get-device-types");
 
 export const getDeviceById = query(async (id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const device = await Effect.runPromise(
+  return run(
+    "@query/get-device-by-id",
     Effect.gen(function* (_) {
       const deviceService = yield* _(DeviceService);
       const device = yield* deviceService.findById(id);
@@ -180,54 +83,30 @@ export const getDeviceById = query(async (id: string) => {
       }
       return device;
     }).pipe(Effect.provide(DeviceLive)),
+    json([]),
   );
-  return device;
 }, "get-device-by-id");
 
-export const updateDevice = action(async (data: DeviceUpdateInfo) => {
+export const updateDevice = action((data: DeviceUpdateInfo) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const device = await Effect.runPromise(
+  return run(
+    "@action/update-device",
     Effect.gen(function* (_) {
       const deviceService = yield* _(DeviceService);
       return yield* deviceService.update(data);
     }).pipe(Effect.provide(DeviceLive)),
+    json(undefined),
   );
-  return device;
 });
 
-export const deleteDevice = action(async (id: string) => {
+export const deleteDevice = action((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const device = await Effect.runPromise(
+  return run(
+    "@action/delete-device",
     Effect.gen(function* (_) {
       const deviceService = yield* _(DeviceService);
       return yield* deviceService.safeRemove(id);
     }).pipe(Effect.provide(DeviceLive)),
+    json(undefined),
   );
-  return device;
 });

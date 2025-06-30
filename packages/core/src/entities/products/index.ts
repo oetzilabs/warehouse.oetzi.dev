@@ -341,16 +341,11 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       return deleted;
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/products/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/products/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
       const orgProds = yield* Effect.promise(() =>
         db.query.TB_organizations_products.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
           with: {
             product: {
               with: {
@@ -427,28 +422,22 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
           ...op,
           createdAt: op.product.createdAt,
           updatedAt: op.product.updatedAt,
-          minimumStock:
-            op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)?.minimumStock ?? 0,
-          maximumStock:
-            op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)?.maximumStock ?? 0,
-          reorderPoint:
-            op.product.organizations.find((o) => o.organizationId === parsedOrganizationId.output)?.reorderPoint ?? 0,
+          minimumStock: op.product.organizations.find((o) => o.organizationId === orgId)?.minimumStock ?? 0,
+          maximumStock: op.product.organizations.find((o) => o.organizationId === orgId)?.maximumStock ?? 0,
+          reorderPoint: op.product.organizations.find((o) => o.organizationId === orgId)?.reorderPoint ?? 0,
           currency:
             op.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)
+              .find((org) => org.organizationId === orgId)
               ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.currency ??
             "unknown",
           sellingPrice:
             op.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)
+              .find((org) => org.organizationId === orgId)
               ?.priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0]?.sellingPrice ??
             0.0,
-          taxGroupName:
-            op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)?.tg?.name ??
-            "unknown",
+          taxGroupName: op.product.organizations.find((org) => org.organizationId === orgId)?.tg?.name ?? "unknown",
           taxGroupRate:
-            op.product.organizations.find((org) => org.organizationId === parsedOrganizationId.output)?.tg?.crs[0]?.tr
-              .rate ?? "unknown",
+            op.product.organizations.find((org) => org.organizationId === orgId)?.tg?.crs[0]?.tr.rate ?? "unknown",
         }))
         .filter((p) => p.taxGroupName !== undefined && p.taxGroupRate !== undefined);
     });

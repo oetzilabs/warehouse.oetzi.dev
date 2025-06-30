@@ -362,16 +362,11 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
       return percentage;
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/purchases/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/purchases/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
       const orgPurchases = yield* Effect.promise(() =>
         db.query.TB_supplier_purchases.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
           with: {
             supplier: true,
             products: {
@@ -407,16 +402,16 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
           ...p,
           product: {
             ...p.product,
-            organizations: p.product.organizations.filter((org) => org.organizationId === parsedOrganizationId.output),
+            organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
             priceHistory:
               p.product.organizations
-                .find((org) => org.organizationId === parsedOrganizationId.output)!
+                .find((org) => org.organizationId === orgId)!
                 .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
             currency: p.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)!
+              .find((org) => org.organizationId === orgId)!
               .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
             sellingPrice: p.product.organizations
-              .find((org) => org.organizationId === parsedOrganizationId.output)!
+              .find((org) => org.organizationId === orgId)!
               .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
           },
         })),

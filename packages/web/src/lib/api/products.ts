@@ -1,157 +1,74 @@
-import { action, json, query, redirect } from "@solidjs/router";
-import { ProductCreateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+import { action, json, query } from "@solidjs/router";
 import { BrandLive, BrandService } from "@warehouseoetzidev/core/src/entities/brands";
 import { InventoryLive, InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
-import {
-  OrganizationNotFound,
-  OrganizationProductNotAdded,
-  OrganizationProductNotFound,
-} from "@warehouseoetzidev/core/src/entities/organizations/errors";
-import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
 import { NewProductFormData } from "@warehouseoetzidev/core/src/entities/products/schemas";
-import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
-import { SupplierNotFound } from "@warehouseoetzidev/core/src/entities/suppliers/errors";
-import { Cause, Chunk, Effect, Exit, Layer } from "effect";
-import { InferInput } from "valibot";
-import { withSession } from "./session";
+import { SupplierLive } from "@warehouseoetzidev/core/src/entities/suppliers";
+import { Effect } from "effect";
+import { run, runWithSession } from "./utils";
 
-export const getProducts = query(async () => {
+export const getProducts = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const products = await Effect.runPromiseExit(
+  return run(
+    "@query/products",
     Effect.gen(function* (_) {
-      const productsService = yield* _(ProductService);
-      const products = yield* productsService.findByOrganizationId(orgId);
+      const productsService = yield* ProductService;
+      const products = yield* productsService.findByOrganizationId();
       return products;
     }).pipe(Effect.provide(ProductLive)),
+    json([]),
   );
-  return Exit.match(products, {
-    onSuccess: (prods) => {
-      return json(prods);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getProducts`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 }, "products");
 
-export const getProductLabels = query(async () => {
+export const getProductLabels = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const labels = await Effect.runPromise(
+  return run(
+    "@query/labels",
     Effect.gen(function* (_) {
-      const productLabelsService = yield* _(ProductLabelsService);
+      const productLabelsService = yield* ProductLabelsService;
       const labels = yield* productLabelsService.findAllWithoutProducts();
       return labels;
     }).pipe(Effect.provide(ProductLabelsLive)),
+    json([]),
   );
-  return labels;
 }, "labels");
 
-export const getProductById = query(async (pid: string) => {
+export const getProductById = query((pid: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-  const product = await Effect.runPromise(
+  return run(
+    "@query/product-by-id",
     Effect.gen(function* (_) {
-      const orgService = yield* _(OrganizationService);
-      const org = yield* orgService.findById(orgId);
-      const productService = yield* _(ProductService);
+      const productService = yield* ProductService;
+      const orgService = yield* OrganizationService;
       const product = yield* productService.findById(pid);
       const orgP = yield* orgService.findProductById(pid);
       const stock = yield* productService.getStockCount(product.id);
 
       return { ...product, isInSortiment: orgP.deletedAt === null, stock };
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+    json(undefined),
   );
-  return product;
 }, "product-by-id");
 
-export const deleteProduct = action(async (id: string) => {
+export const deleteProduct = action((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-
-  const product = await Effect.runPromise(
+  return run(
+    "@action/delete-product",
     Effect.gen(function* (_) {
-      const productService = yield* _(ProductService);
-      const orgService = yield* _(OrganizationService);
-      const org = yield* orgService.findById(orgId);
+      const productService = yield* ProductService;
+      const orgService = yield* OrganizationService;
       const product = yield* productService.findById(id);
       return yield* orgService.removeProduct(product.id);
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+    json(undefined),
   );
-  return json(product, {
-    revalidate: [getProductById.keyFor(id), getProducts.key],
-  });
 });
 
 export const downloadProductSheet = action(
-  async (
+  (
     pid: string,
     options: {
       size: "A4" | "A5";
@@ -159,89 +76,39 @@ export const downloadProductSheet = action(
     },
   ) => {
     "use server";
-    const auth = await withSession();
-    if (!auth) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const user = auth[0];
-    if (!user) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const session = auth[1];
-    if (!session) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const orgId = session.current_organization_id;
-    if (!orgId) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const organizationId = Layer.succeed(OrganizationId, orgId);
-    const productExit = await Effect.runPromiseExit(
-      Effect.gen(function* (_) {
-        const productService = yield* _(ProductService);
-        const product = yield* productService.findById(pid);
-        const orgService = yield* _(OrganizationService);
-        const org = yield* orgService.findById(orgId);
+    return runWithSession(
+      "@action/download-product-sheet",
+      Effect.fn(
+        function* (session) {
+          const productService = yield* ProductService;
+          const product = yield* productService.findById(pid);
+          const orgService = yield* OrganizationService;
+          const org = yield* orgService.findById(session.current_organization_id);
 
-        const pdf = yield* productService.generatePDF(product, org, {
-          type: options.type === "full" ? "full" : [options.type],
-          page: { size: options.size, orientation: "portrait" },
-        });
+          const pdf = yield* productService.generatePDF(product, org, {
+            type: options.type === "full" ? "full" : [options.type],
+            page: { size: options.size, orientation: "portrait" },
+          });
 
-        return yield* Effect.succeed({
-          pdf: pdf.toString("base64"),
-          name: product.name,
-        });
-      }).pipe(
-        Effect.provide(ProductLive),
-        Effect.provide(OrganizationLive),
-        Effect.provide(SupplierLive),
-        Effect.provide(organizationId),
+          return yield* Effect.succeed({
+            pdf: pdf.toString("base64"),
+            name: product.name,
+          });
+        },
+        (effect) =>
+          effect.pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(SupplierLive)),
       ),
+      json(undefined),
     );
-
-    return Exit.match(productExit, {
-      onSuccess: (data) => {
-        return json(data);
-      },
-      onFailure: (cause) => {
-        console.log(cause);
-        const causes = Cause.failures(cause);
-        const errors = Chunk.toReadonlyArray(causes).map((c) => {
-          return c.message;
-        });
-        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
-          status: 500,
-          statusText: `Internal Server Error: ${errors.join(", ")}`,
-        });
-      },
-    });
   },
 );
 
-export const addLabelsToProduct = action(async (id: string, labels: string[]) => {
+export const addLabelsToProduct = action((id: string, labels: string[]) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-
-  const result = await Effect.runPromise(
+  return run(
+    "@action/add-labels-to-product",
     Effect.gen(function* (_) {
-      const service = yield* _(ProductService);
+      const service = yield* ProductService;
       const product = yield* service.findById(id);
       const prodlabels = product.labels.map((l) => l.label.id);
       const toAdd = labels.filter((l) => !prodlabels.includes(l));
@@ -254,36 +121,22 @@ export const addLabelsToProduct = action(async (id: string, labels: string[]) =>
         yield* service.removeLabel(id, label);
       }
 
-      return true;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
+      return json(true, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      });
+    }).pipe(Effect.provide(ProductLive)),
+    json(false, {
+      revalidate: [getProductById.keyFor(id), getProducts.key],
+    }),
   );
-  return json(result, {
-    revalidate: [getProductById.keyFor(id), getProducts.key],
-  });
 });
 
-export const removeLabelsFromProduct = action(async (id: string, labelId: string) => {
+export const removeLabelsFromProduct = action((id: string, labelId: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-  const result = await Effect.runPromise(
+  return run(
+    "@action/remove-labels-from-product",
     Effect.gen(function* (_) {
-      const service = yield* _(ProductService);
+      const service = yield* ProductService;
       const product = yield* service.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
@@ -291,79 +144,53 @@ export const removeLabelsFromProduct = action(async (id: string, labelId: string
 
       yield* service.removeLabel(id, labelId);
 
-      return true;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
+      return json(true, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      });
+    }).pipe(Effect.provide(ProductLive)),
+    json(false, {
+      revalidate: [getProductById.keyFor(id), getProducts.key],
+    }),
   );
-  return json(result, {
-    revalidate: [getProductById.keyFor(id), getProducts.key],
-  });
 });
 
-export const getProductBrands = query(async () => {
+export const getProductBrands = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const brands = await Effect.runPromise(
+  return run(
+    "@query/product-brands",
     Effect.gen(function* (_) {
-      const brandsService = yield* _(BrandService);
+      const brandsService = yield* BrandService;
       const brands = yield* brandsService.all();
       return brands;
     }).pipe(Effect.provide(BrandLive)),
+    json([]),
   );
-  return brands;
 }, "brands");
 
-export const assignBrand = action(async (id: string, brandId: string) => {
+export const assignBrand = action((id: string, brandId: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-  const result = await Effect.runPromise(
+  return run(
+    "@action/assign-brand",
     Effect.gen(function* (_) {
-      const service = yield* _(ProductService);
+      const service = yield* ProductService;
       const product = yield* service.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
 
-      return yield* service.update(product.id, { id: product.id, brand_id: brandId });
-    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
+      const result = yield* service.update(product.id, { id: product.id, brand_id: brandId });
+      return json(result, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      });
+    }).pipe(Effect.provide(ProductLive)),
+    json(undefined, {
+      revalidate: [getProductById.keyFor(id), getProducts.key],
+    }),
   );
-  return json(result, {
-    revalidate: [getProductById.keyFor(id), getProducts.key],
-  });
 });
 
 export const updateProductStock = action(
-  async (
+  (
     id: string,
     {
       minimumStock,
@@ -376,276 +203,110 @@ export const updateProductStock = action(
     },
   ) => {
     "use server";
-    const auth = await withSession();
-    if (!auth) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const user = auth[0];
-    if (!user) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const session = auth[1];
-    if (!session) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const orgId = session.current_organization_id;
-    if (!orgId) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const organizationId = Layer.succeed(OrganizationId, orgId);
-
-    const result = await Effect.runPromiseExit(
+    return run(
+      "@action/update-product-stock",
       Effect.gen(function* (_) {
-        const orgService = yield* _(OrganizationService);
-        const productService = yield* _(ProductService);
+        const orgService = yield* OrganizationService;
+        const productService = yield* ProductService;
         const product = yield* productService.findById(id);
 
-        return yield* orgService.updateProduct(product.id, { minimumStock, maximumStock, reorderPoint });
-      }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive), Effect.provide(organizationId)),
-    );
-    return Exit.match(result, {
-      onSuccess: (result) => {
+        const result = yield* orgService.updateProduct(product.id, { minimumStock, maximumStock, reorderPoint });
         return json(result, {
           revalidate: [getProductById.keyFor(id), getProducts.key],
         });
-      },
-      onFailure: (cause) => {
-        console.error("Failed to update product:", cause);
-        const causes = Cause.failures(cause);
-        const errors = Chunk.toReadonlyArray(causes).map((c) => {
-          return c.message;
-        });
-        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=updateProduct`, {
-          status: 500,
-          statusText: `Internal Server Error: ${errors.join(", ")}`,
-        });
-      },
-    });
+      }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive)),
+      json(undefined, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      }),
+    );
   },
 );
 
-export const reAddProduct = action(async (id: string) => {
+export const reAddProduct = action((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-
-  const result = await Effect.runPromiseExit(
+  return run(
+    "@action/re-add-product",
     Effect.gen(function* (_) {
-      const service = yield* _(ProductService);
+      const service = yield* ProductService;
       const product = yield* service.findById(id);
-      const orgService = yield* _(OrganizationService);
+      const orgService = yield* OrganizationService;
       const p = yield* orgService.reAddProduct(product.id);
-      return p;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
-  );
-
-  return Exit.match(result, {
-    onSuccess: (result) => {
-      return json(result, {
+      return json(p, {
         revalidate: [getProductById.keyFor(id), getProducts.key],
       });
-    },
-    onFailure: (cause) => {
-      console.error("Failed to re-add product:", cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=re-add product`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
+    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
+    json(undefined, {
+      revalidate: [getProductById.keyFor(id), getProducts.key],
+    }),
+  );
 });
 
-export const getLatestPricesByProductId = query(async (id: string) => {
+export const getLatestPricesByProductId = query((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-  const product = await Effect.runPromise(
+  return run(
+    "@query/latest-prices-by-product-id",
     Effect.gen(function* (_) {
-      const orgService = yield* _(OrganizationService);
-      const productService = yield* _(ProductService);
-      const org = yield* orgService.findById(orgId);
+      const productService = yield* ProductService;
       const product = yield* productService.findById(id);
-      const orgP = yield* orgService.findProductById(id);
       const currentPrices = yield* productService.getPriceHistory(product.id);
-
       return currentPrices;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(organizationId)),
+    }).pipe(Effect.provide(ProductLive)),
+    json([]),
   );
-  return product;
 }, "product-by-id");
 
-export const clearBrand = action(async (id: string) => {
+export const clearBrand = action((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-
-  const result = await Effect.runPromiseExit(
+  return run(
+    "",
     Effect.gen(function* (_) {
-      const service = yield* _(ProductService);
+      const service = yield* ProductService;
       const product = yield* service.findById(id);
       if (!product) {
         return yield* Effect.fail(new ProductNotFound({ id }));
       }
 
-      yield* service.update(product.id, { id: product.id, brand_id: null });
+      const result = yield* service.update(product.id, { id: product.id, brand_id: null });
 
-      return true;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
-  );
-  return Exit.match(result, {
-    onSuccess: (result) => {
       return json(result, {
         revalidate: [getProductById.keyFor(id), getProducts.key],
       });
-    },
-    onFailure: (cause) => {
-      console.error("Failed to re-add product:", cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=re-add product`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
+    }).pipe(Effect.provide(ProductLive)),
+    json(undefined, {
+      revalidate: [getProductById.keyFor(id), getProducts.key],
+    }),
+  );
 });
 
-export const getProductStock = query(async (id: string) => {
+export const getProductStock = query((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-  const product = await Effect.runPromise(
+  return run(
+    "@query/product-stock-by-id",
     Effect.gen(function* (_) {
-      const orgService = yield* _(OrganizationService);
-      const productService = yield* _(ProductService);
-      const inventoryService = yield* _(InventoryService);
-      yield* orgService.findById(orgId);
-      yield* productService.findById(id);
-      yield* orgService.findProductById(id);
+      const inventoryService = yield* InventoryService;
       const stock = yield* inventoryService.getStockForProducts([id]);
 
       return stock[0].stock;
-    }).pipe(
-      Effect.provide(ProductLive),
-      Effect.provide(OrganizationLive),
-      Effect.provide(InventoryLive),
-      Effect.provide(organizationId),
-    ),
+    }).pipe(Effect.provide(InventoryLive)),
+    json(undefined),
   );
-  return product;
 }, "product-stock-by-id");
 
-export const createProduct = action(async (data: NewProductFormData) => {
+export const createProduct = action((data: NewProductFormData) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-  const { product, ...additional } = data;
-
-  const createProductExit = await Effect.runPromiseExit(
+  return run(
+    "@action/create-product",
     Effect.gen(function* (_) {
-      const service = yield* _(ProductService);
+      const { product, ...additional } = data;
+      const service = yield* ProductService;
 
       const result = yield* service.create(product, additional);
-      return result;
-    }).pipe(Effect.provide(ProductLive), Effect.provide(organizationId)),
-  );
-  return Exit.match(createProductExit, {
-    onSuccess: (result) => {
       return json(result, {
         revalidate: [getProductById.keyFor(result.id), getProducts.key],
       });
-    },
-    onFailure: (cause) => {
-      console.error("Failed to create product:", cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=create product`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
+    }).pipe(Effect.provide(ProductLive)),
+    json(undefined, {
+      revalidate: [getProductById.key, getProducts.key],
+    }),
+  );
 });

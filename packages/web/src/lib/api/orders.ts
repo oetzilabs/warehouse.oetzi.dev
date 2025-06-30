@@ -7,259 +7,107 @@ import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/user
 import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { getAuthenticatedUser } from "./auth";
 import { getSales } from "./sales";
-import { withSession } from "./session";
+import { run, runWithSession } from "./utils";
 
-export const getCustomerOrders = query(async () => {
+export const getCustomerOrders = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orders = await Effect.runPromiseExit(
+  return run(
+    "@query/customer-order-by-warehouse-id",
     Effect.gen(function* (_) {
-      const orderService = yield* _(CustomerOrderService);
-      const orders = yield* orderService.findByOrganizationId(orgId);
-      return orders;
+      const orderService = yield* CustomerOrderService;
+      return yield* orderService.findByOrganizationId();
     }).pipe(Effect.provide(CustomerOrderLive)),
+    json([]),
   );
-  return Exit.match(orders, {
-    onSuccess: (ords) => {
-      return json(ords);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getCustomerOrders`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 }, "customer-order-by-warehouse-id");
 
-export const getOrdersByUserId = query(async (uid: string) => {
+export const getOrdersByUserId = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orders = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const userService = yield* _(UserService);
-      const orderService = yield* _(CustomerOrderService);
-      const user = yield* userService.findById(uid);
-      if (!user) {
-        return yield* Effect.fail(new Error("User not found"));
-      }
-      const orders = yield* orderService.findByUserId(user.id);
-      return orders;
-    }).pipe(Effect.provide(UserLive), Effect.provide(CustomerOrderLive)),
+  return runWithSession(
+    "@query/order-by-user-id",
+    Effect.fn(
+      function* (session) {
+        const userService = yield* UserService;
+        const orderService = yield* CustomerOrderService;
+        const user = yield* userService.findById(session.user_id);
+        if (!user) {
+          return yield* Effect.fail(new Error("User not found"));
+        }
+        const orders = yield* orderService.findByUserId(user.id);
+        return orders;
+      },
+      (effect) => effect.pipe(Effect.provide(UserLive), Effect.provide(CustomerOrderLive)),
+    ),
+    json([]),
   );
-  return orders;
 }, "order-by-user-id");
 
 export const getOrderById = query(async (oid: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  if (!oid) {
-    throw redirect(`/404`, { status: 404, statusText: "Not Found" });
-  }
-
-  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
-  const order = await Effect.runPromiseExit(
+  return run(
+    "@query/order-by-id",
     Effect.gen(function* (_) {
-      const orderService = yield* _(CustomerOrderService);
-      const order = yield* orderService.findById(oid);
-      return order;
-    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
+      const orderService = yield* CustomerOrderService;
+      return yield* orderService.findById(oid);
+    }).pipe(Effect.provide(CustomerOrderLive)),
+    json(undefined),
   );
-
-  return Exit.match(order, {
-    onSuccess: (order) => {
-      return json(order);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getOrderById`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 }, "order-by-id");
 
-export const deleteOrder = action(async (oid: string) => {
+export const deleteOrder = action((oid: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const result = await Effect.runPromiseExit(
+  return run(
+    "@action/delete-order",
     Effect.gen(function* (_) {
-      const orderService = yield* _(CustomerOrderService);
+      const orderService = yield* CustomerOrderService;
 
       yield* orderService.update({ id: oid, status: "deleted", deletedAt: new Date() });
       return true;
     }).pipe(Effect.provide(CustomerOrderLive)),
+    json(false),
   );
-
-  return Exit.match(result, {
-    onSuccess: () => {
-      return json(
-        { success: true },
-        {
-          revalidate: [
-            getCustomerOrders.key,
-            getOrdersByUserId.key,
-            getOrderById.keyFor(oid),
-            getAuthenticatedUser.key,
-          ],
-        },
-      );
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 });
 
-export const convertToSale = action(
-  async (id: string, cid: string, products: Array<{ id: string; quantity: number }>) => {
-    "use server";
-    const auth = await withSession();
-    if (!auth) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const user = auth[0];
-    if (!user) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const session = auth[1];
-    if (!session) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const orgId = session.current_organization_id;
-    if (!orgId) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-
-    const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
-    const order = await Effect.runPromiseExit(
-      Effect.gen(function* (_) {
-        const orderService = yield* _(CustomerOrderService);
-        return yield* orderService.convertToSale(id, cid, products);
-      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
-    );
-    return Exit.match(order, {
-      onSuccess: (order) => {
-        return json(order, {
-          revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
-        });
-      },
-      onFailure: (cause) => {
-        console.error("Failed to convert order to sale:", cause);
-        const causes = Cause.failures(cause);
-        const errors = Chunk.toReadonlyArray(causes).map((c) => {
-          return c.message;
-        });
-        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=convertToSale`, {
-          status: 500,
-          statusText: `Internal Server Error: ${errors.join(", ")}`,
-        });
-      },
-    });
-  },
-);
+export const convertToSale = action((id: string, cid: string, products: Array<{ id: string; quantity: number }>) => {
+  "use server";
+  return run(
+    "@action/convert-to-sale",
+    Effect.gen(function* (_) {
+      const orderService = yield* _(CustomerOrderService);
+      const orderConverted = yield* orderService.convertToSale(id, cid, products);
+      return json(orderConverted, {
+        revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
+      });
+    }).pipe(Effect.provide(CustomerOrderLive)),
+    json(undefined),
+  );
+});
 
 export const downloadOrderSheet = action(async (id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
-  const order = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const orderService = yield* _(CustomerOrderService);
-      const order = yield* orderService.findById(id);
-      const organizationService = yield* _(OrganizationService);
-      const org = yield* organizationService.findById(orgId);
-      const pdf = yield* orderService.generatePDF(id, org, { page: { size: "A4", orientation: "portrait" } });
-      return yield* Effect.succeed({
-        pdf: pdf.toString("base64"),
-        name: order.barcode ?? order.createdAt.toISOString(),
-      });
-    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive), Effect.provide(organizationIdLayer)),
+
+  return runWithSession(
+    "@action/download-order-sheet",
+    Effect.fn(
+      function* (session) {
+        const orderService = yield* CustomerOrderService;
+        const order = yield* orderService.findById(id);
+        const organizationService = yield* OrganizationService;
+        const org = yield* organizationService.findById(session.current_organization_id);
+        const pdf = yield* orderService.generatePDF(id, org, { page: { size: "A4", orientation: "portrait" } });
+        return yield* Effect.succeed({
+          pdf: pdf.toString("base64"),
+          name: order.barcode ?? order.createdAt.toISOString(),
+        });
+      },
+      (effect) => effect.pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive)),
+    ),
+    json(undefined),
   );
-  return json(order);
 });
 
 export const createOrder = action(
-  async (data: {
+  (data: {
     customer_id: string;
     products: {
       product_id: string;
@@ -267,24 +115,8 @@ export const createOrder = action(
     }[];
   }) => {
     "use server";
-    const auth = await withSession();
-    if (!auth) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const user = auth[0];
-    if (!user) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const session = auth[1];
-    if (!session) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const orgId = session.current_organization_id;
-    if (!orgId) {
-      throw redirect("/", { status: 403, statusText: "Forbidden" });
-    }
-    const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
-    const order = await Effect.runPromiseExit(
+    return run(
+      "@action/create-order",
       Effect.gen(function* (_) {
         const orderService = yield* _(CustomerOrderService);
         const barcode = `order-${Math.floor(Math.random() * 1000000)}`;
@@ -292,11 +124,6 @@ export const createOrder = action(
           { customer_id: data.customer_id, title: "New Order", description: "", barcode },
           data.products,
         );
-        return order;
-      }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationIdLayer)),
-    );
-    return Exit.match(order, {
-      onSuccess: (order) => {
         return json(order, {
           revalidate: [
             getCustomerOrders.key,
@@ -305,16 +132,8 @@ export const createOrder = action(
             getAuthenticatedUser.key,
           ],
         });
-      },
-      onFailure: (cause) => {
-        console.log(cause);
-        const causes = Cause.failures(cause);
-        const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-        throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
-          status: 500,
-          statusText: `Internal Server Error: ${errors.join(", ")}`,
-        });
-      },
-    });
+      }).pipe(Effect.provide(CustomerOrderLive)),
+      json(undefined),
+    );
   },
 );

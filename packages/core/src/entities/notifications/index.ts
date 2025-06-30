@@ -9,6 +9,7 @@ import {
 } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationId } from "../organizations/id";
 import {
   NotificationInvalidId,
   NotificationNotCreated,
@@ -171,18 +172,13 @@ export class NotificationService extends Effect.Service<NotificationService>()("
       return true;
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/notifications/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrgId.success) {
-        return yield* Effect.fail(new NotificationOrganizationInvalidId({ organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/notifications/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
 
       const notifications = yield* Effect.promise(() =>
         db.query.TB_organizations_notifications.findMany({
           where: (fields, operations) =>
-            operations.and(operations.eq(fields.organizationId, parsedOrgId.output), operations.isNull(fields.readAt)),
+            operations.and(operations.eq(fields.organizationId, orgId), operations.isNull(fields.readAt)),
           with: {
             notification: true,
           },

@@ -1,0 +1,103 @@
+import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
+import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
+import { Cause, Chunk, Effect, Exit, Layer, Schema } from "effect";
+import { getCookie } from "vinxi/http";
+
+class NoOrganization extends Schema.TaggedError<NoOrganization>()("NoOrganization", {}) {}
+class NoUser extends Schema.TaggedError<NoUser>()("NoUser", {}) {}
+class NoSession extends Schema.TaggedError<NoSession>()("NoSession", {}) {}
+class NoSessionToken extends Schema.TaggedError<NoSessionToken>()("NoSessionToken", {}) {}
+
+export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, OrganizationId>, onFailure: F) => {
+  const innerProgram = Effect.fn("auth-middleware")(
+    function* () {
+      const sessionToken = getCookie("session_token");
+      if (!sessionToken) {
+        return yield* Effect.fail(NoSessionToken);
+      }
+
+      const authService = yield* AuthService;
+      const verified = yield* authService.verify(sessionToken);
+
+      if (!verified.user) {
+        return yield* Effect.fail(NoUser);
+      }
+      if (!verified.session) {
+        return yield* Effect.fail(NoSession);
+      }
+      const orgId = verified.session.current_organization_id;
+      if (!orgId) {
+        return yield* Effect.fail(NoOrganization);
+      }
+      const organizationId = Layer.succeed(OrganizationId, orgId);
+      return yield* program.pipe(Effect.provide(organizationId));
+    },
+    (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name)])),
+  );
+
+  return Exit.match(await Effect.runPromiseExit(innerProgram()), {
+    onSuccess: (data) => data,
+    onFailure: (cause) => {
+      const errors = Chunk.toReadonlyArray(Cause.failures(cause));
+      console.error(`${name} errors:`, errors, cause);
+      if (typeof onFailure === "function") {
+        return onFailure();
+      }
+      return onFailure;
+    },
+  });
+};
+
+export const runWithSession = async <A, E, F>(
+  name: string,
+  program: (session: {
+    user_id: string;
+    session_id: string;
+    current_organization_id: string;
+  }) => Effect.Effect<A, E, OrganizationId>,
+  onFailure: F,
+) => {
+  const innerProgram = Effect.fn("auth-middleware")(
+    function* () {
+      const sessionToken = getCookie("session_token");
+      if (!sessionToken) {
+        return yield* Effect.fail(NoSessionToken);
+      }
+
+      const authService = yield* AuthService;
+      const verified = yield* authService.verify(sessionToken);
+
+      if (!verified.user) {
+        return yield* Effect.fail(NoUser);
+      }
+
+      if (!verified.session) {
+        return yield* Effect.fail(NoSession);
+      }
+      const orgId = verified.session.current_organization_id;
+      if (!orgId) {
+        return yield* Effect.fail(NoOrganization);
+      }
+      const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
+      return yield* program({
+        user_id: verified.user.id,
+        session_id: verified.session.id,
+        current_organization_id: orgId,
+      }).pipe(Effect.provide(organizationIdLayer));
+    },
+    (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name)])),
+  );
+
+  return Exit.match(await Effect.runPromiseExit(innerProgram()), {
+    onSuccess: (data) => data,
+    onFailure: (cause) => {
+      const errors = Chunk.toReadonlyArray(Cause.failures(cause));
+      console.error(`${name} errors:`, errors);
+      if (typeof onFailure === "function") {
+        return onFailure();
+      }
+      return onFailure;
+    },
+  });
+};

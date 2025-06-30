@@ -2,179 +2,64 @@ import { action, json, query, redirect } from "@solidjs/router";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { PurchasesLive, PurchasesService } from "@warehouseoetzidev/core/src/entities/purchases";
 import { Cause, Chunk, Effect, Exit, Layer } from "effect";
-import { withSession } from "./session";
+import { run, runWithSession } from "./utils";
 
-export const getPurchases = query(async () => {
+export const getPurchases = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orders = await Effect.runPromiseExit(
+  return run(
+    "@query/purchases-by-warehouse-id",
     Effect.gen(function* (_) {
-      const ordersService = yield* _(PurchasesService);
-      const orders = yield* ordersService.findByOrganizationId(orgId);
-      return orders;
+      const ordersService = yield* PurchasesService;
+      return yield* ordersService.findByOrganizationId();
     }).pipe(Effect.provide(PurchasesLive)),
+    json([]),
   );
-  return Exit.match(orders, {
-    onSuccess: (ords) => {
-      return json(ords);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getPurchases`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 }, "purchased-orders");
 
-export const getPendingPurchases = query(async () => {
+export const getPendingPurchases = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orders = await Effect.runPromiseExit(
+  return run(
+    "@query/pending-purchases",
     Effect.gen(function* (_) {
-      const ordersService = yield* _(PurchasesService);
-      const orders = yield* ordersService.findByOrganizationId(orgId);
+      const ordersService = yield* PurchasesService;
+      const orders = yield* ordersService.findByOrganizationId();
       return orders.filter((o) => o.status === "pending" || o.status === "processing");
     }).pipe(Effect.provide(PurchasesLive)),
+    json([]),
   );
-  return Exit.match(orders, {
-    onSuccess: (ords) => {
-      return json(ords);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
-      });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getPendingPurchases`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 }, "sales-order-by-warehouse-id");
 
-export const getPurchaseById = query(async (pid: string) => {
+export const getPurchaseById = query((pid: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
-
-  const purchase = await Effect.runPromiseExit(
+  return run(
+    "@query/purchase-by-id",
     Effect.gen(function* (_) {
-      const purchaseService = yield* _(PurchasesService);
-      const purchase = yield* purchaseService.findById(pid);
-      return purchase;
-    }).pipe(Effect.provide(PurchasesLive), Effect.provide(organizationIdLayer)),
+      const purchaseService = yield* PurchasesService;
+      return yield* purchaseService.findById(pid);
+    }).pipe(Effect.provide(PurchasesLive)),
+    json(undefined),
   );
-
-  return Exit.match(purchase, {
-    onSuccess: (purchase) => {
-      return json(purchase);
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=getPurchaseById`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
 }, "purchase-by-id");
 
 export const deletePurchase = action(async (pid: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-
-  const result = await Effect.runPromiseExit(
+  return run(
+    "@action/delete-purchase",
     Effect.gen(function* (_) {
-      const purchaseService = yield* _(PurchasesService);
+      const purchaseService = yield* PurchasesService;
       yield* purchaseService.safeRemove(pid);
-      return true;
-    }).pipe(Effect.provide(PurchasesLive)),
-  );
-
-  return Exit.match(result, {
-    onSuccess: () => {
       return json(
         { success: true },
         {
           revalidate: [getPendingPurchases.key, getPurchaseById.keyFor(pid), getPurchases.key],
         },
       );
-    },
-    onFailure: (cause) => {
-      console.log(cause);
-      const causes = Cause.failures(cause);
-      const errors = Chunk.toReadonlyArray(causes).map((c) => c.message);
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=deletePurchase`, {
-        status: 500,
-        statusText: `Internal Server Error: ${errors.join(", ")}`,
-      });
-    },
-  });
+    }).pipe(Effect.provide(PurchasesLive)),
+    json(
+      { success: false },
+      {
+        revalidate: [getPendingPurchases.key, getPurchaseById.keyFor(pid), getPurchases.key],
+      },
+    ),
+  );
 });
