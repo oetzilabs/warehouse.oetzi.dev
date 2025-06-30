@@ -1,7 +1,6 @@
 import { action, json, query } from "@solidjs/router";
 import { DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
-import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";

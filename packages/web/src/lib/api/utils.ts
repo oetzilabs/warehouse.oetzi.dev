@@ -1,7 +1,8 @@
 import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
+import { MissingConfig } from "@warehouseoetzidev/core/src/entities/config";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
-import { Cause, Chunk, Effect, Exit, Layer, Schema } from "effect";
+import { Cause, Chunk, Config, Effect, Exit, Layer, Schema } from "effect";
 import { getCookie } from "vinxi/http";
 
 class NoOrganization extends Schema.TaggedError<NoOrganization>()("NoOrganization", {}) {}
@@ -10,6 +11,31 @@ class NoSession extends Schema.TaggedError<NoSession>()("NoSession", {}) {}
 class NoSessionToken extends Schema.TaggedError<NoSessionToken>()("NoSessionToken", {}) {}
 
 export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, OrganizationId>, onFailure: F) => {
+  const otelUrl = Exit.match(
+    await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const url = yield* Config.string("OTEL_URL")
+          .pipe(Config.withDefault("http://localhost:4318/v1/traces"))
+          .pipe(
+            Effect.catchTags({
+              ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "OTEL_URL" })),
+            }),
+          );
+        if (!url) {
+          return yield* Effect.fail(new Error("No OTEL_URL found in config"));
+        }
+        return url;
+      }),
+    ),
+    {
+      onSuccess: (url) => url,
+      onFailure: (cause) => {
+        console.error("Failed to get OTEL_URL from config", cause);
+        return "http://localhost:4318/v1/traces";
+      },
+    },
+  );
+
   const innerProgram = Effect.fn("auth-middleware")(
     function* () {
       const sessionToken = getCookie("session_token");
@@ -33,7 +59,7 @@ export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, Or
       const organizationId = Layer.succeed(OrganizationId, orgId);
       return yield* program.pipe(Effect.provide(organizationId));
     },
-    (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name)])),
+    (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name, otelUrl)])),
   );
 
   const result = Exit.match(await Effect.runPromiseExit(innerProgram()), {
@@ -59,6 +85,30 @@ export const runWithSession = async <A, E, F>(
   }) => Effect.Effect<A, E, OrganizationId>,
   onFailure: F,
 ) => {
+  const otelUrl = Exit.match(
+    await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const url = yield* Config.string("OTEL_URL")
+          .pipe(Config.withDefault("http://localhost:4318/v1/traces"))
+          .pipe(
+            Effect.catchTags({
+              ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "OTEL_URL" })),
+            }),
+          );
+        if (!url) {
+          return yield* Effect.fail(new Error("No OTEL_URL found in config"));
+        }
+        return url;
+      }),
+    ),
+    {
+      onSuccess: (url) => url,
+      onFailure: (cause) => {
+        console.error("Failed to get OTEL_URL from config", cause);
+        return "http://localhost:4318/v1/traces";
+      },
+    },
+  );
   const innerProgram = Effect.fn("auth-middleware")(
     function* () {
       const sessionToken = getCookie("session_token");
