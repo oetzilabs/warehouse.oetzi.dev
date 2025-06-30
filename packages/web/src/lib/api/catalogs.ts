@@ -26,9 +26,10 @@ export const getCatalogById = query((id: string) => {
     "@query/catalog-by-id",
     Effect.gen(function* (_) {
       const service = yield* CatalogService;
-      return yield* service.findById(id);
+      const catalog = yield* service.findById(id);
+      return catalog;
     }).pipe(Effect.provide(CatalogLive)),
-    json(undefined),
+    undefined,
   );
 }, "catalog-by-id");
 

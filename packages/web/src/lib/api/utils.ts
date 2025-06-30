@@ -36,7 +36,7 @@ export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, Or
     (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name)])),
   );
 
-  return Exit.match(await Effect.runPromiseExit(innerProgram()), {
+  const result = Exit.match(await Effect.runPromiseExit(innerProgram()), {
     onSuccess: (data) => data,
     onFailure: (cause) => {
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
@@ -47,6 +47,7 @@ export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, Or
       return onFailure;
     },
   });
+  return result as A;
 };
 
 export const runWithSession = async <A, E, F>(
@@ -89,7 +90,7 @@ export const runWithSession = async <A, E, F>(
     (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name)])),
   );
 
-  return Exit.match(await Effect.runPromiseExit(innerProgram()), {
+  const result = Exit.match(await Effect.runPromiseExit(innerProgram()), {
     onSuccess: (data) => data,
     onFailure: (cause) => {
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
@@ -100,4 +101,5 @@ export const runWithSession = async <A, E, F>(
       return onFailure;
     },
   });
+  return result as A;
 };

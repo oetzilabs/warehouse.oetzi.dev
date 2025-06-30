@@ -378,29 +378,30 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       const products = s.flatMap((supplier) => supplier.products);
       const purchases = s.flatMap((supplier) => supplier.purchases);
       // for each purchase, match each product with its latest priceHistory (by effectiveDate). use the `products` array to find the matching product.
-      const result = purchases.flatMap((purchase) =>
-        purchase.products.map((prod) => {
-          const sp = products.find((sp) => sp.productId === prod.productId)!;
+      return purchases
+        .flatMap((purchase) =>
+          purchase.products.map((prod) => {
+            const sp = products.find((sp) => sp.productId === prod.productId)!;
 
-          // Find the latest priceHistory entry (by effectiveDate)
-          const priceHistorySorted = sp.priceHistory.toSorted(
-            (a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime(),
-          );
-          const latestPrice = priceHistorySorted[0];
-          return {
-            name: prod.productId,
-            value: latestPrice ? latestPrice.supplierPrice * Math.abs(prod.quantity) : 0,
-            currency: latestPrice ? latestPrice.currency : "USD",
-            date: purchase.updatedAt ?? purchase.createdAt,
-            metadata: {
-              purchaseId: purchase.id,
-              quantity: prod.quantity,
-              createdAt: purchase.createdAt,
-            },
-          };
-        }),
-      );
-      return result;
+            // Find the latest priceHistory entry (by effectiveDate)
+            const priceHistorySorted = sp.priceHistory.toSorted(
+              (a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime(),
+            );
+            const latestPrice = priceHistorySorted[0];
+            return {
+              name: prod.productId,
+              value: latestPrice ? latestPrice.supplierPrice * Math.abs(prod.quantity) : 0,
+              currency: latestPrice ? latestPrice.currency : "USD",
+              date: purchase.updatedAt ?? purchase.createdAt,
+              metadata: {
+                purchaseId: purchase.id,
+                quantity: prod.quantity,
+                createdAt: purchase.createdAt,
+              },
+            };
+          }),
+        )
+        .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
     });
 
     return {

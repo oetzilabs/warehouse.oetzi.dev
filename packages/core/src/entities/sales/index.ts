@@ -414,33 +414,33 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           },
         }),
       );
-      // Flatten all sale items and products
-      const allSales = sales.map((s) => s.sale);
-      const allItems = allSales.flatMap((sale) => sale.items);
 
       // For each sale, for each item, find the latest priceHistory for the product in this org and calculate value
-      const result = allSales.flatMap((sale) =>
-        sale.items.map((item) => {
-          // Find the organization-specific product data
-          const orgProduct = item.product.organizations.find((org) => org.organizationId === orgId);
-          // Find the latest priceHistory entry (by effectiveDate)
-          const priceHistorySorted =
-            orgProduct?.priceHistory?.toSorted((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime()) ?? [];
-          const latestPrice = priceHistorySorted[0];
-          return {
-            name: item.productId,
-            value: latestPrice ? latestPrice.sellingPrice * Math.abs(item.quantity) : 0,
-            currency: latestPrice ? latestPrice.currency : "USD",
-            date: sale.updatedAt ?? sale.createdAt,
-            metadata: {
-              saleId: sale.id,
-              quantity: item.quantity,
-              createdAt: sale.createdAt,
-              customerId: sale.customerId,
-            },
-          };
-        }),
-      );
+      const result = sales
+        .map((s) => s.sale)
+        .flatMap((sale) =>
+          sale.items.map((item) => {
+            // Find the organization-specific product data
+            const orgProduct = item.product.organizations.find((org) => org.organizationId === orgId);
+            // Find the latest priceHistory entry (by effectiveDate)
+            const priceHistorySorted =
+              orgProduct?.priceHistory?.toSorted((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime()) ?? [];
+            const latestPrice = priceHistorySorted[0];
+            return {
+              name: item.productId,
+              value: latestPrice ? latestPrice.sellingPrice * Math.abs(item.quantity) : 0,
+              currency: latestPrice ? latestPrice.currency : "USD",
+              date: sale.updatedAt ?? sale.createdAt,
+              metadata: {
+                saleId: sale.id,
+                quantity: item.quantity,
+                createdAt: sale.createdAt,
+                customerId: sale.customerId,
+              },
+            };
+          }),
+        )
+        .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
       return result;
     });
 

@@ -5,14 +5,14 @@ import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entit
 import { Effect } from "effect";
 import { run } from "./utils";
 
-export const getAccountingList = query(async () => {
+export const getAccountingList = query(() => {
   "use server";
   return run(
     "@query/accounting-list",
     Effect.gen(function* (_) {
-      const accounting = yield* _(AccountingService);
-      const salesService = yield* _(SalesService);
-      const supplierService = yield* _(SupplierService);
+      const accounting = yield* AccountingService;
+      const salesService = yield* SalesService;
+      const supplierService = yield* SupplierService;
       const sales = yield* salesService.listIncomes();
       const income = {
         sales,
@@ -23,8 +23,10 @@ export const getAccountingList = query(async () => {
       const expenses = {
         bought: boughtBySuppliers,
       };
-      return yield* accounting.summarize({ income, expenses });
+
+      const result = yield* accounting.summarize({ income, expenses });
+      return json(result);
     }).pipe(Effect.provide(AccountingLive), Effect.provide(SalesLive), Effect.provide(SupplierLive)),
-    json([]),
+    json(undefined),
   );
 }, "organization-accounting");

@@ -18,19 +18,15 @@ import { createSignal, For, onMount, Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: () => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
-    const sessionToken = getSessionToken();
-    const start = dayjs().startOf("month").toDate();
-    const end = dayjs().endOf("month").toDate();
-    const accounting = getAccountingList();
+  preload: async () => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    const accounting = await getAccountingList();
     return { user, sessionToken, accounting };
   },
 } as RouteDefinition;
 
 export default function AccountingPage() {
-  const start = dayjs().startOf("month").toDate();
-  const end = dayjs().endOf("month").toDate();
   const accounting = createAsync(() => getAccountingList(), { deferStream: true });
 
   const calculateAccountingStats = (accounting: AccountingInfo) => {
