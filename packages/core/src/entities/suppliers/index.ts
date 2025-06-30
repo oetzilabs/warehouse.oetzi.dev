@@ -15,7 +15,6 @@ import {
 } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import { OrganizationInvalidId } from "../organizations/errors";
 import { OrganizationId } from "../organizations/id";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import {
@@ -173,16 +172,11 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       return note;
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/suppliers/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new WarehouseInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/suppliers/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
       const orgSuppliers = yield* Effect.promise(() =>
         db.query.TB_organization_suppliers.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
           with: {
             supplier: {
               with: {
