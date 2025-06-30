@@ -10,150 +10,131 @@ import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, De
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/devices", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
+    const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_devices.findMany>[0]>;
+    const create = Effect.fn("@warehouse/devices/create")(function* (input: InferInput<typeof DeviceCreateSchema>) {
+      const [device] = yield* Effect.promise(() => db.insert(TB_devices).values(input).returning());
 
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        type: true,
-      };
-
-      if (options) {
-        return options;
+      if (!device) {
+        return yield* Effect.fail(new DeviceNotCreated({}));
       }
-      return defaultRelations;
-    };
 
-    const create = (input: InferInput<typeof DeviceCreateSchema>) =>
-      Effect.gen(function* (_) {
-        const [device] = yield* Effect.promise(() => db.insert(TB_devices).values(input).returning());
+      return device;
+    });
 
-        if (!device) {
-          return yield* Effect.fail(new DeviceNotCreated({}));
-        }
+    const findById = Effect.fn("@warehouse/devices/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DeviceInvalidId({ id }));
+      }
 
-        return device;
-      });
+      const device = yield* Effect.promise(() =>
+        db.query.TB_devices.findFirst({
+          where: (devices, operations) => operations.eq(devices.id, parsedId.output),
+          with: {
+            type: true,
+          },
+        }),
+      );
 
-    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DeviceInvalidId({ id }));
-        }
+      if (!device) {
+        return yield* Effect.fail(new DeviceNotFound({ id }));
+      }
 
-        const device = yield* Effect.promise(() =>
-          db.query.TB_devices.findFirst({
-            where: (devices, operations) => operations.eq(devices.id, parsedId.output),
-            with: {
-              type: true,
-            },
-          }),
-        );
+      return device;
+    });
 
-        if (!device) {
-          return yield* Effect.fail(new DeviceNotFound({ id }));
-        }
+    const update = Effect.fn("@warehouse/devices/update")(function* (input: InferInput<typeof DeviceUpdateSchema>) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DeviceInvalidId({ id: input.id }));
+      }
 
-        return device;
-      });
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_devices)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_devices.id, parsedId.output))
+          .returning(),
+      );
 
-    const update = (input: InferInput<typeof DeviceUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DeviceInvalidId({ id: input.id }));
-        }
+      if (!updated) {
+        return yield* Effect.fail(new DeviceNotUpdated({ id: input.id }));
+      }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_devices)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_devices.id, parsedId.output))
-            .returning(),
-        );
+      return updated;
+    });
 
-        if (!updated) {
-          return yield* Effect.fail(new DeviceNotUpdated({ id: input.id }));
-        }
+    const remove = Effect.fn("@warehouse/devices/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DeviceInvalidId({ id }));
+      }
 
-        return updated;
-      });
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning(),
+      );
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DeviceInvalidId({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new DeviceNotDeleted({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning(),
-        );
+      return deleted;
+    });
 
-        if (!deleted) {
-          return yield* Effect.fail(new DeviceNotDeleted({ id }));
-        }
+    const all = Effect.fn("@warehouse/devices/all")(function* () {
+      return yield* Effect.promise(() => db.query.TB_devices.findMany());
+    });
 
-        return deleted;
-      });
-
-    const all = () =>
-      Effect.gen(function* (_) {
-        return yield* Effect.promise(() => db.query.TB_devices.findMany());
-      });
-
-    const findByOrganizationId = (organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
-        // look into all the facilites of the warehouse
-        const orgs = yield* Effect.promise(() =>
-          db.query.TB_organizations.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedOrganizationId.output),
-            with: {
-              devices: {
-                with: {
-                  type: true,
-                },
-                where: (fields, operators) => operators.isNull(fields.deletedAt),
+    const findByOrganizationId = Effect.fn("@warehouse/devices/findByOrganizationId")(function* (
+      organizationId: string,
+    ) {
+      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+      if (!parsedOrganizationId.success) {
+        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+      }
+      // look into all the facilites of the warehouse
+      const orgs = yield* Effect.promise(() =>
+        db.query.TB_organizations.findFirst({
+          where: (fields, operations) => operations.eq(fields.id, parsedOrganizationId.output),
+          with: {
+            devices: {
+              with: {
+                type: true,
               },
+              where: (fields, operators) => operators.isNull(fields.deletedAt),
             },
-          }),
-        );
-        if (!orgs) {
-          return yield* Effect.fail(new OrganizationNotFound({ id: organizationId }));
-        }
-        return orgs.devices;
-      });
+          },
+        }),
+      );
+      if (!orgs) {
+        return yield* Effect.fail(new OrganizationNotFound({ id: organizationId }));
+      }
+      return orgs.devices;
+    });
 
-    const getDeviceTypes = () =>
-      Effect.gen(function* (_) {
-        const deviceTypes = yield* Effect.promise(() => db.query.TB_device_types.findMany());
-        return deviceTypes;
-      });
+    const getDeviceTypes = Effect.fn("@warehouse/devices/getDeviceTypes")(function* () {
+      const deviceTypes = yield* Effect.promise(() => db.query.TB_device_types.findMany());
+      return deviceTypes;
+    });
 
-    const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DeviceInvalidId({ id }));
-        }
+    const safeRemove = Effect.fn("@warehouse/devices/safeRemove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DeviceInvalidId({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.update(TB_devices).set({ deletedAt: new Date() }).where(eq(TB_devices.id, parsedId.output)).returning(),
-        );
+      const [deleted] = yield* Effect.promise(() =>
+        db.update(TB_devices).set({ deletedAt: new Date() }).where(eq(TB_devices.id, parsedId.output)).returning(),
+      );
 
-        if (!deleted) {
-          return yield* Effect.fail(new DeviceNotDeleted({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new DeviceNotDeleted({ id }));
+      }
 
-        return deleted;
-      });
+      return deleted;
+    });
 
     return {
       create,

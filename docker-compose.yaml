@@ -16,5 +16,12 @@ services:
     ports:
       - 1025:1025 # smtp server
       - 8025:8025 # web ui
+  otel:
+    image: grafana/otel-lgtm
+    ports:
+      - 4317:4317
+      - 4318:4318
+      - 8888:8888
+      - 30000:3000 # port 3000 is used already by the web app
 volumes:
   data:

@@ -36,21 +36,19 @@ export type RealtimeTopicPattern = `${string}/${string}/realtime/${RealtimeEvent
 
 export class RealtimeService extends Effect.Service<RealtimeService>()("@warehouse/realtime", {
   effect: Effect.gen(function* (_) {
-    const createTopics = (prefix: string, orgId: string) =>
-      Effect.gen(function* (_) {
-        return {
-          subscribe: [`${prefix}${orgId}/realtime/#`],
-          publish: [`${prefix}${orgId}/realtime/`],
-        };
-      });
+    const createTopics = Effect.fn("@warehouse/realtime/createTopics")(function* (prefix: string, orgId: string) {
+      return {
+        subscribe: [`${prefix}${orgId}/realtime/#`],
+        publish: [`${prefix}${orgId}/realtime/`],
+      };
+    });
 
-    const forPrinter = (prefix: string, orgId: string) =>
-      Effect.gen(function* (_) {
-        return {
-          subscribe: [`${prefix}${orgId}/realtime/#`],
-          publish: [`${prefix}${orgId}/realtime/`],
-        };
-      });
+    const forPrinter = Effect.fn("@warehouse/realtime/forPrinter")(function* (prefix: string, orgId: string) {
+      return {
+        subscribe: [`${prefix}${orgId}/realtime/#`],
+        publish: [`${prefix}${orgId}/realtime/`],
+      };
+    });
 
     return {
       createTopics,

@@ -14,84 +14,83 @@ import {
 
 export class CertificateService extends Effect.Service<CertificateService>()("@warehouse/certificates", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
+    const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    const create = (userInput: InferInput<typeof CertificateCreateSchema>) =>
-      Effect.gen(function* (_) {
-        const [certificate] = yield* Effect.promise(() => db.insert(TB_certificates).values(userInput).returning());
+    const create = Effect.fn("@warehouse/certificates/create")(function* (
+      userInput: InferInput<typeof CertificateCreateSchema>,
+    ) {
+      const [certificate] = yield* Effect.promise(() => db.insert(TB_certificates).values(userInput).returning());
 
-        if (!certificate) {
-          return yield* Effect.fail(new CertificateNotCreated({}));
-        }
+      if (!certificate) {
+        return yield* Effect.fail(new CertificateNotCreated({}));
+      }
 
-        return certificate;
-      });
+      return certificate;
+    });
 
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new CertificateInvalidId({ id }));
-        }
+    const findById = Effect.fn("@warehouse/certificates/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new CertificateInvalidId({ id }));
+      }
 
-        const certificate = yield* Effect.promise(() =>
-          db.query.TB_certificates.findFirst({
-            where: (certificates, operations) => operations.eq(certificates.id, parsedId.output),
-          }),
-        );
+      const certificate = yield* Effect.promise(() =>
+        db.query.TB_certificates.findFirst({
+          where: (certificates, operations) => operations.eq(certificates.id, parsedId.output),
+        }),
+      );
 
-        if (!certificate) {
-          return yield* Effect.fail(new CertificateNotFound({ id }));
-        }
+      if (!certificate) {
+        return yield* Effect.fail(new CertificateNotFound({ id }));
+      }
 
-        return certificate;
-      });
+      return certificate;
+    });
 
-    const update = (input: InferInput<typeof CertificateUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new CertificateInvalidId({ id: input.id }));
-        }
+    const update = Effect.fn("@warehouse/certificates/update")(function* (
+      input: InferInput<typeof CertificateUpdateSchema>,
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new CertificateInvalidId({ id: input.id }));
+      }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_certificates)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_certificates.id, parsedId.output))
-            .returning(),
-        );
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_certificates)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_certificates.id, parsedId.output))
+          .returning(),
+      );
 
-        if (!updated) {
-          return yield* Effect.fail(new CertificateNotUpdated({ id: input.id }));
-        }
+      if (!updated) {
+        return yield* Effect.fail(new CertificateNotUpdated({ id: input.id }));
+      }
 
-        return updated;
-      });
+      return updated;
+    });
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new CertificateInvalidId({ id }));
-        }
+    const remove = Effect.fn("@warehouse/certificates/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new CertificateInvalidId({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_certificates).where(eq(TB_certificates.id, parsedId.output)).returning(),
-        );
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_certificates).where(eq(TB_certificates.id, parsedId.output)).returning(),
+      );
 
-        if (!deleted) {
-          return yield* Effect.fail(new CertificateNotDeleted({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new CertificateNotDeleted({ id }));
+      }
 
-        return deleted;
-      });
+      return deleted;
+    });
 
-    const all = () =>
-      Effect.gen(function* (_) {
-        return yield* Effect.promise(() => db.query.TB_certificates.findMany());
-      });
+    const all = Effect.fn("@warehouse/certificates/all")(function* () {
+      return yield* Effect.promise(() => db.query.TB_certificates.findMany());
+    });
 
     return {
       create,

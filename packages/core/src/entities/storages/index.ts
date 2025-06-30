@@ -23,84 +23,81 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       },
     });
 
-    const create = (input: InferInput<typeof StorageCreateSchema>) =>
-      Effect.gen(function* (_) {
-        const [storage] = yield* Effect.promise(() => db.insert(TB_storages).values(input).returning());
-        if (!storage) {
-          return yield* Effect.fail(new StorageNotCreated());
-        }
-        return findById(storage.id);
-      });
+    const create = Effect.fn("@warehouse/storages/create")(function* (input: InferInput<typeof StorageCreateSchema>) {
+      const [storage] = yield* Effect.promise(() => db.insert(TB_storages).values(input).returning());
+      if (!storage) {
+        return yield* Effect.fail(new StorageNotCreated());
+      }
+      return findById(storage.id);
+    });
 
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new StorageInvalidId({ id }));
-        }
+    const findById = Effect.fn("@warehouse/storages/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new StorageInvalidId({ id }));
+      }
 
-        const storage = yield* Effect.promise(() =>
-          db.query.TB_storages.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: {
-              type: true,
-              area: true,
-              products: {
-                with: {
-                  product: {
-                    with: {
-                      stcs: {
-                        with: {
-                          condition: true,
-                        },
+      const storage = yield* Effect.promise(() =>
+        db.query.TB_storages.findFirst({
+          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          with: {
+            type: true,
+            area: true,
+            products: {
+              with: {
+                product: {
+                  with: {
+                    stcs: {
+                      with: {
+                        condition: true,
                       },
-                      certs: {
-                        with: {
-                          cert: true,
-                        },
+                    },
+                    certs: {
+                      with: {
+                        cert: true,
                       },
-                      images: {
-                        with: {
-                          image: true,
-                        },
+                    },
+                    images: {
+                      with: {
+                        image: true,
                       },
-                      space: {
-                        with: {
-                          storage: true,
-                        },
+                    },
+                    space: {
+                      with: {
+                        storage: true,
                       },
-                      brands: true,
-                      saleItems: {
-                        with: {
-                          sale: {
-                            with: {
-                              customer: true,
-                            },
+                    },
+                    brands: true,
+                    saleItems: {
+                      with: {
+                        sale: {
+                          with: {
+                            customer: true,
                           },
                         },
                       },
-                      orders: {
-                        with: {
-                          order: true,
-                        },
+                    },
+                    orders: {
+                      with: {
+                        customerOrder: true,
                       },
-                      labels: {
-                        with: {
-                          label: true,
-                        },
+                    },
+                    labels: {
+                      with: {
+                        label: true,
                       },
-                      stco: {
-                        with: {
-                          condition: true,
-                        },
+                    },
+                    stco: {
+                      with: {
+                        condition: true,
                       },
-                      suppliers: {
-                        with: {
-                          supplier: {
-                            with: {
-                              contacts: true,
-                              notes: true,
-                            },
+                    },
+                    suppliers: {
+                      with: {
+                        supplier: {
+                          with: {
+                            contacts: true,
+                            notes: true,
                           },
                         },
                       },
@@ -108,115 +105,113 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
                   },
                 },
               },
-              children: true,
-              labels: true,
-              parent: true,
             },
-          }),
-        );
+            children: true,
+            labels: true,
+            parent: true,
+          },
+        }),
+      );
 
-        if (!storage) {
-          return yield* Effect.fail(new StorageNotFound({ id }));
-        }
+      if (!storage) {
+        return yield* Effect.fail(new StorageNotFound({ id }));
+      }
 
-        return storage;
-      });
+      return storage;
+    });
 
-    const update = (id: string, input: InferInput<typeof StorageUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new StorageInvalidId({ id }));
-        }
+    const update = Effect.fn("@warehouse/storages/update")(function* (
+      id: string,
+      input: InferInput<typeof StorageUpdateSchema>,
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new StorageInvalidId({ id }));
+      }
 
-        const [storage] = yield* Effect.promise(() =>
-          db
-            .update(TB_storages)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_storages.id, parsedId.output))
-            .returning(),
-        );
+      const [storage] = yield* Effect.promise(() =>
+        db
+          .update(TB_storages)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_storages.id, parsedId.output))
+          .returning(),
+      );
 
-        if (!storage) {
-          return yield* Effect.fail(new StorageNotUpdated({ id }));
-        }
+      if (!storage) {
+        return yield* Effect.fail(new StorageNotUpdated({ id }));
+      }
 
-        return storage;
-      });
+      return storage;
+    });
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new StorageInvalidId({ id }));
-        }
+    const remove = Effect.fn("@warehouse/storages/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new StorageInvalidId({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_storages).where(eq(TB_storages.id, parsedId.output)).returning(),
-        );
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_storages).where(eq(TB_storages.id, parsedId.output)).returning(),
+      );
 
-        if (!deleted) {
-          return yield* Effect.fail(new StorageNotDeleted({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new StorageNotDeleted({ id }));
+      }
 
-        return deleted;
-      });
+      return deleted;
+    });
 
-    const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) return yield* Effect.fail(new StorageInvalidId({ id }));
-        const [deleted] = yield* Effect.promise(() =>
-          db.update(TB_storages).set({ deletedAt: new Date() }).where(eq(TB_storages.id, parsedId.output)).returning(),
-        );
-        return deleted;
-      });
+    const safeRemove = Effect.fn("@warehouse/storages/safeRemove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) return yield* Effect.fail(new StorageInvalidId({ id }));
+      const [deleted] = yield* Effect.promise(() =>
+        db.update(TB_storages).set({ deletedAt: new Date() }).where(eq(TB_storages.id, parsedId.output)).returning(),
+      );
+      return deleted;
+    });
 
-    const findByAreaId = (areaId: string) =>
-      Effect.gen(function* (_) {
-        const parsedAreaId = safeParse(prefixed_cuid2, areaId);
-        if (!parsedAreaId.success) {
-          return yield* Effect.fail(new StorageInvalidId({ id: areaId }));
-        }
-        const storages = yield* Effect.promise(() =>
-          db.query.TB_storages.findMany({
-            where: (fields, operations) => operations.eq(fields.warehouseAreaId, parsedAreaId.output),
-            with: withRelations(),
-          }),
-        );
-        return storages;
-      });
+    const findByAreaId = Effect.fn("@warehouse/storages/findByAreaId")(function* (areaId: string) {
+      const parsedAreaId = safeParse(prefixed_cuid2, areaId);
+      if (!parsedAreaId.success) {
+        return yield* Effect.fail(new StorageInvalidId({ id: areaId }));
+      }
+      const storages = yield* Effect.promise(() =>
+        db.query.TB_storages.findMany({
+          where: (fields, operations) => operations.eq(fields.warehouseAreaId, parsedAreaId.output),
+          with: withRelations(),
+        }),
+      );
+      return storages;
+    });
 
-    const findChildren = (parentId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, parentId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new StorageInvalidId({ id: parentId }));
-        }
+    const findChildren = Effect.fn("@warehouse/storages/findChildren")(function* (parentId: string) {
+      const parsedId = safeParse(prefixed_cuid2, parentId);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new StorageInvalidId({ id: parentId }));
+      }
 
-        const storages = yield* Effect.promise(() =>
-          db.query.TB_storages.findMany({
-            where: (fields, operations) => operations.eq(fields.parentId, parsedId.output),
-            with: {
-              type: true,
-              area: true,
-              products: true,
-              children: true,
-              labels: true,
-              parent: true,
-            },
-          }),
-        );
+      const storages = yield* Effect.promise(() =>
+        db.query.TB_storages.findMany({
+          where: (fields, operations) => operations.eq(fields.parentId, parsedId.output),
+          with: {
+            type: true,
+            area: true,
+            products: true,
+            children: true,
+            labels: true,
+            parent: true,
+          },
+        }),
+      );
 
-        return storages;
-      });
+      return storages;
+    });
 
-    const findParent = (childId: string) =>
-      Effect.gen(function* (_) {
-        const storage = yield* findById(childId);
-        if (!storage.parentId) return null;
-        return yield* findById(storage.parentId);
-      });
+    const findParent = Effect.fn("@warehouse/storages/findParent")(function* (childId: string) {
+      const storage = yield* findById(childId);
+      if (!storage.parentId) return null;
+      return yield* findById(storage.parentId);
+    });
 
     const findRoot = (
       storageId: string,

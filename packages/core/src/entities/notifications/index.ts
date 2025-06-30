@@ -21,198 +21,197 @@ import {
 
 export class NotificationService extends Effect.Service<NotificationService>()("@warehouse/notifications", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
+    const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    const create = (userInput: InferInput<typeof NotificationCreateSchema>, organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new NotificationOrganizationInvalidId({ organizationId }));
-        }
+    const create = Effect.fn("@warehouse/notifications/create")(function* (
+      userInput: InferInput<typeof NotificationCreateSchema>,
+      organizationId: string,
+    ) {
+      const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+      if (!parsedOrgId.success) {
+        return yield* Effect.fail(new NotificationOrganizationInvalidId({ organizationId }));
+      }
 
-        const [notification] = yield* Effect.promise(() => db.insert(TB_notifications).values(userInput).returning());
-        if (!notification) {
-          return yield* Effect.fail(new NotificationNotCreated({}));
-        }
+      const [notification] = yield* Effect.promise(() => db.insert(TB_notifications).values(userInput).returning());
+      if (!notification) {
+        return yield* Effect.fail(new NotificationNotCreated({}));
+      }
 
-        const [connectedToOrg] = yield* Effect.promise(() =>
-          db
-            .insert(TB_organizations_notifications)
-            .values({
-              organizationId: parsedOrgId.output,
-              notificationId: notification.id,
-            })
-            .returning(),
-        );
+      const [connectedToOrg] = yield* Effect.promise(() =>
+        db
+          .insert(TB_organizations_notifications)
+          .values({
+            organizationId: parsedOrgId.output,
+            notificationId: notification.id,
+          })
+          .returning(),
+      );
 
-        if (!connectedToOrg) {
-          return yield* Effect.fail(
-            new NotificationOrganizationLinkFailed({
-              organizationId: parsedOrgId.output,
-              notificationId: notification.id,
-            }),
-          );
-        }
-
-        return notification;
-      });
-
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new NotificationInvalidId({ id }));
-        }
-
-        const notification = yield* Effect.promise(() =>
-          db.query.TB_notifications.findFirst({
-            where: (notifications, operations) => operations.eq(notifications.id, parsedId.output),
+      if (!connectedToOrg) {
+        return yield* Effect.fail(
+          new NotificationOrganizationLinkFailed({
+            organizationId: parsedOrgId.output,
+            notificationId: notification.id,
           }),
         );
+      }
 
-        if (!notification) {
-          return yield* Effect.fail(new NotificationNotFound({ id }));
-        }
+      return notification;
+    });
 
-        return notification;
-      });
+    const findById = Effect.fn("@warehouse/notifications/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new NotificationInvalidId({ id }));
+      }
 
-    const update = (input: InferInput<typeof NotificationUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new NotificationInvalidId({ id: input.id }));
-        }
+      const notification = yield* Effect.promise(() =>
+        db.query.TB_notifications.findFirst({
+          where: (notifications, operations) => operations.eq(notifications.id, parsedId.output),
+        }),
+      );
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_notifications)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_notifications.id, parsedId.output))
-            .returning(),
-        );
+      if (!notification) {
+        return yield* Effect.fail(new NotificationNotFound({ id }));
+      }
 
-        if (!updated) {
-          return yield* Effect.fail(new NotificationNotUpdated({ id: input.id }));
-        }
+      return notification;
+    });
 
-        return updated;
-      });
+    const update = Effect.fn("@warehouse/notifications/update")(function* (
+      input: InferInput<typeof NotificationUpdateSchema>,
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new NotificationInvalidId({ id: input.id }));
+      }
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new NotificationInvalidId({ id }));
-        }
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_notifications)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_notifications.id, parsedId.output))
+          .returning(),
+      );
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_notifications).where(eq(TB_notifications.id, parsedId.output)).returning(),
-        );
+      if (!updated) {
+        return yield* Effect.fail(new NotificationNotUpdated({ id: input.id }));
+      }
 
-        if (!deleted) {
-          return yield* Effect.fail(new NotificationNotDeleted({ id }));
-        }
+      return updated;
+    });
 
-        return deleted;
-      });
+    const remove = Effect.fn("@warehouse/notifications/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new NotificationInvalidId({ id }));
+      }
 
-    const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new NotificationInvalidId({ id }));
-        }
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_notifications).where(eq(TB_notifications.id, parsedId.output)).returning(),
+      );
 
-        const [safeRemoved] = yield* Effect.promise(() =>
-          db
-            .update(TB_notifications)
-            .set({ deletedAt: new Date() })
-            .where(eq(TB_notifications.id, parsedId.output))
-            .returning(),
-        );
+      if (!deleted) {
+        return yield* Effect.fail(new NotificationNotDeleted({ id }));
+      }
 
-        if (!safeRemoved) {
-          return yield* Effect.fail(new NotificationNotDeleted({ id }));
-        }
+      return deleted;
+    });
 
-        return safeRemoved;
-      });
+    const safeRemove = Effect.fn("@warehouse/notifications/safeRemove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new NotificationInvalidId({ id }));
+      }
 
-    const sync = () =>
-      Effect.gen(function* (_) {
-        const notifications = yield* Effect.promise(() =>
-          db.query.TB_notifications.findMany({
-            where: (fields, operations) => operations.isNull(fields.deletedAt),
-            with: {
-              organizations: true,
-            },
-          }),
-        );
+      const [safeRemoved] = yield* Effect.promise(() =>
+        db
+          .update(TB_notifications)
+          .set({ deletedAt: new Date() })
+          .where(eq(TB_notifications.id, parsedId.output))
+          .returning(),
+      );
 
-        const organizations = yield* Effect.promise(() =>
-          db.query.TB_organizations.findMany({
-            where: (fields, operations) => operations.isNull(fields.deletedAt),
-          }),
-        );
+      if (!safeRemoved) {
+        return yield* Effect.fail(new NotificationNotDeleted({ id }));
+      }
 
-        for (const notification of notifications) {
-          yield* Effect.promise(() =>
+      return safeRemoved;
+    });
+
+    const sync = Effect.fn("@warehouse/notifications/sync")(function* () {
+      const notifications = yield* Effect.promise(() =>
+        db.query.TB_notifications.findMany({
+          where: (fields, operations) => operations.isNull(fields.deletedAt),
+          with: {
+            organizations: true,
+          },
+        }),
+      );
+
+      const organizations = yield* Effect.promise(() =>
+        db.query.TB_organizations.findMany({
+          where: (fields, operations) => operations.isNull(fields.deletedAt),
+        }),
+      );
+
+      yield* Effect.all(
+        notifications.map((notification) =>
+          Effect.promise(() =>
             db
               .insert(TB_organizations_notifications)
               .values({ organizationId: organizations[0].id, notificationId: notification.id })
               .onConflictDoNothing()
               .returning(),
-          );
-        }
-        return true;
-      });
+          ),
+        ),
+        { concurrency: 10 },
+      );
+      return true;
+    });
 
-    const findByOrganizationId = (organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrgId.success) {
-          return yield* Effect.fail(new NotificationOrganizationInvalidId({ organizationId }));
-        }
+    const findByOrganizationId = Effect.fn("@warehouse/notifications/findByOrganizationId")(function* (
+      organizationId: string,
+    ) {
+      const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
+      if (!parsedOrgId.success) {
+        return yield* Effect.fail(new NotificationOrganizationInvalidId({ organizationId }));
+      }
 
-        const notifications = yield* Effect.promise(() =>
-          db.query.TB_organizations_notifications.findMany({
-            where: (fields, operations) =>
-              operations.and(
-                operations.eq(fields.organizationId, parsedOrgId.output),
-                operations.isNull(fields.readAt),
-              ),
-            with: {
-              notification: true,
-            },
-          }),
-        );
+      const notifications = yield* Effect.promise(() =>
+        db.query.TB_organizations_notifications.findMany({
+          where: (fields, operations) =>
+            operations.and(operations.eq(fields.organizationId, parsedOrgId.output), operations.isNull(fields.readAt)),
+          with: {
+            notification: true,
+          },
+        }),
+      );
 
-        return notifications.map((n) => n.notification);
-      });
+      return notifications.map((n) => n.notification);
+    });
 
-    const accept = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new NotificationInvalidId({ id }));
-        }
+    const accept = Effect.fn("@warehouse/notifications/accept")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new NotificationInvalidId({ id }));
+      }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_organizations_notifications)
-            .set({ readAt: new Date() })
-            .where(eq(TB_organizations_notifications.notificationId, parsedId.output))
-            .returning(),
-        );
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_organizations_notifications)
+          .set({ readAt: new Date() })
+          .where(eq(TB_organizations_notifications.notificationId, parsedId.output))
+          .returning(),
+      );
 
-        if (!updated) {
-          return yield* Effect.fail(new NotificationNotUpdated({ id }));
-        }
+      if (!updated) {
+        return yield* Effect.fail(new NotificationNotUpdated({ id }));
+      }
 
-        return updated;
-      });
+      return updated;
+    });
 
     return {
       create,

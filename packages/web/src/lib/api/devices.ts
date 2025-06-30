@@ -1,10 +1,12 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { DeviceLive, DeviceService, DeviceUpdateInfo } from "@warehouseoetzidev/core/src/entities/devices";
 import { DeviceNotFound } from "@warehouseoetzidev/core/src/entities/devices/errors";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
+import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
 import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";
-import { Cause, Chunk, Effect, Exit } from "effect";
+import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { withSession } from "./session";
 
 export const printProductSheet = action(async (did: string, pid: string) => {
@@ -25,11 +27,12 @@ export const printProductSheet = action(async (did: string, pid: string) => {
   if (!orgId) {
     throw redirect("/", { status: 403, statusText: "Forbidden" });
   }
+  const organizationId = Layer.succeed(OrganizationId, orgId);
 
   const program = Effect.gen(function* (_) {
     const productService = yield* _(ProductService);
     const deviceService = yield* _(DeviceService);
-    const product = yield* productService.findById(pid, orgId);
+    const product = yield* productService.findById(pid);
     if (!product) {
       return yield* Effect.fail(new ProductNotFound({ id: pid }));
     }
@@ -41,7 +44,12 @@ export const printProductSheet = action(async (did: string, pid: string) => {
     const result = yield* productService.printProductSheet(device, product);
 
     return result;
-  }).pipe(Effect.provide(ProductLive), Effect.provide(DeviceLive));
+  }).pipe(
+    Effect.provide(ProductLive),
+    Effect.provide(DeviceLive),
+    Effect.provide(organizationId),
+    Effect.provide(createOtelLayer("print-product-sheet")),
+  );
 
   const productExit = await Effect.runPromiseExit(program);
 
@@ -83,10 +91,10 @@ export const getDevices = query(async () => {
 
   const devices = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const deviceService = yield* _(DeviceService);
+      const deviceService = yield* DeviceService;
       const devices = yield* deviceService.findByOrganizationId(session.current_organization_id!);
       return devices;
-    }).pipe(Effect.provide(WarehouseLive), Effect.provide(DeviceLive)),
+    }).pipe(Effect.provide(WarehouseLive), Effect.provide(DeviceLive), Effect.provide(createOtelLayer("get-devices"))),
   );
   return devices;
 }, "get-devices");
@@ -112,13 +120,13 @@ export const createDevice = action(async (data: { name: string; typeId: string }
 
   const device = await Effect.runPromise(
     Effect.gen(function* (_) {
-      const deviceService = yield* _(DeviceService);
+      const deviceService = yield* DeviceService;
       return yield* deviceService.create({
         ...data,
         type_id: data.typeId,
         organization_id: orgId,
       });
-    }).pipe(Effect.provide(DeviceLive)),
+    }).pipe(Effect.provide(DeviceLive), Effect.provide(createOtelLayer("create-device"))),
   );
 
   return device;

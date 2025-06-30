@@ -27,196 +27,214 @@ import {
 
 export class FacilityService extends Effect.Service<FacilityService>()("@warehouse/facilities", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
+    const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof FacilityCreateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.ownerId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new UserInvalidId({ id: input.ownerId }));
-        }
+    const create = Effect.fn("@warehouse/facilities/create")(function* (
+      input: InferInput<typeof FacilityCreateSchema>,
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, input.ownerId);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new UserInvalidId({ id: input.ownerId }));
+      }
 
-        const [facility] = yield* Effect.promise(() => db.insert(TB_warehouse_facilities).values(input).returning());
+      const [facility] = yield* Effect.promise(() => db.insert(TB_warehouse_facilities).values(input).returning());
 
-        if (!facility) {
-          return yield* Effect.fail(new FacilityNotCreated({}));
-        }
+      if (!facility) {
+        return yield* Effect.fail(new FacilityNotCreated({}));
+      }
 
-        return facility;
-      });
+      return facility;
+    });
 
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new FacilityInvalidId({ id }));
-        }
+    const findById = Effect.fn("@warehouse/facilities/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new FacilityInvalidId({ id }));
+      }
 
-        const facility = yield* Effect.promise(() =>
-          db.query.TB_warehouse_facilities.findFirst({
-            where: (facilities, operations) => operations.eq(facilities.id, parsedId.output),
-            with: {
-              areas: {
-                with: {
-                  storages: {
-                    with: {
-                      type: true,
-                      area: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
+      const facility = yield* Effect.promise(() =>
+        db.query.TB_warehouse_facilities.findFirst({
+          where: (facilities, operations) => operations.eq(facilities.id, parsedId.output),
+          with: {
+            areas: {
+              with: {
+                storages: {
+                  with: {
+                    type: true,
+                    area: true,
+                    products: {
+                      with: {
+                        product: true,
                       },
-                      labels: true,
-                      parent: true,
-                      children: true,
                     },
+                    labels: true,
+                    parent: true,
+                    children: true,
                   },
                 },
               },
             },
-          }),
-        );
+          },
+        }),
+      );
 
-        if (!facility) {
-          return yield* Effect.fail(new FacilityNotFound({ id }));
-        }
-        const inventoryService = yield* _(InventoryService);
+      if (!facility) {
+        return yield* Effect.fail(new FacilityNotFound({ id }));
+      }
+      const inventoryService = yield* InventoryService;
 
-        return {
-          ...facility,
-          areas: yield* Effect.all(
-            facility.areas.map((a) =>
-              Effect.gen(function* (_) {
-                return {
-                  ...a,
-                  storages: yield* Effect.all(
-                    a.storages.map((s) => Effect.suspend(() => inventoryService.storageStatistics(s.id))),
-                  ),
-                };
-              }),
-            ),
+      return {
+        ...facility,
+        areas: yield* Effect.all(
+          facility.areas.map((a) =>
+            Effect.gen(function* (_) {
+              return {
+                ...a,
+                storages: yield* Effect.all(
+                  a.storages.map((s) => Effect.suspend(() => inventoryService.storageStatistics(s.id))),
+                ),
+              };
+            }),
           ),
-        };
-      }).pipe(Effect.provide(InventoryLive));
+        ).pipe(Effect.provide(InventoryLive)),
+      };
+    });
 
-    const update = (input: InferInput<typeof FacilityUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new FacilityInvalidId({ id: input.id }));
-        }
+    const update = Effect.fn("@warehouse/facilities/update")(function* (
+      input: InferInput<typeof FacilityUpdateSchema>,
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new FacilityInvalidId({ id: input.id }));
+      }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_warehouse_facilities)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_warehouse_facilities.id, parsedId.output))
-            .returning(),
-        );
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_warehouse_facilities)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_warehouse_facilities.id, parsedId.output))
+          .returning(),
+      );
 
-        if (!updated) {
-          return yield* Effect.fail(new FacilityNotUpdated({ id: input.id }));
-        }
+      if (!updated) {
+        return yield* Effect.fail(new FacilityNotUpdated({ id: input.id }));
+      }
 
-        return updated;
-      });
+      return updated;
+    });
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new FacilityInvalidId({ id }));
-        }
+    const remove = Effect.fn("@warehouse/facilities/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new FacilityInvalidId({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_warehouse_facilities).where(eq(TB_warehouse_facilities.id, parsedId.output)).returning(),
-        );
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_warehouse_facilities).where(eq(TB_warehouse_facilities.id, parsedId.output)).returning(),
+      );
 
-        if (!deleted) {
-          return yield* Effect.fail(new FacilityNotDeleted({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new FacilityNotDeleted({ id }));
+      }
 
-        return deleted;
-      });
+      return deleted;
+    });
 
-    const all = () =>
-      Effect.gen(function* (_) {
-        return yield* Effect.promise(() =>
-          db.query.TB_warehouse_facilities.findMany({
-            with: {
-              areas: {
-                with: {
-                  storages: {
-                    with: {
-                      type: true,
-                      area: true,
-                      products: true,
-                      children: true,
-                    },
+    const safeRemove = Effect.fn("@warehouse/facilities/safeRemove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new FacilityInvalidId({ id }));
+      }
+
+      const [deleted] = yield* Effect.promise(() =>
+        db
+          .update(TB_warehouse_facilities)
+          .set({ deletedAt: new Date() })
+          .where(eq(TB_warehouse_facilities.id, parsedId.output))
+          .returning(),
+      );
+
+      if (!deleted) {
+        return yield* Effect.fail(new FacilityNotDeleted({ id }));
+      }
+
+      return deleted;
+    });
+
+    const all = Effect.fn("@warehouse/facilites/all")(function* () {
+      return yield* Effect.promise(() =>
+        db.query.TB_warehouse_facilities.findMany({
+          with: {
+            areas: {
+              with: {
+                storages: {
+                  with: {
+                    type: true,
+                    area: true,
+                    products: true,
+                    children: true,
                   },
                 },
               },
             },
-          }),
-        );
-      });
+          },
+        }),
+      );
+    });
 
-    const findByUserId = (userId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, userId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new UserInvalidId({ id: userId }));
-        }
+    const findByUserId = Effect.fn("@warehouse/facilities/findByUserId")(function* (userId: string) {
+      const parsedId = safeParse(prefixed_cuid2, userId);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new UserInvalidId({ id: userId }));
+      }
 
-        return yield* Effect.promise(() =>
-          db.query.TB_warehouse_facilities.findMany({
-            where: (facilities, operations) => operations.eq(facilities.ownerId, parsedId.output),
-            with: {
-              areas: {
-                with: {
-                  storages: {
-                    with: {
-                      type: true,
-                      area: true,
-                      products: true,
-                      children: true,
-                    },
+      return yield* Effect.promise(() =>
+        db.query.TB_warehouse_facilities.findMany({
+          where: (facilities, operations) => operations.eq(facilities.ownerId, parsedId.output),
+          with: {
+            areas: {
+              with: {
+                storages: {
+                  with: {
+                    type: true,
+                    area: true,
+                    products: true,
+                    children: true,
                   },
                 },
               },
             },
-          }),
-        );
-      });
+          },
+        }),
+      );
+    });
 
-    const findByWarehouseId = (warehouseId: string) =>
-      Effect.gen(function* (_) {
-        const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
-        if (!parsedWarehouseId.success) {
-          return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
-        }
-        return yield* Effect.promise(() =>
-          db.query.TB_warehouse_facilities.findMany({
-            where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
-            with: {
-              areas: {
-                with: {
-                  storages: {
-                    with: {
-                      type: true,
-                      area: true,
-                      products: true,
-                      children: true,
-                    },
+    const findByWarehouseId = Effect.fn("@warehouse/facilites/findByWarehouseId")(function* (warehouseId: string) {
+      const parsedWarehouseId = safeParse(prefixed_cuid2, warehouseId);
+      if (!parsedWarehouseId.success) {
+        return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
+      }
+      return yield* Effect.promise(() =>
+        db.query.TB_warehouse_facilities.findMany({
+          where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
+          with: {
+            areas: {
+              with: {
+                storages: {
+                  with: {
+                    type: true,
+                    area: true,
+                    products: true,
+                    children: true,
                   },
                 },
               },
             },
-          }),
-        );
-      });
+          },
+        }),
+      );
+    });
 
     return {
       create,
@@ -225,6 +243,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
       findByWarehouseId,
       update,
       remove,
+      safeRemove,
       all,
     } as const;
   }),

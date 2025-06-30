@@ -16,119 +16,118 @@ import {
 
 export class SessionService extends Effect.Service<SessionService>()("@warehouse/sessions", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
+    const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    const create = (sessionInput: InferInput<typeof SessionCreateSchema>) =>
-      Effect.gen(function* (_) {
-        const [session] = yield* Effect.promise(() => db.insert(TB_sessions).values(sessionInput).returning());
-        if (!session) {
-          return yield* Effect.fail(new SessionNotCreated({}));
-        }
-        return session;
-      });
+    const create = Effect.fn("@warehouse/sessions/create")(function* (
+      sessionInput: InferInput<typeof SessionCreateSchema>,
+    ) {
+      const [session] = yield* Effect.promise(() => db.insert(TB_sessions).values(sessionInput).returning());
+      if (!session) {
+        return yield* Effect.fail(new SessionNotCreated({}));
+      }
+      return session;
+    });
 
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new SessionInvalidId({ id }));
-        }
+    const findById = Effect.fn("@warehouse/sessions/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new SessionInvalidId({ id }));
+      }
 
-        const session = yield* Effect.promise(() =>
-          db.query.TB_sessions.findFirst({
-            where: (sessions, operations) => operations.eq(sessions.id, parsedId.output),
-            with: {
-              user: {
-                columns: {
-                  hashed_password: false,
-                },
-                with: {
-                  sessions: {
-                    with: {
-                      org: {
-                        with: {
-                          products: {
-                            with: {
-                              product: {
-                                with: {
-                                  labels: true,
-                                  brands: true,
-                                  suppliers: true,
-                                },
+      const session = yield* Effect.promise(() =>
+        db.query.TB_sessions.findFirst({
+          where: (sessions, operations) => operations.eq(sessions.id, parsedId.output),
+          with: {
+            user: {
+              columns: {
+                hashed_password: false,
+              },
+              with: {
+                sessions: {
+                  with: {
+                    org: {
+                      with: {
+                        products: {
+                          with: {
+                            product: {
+                              with: {
+                                labels: true,
+                                brands: true,
+                                suppliers: true,
                               },
                             },
                           },
-                          supps: {
-                            with: {
-                              supplier: true,
-                            },
+                        },
+                        supps: {
+                          with: {
+                            supplier: true,
                           },
-                          customers: {
-                            with: {
-                              customer: true,
-                            },
+                        },
+                        customers: {
+                          with: {
+                            customer: true,
                           },
-                          customerOrders: {
-                            with: {
-                              customer: true,
-                              products: {
-                                with: {
-                                  product: true,
-                                },
-                              },
-                              sale: true,
-                            },
-                          },
-                          purchases: {
-                            with: {
-                              supplier: true,
-                              products: {
-                                with: {
-                                  product: true,
-                                },
+                        },
+                        customerOrders: {
+                          with: {
+                            customer: true,
+                            products: {
+                              with: {
+                                product: true,
                               },
                             },
+                            sale: true,
                           },
-                          devices: {
-                            with: {
-                              type: true,
-                            },
-                          },
-                          sales: {
-                            with: {
-                              sale: true,
-                            },
-                          },
-                          catalogs: {
-                            with: {
-                              products: {
-                                with: {
-                                  product: true,
-                                },
+                        },
+                        purchases: {
+                          with: {
+                            supplier: true,
+                            products: {
+                              with: {
+                                product: true,
                               },
                             },
                           },
-                          whs: {
-                            with: {
-                              warehouse: {
-                                with: {
-                                  addresses: {
-                                    with: {
-                                      address: true,
-                                    },
+                        },
+                        devices: {
+                          with: {
+                            type: true,
+                          },
+                        },
+                        sales: {
+                          with: {
+                            sale: true,
+                          },
+                        },
+                        catalogs: {
+                          with: {
+                            products: {
+                              with: {
+                                product: true,
+                              },
+                            },
+                          },
+                        },
+                        whs: {
+                          with: {
+                            warehouse: {
+                              with: {
+                                addresses: {
+                                  with: {
+                                    address: true,
                                   },
-                                  facilities: {
-                                    with: {
-                                      areas: {
-                                        with: {
-                                          storages: {
-                                            with: {
-                                              type: true,
-                                              area: true,
-                                              products: true,
-                                              children: true,
-                                            },
+                                },
+                                facilities: {
+                                  with: {
+                                    areas: {
+                                      with: {
+                                        storages: {
+                                          with: {
+                                            type: true,
+                                            area: true,
+                                            products: true,
+                                            children: true,
                                           },
                                         },
                                       },
@@ -140,254 +139,103 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                           },
                         },
                       },
-                      wh: {
-                        with: {
-                          products: {
-                            with: {
-                              product: true,
-                            },
-                          },
-                        },
-                      },
-                      fc: true,
                     },
-                  },
-                },
-              },
-              org: {
-                with: {
-                  products: {
-                    with: {
-                      product: {
-                        with: {
-                          labels: true,
-                          brands: true,
-                          suppliers: true,
-                        },
-                      },
-                    },
-                  },
-                  supps: {
-                    with: {
-                      supplier: true,
-                    },
-                  },
-                  customers: {
-                    with: {
-                      customer: true,
-                    },
-                  },
-                  customerOrders: {
-                    with: {
-                      customer: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                      sale: true,
-                    },
-                  },
-                  purchases: {
-                    with: {
-                      supplier: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                    },
-                  },
-                  devices: {
-                    with: {
-                      type: true,
-                    },
-                  },
-                  sales: {
-                    with: {
-                      sale: true,
-                    },
-                  },
-                  catalogs: {
-                    with: {
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                    },
-                  },
-                  whs: {
-                    with: {
-                      warehouse: {
-                        with: {
-                          addresses: {
-                            with: {
-                              address: true,
-                            },
-                          },
-                          facilities: {
-                            with: {
-                              areas: {
-                                with: {
-                                  storages: {
-                                    with: {
-                                      type: true,
-                                      area: true,
-                                      products: true,
-                                      children: true,
-                                    },
-                                  },
-                                },
-                              },
-                            },
+                    wh: {
+                      with: {
+                        products: {
+                          with: {
+                            product: true,
                           },
                         },
                       },
                     },
+                    fc: true,
                   },
                 },
               },
-              wh: {
-                with: {
-                  products: {
-                    with: {
-                      product: true,
-                    },
-                  },
-                },
-              },
-              fc: true,
             },
-          }),
-        );
-
-        if (!session) {
-          return yield* Effect.fail(new SessionNotFound({ id }));
-        }
-
-        return session;
-      });
-
-    const generateToken = () =>
-      Effect.gen(function* (_) {
-        const token = randomBytes(32).toString("hex");
-        return token;
-      });
-
-    const findByUserId = (userId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, userId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new SessionInvalidId({ id: userId }));
-        }
-
-        return yield* Effect.promise(() =>
-          db.query.TB_sessions.findMany({
-            where: (sessions, operations) => operations.eq(sessions.userId, parsedId.output),
-            with: {
-              user: {
-                columns: {
-                  hashed_password: false,
+            org: {
+              with: {
+                products: {
+                  with: {
+                    product: {
+                      with: {
+                        labels: true,
+                        brands: true,
+                        suppliers: true,
+                      },
+                    },
+                  },
                 },
-              },
-              org: {
-                with: {
-                  products: {
-                    with: {
-                      product: {
-                        with: {
-                          labels: true,
-                          brands: true,
-                          suppliers: true,
-                        },
+                supps: {
+                  with: {
+                    supplier: true,
+                  },
+                },
+                customers: {
+                  with: {
+                    customer: true,
+                  },
+                },
+                customerOrders: {
+                  with: {
+                    customer: true,
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                    sale: true,
+                  },
+                },
+                purchases: {
+                  with: {
+                    supplier: true,
+                    products: {
+                      with: {
+                        product: true,
                       },
                     },
                   },
-                  supps: {
-                    with: {
-                      supplier: true,
-                    },
+                },
+                devices: {
+                  with: {
+                    type: true,
                   },
-                  customers: {
-                    with: {
-                      customer: true,
-                    },
+                },
+                sales: {
+                  with: {
+                    sale: true,
                   },
-                  owner: {
-                    columns: {
-                      hashed_password: false,
-                    },
-                  },
-                  users: {
-                    with: {
-                      user: {
-                        columns: {
-                          hashed_password: false,
-                        },
+                },
+                catalogs: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
                       },
                     },
                   },
-                  customerOrders: {
-                    with: {
-                      customer: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                      sale: true,
-                    },
-                  },
-                  purchases: {
-                    with: {
-                      supplier: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                    },
-                  },
-                  devices: {
-                    with: {
-                      type: true,
-                    },
-                  },
-                  sales: {
-                    with: {
-                      sale: true,
-                    },
-                  },
-                  catalogs: {
-                    with: {
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                    },
-                  },
-                  whs: {
-                    with: {
-                      warehouse: {
-                        with: {
-                          addresses: {
-                            with: {
-                              address: true,
-                            },
+                },
+                whs: {
+                  with: {
+                    warehouse: {
+                      with: {
+                        addresses: {
+                          with: {
+                            address: true,
                           },
-                          facilities: {
-                            with: {
-                              areas: {
-                                with: {
-                                  storages: {
-                                    with: {
-                                      type: true,
-                                      area: true,
-                                      products: true,
-                                      children: true,
-                                    },
+                        },
+                        facilities: {
+                          with: {
+                            areas: {
+                              with: {
+                                storages: {
+                                  with: {
+                                    type: true,
+                                    area: true,
+                                    products: true,
+                                    children: true,
                                   },
                                 },
                               },
@@ -400,118 +248,143 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 },
               },
             },
-          }),
-        );
-      });
-
-    const findByToken = (token: string) =>
-      Effect.gen(function* (_) {
-        const session = yield* Effect.promise(() =>
-          db.query.TB_sessions.findFirst({
-            where: (sessions, operations) => operations.eq(sessions.access_token, token),
-            with: {
-              user: {
-                columns: {
-                  hashed_password: false,
+            wh: {
+              with: {
+                products: {
+                  with: {
+                    product: true,
+                  },
                 },
               },
-              org: {
-                with: {
-                  products: {
-                    with: {
-                      product: {
-                        with: {
-                          labels: true,
-                          brands: true,
-                          suppliers: true,
-                        },
+            },
+            fc: true,
+          },
+        }),
+      );
+
+      if (!session) {
+        return yield* Effect.fail(new SessionNotFound({ id }));
+      }
+
+      return session;
+    });
+
+    const generateToken = Effect.fn("@warehouse/sessions/generateToken")(function* () {
+      const token = randomBytes(32).toString("hex");
+      return token;
+    });
+
+    const findByUserId = Effect.fn("@warehouse/sessions/findByUserId")(function* (userId: string) {
+      const parsedId = safeParse(prefixed_cuid2, userId);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new SessionInvalidId({ id: userId }));
+      }
+
+      return yield* Effect.promise(() =>
+        db.query.TB_sessions.findMany({
+          where: (sessions, operations) => operations.eq(sessions.userId, parsedId.output),
+          with: {
+            user: {
+              columns: {
+                hashed_password: false,
+              },
+            },
+            org: {
+              with: {
+                products: {
+                  with: {
+                    product: {
+                      with: {
+                        labels: true,
+                        brands: true,
+                        suppliers: true,
                       },
                     },
                   },
-                  supps: {
-                    with: {
-                      supplier: true,
-                    },
+                },
+                supps: {
+                  with: {
+                    supplier: true,
                   },
-                  customers: {
-                    with: {
-                      customer: true,
-                    },
+                },
+                customers: {
+                  with: {
+                    customer: true,
                   },
-                  owner: {
-                    columns: {
-                      hashed_password: false,
-                    },
+                },
+                owner: {
+                  columns: {
+                    hashed_password: false,
                   },
-                  users: {
-                    with: {
-                      user: {
-                        columns: {
-                          hashed_password: false,
-                        },
+                },
+                users: {
+                  with: {
+                    user: {
+                      columns: {
+                        hashed_password: false,
                       },
                     },
                   },
-                  customerOrders: {
-                    with: {
-                      customer: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
-                      },
-                      sale: true,
-                    },
-                  },
-                  purchases: {
-                    with: {
-                      supplier: true,
-                      products: {
-                        with: {
-                          product: true,
-                        },
+                },
+                customerOrders: {
+                  with: {
+                    customer: true,
+                    products: {
+                      with: {
+                        product: true,
                       },
                     },
+                    sale: true,
                   },
-                  devices: {
-                    with: {
-                      type: true,
-                    },
-                  },
-                  sales: {
-                    with: {
-                      sale: true,
-                    },
-                  },
-                  catalogs: {
-                    with: {
-                      products: {
-                        with: {
-                          product: true,
-                        },
+                },
+                purchases: {
+                  with: {
+                    supplier: true,
+                    products: {
+                      with: {
+                        product: true,
                       },
                     },
                   },
-                  whs: {
-                    with: {
-                      warehouse: {
-                        with: {
-                          addresses: {
-                            with: {
-                              address: true,
-                            },
+                },
+                devices: {
+                  with: {
+                    type: true,
+                  },
+                },
+                sales: {
+                  with: {
+                    sale: true,
+                  },
+                },
+                catalogs: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                  },
+                },
+                whs: {
+                  with: {
+                    warehouse: {
+                      with: {
+                        addresses: {
+                          with: {
+                            address: true,
                           },
-                          facilities: {
-                            with: {
-                              areas: {
-                                with: {
-                                  storages: {
-                                    with: {
-                                      type: true,
-                                      area: true,
-                                      products: true,
-                                      children: true,
-                                    },
+                        },
+                        facilities: {
+                          with: {
+                            areas: {
+                              with: {
+                                storages: {
+                                  with: {
+                                    type: true,
+                                    area: true,
+                                    products: true,
+                                    children: true,
                                   },
                                 },
                               },
@@ -524,67 +397,188 @@ export class SessionService extends Effect.Service<SessionService>()("@warehouse
                 },
               },
             },
-          }),
-        );
+          },
+        }),
+      );
+    });
 
-        if (!session) {
-          return yield* Effect.fail(new SessionTokenNotFound({ token }));
-        }
+    const findByToken = Effect.fn("@warehouse/sessions/findByToken")(function* (token: string) {
+      const session = yield* Effect.promise(() =>
+        db.query.TB_sessions.findFirst({
+          where: (sessions, operations) => operations.eq(sessions.access_token, token),
+          with: {
+            user: {
+              columns: {
+                hashed_password: false,
+              },
+            },
+            org: {
+              with: {
+                products: {
+                  with: {
+                    product: {
+                      with: {
+                        labels: true,
+                        brands: true,
+                        suppliers: true,
+                      },
+                    },
+                  },
+                },
+                supps: {
+                  with: {
+                    supplier: true,
+                  },
+                },
+                customers: {
+                  with: {
+                    customer: true,
+                  },
+                },
+                owner: {
+                  columns: {
+                    hashed_password: false,
+                  },
+                },
+                users: {
+                  with: {
+                    user: {
+                      columns: {
+                        hashed_password: false,
+                      },
+                    },
+                  },
+                },
+                customerOrders: {
+                  with: {
+                    customer: true,
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                    sale: true,
+                  },
+                },
+                purchases: {
+                  with: {
+                    supplier: true,
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                  },
+                },
+                devices: {
+                  with: {
+                    type: true,
+                  },
+                },
+                sales: {
+                  with: {
+                    sale: true,
+                  },
+                },
+                catalogs: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                  },
+                },
+                whs: {
+                  with: {
+                    warehouse: {
+                      with: {
+                        addresses: {
+                          with: {
+                            address: true,
+                          },
+                        },
+                        facilities: {
+                          with: {
+                            areas: {
+                              with: {
+                                storages: {
+                                  with: {
+                                    type: true,
+                                    area: true,
+                                    products: true,
+                                    children: true,
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+      );
 
-        return session;
-      });
+      if (!session) {
+        return yield* Effect.fail(new SessionTokenNotFound({ token }));
+      }
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new SessionInvalidId({ id }));
-        }
+      return session;
+    });
 
-        const [deletedSession] = yield* Effect.promise(() =>
-          db.delete(TB_sessions).where(eq(TB_sessions.id, parsedId.output)).returning(),
-        );
+    const remove = Effect.fn("@warehouse/sessions/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new SessionInvalidId({ id }));
+      }
 
-        if (!deletedSession) {
-          return yield* Effect.fail(new SessionNotDeleted({ id }));
-        }
+      const [deletedSession] = yield* Effect.promise(() =>
+        db.delete(TB_sessions).where(eq(TB_sessions.id, parsedId.output)).returning(),
+      );
 
-        return deletedSession;
-      });
+      if (!deletedSession) {
+        return yield* Effect.fail(new SessionNotDeleted({ id }));
+      }
 
-    const removeByUserId = (userId: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, userId);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new SessionInvalidId({ id: userId }));
-        }
+      return deletedSession;
+    });
 
-        return yield* Effect.promise(() =>
-          db.delete(TB_sessions).where(eq(TB_sessions.userId, parsedId.output)).returning(),
-        );
-      });
+    const removeByUserId = Effect.fn("@warehouse/sessions/removeByUserId")(function* (userId: string) {
+      const parsedId = safeParse(prefixed_cuid2, userId);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new SessionInvalidId({ id: userId }));
+      }
 
-    const update = (input: InferInput<typeof SessionUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new SessionInvalidId({ id: input.id }));
-        }
+      return yield* Effect.promise(() =>
+        db.delete(TB_sessions).where(eq(TB_sessions.userId, parsedId.output)).returning(),
+      );
+    });
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_sessions)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_sessions.id, parsedId.output))
-            .returning(),
-        );
+    const update = Effect.fn("@warehouse/sessions/update")(function* (input: InferInput<typeof SessionUpdateSchema>) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new SessionInvalidId({ id: input.id }));
+      }
 
-        if (!updated) {
-          return yield* Effect.fail(new SessionNotUpdated({ id: input.id }));
-        }
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_sessions)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_sessions.id, parsedId.output))
+          .returning(),
+      );
 
-        return updated;
-      });
+      if (!updated) {
+        return yield* Effect.fail(new SessionNotUpdated({ id: input.id }));
+      }
+
+      return updated;
+    });
 
     return {
       create,

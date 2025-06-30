@@ -16,102 +16,124 @@ import {
 
 export class DiscountService extends Effect.Service<DiscountService>()("@warehouse/discounts", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
+    const database = yield* DatabaseService;
     const db = yield* database.instance;
 
-    const create = (input: InferInput<typeof DiscountV1CreateSchema>) =>
-      Effect.gen(function* (_) {
-        const [discount] = yield* Effect.promise(() => db.insert(TB_discounts_v1).values(input).returning());
+    const create = Effect.fn("@warehouse/discounts/create")(function* (
+      input: InferInput<typeof DiscountV1CreateSchema>,
+    ) {
+      const [discount] = yield* Effect.promise(() => db.insert(TB_discounts_v1).values(input).returning());
 
-        if (!discount) {
-          return yield* Effect.fail(new DiscountNotCreated({}));
-        }
+      if (!discount) {
+        return yield* Effect.fail(new DiscountNotCreated({}));
+      }
 
-        return discount;
-      });
+      return discount;
+    });
 
-    const findById = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DiscountInvalidId({ id }));
-        }
+    const findById = Effect.fn("@warehouse/discounts/findById")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DiscountInvalidId({ id }));
+      }
 
-        const discount = yield* Effect.promise(() =>
-          db.query.TB_discounts_v1.findFirst({
-            where: (discounts, { eq }) => eq(discounts.id, parsedId.output),
-          }),
-        );
+      const discount = yield* Effect.promise(() =>
+        db.query.TB_discounts_v1.findFirst({
+          where: (discounts, { eq }) => eq(discounts.id, parsedId.output),
+        }),
+      );
 
-        if (!discount) {
-          return yield* Effect.fail(new DiscountNotFound({ id }));
-        }
+      if (!discount) {
+        return yield* Effect.fail(new DiscountNotFound({ id }));
+      }
 
-        return discount;
-      });
+      return discount;
+    });
 
-    const findByOrganizationId = (organizationId: string) =>
-      Effect.gen(function* (_) {
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
+    const findByOrganizationId = Effect.fn("@warehouse/discounts/findByOrganizationId")(function* (
+      organizationId: string,
+    ) {
+      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+      if (!parsedOrganizationId.success) {
+        return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+      }
 
-        const discounts = yield* Effect.promise(() =>
-          db.query.TB_organization_discounts.findMany({
-            where: (fields, { eq }) => eq(fields.organization_id, organizationId),
-            with: {
-              discount: true,
-            },
-          }),
-        );
+      const discounts = yield* Effect.promise(() =>
+        db.query.TB_organization_discounts.findMany({
+          where: (fields, { eq }) => eq(fields.organization_id, organizationId),
+          with: {
+            discount: true,
+          },
+        }),
+      );
 
-        // if (discounts.length === 0) {
-        //   return yield* Effect.fail(new OrganizationNoDiscounts({ id: organizationId }));
-        // }
+      // if (discounts.length === 0) {
+      //   return yield* Effect.fail(new OrganizationNoDiscounts({ id: organizationId }));
+      // }
 
-        return discounts.map((d) => d.discount);
-      });
+      return discounts.map((d) => d.discount);
+    });
 
-    const update = (input: InferInput<typeof DiscountV1UpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DiscountInvalidId({ id: input.id }));
-        }
+    const update = Effect.fn("@warehouse/discounts/update")(function* (
+      input: InferInput<typeof DiscountV1UpdateSchema>,
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DiscountInvalidId({ id: input.id }));
+      }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_discounts_v1)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_discounts_v1.id, parsedId.output))
-            .returning(),
-        );
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_discounts_v1)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_discounts_v1.id, parsedId.output))
+          .returning(),
+      );
 
-        if (!updated) {
-          return yield* Effect.fail(new DiscountNotUpdated({ id: input.id }));
-        }
+      if (!updated) {
+        return yield* Effect.fail(new DiscountNotUpdated({ id: input.id }));
+      }
 
-        return updated;
-      });
+      return updated;
+    });
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new DiscountInvalidId({ id }));
-        }
+    const remove = Effect.fn("@warehouse/dscounts/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DiscountInvalidId({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_discounts_v1).where(eq(TB_discounts_v1.id, parsedId.output)).returning(),
-        );
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_discounts_v1).where(eq(TB_discounts_v1.id, parsedId.output)).returning(),
+      );
 
-        if (!deleted) {
-          return yield* Effect.fail(new DiscountNotDeleted({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new DiscountNotDeleted({ id }));
+      }
 
-        return deleted;
-      });
+      return deleted;
+    });
+
+    const safeRemove = Effect.fn("@warehouse/discounts/safeRemove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DiscountInvalidId({ id }));
+      }
+
+      const [deleted] = yield* Effect.promise(() =>
+        db
+          .update(TB_discounts_v1)
+          .set({ deletedAt: new Date() })
+          .where(eq(TB_discounts_v1.id, parsedId.output))
+          .returning(),
+      );
+
+      if (!deleted) {
+        return yield* Effect.fail(new DiscountNotDeleted({ id }));
+      }
+
+      return deleted;
+    });
 
     return {
       create,
@@ -119,6 +141,7 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
       findByOrganizationId,
       update,
       remove,
+      safeRemove,
     } as const;
   }),
   dependencies: [DatabaseLive],

@@ -22,9 +22,9 @@ interface JwtPayload {
 
 export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth", {
   effect: Effect.gen(function* (_) {
-    const sessionService = yield* _(SessionService);
-    const userService = yield* _(UserService);
-    const C = yield* _(WarehouseConfig); // Access the JWT secrets
+    const sessionService = yield* SessionService;
+    const userService = yield* UserService;
+    const C = yield* WarehouseConfig;
     const config = yield* C.getConfig;
     const jwtSecrets = [Redacted.value(config.JWTSecret1), Redacted.value(config.JWTSecret2)];
 
@@ -35,136 +35,130 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
     }
 
     // Function to generate a JWT
-    const generateJwt = (userId: string, expiresIn: number): Effect.Effect<string, Error> =>
-      Effect.gen(function* (_) {
-        const payload: JwtPayload = { userId };
-        return jwt.sign(payload, jwtSecrets[0], { expiresIn });
-      });
+    const generateJwt = Effect.fn("@warehouse/auth/generateJwt")(function* (userId: string, expiresIn: number) {
+      const payload: JwtPayload = { userId };
+      return jwt.sign(payload, jwtSecrets[0], { expiresIn });
+    });
 
     // Function to verify a JWT
-    const verifyJwt = (token: string): Effect.Effect<JwtPayload, Error> =>
-      Effect.gen(function* (_) {
-        for (const secret of jwtSecrets) {
-          try {
-            const decoded = jwt.verify(token, secret) as JwtPayload;
-            return decoded; // Verification successful
-          } catch (error) {
-            // If verification fails, try the next secret.
-            // We can safely ignore jwt.JsonWebTokenError here as it just means this secret didn't work.
-            // We might want to log other types of errors if they occur during verification.
-            if (!(error instanceof jwt.JsonWebTokenError)) {
-              yield* _(
-                Effect.logError(
-                  `Unexpected error during JWT verification with secret: ${secret.substring(0, 5)}...`,
-                  error,
-                ),
-              );
-            }
+    const verifyJwt = Effect.fn("@warehouse/auth/verifyJwt")(function* (token: string) {
+      for (const secret of jwtSecrets) {
+        try {
+          const decoded = jwt.verify(token, secret) as JwtPayload;
+          return decoded; // Verification successful
+        } catch (error) {
+          // If verification fails, try the next secret.
+          // We can safely ignore jwt.JsonWebTokenError here as it just means this secret didn't work.
+          // We might want to log other types of errors if they occur during verification.
+          if (!(error instanceof jwt.JsonWebTokenError)) {
+            yield* _(
+              Effect.logError(
+                `Unexpected error during JWT verification with secret: ${secret.substring(0, 5)}...`,
+                error,
+              ),
+            );
           }
         }
-        // If loop finishes without returning, no secret worked
-        return yield* Effect.fail(new AuthInvalidToken({ message: "Invalid or expired token" }));
+      }
+      // If loop finishes without returning, no secret worked
+      return yield* Effect.fail(new AuthInvalidToken({ message: "Invalid or expired token" }));
+    });
+
+    const verify = Effect.fn("@warehouse/auth/verify")(function* (token: string) {
+      // Verify the JWT first
+      const decodedToken = yield* verifyJwt(token);
+
+      const session = yield* sessionService.findByToken(token);
+      if (!session) {
+        return yield* Effect.fail(new AuthSessionNotFound({ token }));
+      }
+
+      const user = yield* userService.findById(decodedToken.userId);
+      // console.dir(user, { depth: Infinity });
+      if (!user) {
+        return yield* Effect.fail(new AuthUserNotFound({ userId: decodedToken.userId }));
+      }
+      return yield* Effect.succeed({ user, session });
+    });
+
+    const login = Effect.fn("@warehouse/auth/login")(function* (email: string, password: string) {
+      const attempt = yield* userService.verifyPassword(email, password);
+      if (!attempt) {
+        return yield* Effect.fail(new AuthLoginFailed({ email }));
+      }
+      const user = yield* userService.findByEmail(email);
+      if (!user) {
+        // This case should ideally not happen if verifyPassword succeeded, but for safety
+        return yield* Effect.fail(new AuthUserNotFound({ userId: email }));
+      }
+
+      // Generate the JWT
+      const expiresIn = ms("7 Days"); // Configure your JWT expiration time
+      const accessToken = yield* generateJwt(user.id, expiresIn);
+
+      const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
+
+      const lastOrganization = yield* userService.findLastOrganization(user.id);
+      const lastWarehouse = yield* userService.findLastWarehouse(user.id);
+      const lastFacility = yield* userService.findLastFacility(user.id);
+      const session = yield* sessionService.create({
+        expiresAt,
+        userId: user.id,
+        access_token: accessToken,
+        current_organization_id: lastOrganization?.id ?? null,
+        current_warehouse_id: lastWarehouse?.id ?? null,
+        current_warehouse_facility_id: lastFacility?.id ?? null,
+      });
+      if (!session) {
+        return yield* Effect.fail(new AuthSessionCreateFailed({ userId: user.id }));
+      }
+
+      return { user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
+    });
+
+    const removeSession = Effect.fn("@warehouse/auth/removeSession")(function* (token: string) {
+      // If you are using JWTs with a blocklist, this is where you would add the token's JTI to the blocklist.
+      // If you are still using database sessions to track active tokens, you'd remove the session record.
+
+      // Assuming you are still using database sessions for tracking/blocklisting:
+      const session = yield* sessionService.findByToken(token);
+      if (!session) {
+        return yield* Effect.fail(new AuthSessionNotFound({ token }));
+      }
+      const removedSession = yield* sessionService.remove(session.id);
+      return { success: true, session: removedSession } as const;
+
+      // we could use JTI to blocklist the session... (for now we wont do that, too much hastle to set it up)
+    });
+
+    const signup = Effect.fn("@warehouse/auth/signup")(function* (email: string, password: string) {
+      const user = yield* userService.findByEmail(email);
+      if (user) {
+        return yield* Effect.fail(new AuthUserAlreadyExists({ email }));
+      }
+      const attempt = yield* userService.create({ email, password, name: email, status: "active" });
+      if (!attempt) {
+        return yield* Effect.fail(new AuthSignupFailed({ email }));
+      }
+
+      // Generate the JWT
+      const expiresIn = ms("7 Days"); // Configure your JWT expiration time
+      const accessToken = yield* generateJwt(attempt.id, expiresIn);
+
+      // Create a session record (if needed for blocklisting/tracking)
+      const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
+      const session = yield* sessionService.create({
+        expiresAt,
+        userId: attempt.id,
+        access_token: accessToken, // Store the JWT in the database session record
       });
 
-    const verify = (token: string) =>
-      Effect.gen(function* (_) {
-        // Verify the JWT first
-        const decodedToken = yield* verifyJwt(token);
+      if (!session) {
+        return yield* Effect.fail(new AuthSessionCreateFailed({ userId: attempt.id }));
+      }
 
-        const session = yield* sessionService.findByToken(token);
-        if (!session) {
-          return yield* Effect.fail(new AuthSessionNotFound({ token }));
-        }
-
-        const user = yield* userService.findById(decodedToken.userId);
-        // console.dir(user, { depth: Infinity });
-        if (!user) {
-          return yield* Effect.fail(new AuthUserNotFound({ userId: decodedToken.userId }));
-        }
-        return yield* Effect.succeed({ user, session });
-      });
-
-    const login = (email: string, password: string) =>
-      Effect.gen(function* (_) {
-        const attempt = yield* userService.verifyPassword(email, password);
-        if (!attempt) {
-          return yield* Effect.fail(new AuthLoginFailed({ email }));
-        }
-        const user = yield* userService.findByEmail(email);
-        if (!user) {
-          // This case should ideally not happen if verifyPassword succeeded, but for safety
-          return yield* Effect.fail(new AuthUserNotFound({ userId: email }));
-        }
-
-        // Generate the JWT
-        const expiresIn = ms("7 Days"); // Configure your JWT expiration time
-        const accessToken = yield* generateJwt(user.id, expiresIn);
-
-        const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
-
-        const lastOrganization = yield* userService.findLastOrganization(user.id);
-        const lastWarehouse = yield* userService.findLastWarehouse(user.id);
-        const lastFacility = yield* userService.findLastFacility(user.id);
-        const session = yield* sessionService.create({
-          expiresAt,
-          userId: user.id,
-          access_token: accessToken,
-          current_organization_id: lastOrganization?.id ?? null,
-          current_warehouse_id: lastWarehouse?.id ?? null,
-          current_warehouse_facility_id: lastFacility?.id ?? null,
-        });
-        if (!session) {
-          return yield* Effect.fail(new AuthSessionCreateFailed({ userId: user.id }));
-        }
-
-        return { user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
-      });
-
-    const removeSession = (token: string) =>
-      Effect.gen(function* (_) {
-        // If you are using JWTs with a blocklist, this is where you would add the token's JTI to the blocklist.
-        // If you are still using database sessions to track active tokens, you'd remove the session record.
-
-        // Assuming you are still using database sessions for tracking/blocklisting:
-        const session = yield* sessionService.findByToken(token);
-        if (!session) {
-          return yield* Effect.fail(new AuthSessionNotFound({ token }));
-        }
-        const removedSession = yield* sessionService.remove(session.id);
-        return { success: true, session: removedSession } as const;
-
-        // we could use JTI to blocklist the session... (for now we wont do that, too much hastle to set it up)
-      });
-
-    const signup = (email: string, password: string) =>
-      Effect.gen(function* (_) {
-        const user = yield* userService.findByEmail(email);
-        if (user) {
-          return yield* Effect.fail(new AuthUserAlreadyExists({ email }));
-        }
-        const attempt = yield* userService.create({ email, password, name: email, status: "active" });
-        if (!attempt) {
-          return yield* Effect.fail(new AuthSignupFailed({ email }));
-        }
-
-        // Generate the JWT
-        const expiresIn = ms("7 Days"); // Configure your JWT expiration time
-        const accessToken = yield* generateJwt(attempt.id, expiresIn);
-
-        // Create a session record (if needed for blocklisting/tracking)
-        const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
-        const session = yield* sessionService.create({
-          expiresAt,
-          userId: attempt.id,
-          access_token: accessToken, // Store the JWT in the database session record
-        });
-
-        if (!session) {
-          return yield* Effect.fail(new AuthSessionCreateFailed({ userId: attempt.id }));
-        }
-
-        return { user: attempt, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
-      });
+      return { user: attempt, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
+    });
 
     return {
       verify,

@@ -11,6 +11,7 @@ import {
   OrganizationService,
 } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
+import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
 import { Cause, Chunk, Effect, Exit, Layer } from "effect";
@@ -39,14 +40,11 @@ export const getDashboardData = query(async () => {
 
   const dashboardDataExit = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const organizationService = yield* _(OrganizationService);
-      const orderService = yield* _(CustomerOrderService);
-      const notificationService = yield* _(NotificationService);
+      const organizationService = yield* OrganizationService;
+      const orderService = yield* CustomerOrderService;
+      const notificationService = yield* NotificationService;
 
       const organization = yield* organizationService.getDashboardData();
-      if (!organization) {
-        throw new Error("Organization not found");
-      }
 
       // Get recent data
       const customerOrders = organization.customerOrders
@@ -60,13 +58,6 @@ export const getDashboardData = query(async () => {
         .map((so) => ({ order: so, supplierId: so.supplier_id }))
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
-
-      const lastUsedProductsFromCustomers = customerOrders
-        .map((co) => co.order.products)
-        .flat()
-        .sort((a, b) => dayjs(b.updatedAt).unix() - dayjs(a.updatedAt).unix())
-        .slice(0, 3)
-        .map((p) => p.product);
 
       // Get analytics data
       const customerOrdersPercentageLastWeek = yield* orderService.percentageCustomerOrdersLastWeekByOrganizationId(
@@ -98,6 +89,7 @@ export const getDashboardData = query(async () => {
       Effect.provide(CustomerOrderLive),
       Effect.provide(NotificationLive),
       Effect.provide(organizationId),
+      Effect.provide(createOtelLayer("dashboard-data")),
     ),
   );
 
@@ -156,7 +148,11 @@ export const getMostPopularProducts = query(async () => {
       const mostPopularProducts = yield* orderService.findMostPopularProductsByOrganizationId(orgId);
 
       return yield* Effect.succeed(mostPopularProducts);
-    }).pipe(Effect.provide(CustomerOrderLive), Effect.provide(organizationId)),
+    }).pipe(
+      Effect.provide(CustomerOrderLive),
+      Effect.provide(organizationId),
+      Effect.provide(createOtelLayer("most-popular-products")),
+    ),
   );
 
   return Exit.match(mostPopularProductsExit, {
@@ -206,12 +202,6 @@ export const getLastSoldProducts = query(async () => {
         .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
         .slice(0, 3);
 
-      const purchases = organization.purchases
-        .filter((p) => !p.deletedAt)
-        .map((so) => ({ order: so, supplierId: so.supplier_id }))
-        .sort((a, b) => dayjs(b.order.createdAt).unix() - dayjs(a.order.createdAt).unix())
-        .slice(0, 3);
-
       const lastUsedProductsFromCustomers = customerOrders
         .map((co) => co.order.products)
         .flat()
@@ -220,7 +210,11 @@ export const getLastSoldProducts = query(async () => {
         .map((p) => p.product);
 
       return yield* Effect.succeed(lastUsedProductsFromCustomers);
-    }).pipe(Effect.provide(OrganizationLive), Effect.provide(organizationId)),
+    }).pipe(
+      Effect.provide(OrganizationLive),
+      Effect.provide(organizationId),
+      Effect.provide(createOtelLayer("last-sold-products")),
+    ),
   );
 
   return Exit.match(lastSoldProductsExit, {

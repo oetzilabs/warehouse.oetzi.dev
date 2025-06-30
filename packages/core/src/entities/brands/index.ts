@@ -13,99 +13,96 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
 
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_brands.findMany>[0]>;
 
-    const create = (userInput: InferInput<typeof BrandCreateSchema>) =>
-      Effect.gen(function* (_) {
-        const [brand] = yield* Effect.promise(() => db.insert(TB_brands).values(userInput).returning());
-        if (!brand) {
-          return yield* Effect.fail(new BrandNotCreated({}));
-        }
+    const create = Effect.fn("@warehouse/brands/create")(function* (userInput: InferInput<typeof BrandCreateSchema>) {
+      const [brand] = yield* Effect.promise(() => db.insert(TB_brands).values(userInput).returning());
+      if (!brand) {
+        return yield* Effect.fail(new BrandNotCreated({}));
+      }
 
-        return brand;
-      });
+      return brand;
+    });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new BrandInvalidId({ id }));
-        }
+    const findById = Effect.fn("@warehouse/brands/findById")(function* (
+      id: string,
+      relations?: FindManyParams["with"],
+    ) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new BrandInvalidId({ id }));
+      }
 
-        const brand = yield* Effect.promise(() =>
-          db.query.TB_brands.findFirst({
-            where: (brands, operations) => operations.eq(brands.id, parsedId.output),
-            with: relations,
-          }),
-        );
+      const brand = yield* Effect.promise(() =>
+        db.query.TB_brands.findFirst({
+          where: (brands, operations) => operations.eq(brands.id, parsedId.output),
+          with: relations,
+        }),
+      );
 
-        if (!brand) {
-          return yield* Effect.fail(new BrandNotFound({ id }));
-        }
+      if (!brand) {
+        return yield* Effect.fail(new BrandNotFound({ id }));
+      }
 
-        return brand;
-      });
+      return brand;
+    });
 
-    const update = (input: InferInput<typeof BrandUpdateSchema>) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, input.id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new BrandInvalidId({ id: input.id }));
-        }
+    const update = Effect.fn("@warehouse/brands/update")(function* (input: InferInput<typeof BrandUpdateSchema>) {
+      const parsedId = safeParse(prefixed_cuid2, input.id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new BrandInvalidId({ id: input.id }));
+      }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_brands)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_brands.id, parsedId.output))
-            .returning(),
-        );
+      const [updated] = yield* Effect.promise(() =>
+        db
+          .update(TB_brands)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_brands.id, parsedId.output))
+          .returning(),
+      );
 
-        if (!updated) {
-          return yield* Effect.fail(new BrandNotUpdated({ id: input.id }));
-        }
+      if (!updated) {
+        return yield* Effect.fail(new BrandNotUpdated({ id: input.id }));
+      }
 
-        return updated;
-      });
+      return updated;
+    });
 
-    const remove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new BrandInvalidId({ id }));
-        }
+    const remove = Effect.fn("@warehouse/brands/remove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new BrandInvalidId({ id }));
+      }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_brands).where(eq(TB_brands.id, parsedId.output)).returning(),
-        );
+      const [deleted] = yield* Effect.promise(() =>
+        db.delete(TB_brands).where(eq(TB_brands.id, parsedId.output)).returning(),
+      );
 
-        if (!deleted) {
-          return yield* Effect.fail(new BrandNotDeleted({ id }));
-        }
+      if (!deleted) {
+        return yield* Effect.fail(new BrandNotDeleted({ id }));
+      }
 
-        return deleted;
-      });
+      return deleted;
+    });
 
-    const safeRemove = (id: string) =>
-      Effect.gen(function* (_) {
-        const parsedId = safeParse(prefixed_cuid2, id);
-        if (!parsedId.success) {
-          return yield* Effect.fail(new BrandInvalidId({ id }));
-        }
+    const safeRemove = Effect.fn("@warehouse/brands/safeRemove")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new BrandInvalidId({ id }));
+      }
 
-        const entries = yield* Effect.promise(() =>
-          db.update(TB_brands).set({ deletedAt: new Date() }).where(eq(TB_brands.id, parsedId.output)).returning(),
-        );
+      const entries = yield* Effect.promise(() =>
+        db.update(TB_brands).set({ deletedAt: new Date() }).where(eq(TB_brands.id, parsedId.output)).returning(),
+      );
 
-        if (entries.length === 0) {
-          return yield* Effect.fail(new BrandNotCreated({ message: "Failed to safe remove brand" }));
-        }
+      if (entries.length === 0) {
+        return yield* Effect.fail(new BrandNotCreated({ message: "Failed to safe remove brand" }));
+      }
 
-        return entries[0];
-      });
+      return entries[0];
+    });
 
-    const all = () =>
-      Effect.gen(function* (_) {
-        return yield* Effect.promise(() => db.query.TB_brands.findMany());
-      });
+    const all = Effect.fn("@warehouse/brands/all")(function* () {
+      return yield* Effect.promise(() => db.query.TB_brands.findMany());
+    });
 
     return {
       create,
