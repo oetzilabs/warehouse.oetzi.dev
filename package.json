@@ -22,7 +22,7 @@
     "typescript": "5.8.3"
   },
   "peerDependencies": {
-    "@effect/language-service": "0.23.3",
+    "@effect/language-service": "0.23.4",
     "@effect/platform": "0.87.1",
     "@effect/platform-bun": "0.72.3",
     "@effect/platform-node": "0.88.3",
