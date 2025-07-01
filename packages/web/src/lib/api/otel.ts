@@ -28,3 +28,16 @@ export const triggerSuccess = action((name: string) => {
     json(false),
   );
 });
+
+export const triggerLog = action((name: string, message: string) => {
+  "use server";
+  return run(
+    "@action/trigger-otel-log",
+    Effect.gen(function* (_) {
+      yield* Effect.annotateCurrentSpan("ranBy", name);
+      yield* Effect.log(message);
+      return yield* Effect.succeed(message);
+    }),
+    json(message),
+  );
+});

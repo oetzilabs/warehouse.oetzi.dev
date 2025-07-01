@@ -14,7 +14,7 @@ export const ProductImages = (props: ProductImagesProps) => {
   return (
     <div class="group flex flex-col grow gap-4">
       <div class="flex flex-col p-1 grow bg-muted rounded-lg border aspect-[4/3] gap-1">
-        <div class="relative w-full grow flex flex-row gap-4 rounded-md overflow-clip bg-gradient-to-b from-neutral-200 dark:from-neutral-900 to-transparent">
+        <div class="relative w-full grow flex flex-row gap-4 rounded-md overflow-clip bg-gradient-to-b from-neutral-200 dark:from-neutral-900 to-transparent z-0">
           <Show
             when={props.product().images?.length > 0}
             fallback={

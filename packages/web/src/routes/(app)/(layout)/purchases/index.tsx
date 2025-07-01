@@ -25,10 +25,10 @@ export default function PurchasesPage() {
   const data = createAsync(() => getPurchases(), { deferStream: true });
 
   return (
-    <div class="container flex flex-col grow py-0">
+    <div class="container flex flex-col grow py-0 relative">
       <div class="w-full flex flex-row h-full gap-4">
-        <div class="w-full flex flex-col gap-4">
-          <div class="flex items-center gap-4 justify-between w-full">
+        <div class="w-full flex flex-col bg-background">
+          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
             <div class="flex flex-row items-center gap-4">
               <Button size="sm" as={A} href="/dashboard" variant="outline" class="bg-background">
                 <ArrowLeft class="size-4" />
@@ -53,7 +53,7 @@ export default function PurchasesPage() {
               </Button>
               <Button size="sm" class="pl-2.5 rounded-l-none" as={A} href="/purchases/new">
                 <Plus class="size-4" />
-                Create
+                <span class="sr-only md:not-sr-only">Create</span>
               </Button>
             </div>
           </div>

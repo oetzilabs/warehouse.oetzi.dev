@@ -6,8 +6,11 @@ import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCustomerOrders } from "@/lib/api/orders";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import CheckCheck from "lucide-solid/icons/check-check";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
+import Tags from "lucide-solid/icons/tags";
+import Trash from "lucide-solid/icons/trash";
 import { Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -24,10 +27,10 @@ export default function CustomerOrdersPage() {
   const data = createAsync(() => getCustomerOrders(), { deferStream: true });
 
   return (
-    <div class="container flex flex-col grow py-0">
+    <div class="container flex flex-col grow py-0 relative">
       <div class="w-full flex flex-row h-full gap-4">
-        <div class="w-full flex flex-col gap-4">
-          <div class="flex items-center gap-4 justify-between w-full">
+        <div class="w-full flex flex-col bg-background">
+          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
             <div class="flex flex-row items-center gap-4">
               <Button size="sm" as={A} href="/dashboard" variant="outline" class="bg-background">
                 <ArrowLeft class="size-4" />
@@ -52,7 +55,7 @@ export default function CustomerOrdersPage() {
               </Button>
               <Button size="sm" class="pl-2.5 rounded-l-none" as={A} href="/orders/new">
                 <Plus class="size-4" />
-                Create
+                <span class="sr-only md:not-sr-only">Create</span>
               </Button>
             </div>
           </div>
@@ -76,19 +79,28 @@ export default function CustomerOrdersPage() {
                         value="all"
                         class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
                       >
-                        All Non-Delted Orders ({os().filter((o) => o.status !== "deleted" || !o.deletedAt).length})
+                        <Tags class="size-4" />
+                        <span class="sr-only md:not-sr-only">
+                          All Non-Delted Orders ({os().filter((o) => o.status !== "deleted" || !o.deletedAt).length})
+                        </span>
                       </TabsTrigger>
                       <TabsTrigger
                         value="completed"
                         class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
                       >
-                        Completed ({os().filter((o) => o.status === "completed").length})
+                        <CheckCheck class="size-4" />
+                        <span class="sr-only md:not-sr-only">
+                          Completed ({os().filter((o) => o.status === "completed").length})
+                        </span>
                       </TabsTrigger>
                       <TabsTrigger
                         value="deleted"
                         class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
                       >
-                        Deleted ({os().filter((o) => o.status === "deleted" || o.deletedAt).length})
+                        <Trash class="size-4" />
+                        <span class="sr-only md:not-sr-only">
+                          Deleted ({os().filter((o) => o.status === "deleted" || o.deletedAt).length})
+                        </span>
                       </TabsTrigger>
                     </TabsList>
                     <TabsContent value="all" class="pt-2">

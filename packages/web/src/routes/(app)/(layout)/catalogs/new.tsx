@@ -94,8 +94,8 @@ export default function NewCatalogPage() {
   };
 
   return (
-    <div class="container flex flex-col grow py-0 gap-4">
-      <div class="flex items-center gap-4 justify-between w-full">
+    <div class="container flex flex-col grow py-0 gap-4 relative">
+      <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
         <div class="flex items-center gap-4">
           <Button size="sm" variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft class="size-4" />
@@ -129,7 +129,7 @@ export default function NewCatalogPage() {
                   fallback={
                     <>
                       <Plus class="size-4" />
-                      Create
+                      <span class="sr-only md:not-sr-only">Create</span>
                     </>
                   }
                 >

@@ -1,18 +1,14 @@
 import { AccountingList } from "@/components/lists/accounting";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAccountingList } from "@/lib/api/accounting";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import {
-  AccountingCurrencyTotalsEntry,
-  AccountingInfo,
-  AccountingTotalsByCurrency,
-} from "@warehouseoetzidev/core/src/entities/accounting";
+import { AccountingCurrencyTotalsEntry, AccountingInfo } from "@warehouseoetzidev/core/src/entities/accounting";
 import dayjs from "dayjs";
-import Plus from "lucide-solid/icons/plus";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { createSignal, For, onMount, Show } from "solid-js";
 import { toast } from "solid-sonner";
@@ -128,11 +124,17 @@ export default function AccountingPage() {
   return (
     <Show when={accounting()}>
       {(accountingList) => (
-        <div class="container flex flex-col grow py-0">
+        <div class="container flex flex-col grow py-0 relative">
           <div class="w-full flex flex-row h-full">
             <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full">
-                <h1 class="font-semibold leading-none">Accounting</h1>
+              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
+                <div class="flex flex-row items-center gap-4">
+                  <Button variant="outline" size="sm" as={A} href="/dashboard" class="bg-background">
+                    <ArrowLeft class="size-4" />
+                    Back
+                  </Button>
+                  <h1 class="font-semibold leading-none">Accounting</h1>
+                </div>
                 <div class="flex items-center gap-0">
                   <Button
                     size="sm"

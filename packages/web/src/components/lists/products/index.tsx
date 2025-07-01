@@ -114,7 +114,7 @@ export const ProductsList = (props: ProductsListProps) => {
 
   return (
     <div class="w-full flex flex-col gap-4">
-      <div class="flex flex-row items-center justify-between gap-4">
+      <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
           onChange={(e) => {

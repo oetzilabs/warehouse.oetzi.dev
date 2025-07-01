@@ -67,8 +67,8 @@ export default function DevicePage() {
     >
       <Show when={device()}>
         {(deviceInfo) => (
-          <div class="container flex flex-col gap-4 py-4">
-            <div class="flex flex-row items-center justify-between gap-4">
+          <div class="container flex flex-col gap-4 py-0 relative">
+            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
               <Button variant="outline" size="sm" as={A} href="/devices" class="w-max">
                 <ArrowLeft class="size-4" />
                 Back

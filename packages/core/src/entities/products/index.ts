@@ -437,7 +437,7 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
             0.0,
           taxGroupName: op.product.organizations.find((org) => org.organizationId === orgId)?.tg?.name ?? "unknown",
           taxGroupRate:
-            op.product.organizations.find((org) => org.organizationId === orgId)?.tg?.crs[0]?.tr.rate ?? "unknown",
+            op.product.organizations.find((org) => org.organizationId === orgId)?.tg?.crs[0]?.tr.rate ?? 0.0,
         }))
         .filter((p) => p.taxGroupName !== undefined && p.taxGroupRate !== undefined);
     });

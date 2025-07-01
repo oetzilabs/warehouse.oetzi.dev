@@ -243,7 +243,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
         </Sidebar>
         <div class="w-full h-full flex flex-col p-2">
           <div class="relative w-full h-full flex flex-col overflow-auto border rounded-lg bg-background">
-            <div class="sticky top-0 left-0 z-50 w-max h-max flex p-2">
+            <div class="sticky top-0 left-0 z-50 w-full h-max flex p-2 bg-background">
               <SidebarButtonTrigger />
             </div>
             <Suspense

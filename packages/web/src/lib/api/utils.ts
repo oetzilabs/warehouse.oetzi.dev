@@ -137,7 +137,7 @@ export const runWithSession = async <A, E, F>(
         current_organization_id: orgId,
       }).pipe(Effect.provide(organizationIdLayer));
     },
-    (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name)])),
+    (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name, otelUrl)])),
   );
 
   const result = Exit.match(await Effect.runPromiseExit(innerProgram()), {

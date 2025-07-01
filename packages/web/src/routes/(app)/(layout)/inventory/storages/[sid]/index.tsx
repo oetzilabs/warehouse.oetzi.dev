@@ -26,10 +26,10 @@ export default function InventoryPage() {
   return (
     <Show when={data()}>
       {(os) => (
-        <div class="container flex flex-col grow py-0">
+        <div class="container flex flex-col grow py-0 relative">
           <div class="w-full flex flex-row h-full gap-4">
             <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full">
+              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
                 <h1 class="font-semibold leading-none">Inventory Summary</h1>
                 <div class="flex items-center gap-0">
                   <Button
@@ -48,7 +48,7 @@ export default function InventoryPage() {
                   </Button>
                   <Button size="sm" class="pl-2.5 rounded-l-none">
                     <Plus class="size-4" />
-                    Create
+                    <span class="sr-only md:not-sr-only">Create</span>
                   </Button>
                 </div>
               </div>

@@ -78,8 +78,8 @@ export default function ProductPage() {
     >
       <Show when={product()}>
         {(productInfo) => (
-          <div class="container flex flex-col gap-4">
-            <div class="flex flex-row items-center justify-between gap-4">
+          <div class="container flex flex-col gap-0 relative">
+            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background pb-4">
               <div class="flex flex-row items-center gap-4">
                 <Button variant="outline" size="sm" as={A} href="/products">
                   <ArrowLeft class="size-4" />
@@ -176,111 +176,113 @@ export default function ProductPage() {
                 </DropdownMenu>
               </div>
             </div>
-            <div class="grid grid-cols-5 w-full grow gap-4">
-              <div class="col-span-3 grow flex">
-                <ProductImages product={productInfo} />
-              </div>
-              <div class="col-span-2 w-full grow flex gap-4">
-                <div class="flex flex-col w-full grow gap-4">
-                  <div class="flex flex-col gap-2 w-full">
-                    <div class="flex flex-col w-full gap-4">
-                      <div class="flex flex-col w-full gap-2">
-                        <h2 class="md:text-2xl font-bold uppercase text-wrap">{productInfo().name}</h2>
-                        <span class="text-sm text-muted-foreground">
-                          {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - HH:mm A")}
+            <div class="flex flex-col w-full grow gap-4">
+              <div class="flex flex-col md:grid grid-cols-5 w-full grow gap-4">
+                <div class="col-span-3 grow flex">
+                  <ProductImages product={productInfo} />
+                </div>
+                <div class="col-span-2 w-full grow flex gap-4">
+                  <div class="flex flex-col w-full grow gap-4">
+                    <div class="flex flex-col gap-2 w-full">
+                      <div class="flex flex-col w-full gap-4">
+                        <div class="flex flex-col w-full gap-2">
+                          <h2 class="md:text-2xl font-bold uppercase text-wrap">{productInfo().name}</h2>
+                          <span class="text-sm text-muted-foreground">
+                            {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - HH:mm A")}
+                          </span>
+                        </div>
+                        <span class="text-muted-foreground">{productInfo().description}</span>
+                      </div>
+                      <Show when={productInfo().deletedAt}>
+                        <Badge variant="outline" class="bg-rose-500 border-0">
+                          Deleted
+                        </Badge>
+                      </Show>
+                      <Show when={!productInfo().isInSortiment}>
+                        <Badge variant="outline" class="bg-rose-500 border-0 text-white">
+                          Not in Sortiment
+                        </Badge>
+                      </Show>
+                    </div>
+                    <div class="flex flex-col gap-1 border-b py-0">
+                      <div class="flex flex-col gap-1 pb-10">
+                        <span class="text-3xl font-bold font-['Geist_Mono_Variable']">
+                          {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
                         </span>
                       </div>
-                      <span class="text-muted-foreground">{productInfo().description}</span>
-                    </div>
-                    <Show when={productInfo().deletedAt}>
-                      <Badge variant="outline" class="bg-rose-500 border-0">
-                        Deleted
-                      </Badge>
-                    </Show>
-                    <Show when={!productInfo().isInSortiment}>
-                      <Badge variant="outline" class="bg-rose-500 border-0 text-white">
-                        Not in Sortiment
-                      </Badge>
-                    </Show>
-                  </div>
-                  <div class="flex flex-col gap-1 border-b py-0">
-                    <div class="flex flex-col gap-1 pb-10">
-                      <span class="text-3xl font-bold font-['Geist_Mono_Variable']">
-                        {productInfo().sellingPrice.toFixed(2)} {productInfo().currency}
-                      </span>
-                    </div>
-                    <Show when={productInfo().suppliers}>
-                      {(suppliers) => (
-                        <div class="flex flex-col gap-1 py-4">
-                          <div class="flex flex-row gap-1 items-center justify-between">
-                            <span class="text-sm font-medium">Bought at</span>
-                            <div class="flex flex-row gap-1">
-                              <For
-                                each={suppliers().flatMap((s) => s.priceHistory)}
-                                fallback={
-                                  <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">N/A</span>
-                                }
-                              >
-                                {(p, i) => (
-                                  <div class="flex flex-row">
-                                    <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
-                                      {(p.supplierPrice ?? 0).toFixed(2)} {productInfo().currency}
-                                    </span>
-                                    <Show when={i() < suppliers().length - 1}>
-                                      <span class="text-sm text-muted-foreground">/</span>
-                                    </Show>
-                                  </div>
-                                )}
-                              </For>
+                      <Show when={productInfo().suppliers}>
+                        {(suppliers) => (
+                          <div class="flex flex-col gap-1 py-4">
+                            <div class="flex flex-row gap-1 items-center justify-between">
+                              <span class="text-sm font-medium">Bought at</span>
+                              <div class="flex flex-row gap-1">
+                                <For
+                                  each={suppliers().flatMap((s) => s.priceHistory)}
+                                  fallback={
+                                    <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">N/A</span>
+                                  }
+                                >
+                                  {(p, i) => (
+                                    <div class="flex flex-row">
+                                      <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
+                                        {(p.supplierPrice ?? 0).toFixed(2)} {productInfo().currency}
+                                      </span>
+                                      <Show when={i() < suppliers().length - 1}>
+                                        <span class="text-sm text-muted-foreground">/</span>
+                                      </Show>
+                                    </div>
+                                  )}
+                                </For>
+                              </div>
+                            </div>
+                            <div class="flex flex-row gap-1 items-center justify-between">
+                              <span class="text-sm font-medium">Margin</span>
+                              <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
+                                <MarginRange suppliers={suppliers()} sellingPrice={productInfo().sellingPrice} />
+                              </span>
                             </div>
                           </div>
-                          <div class="flex flex-row gap-1 items-center justify-between">
-                            <span class="text-sm font-medium">Margin</span>
-                            <span class="text-sm text-muted-foreground font-['Geist_Mono_Variable']">
-                              <MarginRange suppliers={suppliers()} sellingPrice={productInfo().sellingPrice} />
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </Show>
-                  </div>
-                  <div class="flex flex-col gap-1 border-b py-4">
-                    <Inventory product={productInfo} />
-                  </div>
-                  <div class="flex flex-col gap-1 pt-8">
-                    <Actions product={productInfo} />
+                        )}
+                      </Show>
+                    </div>
+                    <div class="flex flex-col gap-1 border-b py-4">
+                      <Inventory product={productInfo} />
+                    </div>
+                    <div class="flex flex-col gap-1 pt-8">
+                      <Actions product={productInfo} />
+                    </div>
                   </div>
                 </div>
               </div>
+              <Tabs defaultValue="codes" class="w-full max-w-full">
+                <TabsList class="flex flex-row w-full items-center justify-start h-max max-w-screen overflow-x-auto">
+                  <TabsTrigger value="codes">Codes</TabsTrigger>
+                  <TabsTrigger value="labels">Labels</TabsTrigger>
+                  <TabsTrigger value="conditions">Conditions</TabsTrigger>
+                  <TabsTrigger value="certificates">Certificates</TabsTrigger>
+                  <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+                  <TabsTrigger value="history">History</TabsTrigger>
+                </TabsList>
+                <TabsContent value="codes">
+                  <Codes product={productInfo} />
+                </TabsContent>
+                <TabsContent value="labels">
+                  <Labels product={productInfo} />
+                </TabsContent>
+                <TabsContent value="certificates">
+                  <Certificates product={productInfo} />
+                </TabsContent>
+                <TabsContent value="conditions">
+                  <Conditions product={productInfo} />
+                </TabsContent>
+                <TabsContent value="suppliers">
+                  <Suppliers product={productInfo} />
+                </TabsContent>
+                <TabsContent value="history">
+                  <PricingHistory product={productInfo} />
+                </TabsContent>
+              </Tabs>
             </div>
-            <Tabs defaultValue="codes" class="w-full max-w-full">
-              <TabsList class="flex flex-row w-full items-center justify-start h-max">
-                <TabsTrigger value="codes">Codes</TabsTrigger>
-                <TabsTrigger value="labels">Labels</TabsTrigger>
-                <TabsTrigger value="conditions">Conditions</TabsTrigger>
-                <TabsTrigger value="certificates">Certificates</TabsTrigger>
-                <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-              <TabsContent value="codes">
-                <Codes product={productInfo} />
-              </TabsContent>
-              <TabsContent value="labels">
-                <Labels product={productInfo} />
-              </TabsContent>
-              <TabsContent value="certificates">
-                <Certificates product={productInfo} />
-              </TabsContent>
-              <TabsContent value="conditions">
-                <Conditions product={productInfo} />
-              </TabsContent>
-              <TabsContent value="suppliers">
-                <Suppliers product={productInfo} />
-              </TabsContent>
-              <TabsContent value="history">
-                <PricingHistory product={productInfo} />
-              </TabsContent>
-            </Tabs>
           </div>
         )}
       </Show>

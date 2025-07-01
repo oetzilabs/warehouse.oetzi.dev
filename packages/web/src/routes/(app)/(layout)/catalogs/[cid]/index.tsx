@@ -86,7 +86,7 @@ export default function CatalogPage() {
   };
 
   return (
-    <div class="container flex flex-col gap-4 py-0">
+    <div class="container flex flex-col gap-4 py-0 relative">
       <div class="flex flex-row items-center gap-4">
         <Button variant="outline" size="sm" as={A} href="/catalogs" class="w-max">
           <ArrowLeft class="size-4" />

@@ -35,10 +35,10 @@ export default function UpdateProductInventoryPage() {
   return (
     <Show when={data()}>
       {(product) => (
-        <div class="container flex flex-col grow py-0">
+        <div class="container flex flex-col grow py-0 relative">
           <div class="w-full flex flex-row h-full gap-4">
             <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full">
+              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
                 <div class="flex flex-row items-center gap-2">
                   <Button variant="outline" size="sm" as={A} href="/inventory">
                     <ArrowLeft class="size-4" />

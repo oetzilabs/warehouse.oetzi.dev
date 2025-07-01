@@ -112,7 +112,7 @@ export default function DashboardPage() {
                   {(s) => (
                     <A
                       class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 md:border-r hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
-                      href="/schedule"
+                      href="/schedules"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
                         <span class="font-semibold">Schedules</span>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                         </div>
                         <div class="flex flex-row gap-2">
                           <Button size="sm" as={A} href="/orders/new" disabled variant="outline" class="bg-background">
-                            Create
+                            <span class="sr-only md:not-sr-only">Create</span>
                             <Plus class="size-4" />
                           </Button>
                           <Button size="sm" as={A} href="/orders">
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                             variant="outline"
                             class="bg-background"
                           >
-                            Create
+                            <span class="sr-only md:not-sr-only">Create</span>
                             <Plus class="size-4" />
                           </Button>
                           <Button size="sm" as={A} href="/purchases">

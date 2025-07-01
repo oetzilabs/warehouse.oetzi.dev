@@ -4,6 +4,7 @@ import { safeParse, type InferInput } from "valibot";
 import { ScheduleCreateSchema, ScheduleUpdateSchema, TB_schedules } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrganizationId } from "../organizations/id";
 import {
   ScheduleInvalidId,
   ScheduleNotCreated,
@@ -40,7 +41,20 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
             customers: {
               with: {
                 customer: true,
-                order: true,
+                order: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                    sale: {
+                      with: {
+                        items: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -122,7 +136,20 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
             customers: {
               with: {
                 customer: true,
-                order: true,
+                order: {
+                  with: {
+                    products: {
+                      with: {
+                        product: true,
+                      },
+                    },
+                    sale: {
+                      with: {
+                        items: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -140,7 +167,20 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
           where: (fields, operations) => operations.eq(fields.customerId, parsedCustomerId.output),
           with: {
             schedule: true,
-            order: true,
+            order: {
+              with: {
+                products: {
+                  with: {
+                    product: true,
+                  },
+                },
+                sale: {
+                  with: {
+                    items: true,
+                  },
+                },
+              },
+            },
           },
         }),
       );
@@ -162,17 +202,12 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
       );
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/schedules/findByOrganizationId")(function* (
-      organizationId: string,
-    ) {
-      const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrganizationId.success) {
-        return yield* Effect.fail(new ScheduleInvalidId({ id: organizationId }));
-      }
+    const findByOrganizationId = Effect.fn("@warehouse/schedules/findByOrganizationId")(function* () {
+      const orgId = yield* OrganizationId;
 
       const orders = yield* Effect.promise(() =>
         db.query.TB_customer_orders.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
+          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
           with: {
             custSched: {
               with: {
@@ -181,7 +216,20 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
                     customers: {
                       with: {
                         customer: true,
-                        order: true,
+                        order: {
+                          with: {
+                            products: {
+                              with: {
+                                product: true,
+                              },
+                            },
+                            sale: {
+                              with: {
+                                items: true,
+                              },
+                            },
+                          },
+                        },
                       },
                     },
                   },

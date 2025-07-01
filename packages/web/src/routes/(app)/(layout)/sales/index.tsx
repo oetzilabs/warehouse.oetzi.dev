@@ -7,16 +7,17 @@ import { getSales } from "@/lib/api/sales";
 import { A, createAsync, revalidate, RouteDefinition, useParams } from "@solidjs/router";
 import { SaleInfo } from "@warehouseoetzidev/core/src/entities/sales";
 import dayjs from "dayjs";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
-    const sessionToken = getSessionToken();
-    const sales = getSales();
+  preload: async (props) => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    const sales = await getSales();
     return { user, sessionToken, sales };
   },
 } as RouteDefinition;
@@ -71,11 +72,17 @@ export default function SalesPage() {
   };
 
   return (
-    <div class="container flex flex-col grow py-0">
+    <div class="container flex flex-col grow py-0 relative">
       <div class="w-full flex flex-row h-full gap-4">
-        <div class="w-full flex flex-col gap-4">
-          <div class="flex items-center gap-4 justify-between w-full">
-            <h1 class="font-semibold leading-none">Sales</h1>
+        <div class="w-full flex flex-col bg-background">
+          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
+            <div class="flex flex-row items-center gap-4">
+              <Button variant="outline" size="sm" as={A} href="/dashboard" class="bg-background">
+                <ArrowLeft class="size-4" />
+                Back
+              </Button>
+              <h1 class="font-semibold leading-none">Sales</h1>
+            </div>
             <div class="flex items-center gap-0">
               <Button
                 size="icon"
@@ -93,7 +100,7 @@ export default function SalesPage() {
               </Button>
               <Button size="sm" class="pl-2.5 rounded-l-none" as={A} href="/sales/new">
                 <Plus class="size-4" />
-                Create
+                <span class="sr-only md:not-sr-only">Create</span>
               </Button>
             </div>
           </div>

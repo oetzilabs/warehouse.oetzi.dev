@@ -42,7 +42,7 @@ function summarizeTransactionsByDay(transactions: AccoutingTransaction[]) {
   }
 
   // Sort by date descending (latest first)
-  return Object.values(grouped).sort((a, b) => dayjs(b.date).unix() - dayjs(a.date).unix());
+  return Object.values(grouped).sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
 }
 
 export const AccountingList = (props: AccountingListProps) => {
@@ -57,12 +57,12 @@ export const AccountingList = (props: AccountingListProps) => {
     sort: {
       default: "date",
       current: "date",
-      direction: "desc",
+      direction: "asc",
       variants: [
         {
           field: "date",
           label: "Date",
-          fn: (a, b) => dayjs(b.date).unix() - dayjs(a.date).unix(),
+          fn: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
         },
       ],
     },

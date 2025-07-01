@@ -55,7 +55,7 @@ export default function NewSupplierPage() {
 
   return (
     <div class="container flex flex-col grow py-0 gap-4">
-      <div class="flex items-center gap-4 justify-between w-full">
+      <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
         <div class="flex items-center gap-4">
           <Button size="sm" variant="outline" as={A} href="/suppliers">
             <ArrowLeft class="size-4" />
@@ -80,12 +80,12 @@ export default function NewSupplierPage() {
                   fallback={
                     <>
                       <Plus class="size-4" />
-                      Create
+                      <span class="sr-only md:not-sr-only">Create</span>
                     </>
                   }
                 >
                   <Loader2 class="size-4 animate-spin" />
-                  Creating
+                  <span class="sr-only md:not-sr-only">Creating</span>
                 </Show>
               </Button>
             )}
@@ -100,13 +100,7 @@ export default function NewSupplierPage() {
           form.handleSubmit();
         }}
       >
-        <form.Field
-          name="name"
-          validators={{
-            onChange: pipe(string(), minLength(3)),
-            onBlur: pipe(string(), minLength(3)),
-          }}
-        >
+        <form.Field name="name">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">
@@ -118,19 +112,10 @@ export default function NewSupplierPage() {
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>
-        <form.Field
-          name="email"
-          validators={{
-            onChange: pipe(string(), email()),
-            onBlur: pipe(string(), email()),
-          }}
-        >
+        <form.Field name="email">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Email</TextFieldLabel>
@@ -141,13 +126,10 @@ export default function NewSupplierPage() {
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>
-        <form.Field name="phone" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="phone">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Phone</TextFieldLabel>
@@ -161,7 +143,7 @@ export default function NewSupplierPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="bank_details" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="bank_details">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Bank Details</TextFieldLabel>
@@ -174,7 +156,7 @@ export default function NewSupplierPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="tax_id" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="tax_id">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Tax ID</TextFieldLabel>
@@ -187,7 +169,7 @@ export default function NewSupplierPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="code" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="code">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Supplier Code</TextFieldLabel>
@@ -200,7 +182,7 @@ export default function NewSupplierPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="payment_terms" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="payment_terms">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Payment Terms</TextFieldLabel>
@@ -213,7 +195,7 @@ export default function NewSupplierPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="website" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="website">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Website</TextFieldLabel>

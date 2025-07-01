@@ -439,7 +439,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       // }
       const ids = products.map((p) => p.id);
 
-      const productsInOrganization = [];
+      const productsInOrganization: string[] = [];
       for (const productId of ids) {
         const orgProduct = yield* Effect.promise(() =>
           db.query.TB_organizations_products.findFirst({
@@ -481,7 +481,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       );
 
       const xStock = storages.flatMap((s) =>
-        s.productSummary.map((ps) => ({ productId: ps.product.id, stock: ps.count })),
+        s.productSummary
+          .filter((ps) => productsInOrganization.includes(ps.product.id))
+          .map((ps) => ({ productId: ps.product.id, stock: ps.count })),
       );
 
       return xStock;

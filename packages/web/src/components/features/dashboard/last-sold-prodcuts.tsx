@@ -24,7 +24,7 @@ export const LastSoldProducts = () => {
               <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Last Sold Products</h3>
               <div class="flex flex-row gap-2">
                 <Button size="sm" as={A} href="/products/new">
-                  Create
+                  <span class="sr-only md:not-sr-only">Create</span>
                   <Plus class="size-4" />
                 </Button>
               </div>

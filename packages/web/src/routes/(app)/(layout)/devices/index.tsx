@@ -25,10 +25,10 @@ export default function DevicesPage() {
   return (
     <Show when={data()}>
       {(devicesList) => (
-        <div class="container flex flex-col grow py-0">
+        <div class="container flex flex-col grow py-0 relative">
           <div class="w-full flex flex-row h-full">
-            <div class="w-full flex flex-col gap-4">
-              <div class="flex items-center gap-4 justify-between w-full">
+            <div class="w-full flex flex-col gap-0">
+              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
                 <div class="flex flex-row items-center gap-4">
                   <Button size="sm" variant="outline" class="bg-background" as={A} href="/dashboard">
                     <ArrowLeft class="size-4" />
@@ -51,9 +51,9 @@ export default function DevicesPage() {
                   >
                     <RotateCw class="size-4" />
                   </Button>
-                  <Button as={A} href="/devices/new" size="sm" class="pl-2.5 rounded-l-none">
+                  <Button as={A} href="/devices/new" size="sm" class="pl-2.5 rounded-l-none pr-2.5 md:pr-3">
                     <Plus class="size-4" />
-                    Add Device
+                    <span class="sr-only md:not-sr-only">Add Device</span>
                   </Button>
                 </div>
               </div>

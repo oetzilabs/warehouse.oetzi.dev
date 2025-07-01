@@ -6,9 +6,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getAuthenticatedUser } from "@/lib/api/auth";
+import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getCustomers } from "@/lib/api/customers";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Upload from "lucide-solid/icons/upload";
@@ -16,9 +17,11 @@ import { Show } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {
-  preload: () => {
-    getAuthenticatedUser();
-    getCustomers();
+  preload: async () => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    const customers = await getCustomers();
+    return { user, sessionToken, customers };
   },
 } as RouteDefinition;
 
@@ -28,11 +31,17 @@ export default function CustomersPage() {
   return (
     <Show when={data()}>
       {(customersList) => (
-        <div class="container flex flex-col grow py-0">
+        <div class="container flex flex-col grow py-0 relative">
           <div class="w-full flex flex-row h-full">
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full ">
-                <h1 class="font-semibold leading-none">Customers</h1>
+                <div class="flex flex-row items-center gap-4">
+                  <Button variant="outline" size="sm" as={A} href="/dashboard" class="bg-background">
+                    <ArrowLeft class="size-4" />
+                    Back
+                  </Button>
+                  <h1 class="font-semibold leading-none">Customers</h1>
+                </div>
                 <div class="flex items-center gap-0">
                   <Button
                     size="icon"
@@ -56,7 +65,7 @@ export default function CustomersPage() {
                     <DropdownMenuContent>
                       <DropdownMenuItem as={A} href="/customers/new" class="cursor-pointer">
                         <Plus class="size-4" />
-                        Create New
+                        <span class="sr-only md:not-sr-only">Create New</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Upload class="size-4" />
