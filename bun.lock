@@ -44,7 +44,6 @@
         "@aws-sdk/client-s3": "3.808.0",
         "@aws-sdk/client-sns": "3.808.0",
         "@aws-sdk/s3-request-presigner": "3.808.0",
-        "@effect/sql-drizzle": "0.39.3",
         "@gcornut/valibot-json-schema": "^0.42.0",
         "@napi-rs/canvas": "0.1.70",
         "@neondatabase/serverless": "1.0.0",
