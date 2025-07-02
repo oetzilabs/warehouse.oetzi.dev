@@ -21,25 +21,7 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
   "@warehouse/document-storage-offers",
   {
     effect: Effect.gen(function* (_) {
-      const database = yield* _(DatabaseService);
-      const db = yield* database.instance;
-
-      type FindManyParams = NonNullable<Parameters<typeof db.query.TB_document_storage_offers.findMany>[0]>;
-
-      const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-        const defaultRelations: NonNullable<FindManyParams["with"]> = {
-          featureSets: {
-            with: {
-              feature_set: true,
-            },
-          },
-        };
-
-        if (options) {
-          return options;
-        }
-        return defaultRelations;
-      };
+      const db = yield* DatabaseService;
 
       const create = (input: InferInput<typeof DocumentStorageOfferCreateSchema>, organization_id: string) =>
         Effect.gen(function* (_) {
@@ -48,19 +30,15 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
             return yield* Effect.fail(new DocumentStorageOfferInvalidId({ id: organization_id }));
           }
 
-          const [storage] = yield* Effect.promise(() =>
-            db.insert(TB_document_storage_offers).values(input).returning(),
-          );
+          const [storage] = yield* db.insert(TB_document_storage_offers).values(input).returning();
 
-          const connectedWithOrg = yield* Effect.promise(() =>
-            db
-              .insert(TB_organizations_storages)
-              .values({
-                organizationId: parsedOrgId.output,
-                storageId: storage.id,
-              })
-              .returning(),
-          );
+          const connectedWithOrg = yield* db
+            .insert(TB_organizations_storages)
+            .values({
+              organizationId: parsedOrgId.output,
+              storageId: storage.id,
+            })
+            .returning();
 
           if (!connectedWithOrg) {
             return yield* Effect.fail(new DocumentStorageOfferCreateFailed({ organizationId: organization_id }));
@@ -69,19 +47,23 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
           return storage;
         });
 
-      const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
+      const findById = (id: string) =>
         Effect.gen(function* (_) {
           const parsedId = safeParse(prefixed_cuid2, id);
           if (!parsedId.success) {
             return yield* Effect.fail(new DocumentStorageOfferInvalidId({ id }));
           }
 
-          const result = yield* Effect.promise(() =>
-            db.query.TB_document_storage_offers.findFirst({
-              where: (storages, operations) => operations.eq(storages.id, parsedId.output),
-              with: relations,
-            }),
-          );
+          const result = yield* db.query.TB_document_storage_offers.findFirst({
+            where: (storages, operations) => operations.eq(storages.id, parsedId.output),
+            with: {
+              featureSets: {
+                with: {
+                  feature_set: true,
+                },
+              },
+            },
+          });
 
           if (!result) {
             return yield* Effect.fail(new DocumentStorageOfferNotFound({ id }));
@@ -92,22 +74,18 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
 
       const update = (input: InferInput<typeof DocumentStorageOfferUpdateSchema>) =>
         Effect.gen(function* (_) {
-          const exists = yield* Effect.promise(() =>
-            db.query.TB_document_storages.findFirst({
-              where: (storages, operations) => operations.eq(storages.id, input.id),
-            }),
-          );
+          const exists = yield* db.query.TB_document_storages.findFirst({
+            where: (storages, operations) => operations.eq(storages.id, input.id),
+          });
           if (!exists) {
             return yield* Effect.fail(new DocumentStorageOfferNotFound({ id: input.id }));
           }
 
-          const [updated] = yield* Effect.promise(() =>
-            db
-              .update(TB_document_storage_offers)
-              .set({ ...input, updatedAt: new Date() })
-              .where(eq(TB_document_storage_offers.id, input.id))
-              .returning(),
-          );
+          const [updated] = yield* db
+            .update(TB_document_storage_offers)
+            .set({ ...input, updatedAt: new Date() })
+            .where(eq(TB_document_storage_offers.id, input.id))
+            .returning();
 
           if (!updated) {
             return yield* Effect.fail(new DocumentStorageOfferUpdateFailed({ id: input.id }));
@@ -123,13 +101,11 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
             return yield* Effect.fail(new DocumentStorageOfferInvalidId({ id }));
           }
 
-          const result = yield* Effect.promise(() =>
-            db
-              .update(TB_document_storage_offers)
-              .set({ deletedAt: new Date() })
-              .where(eq(TB_document_storage_offers.id, parsedId.output))
-              .returning(),
-          );
+          const result = yield* db
+            .update(TB_document_storage_offers)
+            .set({ deletedAt: new Date() })
+            .where(eq(TB_document_storage_offers.id, parsedId.output))
+            .returning();
 
           if (result.length === 0) {
             return yield* Effect.fail(new DocumentStorageOfferDeleteFailed({ id }));
@@ -138,13 +114,17 @@ export class DocumentStorageOfferService extends Effect.Service<DocumentStorageO
           return result;
         });
 
-      const all = (relations: FindManyParams["with"] = withRelations()) =>
+      const all = () =>
         Effect.gen(function* (_) {
-          return yield* Effect.promise(() =>
-            db.query.TB_document_storage_offers.findMany({
-              with: relations,
-            }),
-          );
+          return yield* db.query.TB_document_storage_offers.findMany({
+            with: {
+              featureSets: {
+                with: {
+                  feature_set: true,
+                },
+              },
+            },
+          });
         });
 
       return {

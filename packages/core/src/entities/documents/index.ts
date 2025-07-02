@@ -16,30 +16,14 @@ import {
 
 export class DocumentService extends Effect.Service<DocumentService>()("@warehouse/documents", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
-
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_documents.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        storage: true,
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
+    const db = yield* DatabaseService;
 
     const create = (userInput: InferInput<typeof DocumentCreateSchema>) =>
       Effect.gen(function* (_) {
-        const [document] = yield* Effect.promise(() =>
-          db
-            .insert(TB_documents)
-            .values({ ...userInput })
-            .returning(),
-        );
+        const [document] = yield* db
+          .insert(TB_documents)
+          .values({ ...userInput })
+          .returning();
 
         if (!document) {
           return yield* Effect.fail(new DocumentNotCreated({}));
@@ -48,21 +32,19 @@ export class DocumentService extends Effect.Service<DocumentService>()("@warehou
         return document;
       });
 
-    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new DocumentInvalidId({ id }));
         }
 
-        const document = yield* Effect.promise(() =>
-          db.query.TB_documents.findFirst({
-            where: (documents, operations) => operations.eq(documents.id, parsedId.output),
-            with: {
-              storage: true,
-            },
-          }),
-        );
+        const document = yield* db.query.TB_documents.findFirst({
+          where: (documents, operations) => operations.eq(documents.id, parsedId.output),
+          with: {
+            storage: true,
+          },
+        });
 
         if (!document) {
           return yield* Effect.fail(new DocumentNotFound({ id }));
@@ -78,13 +60,11 @@ export class DocumentService extends Effect.Service<DocumentService>()("@warehou
           return yield* Effect.fail(new DocumentInvalidId({ id: input.id }));
         }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_documents)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_documents.id, parsedId.output))
-            .returning(),
-        );
+        const [updated] = yield* db
+          .update(TB_documents)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_documents.id, parsedId.output))
+          .returning();
 
         if (!updated) {
           return yield* Effect.fail(new DocumentNotUpdated({ id: input.id }));
@@ -100,9 +80,7 @@ export class DocumentService extends Effect.Service<DocumentService>()("@warehou
           return yield* Effect.fail(new DocumentInvalidId({ id }));
         }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_documents).where(eq(TB_documents.id, parsedId.output)).returning(),
-        );
+        const [deleted] = yield* db.delete(TB_documents).where(eq(TB_documents.id, parsedId.output)).returning();
 
         if (!deleted) {
           return yield* Effect.fail(new DocumentNotDeleted({ id }));
@@ -118,13 +96,11 @@ export class DocumentService extends Effect.Service<DocumentService>()("@warehou
           return yield* Effect.fail(new DocumentInvalidId({ id }));
         }
 
-        const entries = yield* Effect.promise(() =>
-          db
-            .update(TB_documents)
-            .set({ deletedAt: new Date() })
-            .where(eq(TB_documents.id, parsedId.output))
-            .returning(),
-        );
+        const entries = yield* db
+          .update(TB_documents)
+          .set({ deletedAt: new Date() })
+          .where(eq(TB_documents.id, parsedId.output))
+          .returning();
 
         if (entries.length === 0) {
           return yield* Effect.fail(new DocumentNotCreated({ message: "Failed to safe remove document" }));
@@ -139,18 +115,16 @@ export class DocumentService extends Effect.Service<DocumentService>()("@warehou
         if (!parsedOrganizationId.success) {
           return yield* Effect.fail(new DocumentInvalidId({ id: organizationId }));
         }
-        const documents = yield* Effect.promise(() =>
-          db.query.TB_organizations_documents.findMany({
-            where: (documents, operations) => operations.eq(documents.organizationId, parsedOrganizationId.output),
-            with: {
-              document: {
-                with: {
-                  storage: true,
-                },
+        const documents = yield* db.query.TB_organizations_documents.findMany({
+          where: (documents, operations) => operations.eq(documents.organizationId, parsedOrganizationId.output),
+          with: {
+            document: {
+              with: {
+                storage: true,
               },
             },
-          }),
-        );
+          },
+        });
         return documents.map((d) => d.document);
       });
 

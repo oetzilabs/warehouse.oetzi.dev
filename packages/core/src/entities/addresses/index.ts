@@ -8,13 +8,12 @@ import { AddressInvalidId, AddressNotDeleted, AddressNotFound, AddressNotUpdated
 
 export class AddressService extends Effect.Service<AddressService>()("@warehouse/addresses", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/addresses/create")(function* (
       userInput: InferInput<typeof AddressCreateSchema>,
     ) {
-      const [address] = yield* Effect.promise(() => db.insert(TB_addresses).values(userInput).returning());
+      const [address] = yield* db.insert(TB_addresses).values(userInput).returning();
       return address;
     });
 
@@ -24,15 +23,13 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
         return yield* Effect.fail(new AddressInvalidId({ id }));
       }
 
-      const result = yield* Effect.promise(() =>
-        db.query.TB_addresses.findFirst({
-          where: (addresses, { eq }) => eq(addresses.id, parsedId.output),
-          with: {
-            organizations: true,
-            warehouses: true,
-          },
-        }),
-      );
+      const result = yield* db.query.TB_addresses.findFirst({
+        where: (addresses, { eq }) => eq(addresses.id, parsedId.output),
+        with: {
+          organizations: true,
+          warehouses: true,
+        },
+      });
 
       if (!result) {
         return yield* Effect.fail(new AddressNotFound({ id }));
@@ -42,12 +39,10 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
     });
 
     const findByLatLon = Effect.fn("@warehouse/addresses/findByLatLon")(function* (lat_lon: [number, number]) {
-      return yield* Effect.promise(() =>
-        db.query.TB_addresses.findFirst({
-          where: (addresses, operations) =>
-            operations.and(operations.eq(addresses.lat, lat_lon[0]), operations.eq(addresses.lon, lat_lon[1])),
-        }),
-      );
+      return yield* db.query.TB_addresses.findFirst({
+        where: (addresses, operations) =>
+          operations.and(operations.eq(addresses.lat, lat_lon[0]), operations.eq(addresses.lon, lat_lon[1])),
+      });
     });
 
     const update = Effect.fn("@warehouse/addresses/update")(function* (input: InferInput<typeof AddressUpdateSchema>) {
@@ -56,13 +51,11 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
         return yield* Effect.fail(new AddressInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_addresses)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_addresses.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_addresses)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_addresses.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new AddressNotUpdated({ id: input.id }));
@@ -77,13 +70,7 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
         return yield* Effect.fail(new AddressInvalidId({ id }));
       }
 
-      const result = yield* Effect.promise(() =>
-        db
-          .delete(TB_addresses)
-          .where(eq(TB_addresses.id, parsedId.output))
-          .returning()
-          .then(([x]) => x),
-      );
+      const [result] = yield* db.delete(TB_addresses).where(eq(TB_addresses.id, parsedId.output)).returning();
 
       if (!result) {
         return yield* Effect.fail(new AddressNotDeleted({ id }));
@@ -93,7 +80,7 @@ export class AddressService extends Effect.Service<AddressService>()("@warehouse
     });
 
     const all = Effect.fn("@warehouse/addresses/all")(function* () {
-      return yield* Effect.promise(() => db.query.TB_addresses.findMany());
+      return yield* db.query.TB_addresses.findMany();
     });
 
     return {

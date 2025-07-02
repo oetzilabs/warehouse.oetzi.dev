@@ -15,12 +15,11 @@ export class StorageConditionService extends Effect.Service<StorageConditionServ
   "@warehouse/storage-conditions",
   {
     effect: Effect.gen(function* (_) {
-      const database = yield* _(DatabaseService);
-      const db = yield* database.instance;
+      const db = yield* DatabaseService;
 
       const create = (input: InferInput<typeof StorageConditionCreateSchema>) =>
         Effect.gen(function* (_) {
-          const [condition] = yield* Effect.promise(() => db.insert(TB_storage_conditions).values(input).returning());
+          const [condition] = yield* db.insert(TB_storage_conditions).values(input).returning();
           if (!condition) {
             return yield* Effect.fail(new StorageNotCreated());
           }
@@ -34,11 +33,9 @@ export class StorageConditionService extends Effect.Service<StorageConditionServ
             return yield* Effect.fail(new StorageInvalidId({ id }));
           }
 
-          const condition = yield* Effect.promise(() =>
-            db.query.TB_storage_conditions.findFirst({
-              where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            }),
-          );
+          const condition = yield* db.query.TB_storage_conditions.findFirst({
+            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          });
 
           if (!condition) {
             return yield* Effect.fail(new StorageNotFound({ id }));
@@ -49,7 +46,7 @@ export class StorageConditionService extends Effect.Service<StorageConditionServ
 
       const findAll = () =>
         Effect.gen(function* (_) {
-          return yield* Effect.promise(() => db.query.TB_storage_conditions.findMany());
+          return yield* db.query.TB_storage_conditions.findMany();
         });
 
       const update = (id: string, input: InferInput<typeof StorageConditionUpdateSchema>) =>
@@ -59,13 +56,11 @@ export class StorageConditionService extends Effect.Service<StorageConditionServ
             return yield* Effect.fail(new StorageInvalidId({ id }));
           }
 
-          const [condition] = yield* Effect.promise(() =>
-            db
-              .update(TB_storage_conditions)
-              .set({ ...input, updatedAt: new Date() })
-              .where(eq(TB_storage_conditions.id, parsedId.output))
-              .returning(),
-          );
+          const [condition] = yield* db
+            .update(TB_storage_conditions)
+            .set({ ...input, updatedAt: new Date() })
+            .where(eq(TB_storage_conditions.id, parsedId.output))
+            .returning();
 
           if (!condition) {
             return yield* Effect.fail(new StorageNotUpdated({ id }));
@@ -81,9 +76,10 @@ export class StorageConditionService extends Effect.Service<StorageConditionServ
             return yield* Effect.fail(new StorageInvalidId({ id }));
           }
 
-          const [deleted] = yield* Effect.promise(() =>
-            db.delete(TB_storage_conditions).where(eq(TB_storage_conditions.id, parsedId.output)).returning(),
-          );
+          const [deleted] = yield* db
+            .delete(TB_storage_conditions)
+            .where(eq(TB_storage_conditions.id, parsedId.output))
+            .returning();
 
           if (!deleted) {
             return yield* Effect.fail(new StorageNotDeleted({ id }));
@@ -96,42 +92,36 @@ export class StorageConditionService extends Effect.Service<StorageConditionServ
         Effect.gen(function* (_) {
           const parsedId = safeParse(prefixed_cuid2, id);
           if (!parsedId.success) return yield* Effect.fail(new StorageInvalidId({ id }));
-          const [deleted] = yield* Effect.promise(() =>
-            db
-              .update(TB_storage_conditions)
-              .set({ deletedAt: new Date() })
-              .where(eq(TB_storage_conditions.id, parsedId.output))
-              .returning(),
-          );
+          const [deleted] = yield* db
+            .update(TB_storage_conditions)
+            .set({ deletedAt: new Date() })
+            .where(eq(TB_storage_conditions.id, parsedId.output))
+            .returning();
           return deleted;
         });
 
       const assignToProduct = (productId: string, conditionId: string) =>
         Effect.gen(function* (_) {
-          yield* Effect.promise(() =>
-            db
-              .insert(TB_products_to_storage_conditions)
-              .values({
-                productId,
-                conditionId,
-              })
-              .returning(),
-          );
+          yield* db
+            .insert(TB_products_to_storage_conditions)
+            .values({
+              productId,
+              conditionId,
+            })
+            .returning();
         });
 
       const removeFromProduct = (productId: string, conditionId: string) =>
         Effect.gen(function* (_) {
-          yield* Effect.promise(() =>
-            db
-              .delete(TB_products_to_storage_conditions)
-              .where(
-                and(
-                  eq(TB_products_to_storage_conditions.productId, productId),
-                  eq(TB_products_to_storage_conditions.conditionId, conditionId),
-                ),
-              )
-              .returning(),
-          );
+          yield* db
+            .delete(TB_products_to_storage_conditions)
+            .where(
+              and(
+                eq(TB_products_to_storage_conditions.productId, productId),
+                eq(TB_products_to_storage_conditions.conditionId, conditionId),
+              ),
+            )
+            .returning();
         });
 
       return {

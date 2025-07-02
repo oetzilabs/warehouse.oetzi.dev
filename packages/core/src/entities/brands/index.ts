@@ -8,13 +8,12 @@ import { BrandInvalidId, BrandNotCreated, BrandNotDeleted, BrandNotFound, BrandN
 
 export class BrandService extends Effect.Service<BrandService>()("@warehouse/brands", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     type FindManyParams = NonNullable<Parameters<typeof db.query.TB_brands.findMany>[0]>;
 
     const create = Effect.fn("@warehouse/brands/create")(function* (userInput: InferInput<typeof BrandCreateSchema>) {
-      const [brand] = yield* Effect.promise(() => db.insert(TB_brands).values(userInput).returning());
+      const [brand] = yield* db.insert(TB_brands).values(userInput).returning();
       if (!brand) {
         return yield* Effect.fail(new BrandNotCreated({}));
       }
@@ -31,12 +30,10 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
         return yield* Effect.fail(new BrandInvalidId({ id }));
       }
 
-      const brand = yield* Effect.promise(() =>
-        db.query.TB_brands.findFirst({
-          where: (brands, operations) => operations.eq(brands.id, parsedId.output),
-          with: relations,
-        }),
-      );
+      const brand = yield* db.query.TB_brands.findFirst({
+        where: (brands, operations) => operations.eq(brands.id, parsedId.output),
+        with: relations,
+      });
 
       if (!brand) {
         return yield* Effect.fail(new BrandNotFound({ id }));
@@ -51,13 +48,11 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
         return yield* Effect.fail(new BrandInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_brands)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_brands.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_brands)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_brands.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new BrandNotUpdated({ id: input.id }));
@@ -72,9 +67,7 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
         return yield* Effect.fail(new BrandInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_brands).where(eq(TB_brands.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_brands).where(eq(TB_brands.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new BrandNotDeleted({ id }));
@@ -89,9 +82,11 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
         return yield* Effect.fail(new BrandInvalidId({ id }));
       }
 
-      const entries = yield* Effect.promise(() =>
-        db.update(TB_brands).set({ deletedAt: new Date() }).where(eq(TB_brands.id, parsedId.output)).returning(),
-      );
+      const entries = yield* db
+        .update(TB_brands)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_brands.id, parsedId.output))
+        .returning();
 
       if (entries.length === 0) {
         return yield* Effect.fail(new BrandNotCreated({ message: "Failed to safe remove brand" }));
@@ -101,7 +96,7 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
     });
 
     const all = Effect.fn("@warehouse/brands/all")(function* () {
-      return yield* Effect.promise(() => db.query.TB_brands.findMany());
+      return yield* db.query.TB_brands.findMany();
     });
 
     return {

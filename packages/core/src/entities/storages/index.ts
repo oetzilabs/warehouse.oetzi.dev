@@ -1,3 +1,4 @@
+import { SqlError } from "@effect/sql/SqlError";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { InferInput, safeParse } from "valibot";
@@ -8,23 +9,10 @@ import { StorageInvalidId, StorageNotCreated, StorageNotDeleted, StorageNotFound
 
 export class StorageService extends Effect.Service<StorageService>()("@warehouse/storages", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_storages.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => ({
-      area: true,
-      type: true,
-      parent: true,
-      children: {
-        with: {
-          type: true,
-        },
-      },
-    });
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/storages/create")(function* (input: InferInput<typeof StorageCreateSchema>) {
-      const [storage] = yield* Effect.promise(() => db.insert(TB_storages).values(input).returning());
+      const [storage] = yield* db.insert(TB_storages).values(input).returning();
       if (!storage) {
         return yield* Effect.fail(new StorageNotCreated());
       }
@@ -37,68 +25,66 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return yield* Effect.fail(new StorageInvalidId({ id }));
       }
 
-      const storage = yield* Effect.promise(() =>
-        db.query.TB_storages.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-          with: {
-            type: true,
-            area: true,
-            products: {
-              with: {
-                product: {
-                  with: {
-                    stcs: {
-                      with: {
-                        condition: true,
-                      },
+      const storage = yield* db.query.TB_storages.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          type: true,
+          area: true,
+          products: {
+            with: {
+              product: {
+                with: {
+                  stcs: {
+                    with: {
+                      condition: true,
                     },
-                    certs: {
-                      with: {
-                        cert: true,
-                      },
+                  },
+                  certs: {
+                    with: {
+                      cert: true,
                     },
-                    images: {
-                      with: {
-                        image: true,
-                      },
+                  },
+                  images: {
+                    with: {
+                      image: true,
                     },
-                    space: {
-                      with: {
-                        storage: true,
-                      },
+                  },
+                  space: {
+                    with: {
+                      storage: true,
                     },
-                    brands: true,
-                    saleItems: {
-                      with: {
-                        sale: {
-                          with: {
-                            customer: true,
-                          },
+                  },
+                  brands: true,
+                  saleItems: {
+                    with: {
+                      sale: {
+                        with: {
+                          customer: true,
                         },
                       },
                     },
-                    orders: {
-                      with: {
-                        customerOrder: true,
-                      },
+                  },
+                  orders: {
+                    with: {
+                      customerOrder: true,
                     },
-                    labels: {
-                      with: {
-                        label: true,
-                      },
+                  },
+                  labels: {
+                    with: {
+                      label: true,
                     },
-                    stco: {
-                      with: {
-                        condition: true,
-                      },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
                     },
-                    suppliers: {
-                      with: {
-                        supplier: {
-                          with: {
-                            contacts: true,
-                            notes: true,
-                          },
+                  },
+                  suppliers: {
+                    with: {
+                      supplier: {
+                        with: {
+                          contacts: true,
+                          notes: true,
                         },
                       },
                     },
@@ -106,12 +92,12 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
                 },
               },
             },
-            children: true,
-            labels: true,
-            parent: true,
           },
-        }),
-      );
+          children: true,
+          labels: true,
+          parent: true,
+        },
+      });
 
       if (!storage) {
         return yield* Effect.fail(new StorageNotFound({ id }));
@@ -129,13 +115,11 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return yield* Effect.fail(new StorageInvalidId({ id }));
       }
 
-      const [storage] = yield* Effect.promise(() =>
-        db
-          .update(TB_storages)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_storages.id, parsedId.output))
-          .returning(),
-      );
+      const [storage] = yield* db
+        .update(TB_storages)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_storages.id, parsedId.output))
+        .returning();
 
       if (!storage) {
         return yield* Effect.fail(new StorageNotUpdated({ id }));
@@ -150,9 +134,7 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return yield* Effect.fail(new StorageInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_storages).where(eq(TB_storages.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_storages).where(eq(TB_storages.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new StorageNotDeleted({ id }));
@@ -164,9 +146,11 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
     const safeRemove = Effect.fn("@warehouse/storages/safeRemove")(function* (id: string) {
       const parsedId = safeParse(prefixed_cuid2, id);
       if (!parsedId.success) return yield* Effect.fail(new StorageInvalidId({ id }));
-      const [deleted] = yield* Effect.promise(() =>
-        db.update(TB_storages).set({ deletedAt: new Date() }).where(eq(TB_storages.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_storages)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_storages.id, parsedId.output))
+        .returning();
       return deleted;
     });
 
@@ -175,12 +159,19 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       if (!parsedAreaId.success) {
         return yield* Effect.fail(new StorageInvalidId({ id: areaId }));
       }
-      const storages = yield* Effect.promise(() =>
-        db.query.TB_storages.findMany({
-          where: (fields, operations) => operations.eq(fields.warehouseAreaId, parsedAreaId.output),
-          with: withRelations(),
-        }),
-      );
+      const storages = yield* db.query.TB_storages.findMany({
+        where: (fields, operations) => operations.eq(fields.warehouseAreaId, parsedAreaId.output),
+        with: {
+          area: true,
+          type: true,
+          parent: true,
+          children: {
+            with: {
+              type: true,
+            },
+          },
+        },
+      });
       return storages;
     });
 
@@ -190,19 +181,17 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return yield* Effect.fail(new StorageInvalidId({ id: parentId }));
       }
 
-      const storages = yield* Effect.promise(() =>
-        db.query.TB_storages.findMany({
-          where: (fields, operations) => operations.eq(fields.parentId, parsedId.output),
-          with: {
-            type: true,
-            area: true,
-            products: true,
-            children: true,
-            labels: true,
-            parent: true,
-          },
-        }),
-      );
+      const storages = yield* db.query.TB_storages.findMany({
+        where: (fields, operations) => operations.eq(fields.parentId, parsedId.output),
+        with: {
+          type: true,
+          area: true,
+          products: true,
+          children: true,
+          labels: true,
+          parent: true,
+        },
+      });
 
       return storages;
     });
@@ -215,7 +204,10 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
 
     const findRoot = (
       storageId: string,
-    ): Effect.Effect<Effect.Effect.Success<ReturnType<typeof findById>>, StorageNotFound | StorageInvalidId> =>
+    ): Effect.Effect<
+      Effect.Effect.Success<ReturnType<typeof findById>>,
+      StorageNotFound | StorageInvalidId | SqlError
+    > =>
       Effect.gen(function* (_) {
         const storage = yield* findById(storageId);
         const parentId = storage.parentId;

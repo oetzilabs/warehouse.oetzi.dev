@@ -36,12 +36,11 @@ dayjs.extend(isBetween);
 
 export class SalesService extends Effect.Service<SalesService>()("@warehouse/sales", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
+    const db = yield* DatabaseService;
     const productService = yield* ProductService;
-    const db = yield* database.instance;
 
     const create = Effect.fn("@warehouse/sales/create")(function* (saleInput: InferInput<typeof SaleCreateSchema>) {
-      const [sale] = yield* Effect.promise(() => db.insert(TB_sales).values(saleInput).returning());
+      const [sale] = yield* db.insert(TB_sales).values(saleInput).returning();
       if (!sale) {
         return yield* Effect.fail(new SaleNotCreated({}));
       }
@@ -56,38 +55,36 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       }
       const orgId = yield* OrganizationId;
 
-      const sale = yield* Effect.promise(() =>
-        db.query.TB_sales.findFirst({
-          where: (fields, operations) =>
-            operations.and(operations.eq(fields.id, parsedId.output), operations.eq(fields.organizationId, orgId)),
-          with: {
-            items: {
-              with: {
-                product: {
-                  with: {
-                    organizations: {
-                      with: {
-                        priceHistory: true,
-                        tg: {
-                          with: {
-                            crs: {
-                              with: {
-                                tr: true,
-                              },
+      const sale = yield* db.query.TB_sales.findFirst({
+        where: (fields, operations) =>
+          operations.and(operations.eq(fields.id, parsedId.output), operations.eq(fields.organizationId, orgId)),
+        with: {
+          items: {
+            with: {
+              product: {
+                with: {
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
                             },
                           },
                         },
                       },
                     },
-                    brands: true,
                   },
+                  brands: true,
                 },
               },
             },
-            customer: true,
           },
-        }),
-      );
+          customer: true,
+        },
+      });
 
       if (!sale) {
         return yield* Effect.fail(new SaleNotFound({ id }));
@@ -122,13 +119,11 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       if (!parsedId.success) {
         return yield* Effect.fail(new SaleInvalidId({ id }));
       }
-      const [updatedSale] = yield* Effect.promise(() =>
-        db
-          .update(TB_sales)
-          .set({ ...saleInput, updatedAt: new Date() })
-          .where(eq(TB_sales.id, parsedId.output))
-          .returning(),
-      );
+      const [updatedSale] = yield* db
+        .update(TB_sales)
+        .set({ ...saleInput, updatedAt: new Date() })
+        .where(eq(TB_sales.id, parsedId.output))
+        .returning();
       if (!updatedSale) {
         return yield* Effect.fail(new SaleNotUpdated({ id }));
       }
@@ -140,9 +135,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       if (!parsedId.success) {
         return yield* Effect.fail(new SaleInvalidId({ id }));
       }
-      const [deletedSale] = yield* Effect.promise(() =>
-        db.delete(TB_sales).where(eq(TB_sales.id, parsedId.output)).returning(),
-      );
+      const [deletedSale] = yield* db.delete(TB_sales).where(eq(TB_sales.id, parsedId.output)).returning();
       if (!deletedSale) {
         return yield* Effect.fail(new SaleNotDeleted({ id }));
       }
@@ -159,63 +152,59 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
 
     const findWithinRange = Effect.fn("@warehouse/sales/findWithinRange")(function* (start: Date, end: Date) {
       const orgId = yield* OrganizationId;
-      const sales = yield* Effect.promise(() =>
-        db.query.TB_organizations_sales.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-          with: {
-            sale: {
-              with: {
-                items: {
-                  with: {
-                    product: true,
-                  },
+      const sales = yield* db.query.TB_organizations_sales.findMany({
+        where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+        with: {
+          sale: {
+            with: {
+              items: {
+                with: {
+                  product: true,
                 },
-                customer: true,
               },
+              customer: true,
             },
           },
-        }),
-      );
+        },
+      });
       return sales.filter((s) => dayjs(s.sale.createdAt).isBetween(start, end));
     });
 
     const findByOrganizationId = Effect.fn("@warehouse/sales/findByOrganizationId")(function* () {
       const orgId = yield* OrganizationId;
-      const sales = yield* Effect.promise(() =>
-        db.query.TB_organizations_sales.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-          with: {
-            sale: {
-              with: {
-                items: {
-                  with: {
-                    product: {
-                      with: {
-                        organizations: {
-                          with: {
-                            priceHistory: true,
-                            tg: {
-                              with: {
-                                crs: {
-                                  with: {
-                                    tr: true,
-                                  },
+      const sales = yield* db.query.TB_organizations_sales.findMany({
+        where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+        with: {
+          sale: {
+            with: {
+              items: {
+                with: {
+                  product: {
+                    with: {
+                      organizations: {
+                        with: {
+                          priceHistory: true,
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
                                 },
                               },
                             },
                           },
                         },
-                        brands: true,
                       },
+                      brands: true,
                     },
                   },
                 },
-                customer: true,
               },
+              customer: true,
             },
           },
-        }),
-      );
+        },
+      });
 
       // Filter and map organization-specific product data
       const filteredSales = sales.map((s) => ({
@@ -251,13 +240,11 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return yield* Effect.fail(new SaleInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db
-          .update(TB_sales)
-          .set({ status: "deleted", deletedAt: new Date(), updatedAt: new Date() })
-          .where(eq(TB_sales.id, parsedId.output))
-          .returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_sales)
+        .set({ status: "deleted", deletedAt: new Date(), updatedAt: new Date() })
+        .where(eq(TB_sales.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new SaleNotDeleted({ id }));
@@ -282,7 +269,7 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
           return yield* Effect.fail(new OrderNotFound({ id }));
         }
 
-        const pdfGenService = yield* _(PDFService);
+        const pdfGenService = yield* PDFService;
         let generatedPdf: Buffer<ArrayBuffer> = yield* pdfGenService.sale(sale, organization, {
           page: options.page,
         });
@@ -318,23 +305,19 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
       }
 
       // does the sale have the product already?
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_sale_items.findFirst({
-          where: (fields, operations) =>
-            and(eq(fields.saleId, parsedSaleId.output), eq(fields.productId, parsedItemId.output)),
-        }),
-      );
+      const exists = yield* db.query.TB_sale_items.findFirst({
+        where: (fields, operations) =>
+          and(eq(fields.saleId, parsedSaleId.output), eq(fields.productId, parsedItemId.output)),
+      });
 
       if (exists) {
         return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
       }
 
-      const [added] = yield* Effect.promise(() =>
-        db
-          .insert(TB_sale_items)
-          .values({ ...data, saleId: parsedSaleId.output, productId: parsedItemId.output })
-          .returning(),
-      );
+      const [added] = yield* db
+        .insert(TB_sale_items)
+        .values({ ...data, saleId: parsedSaleId.output, productId: parsedItemId.output })
+        .returning();
 
       if (!added) {
         return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
@@ -363,12 +346,10 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
         return yield* Effect.fail(new SaleProductNotAdded({ saleId, productId }));
       }
 
-      const [removed] = yield* Effect.promise(() =>
-        db
-          .delete(TB_sale_items)
-          .where(and(eq(TB_sale_items.saleId, parsedSaleId.output), eq(TB_sale_items.productId, parsedItemId.output)))
-          .returning(),
-      );
+      const [removed] = yield* db
+        .delete(TB_sale_items)
+        .where(and(eq(TB_sale_items.saleId, parsedSaleId.output), eq(TB_sale_items.productId, parsedItemId.output)))
+        .returning();
 
       if (!removed) {
         return yield* Effect.fail(new SaleProductNotRemoved({ saleId, productId }));
@@ -379,41 +360,39 @@ export class SalesService extends Effect.Service<SalesService>()("@warehouse/sal
 
     const listIncomes = Effect.fn("@warehouse/sales/listIncomes")(function* () {
       const orgId = yield* OrganizationId;
-      const sales = yield* Effect.promise(() =>
-        db.query.TB_organizations_sales.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-          with: {
-            sale: {
-              with: {
-                customer: true,
-                items: {
-                  with: {
-                    product: {
-                      with: {
-                        organizations: {
-                          with: {
-                            priceHistory: true,
-                            tg: {
-                              with: {
-                                crs: {
-                                  with: {
-                                    tr: true,
-                                  },
+      const sales = yield* db.query.TB_organizations_sales.findMany({
+        where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+        with: {
+          sale: {
+            with: {
+              customer: true,
+              items: {
+                with: {
+                  product: {
+                    with: {
+                      organizations: {
+                        with: {
+                          priceHistory: true,
+                          tg: {
+                            with: {
+                              crs: {
+                                with: {
+                                  tr: true,
                                 },
                               },
                             },
                           },
                         },
-                        brands: true,
                       },
+                      brands: true,
                     },
                   },
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
 
       // For each sale, for each item, find the latest priceHistory for the product in this org and calculate value
       const result = sales

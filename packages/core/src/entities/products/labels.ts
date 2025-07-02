@@ -14,14 +14,14 @@ import {
 
 export class ProductLabelsService extends Effect.Service<ProductLabelsService>()("@warehouse/product-labels", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = (input: { name: string; description?: string | null }) =>
       Effect.gen(function* (_) {
-        const [label] = yield* Effect.promise(() =>
-          db.insert(TB_product_labels).values({ name: input.name, description: input.description }).returning(),
-        );
+        const [label] = yield* db
+          .insert(TB_product_labels)
+          .values({ name: input.name, description: input.description })
+          .returning();
         if (!label) {
           return yield* Effect.fail(new ProductLabelNotCreated({}));
         }
@@ -35,18 +35,16 @@ export class ProductLabelsService extends Effect.Service<ProductLabelsService>()
           return yield* Effect.fail(new ProductLabelInvalidId({ id }));
         }
 
-        const label = yield* Effect.promise(() =>
-          db.query.TB_product_labels.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: {
-              products: {
-                with: {
-                  product: true,
-                },
+        const label = yield* db.query.TB_product_labels.findFirst({
+          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          with: {
+            products: {
+              with: {
+                product: true,
               },
             },
-          }),
-        );
+          },
+        });
 
         if (!label) {
           return yield* Effect.fail(new ProductLabelNotFound({ id }));
@@ -62,13 +60,11 @@ export class ProductLabelsService extends Effect.Service<ProductLabelsService>()
           return yield* Effect.fail(new ProductLabelInvalidId({ id }));
         }
 
-        const [label] = yield* Effect.promise(() =>
-          db
-            .update(TB_product_labels)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_product_labels.id, parsedId.output))
-            .returning(),
-        );
+        const [label] = yield* db
+          .update(TB_product_labels)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_product_labels.id, parsedId.output))
+          .returning();
 
         if (!label) {
           return yield* Effect.fail(new ProductLabelNotUpdated({ id }));
@@ -84,9 +80,10 @@ export class ProductLabelsService extends Effect.Service<ProductLabelsService>()
           return yield* Effect.fail(new ProductLabelInvalidId({ id }));
         }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_product_labels).where(eq(TB_product_labels.id, parsedId.output)).returning(),
-        );
+        const [deleted] = yield* db
+          .delete(TB_product_labels)
+          .where(eq(TB_product_labels.id, parsedId.output))
+          .returning();
 
         if (!deleted) {
           return yield* Effect.fail(new ProductLabelNotDeleted({ id }));
@@ -97,22 +94,20 @@ export class ProductLabelsService extends Effect.Service<ProductLabelsService>()
 
     const findAll = () =>
       Effect.gen(function* (_) {
-        return yield* Effect.promise(() =>
-          db.query.TB_product_labels.findMany({
-            with: {
-              products: {
-                with: {
-                  product: true,
-                },
+        return yield* db.query.TB_product_labels.findMany({
+          with: {
+            products: {
+              with: {
+                product: true,
               },
             },
-          }),
-        );
+          },
+        });
       });
 
     const findAllWithoutProducts = () =>
       Effect.gen(function* (_) {
-        return yield* Effect.promise(() => db.query.TB_product_labels.findMany());
+        return yield* db.query.TB_product_labels.findMany();
       });
 
     return { create, findById, update, remove, findAll, findAllWithoutProducts } as const;

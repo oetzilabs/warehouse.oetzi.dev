@@ -1,3 +1,4 @@
+import { SqlError } from "@effect/sql/SqlError";
 import { and, count, eq, inArray } from "drizzle-orm";
 import { Console, Effect } from "effect";
 import { array, safeParse } from "valibot";
@@ -13,71 +14,64 @@ import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 
 export class InventoryService extends Effect.Service<InventoryService>()("@warehouse/inventory", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
+    const db = yield* DatabaseService;
     const productService = yield* ProductService;
-    const db = yield* database.instance;
 
     const statistics = Effect.fn("@warehouse/inventory/statistics")(function* () {
       const orgId = yield* OrganizationId;
 
-      const products = yield* Effect.promise(() =>
-        db.query.TB_organizations_products.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-        }),
-      );
+      const products = yield* db.query.TB_organizations_products.findMany({
+        where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+      });
 
-      const productCounts = yield* Effect.promise(() =>
-        db
-          .select({
-            productId: TB_storage_to_products.productId,
-            count: count(),
-          })
-          .from(TB_storage_to_products)
-          .where(
-            inArray(
-              TB_storage_to_products.productId,
-              products.map((p) => p.productId),
-            ),
-          )
-          .groupBy(TB_storage_to_products.productId),
-      );
+      const productCounts = yield* db
+        .select({
+          productId: TB_storage_to_products.productId,
+          count: count(),
+        })
+        .from(TB_storage_to_products)
+        .where(
+          inArray(
+            TB_storage_to_products.productId,
+            products.map((p) => p.productId),
+          ),
+        )
+        .groupBy(TB_storage_to_products.productId);
 
       // Update the productsWithStock map with counts from query
       const productsWithStock = yield* Effect.all(
         productCounts.map((p) =>
           Effect.gen(function* (_) {
-            const product = yield* Effect.promise(() =>
-              db.query.TB_products.findFirst({
-                where: (fields, operations) => operations.eq(fields.id, p.productId),
-                with: {
-                  organizations: true,
-                  brands: true,
-                  suppliers: {
-                    with: {
-                      supplier: {
-                        with: {
-                          purchases: {
-                            with: {
-                              products: {
-                                with: {
-                                  product: true,
-                                },
+            const product = yield* db.query.TB_products.findFirst({
+              where: (fields, operations) => operations.eq(fields.id, p.productId),
+              with: {
+                organizations: true,
+                brands: true,
+                suppliers: {
+                  with: {
+                    supplier: {
+                      with: {
+                        purchases: {
+                          with: {
+                            products: {
+                              with: {
+                                product: true,
                               },
                             },
                           },
-                          schedules: {
-                            with: {
-                              schedule: true,
-                            },
-                          },
-                          contacts: true,
                         },
+                        schedules: {
+                          with: {
+                            schedule: true,
+                          },
+                        },
+                        contacts: true,
                       },
                     },
                   },
                 },
-              }),
-            );
+              },
+            });
             return {
               product: {
                 ...product!,
@@ -91,44 +85,36 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         ),
       );
 
-      const warehouses = yield* Effect.promise(() =>
-        db.query.TB_organizations_warehouses.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-        }),
-      );
+      const warehouses = yield* db.query.TB_organizations_warehouses.findMany({
+        where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+      });
 
-      const facilities = yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findMany({
-          where: (fields, operations) =>
+      const facilities = yield* db.query.TB_warehouse_facilities.findMany({
+        where: (fields, operations) =>
+          operations.inArray(
+            fields.warehouse_id,
+            warehouses.map((w) => w.warehouseId),
+          ),
+      });
+
+      const areas = yield* db.query.TB_warehouse_areas.findMany({
+        where: (fields, operations) =>
+          operations.inArray(
+            fields.warehouse_facility_id,
+            facilities.map((f) => f.id),
+          ),
+      });
+
+      const storages = yield* db.query.TB_storages.findMany({
+        where: (fields, operations) =>
+          operations.and(
             operations.inArray(
-              fields.warehouse_id,
-              warehouses.map((w) => w.warehouseId),
+              fields.warehouseAreaId,
+              areas.map((a) => a.id),
             ),
-        }),
-      );
-
-      const areas = yield* Effect.promise(() =>
-        db.query.TB_warehouse_areas.findMany({
-          where: (fields, operations) =>
-            operations.inArray(
-              fields.warehouse_facility_id,
-              facilities.map((f) => f.id),
-            ),
-        }),
-      );
-
-      const storages = yield* Effect.promise(() =>
-        db.query.TB_storages.findMany({
-          where: (fields, operations) =>
-            operations.and(
-              operations.inArray(
-                fields.warehouseAreaId,
-                areas.map((a) => a.id),
-              ),
-              operations.isNull(fields.parentId),
-            ),
-        }),
-      );
+            operations.isNull(fields.parentId),
+          ),
+      });
 
       const storageDeep = yield* Effect.all(storages.map((s) => Effect.suspend(() => storageList(s.id))));
 
@@ -161,22 +147,20 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return yield* Effect.fail(new StorageInvalidId({ id: storageId }));
       }
 
-      const storage = yield* Effect.promise(() =>
-        db.query.TB_storages.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-          with: {
-            parent: true,
-            products: {
-              with: {
-                product: true,
-              },
+      const storage = yield* db.query.TB_storages.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          parent: true,
+          products: {
+            with: {
+              product: true,
             },
-            children: true,
-            type: true,
-            labels: true,
           },
-        }),
-      );
+          children: true,
+          type: true,
+          labels: true,
+        },
+      });
       if (!storage) {
         return yield* Effect.fail(new StorageNotFound({ id: storageId }));
       }
@@ -192,7 +176,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       storageId: string,
     ): Effect.Effect<
       Effect.Effect.Success<ReturnType<typeof sb>> & { productSummary: ProductSummary[] },
-      StorageInvalidId | StorageNotFound
+      StorageInvalidId | StorageNotFound | SqlError
     > =>
       Effect.gen(function* (_) {
         const storage = yield* sb(storageId);
@@ -225,7 +209,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       storageId: string,
     ): Effect.Effect<
       "low" | "below-reorder" | "below-capacity" | "optimal" | "empty",
-      StorageInvalidId | StorageNotFound | OrganizationInvalidId | ProductInvalidId | ProductNotFound,
+      StorageInvalidId | StorageNotFound | OrganizationInvalidId | ProductInvalidId | ProductNotFound | SqlError,
       OrganizationId
     > =>
       Effect.gen(function* (_) {
@@ -278,11 +262,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return yield* Effect.fail(new StorageInvalidId({ id: storageId }));
       }
 
-      const products = yield* Effect.promise(() =>
-        db.query.TB_storage_to_products.findMany({
-          where: (fields, operations) => operations.eq(fields.storageId, parsedId.output),
-        }),
-      );
+      const products = yield* db.query.TB_storage_to_products.findMany({
+        where: (fields, operations) => operations.eq(fields.storageId, parsedId.output),
+      });
       if (products.length > 0) {
         return products.length;
       }
@@ -300,7 +282,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         children: Effect.Effect.Success<ReturnType<typeof storageBox>>["children"];
         products: Effect.Effect.Success<ReturnType<typeof productService.findById>>[];
       },
-      StorageInvalidId | StorageNotFound | ProductInvalidId | ProductNotFound | OrganizationInvalidId,
+      StorageInvalidId | StorageNotFound | ProductInvalidId | ProductNotFound | OrganizationInvalidId | SqlError,
       OrganizationId
     > =>
       Effect.gen(function* (_) {
@@ -337,15 +319,13 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           return yield* Effect.fail(new StorageInvalidId({ id: storageId }));
         }
 
-        const products = yield* Effect.promise(() =>
-          db.query.TB_storage_to_products.findMany({
-            where: (fields, operations) =>
-              operations.and(
-                operations.eq(fields.productId, parsedId.output),
-                operations.eq(fields.storageId, storageId),
-              ),
-          }),
-        );
+        const products = yield* db.query.TB_storage_to_products.findMany({
+          where: (fields, operations) =>
+            operations.and(
+              operations.eq(fields.productId, parsedId.output),
+              operations.eq(fields.storageId, storageId),
+            ),
+        });
         if (!products) {
           return yield* Effect.fail(new ProductNotFound({ id: productId }));
         }
@@ -360,18 +340,16 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return yield* Effect.fail(new ProductInvalidId({ id: productId }));
       }
 
-      const products = yield* Effect.promise(() =>
-        db.query.TB_storage_to_products.findMany({
-          where: (fields, operations) => operations.eq(fields.productId, parsedId.output),
-        }),
-      );
+      const products = yield* db.query.TB_storage_to_products.findMany({
+        where: (fields, operations) => operations.eq(fields.productId, parsedId.output),
+      });
       if (!products) {
         return yield* Effect.fail(new ProductNotFound({ id: productId }));
       }
       return products.length;
     });
 
-    const storageCapacity = (storageId: string): Effect.Effect<number, StorageInvalidId | StorageNotFound> =>
+    const storageCapacity = (storageId: string): Effect.Effect<number, StorageInvalidId | StorageNotFound | SqlError> =>
       Effect.gen(function* (_) {
         const storage = yield* storageBox(storageId);
 
@@ -429,11 +407,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return yield* Effect.fail(new Error("Invalid product ids"));
       }
       const orgId = yield* OrganizationId;
-      const products = yield* Effect.promise(() =>
-        db.query.TB_products.findMany({
-          where: (fields, operations) => operations.inArray(fields.id, parsedIds.output),
-        }),
-      );
+      const products = yield* db.query.TB_products.findMany({
+        where: (fields, operations) => operations.inArray(fields.id, parsedIds.output),
+      });
       // if (products.length === 0) {
       //   return yield* Effect.fail(new Error("No products found"));
       // }
@@ -441,38 +417,34 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
 
       const productsInOrganization: string[] = [];
       for (const productId of ids) {
-        const orgProduct = yield* Effect.promise(() =>
-          db.query.TB_organizations_products.findFirst({
-            where: (fields, operations) =>
-              operations.and(operations.eq(fields.productId, productId), operations.eq(fields.organizationId, orgId)),
-          }),
-        );
+        const orgProduct = yield* db.query.TB_organizations_products.findFirst({
+          where: (fields, operations) =>
+            operations.and(operations.eq(fields.productId, productId), operations.eq(fields.organizationId, orgId)),
+        });
         if (orgProduct) {
           productsInOrganization.push(productId);
         }
       }
 
       // get all the root storages of all warehouses in the organization
-      const warehouses = yield* Effect.promise(() =>
-        db.query.TB_organizations_warehouses.findMany({
-          where: (fields, operations) => operations.eq(fields.organizationId, orgId),
-          with: {
-            warehouse: {
-              with: {
-                facilities: {
-                  with: {
-                    areas: {
-                      with: {
-                        storages: true,
-                      },
+      const warehouses = yield* db.query.TB_organizations_warehouses.findMany({
+        where: (fields, operations) => operations.eq(fields.organizationId, orgId),
+        with: {
+          warehouse: {
+            with: {
+              facilities: {
+                with: {
+                  areas: {
+                    with: {
+                      storages: true,
                     },
                   },
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
 
       const storages = yield* Effect.all(
         warehouses
@@ -497,11 +469,9 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       if (!parsedId.success) {
         return yield* Effect.fail(new Error("Invalid product id"));
       }
-      const product = yield* Effect.promise(() =>
-        db.query.TB_products.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-        }),
-      );
+      const product = yield* db.query.TB_products.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+      });
       if (!product) {
         return yield* Effect.fail(new Error("Product not found"));
       }
@@ -514,15 +484,13 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         return yield* Effect.fail(new StorageNotFound({ id: data.storageId }));
       }
       // we gotta update the junction table of the storage to product, by checking how many products are in the storage.
-      const storageProducts = yield* Effect.promise(() =>
-        db.query.TB_storage_to_products.findMany({
-          where: (fields, operations) =>
-            operations.and(
-              operations.eq(fields.productId, parsedId.output),
-              operations.eq(fields.storageId, parsedStorageId.output),
-            ),
-        }),
-      );
+      const storageProducts = yield* db.query.TB_storage_to_products.findMany({
+        where: (fields, operations) =>
+          operations.and(
+            operations.eq(fields.productId, parsedId.output),
+            operations.eq(fields.storageId, parsedStorageId.output),
+          ),
+      });
       if (storageProducts.length === data.amount) {
         // nothing to update
         return yield* Effect.succeed(data);
@@ -531,17 +499,15 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
         // we need to remove some products
         const productsToRemove = storageProducts.slice(data.amount);
         const productsToRemoveIds = productsToRemove.map((p) => p.productId);
-        yield* Effect.promise(() =>
-          db
-            .delete(TB_storage_to_products)
-            .where(
-              and(
-                eq(TB_storage_to_products.storageId, parsedStorageId.output),
-                inArray(TB_storage_to_products.productId, productsToRemoveIds),
-              ),
-            )
-            .returning(),
-        );
+        yield* db
+          .delete(TB_storage_to_products)
+          .where(
+            and(
+              eq(TB_storage_to_products.storageId, parsedStorageId.output),
+              inArray(TB_storage_to_products.productId, productsToRemoveIds),
+            ),
+          )
+          .returning();
         return yield* Effect.succeed({ ...data, amount: storageProducts.length });
       }
       if (storageProducts.length < data.amount) {
@@ -551,7 +517,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
           storageId: parsedStorageId.output,
         }));
 
-        yield* Effect.promise(() => db.insert(TB_storage_to_products).values(productsToAddIds).returning());
+        yield* db.insert(TB_storage_to_products).values(productsToAddIds).returning();
         return yield* Effect.succeed({ ...data, amount: storageProducts.length });
       }
     });

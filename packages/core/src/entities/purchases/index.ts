@@ -24,19 +24,16 @@ import {
 
 export class PurchasesService extends Effect.Service<PurchasesService>()("@warehouse/purchases", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/purchases/create")(function* (
       userInput: InferInput<typeof SupplierPurchaseCreateSchema>,
     ) {
       const orgId = yield* OrganizationId;
-      const [order] = yield* Effect.promise(() =>
-        db
-          .insert(TB_supplier_purchases)
-          .values({ ...userInput, organization_id: orgId })
-          .returning(),
-      );
+      const [order] = yield* db
+        .insert(TB_supplier_purchases)
+        .values({ ...userInput, organization_id: orgId })
+        .returning();
       if (!order) {
         return yield* Effect.fail(new PurchaseNotCreated({}));
       }
@@ -52,38 +49,36 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         }
         const orgId = yield* OrganizationId;
 
-        const order = yield* Effect.promise(() =>
-          db.query.TB_supplier_purchases.findFirst({
-            where: (orders, operations) => operations.eq(orders.id, parsedId.output),
-            with: {
-              organization: true,
-              supplier: true,
-              products: {
-                with: {
-                  product: {
-                    with: {
-                      organizations: {
-                        with: {
-                          priceHistory: true,
-                          tg: {
-                            with: {
-                              crs: {
-                                with: {
-                                  tr: true,
-                                },
+        const order = yield* db.query.TB_supplier_purchases.findFirst({
+          where: (orders, operations) => operations.eq(orders.id, parsedId.output),
+          with: {
+            organization: true,
+            supplier: true,
+            products: {
+              with: {
+                product: {
+                  with: {
+                    organizations: {
+                      with: {
+                        priceHistory: true,
+                        tg: {
+                          with: {
+                            crs: {
+                              with: {
+                                tr: true,
                               },
                             },
                           },
                         },
                       },
-                      brands: true,
                     },
+                    brands: true,
                   },
                 },
               },
             },
-          }),
-        );
+          },
+        });
 
         if (!order) {
           return yield* Effect.fail(new PurchaseNotFound({ id }));
@@ -134,13 +129,11 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         return yield* Effect.fail(new PurchaseInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_supplier_purchases)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_supplier_purchases.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_supplier_purchases)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_supplier_purchases.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new PurchaseNotUpdated({ id: input.id }));
@@ -155,9 +148,10 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         return yield* Effect.fail(new PurchaseInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_supplier_purchases).where(eq(TB_supplier_purchases.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .delete(TB_supplier_purchases)
+        .where(eq(TB_supplier_purchases.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new PurchaseNotDeleted({ id }));
@@ -172,13 +166,11 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
         return yield* Effect.fail(new PurchaseInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db
-          .update(TB_supplier_purchases)
-          .set({ deletedAt: new Date() })
-          .where(eq(TB_supplier_purchases.id, parsedId.output))
-          .returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_supplier_purchases)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_supplier_purchases.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new PurchaseNotCreated({ message: "Failed to safe remove order" }));
@@ -188,8 +180,44 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
     });
 
     const all = Effect.fn("@warehouse/purchases/all")(function* () {
-      return yield* Effect.promise(() =>
-        db.query.TB_supplier_purchases.findMany({
+      return yield* db.query.TB_supplier_purchases.findMany({
+        with: {
+          organization: true,
+          products: {
+            with: {
+              product: {
+                with: {
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  brands: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    const findCustomerOrdersByOrganizationId = Effect.fn("@warehouse/purchases/findCustomerOrdersByOrganizationId")(
+      function* (organizationId: string) {
+        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
+        if (!parsedOrganizationId.success) {
+          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
+        }
+        const orgOrders = yield* db.query.TB_supplier_purchases.findMany({
+          where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
           with: {
             organization: true,
             products: {
@@ -216,47 +244,7 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
               },
             },
           },
-        }),
-      );
-    });
-
-    const findCustomerOrdersByOrganizationId = Effect.fn("@warehouse/purchases/findCustomerOrdersByOrganizationId")(
-      function* (organizationId: string) {
-        const parsedOrganizationId = safeParse(prefixed_cuid2, organizationId);
-        if (!parsedOrganizationId.success) {
-          return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
-        }
-        const orgOrders = yield* Effect.promise(() =>
-          db.query.TB_supplier_purchases.findMany({
-            where: (fields, operations) => operations.eq(fields.organization_id, parsedOrganizationId.output),
-            with: {
-              organization: true,
-              products: {
-                with: {
-                  product: {
-                    with: {
-                      organizations: {
-                        with: {
-                          priceHistory: true,
-                          tg: {
-                            with: {
-                              crs: {
-                                with: {
-                                  tr: true,
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                      brands: true,
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        );
+        });
         return orgOrders;
       },
     );
@@ -270,22 +258,20 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
       }
 
       const sixMonthsAgo = dayjs().subtract(6, "month").startOf("month");
-      const purchases = yield* Effect.promise(() =>
-        db
-          .select({
-            month: sql<string>`date_trunc('month', ${TB_supplier_purchases.createdAt})`,
-            count: sql<number>`count(*)`,
-          })
-          .from(TB_supplier_purchases)
-          .where(
-            and(
-              eq(TB_supplier_purchases.organization_id, parsedOrganizationId.output),
-              gte(TB_supplier_purchases.createdAt, sixMonthsAgo.toDate()),
-            ),
-          )
-          .groupBy(sql`date_trunc('month', ${TB_supplier_purchases.createdAt})`)
-          .orderBy(sql`date_trunc('month', ${TB_supplier_purchases.createdAt})`),
-      );
+      const purchases = yield* db
+        .select({
+          month: sql<string>`date_trunc('month', ${TB_supplier_purchases.createdAt})`,
+          count: sql<number>`count(*)`,
+        })
+        .from(TB_supplier_purchases)
+        .where(
+          and(
+            eq(TB_supplier_purchases.organization_id, parsedOrganizationId.output),
+            gte(TB_supplier_purchases.createdAt, sixMonthsAgo.toDate()),
+          ),
+        )
+        .groupBy(sql`date_trunc('month', ${TB_supplier_purchases.createdAt})`)
+        .orderBy(sql`date_trunc('month', ${TB_supplier_purchases.createdAt})`);
 
       const monthLabels = Array.from({ length: 6 }, (_, i) =>
         dayjs()
@@ -364,38 +350,36 @@ export class PurchasesService extends Effect.Service<PurchasesService>()("@wareh
 
     const findByOrganizationId = Effect.fn("@warehouse/purchases/findByOrganizationId")(function* () {
       const orgId = yield* OrganizationId;
-      const orgPurchases = yield* Effect.promise(() =>
-        db.query.TB_supplier_purchases.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
-          with: {
-            supplier: true,
-            products: {
-              with: {
-                product: {
-                  with: {
-                    organizations: {
-                      with: {
-                        priceHistory: true,
-                        tg: {
-                          with: {
-                            crs: {
-                              with: {
-                                tr: true,
-                              },
+      const orgPurchases = yield* db.query.TB_supplier_purchases.findMany({
+        where: (fields, operations) => operations.eq(fields.organization_id, orgId),
+        with: {
+          supplier: true,
+          products: {
+            with: {
+              product: {
+                with: {
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
                             },
                           },
                         },
                       },
                     },
-                    brands: true,
-                    labels: true,
                   },
+                  brands: true,
+                  labels: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
       return orgPurchases.map((op) => ({
         ...op,
         products: op.products.map((p) => ({

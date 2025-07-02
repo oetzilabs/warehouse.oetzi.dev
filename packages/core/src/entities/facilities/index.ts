@@ -27,8 +27,7 @@ import {
 
 export class FacilityService extends Effect.Service<FacilityService>()("@warehouse/facilities", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/facilities/create")(function* (
       input: InferInput<typeof FacilityCreateSchema>,
@@ -38,7 +37,7 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.fail(new UserInvalidId({ id: input.ownerId }));
       }
 
-      const [facility] = yield* Effect.promise(() => db.insert(TB_warehouse_facilities).values(input).returning());
+      const [facility] = yield* db.insert(TB_warehouse_facilities).values(input).returning();
 
       if (!facility) {
         return yield* Effect.fail(new FacilityNotCreated({}));
@@ -53,31 +52,29 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.fail(new FacilityInvalidId({ id }));
       }
 
-      const facility = yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findFirst({
-          where: (facilities, operations) => operations.eq(facilities.id, parsedId.output),
-          with: {
-            areas: {
-              with: {
-                storages: {
-                  with: {
-                    type: true,
-                    area: true,
-                    products: {
-                      with: {
-                        product: true,
-                      },
+      const facility = yield* db.query.TB_warehouse_facilities.findFirst({
+        where: (facilities, operations) => operations.eq(facilities.id, parsedId.output),
+        with: {
+          areas: {
+            with: {
+              storages: {
+                with: {
+                  type: true,
+                  area: true,
+                  products: {
+                    with: {
+                      product: true,
                     },
-                    labels: true,
-                    parent: true,
-                    children: true,
                   },
+                  labels: true,
+                  parent: true,
+                  children: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!facility) {
         return yield* Effect.fail(new FacilityNotFound({ id }));
@@ -109,13 +106,11 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.fail(new FacilityInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_warehouse_facilities)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_warehouse_facilities.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_warehouse_facilities)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_warehouse_facilities.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new FacilityNotUpdated({ id: input.id }));
@@ -130,9 +125,10 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.fail(new FacilityInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_warehouse_facilities).where(eq(TB_warehouse_facilities.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .delete(TB_warehouse_facilities)
+        .where(eq(TB_warehouse_facilities.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new FacilityNotDeleted({ id }));
@@ -147,13 +143,11 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.fail(new FacilityInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db
-          .update(TB_warehouse_facilities)
-          .set({ deletedAt: new Date() })
-          .where(eq(TB_warehouse_facilities.id, parsedId.output))
-          .returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_warehouse_facilities)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_warehouse_facilities.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new FacilityNotDeleted({ id }));
@@ -163,24 +157,22 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
     });
 
     const all = Effect.fn("@warehouse/facilites/all")(function* () {
-      return yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findMany({
-          with: {
-            areas: {
-              with: {
-                storages: {
-                  with: {
-                    type: true,
-                    area: true,
-                    products: true,
-                    children: true,
-                  },
+      return yield* db.query.TB_warehouse_facilities.findMany({
+        with: {
+          areas: {
+            with: {
+              storages: {
+                with: {
+                  type: true,
+                  area: true,
+                  products: true,
+                  children: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     const findByUserId = Effect.fn("@warehouse/facilities/findByUserId")(function* (userId: string) {
@@ -189,25 +181,23 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
         return yield* Effect.fail(new UserInvalidId({ id: userId }));
       }
 
-      return yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findMany({
-          where: (facilities, operations) => operations.eq(facilities.ownerId, parsedId.output),
-          with: {
-            areas: {
-              with: {
-                storages: {
-                  with: {
-                    type: true,
-                    area: true,
-                    products: true,
-                    children: true,
-                  },
+      return yield* db.query.TB_warehouse_facilities.findMany({
+        where: (facilities, operations) => operations.eq(facilities.ownerId, parsedId.output),
+        with: {
+          areas: {
+            with: {
+              storages: {
+                with: {
+                  type: true,
+                  area: true,
+                  products: true,
+                  children: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     const findByWarehouseId = Effect.fn("@warehouse/facilites/findByWarehouseId")(function* (warehouseId: string) {
@@ -215,25 +205,23 @@ export class FacilityService extends Effect.Service<FacilityService>()("@warehou
       if (!parsedWarehouseId.success) {
         return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
       }
-      return yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findMany({
-          where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
-          with: {
-            areas: {
-              with: {
-                storages: {
-                  with: {
-                    type: true,
-                    area: true,
-                    products: true,
-                    children: true,
-                  },
+      return yield* db.query.TB_warehouse_facilities.findMany({
+        where: (fields, operations) => operations.eq(fields.warehouse_id, parsedWarehouseId.output),
+        with: {
+          areas: {
+            with: {
+              storages: {
+                with: {
+                  type: true,
+                  area: true,
+                  products: true,
+                  children: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     return {

@@ -15,8 +15,7 @@ import { SnapshotInputSchema, type SnapshotDataInput, type SnapshotDataOutput } 
 
 export class SnapshotService extends Effect.Service<SnapshotService>()("@warehouse/snapshot", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
     const SNAPSHOT_DIR = yield* Config.string("SNAPSHOT_DIR");
     const fs = yield* _(FileSystem.FileSystem);
     const path = yield* _(Path.Path);
@@ -30,43 +29,38 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
     const createSnapshot = (type: SnapshotDataInput["type"]) =>
       Effect.gen(function* (_) {
         let snap: SnapshotDataOutput;
+        // TODO!: Implement the snapshot logic. products dont have manufacturingDate and expirationDate anymore.
         switch (type) {
           case "json":
-            const products = yield* Effect.promise(() =>
-              db.query.TB_products.findMany({
-                with: {
-                  labels: true,
-                  brands: true,
-                },
-              }),
-            ).pipe(
+            const products = yield* db.query.TB_products.findMany({
+              with: {
+                labels: true,
+                brands: true,
+              },
+            }).pipe(
               Effect.map((products) =>
                 products.map((p) => ({
                   ...p,
-                  manufacturingDate: p.manufacturingDate ? dayjs(p.manufacturingDate).unix().toString() : "",
-                  expirationDate: p.expirationDate ? dayjs(p.expirationDate).unix().toString() : "",
                   labels: p.labels.map((l) => l.labelId),
                   brands: p.brands?.id ?? null,
                 })),
               ),
             );
-            const labels = yield* Effect.promise(() => db.query.TB_product_labels.findMany());
-            const payment_methods = yield* Effect.promise(() => db.query.TB_payment_methods.findMany());
-            const warehouse_types = yield* Effect.promise(() => db.query.TB_warehouse_types.findMany());
-            const document_storage_offers = yield* Effect.promise(() => db.query.TB_document_storage_offers.findMany());
-            const storage_types = yield* Effect.promise(() => db.query.TB_storage_types.findMany());
-            const brands = yield* Effect.promise(() => db.query.TB_brands.findMany());
-            const suppliers = yield* Effect.promise(() =>
-              db.query.TB_suppliers.findMany({
-                with: {
-                  products: {
-                    with: {
-                      product: true,
-                    },
+            const labels = yield* db.query.TB_product_labels.findMany();
+            const payment_methods = yield* db.query.TB_payment_methods.findMany();
+            const warehouse_types = yield* db.query.TB_warehouse_types.findMany();
+            const document_storage_offers = yield* db.query.TB_document_storage_offers.findMany();
+            const storage_types = yield* db.query.TB_storage_types.findMany();
+            const brands = yield* db.query.TB_brands.findMany();
+            const suppliers = yield* db.query.TB_suppliers.findMany({
+              with: {
+                products: {
+                  with: {
+                    product: true,
                   },
                 },
-              }),
-            ).pipe(
+              },
+            }).pipe(
               Effect.map((suppliers) =>
                 suppliers.map((s) => ({
                   ...s,
@@ -74,14 +68,12 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                 })),
               ),
             );
-            const sales = yield* Effect.promise(() =>
-              db.query.TB_sales.findMany({
-                with: {
-                  items: true,
-                  orders: true,
-                },
-              }),
-            ).pipe(
+            const sales = yield* db.query.TB_sales.findMany({
+              with: {
+                items: true,
+                orders: true,
+              },
+            }).pipe(
               Effect.map((sales) =>
                 sales.map((s) => ({
                   ...s,
@@ -90,17 +82,15 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                 })),
               ),
             );
-            const customers = yield* Effect.promise(() =>
-              db.query.TB_customers.findMany({
-                with: {
-                  sales: {
-                    with: {
-                      items: true,
-                    },
+            const customers = yield* db.query.TB_customers.findMany({
+              with: {
+                sales: {
+                  with: {
+                    items: true,
                   },
                 },
-              }),
-            ).pipe(
+              },
+            }).pipe(
               Effect.map((customers) =>
                 customers.map((c) => ({
                   ...c,
@@ -109,56 +99,54 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
               ),
             );
             const users = yield* Effect.gen(function* (_) {
-              const users = yield* Effect.promise(() =>
-                db.query.TB_users.findMany({
-                  with: {
-                    payment_methods: {
-                      with: {
-                        payment_method: true,
-                      },
+              const users = yield* db.query.TB_users.findMany({
+                with: {
+                  payment_methods: {
+                    with: {
+                      payment_method: true,
                     },
-                    payment_history: {
-                      with: {
-                        paymentMethod: true,
-                      },
+                  },
+                  payment_history: {
+                    with: {
+                      paymentMethod: true,
                     },
-                    orgs: {
-                      with: {
-                        org: {
-                          with: {
-                            devices: true,
-                            sales: true,
-                            products: {
-                              with: {
-                                product: true,
-                              },
+                  },
+                  orgs: {
+                    with: {
+                      org: {
+                        with: {
+                          devices: true,
+                          sales: true,
+                          products: {
+                            with: {
+                              product: true,
                             },
-                            supps: true,
-                            customers: true,
-                            customerOrders: true,
-                            purchases: true,
-                            whs: {
-                              with: {
-                                warehouse: {
-                                  with: {
-                                    facilities: {
-                                      with: {
-                                        areas: {
-                                          with: {
-                                            storages: {
-                                              with: {
-                                                type: true,
-                                                area: true,
-                                                products: true,
-                                                children: true,
-                                              },
+                          },
+                          supps: true,
+                          customers: true,
+                          customerOrders: true,
+                          purchases: true,
+                          whs: {
+                            with: {
+                              warehouse: {
+                                with: {
+                                  facilities: {
+                                    with: {
+                                      areas: {
+                                        with: {
+                                          storages: {
+                                            with: {
+                                              type: true,
+                                              area: true,
+                                              products: true,
+                                              children: true,
                                             },
                                           },
                                         },
                                       },
                                     },
-                                    products: true,
                                   },
+                                  products: true,
                                 },
                               },
                             },
@@ -167,8 +155,8 @@ export class SnapshotService extends Effect.Service<SnapshotService>()("@warehou
                       },
                     },
                   },
-                }),
-              ).pipe(
+                },
+              }).pipe(
                 Effect.map((users) =>
                   users.map((user) => ({
                     ...user,

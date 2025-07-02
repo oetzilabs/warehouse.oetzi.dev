@@ -32,18 +32,18 @@ import {
 
 export class SupplierService extends Effect.Service<SupplierService>()("@warehouse/suppliers", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/suppliers/create")(function* (input: InferInput<typeof SupplierCreateSchema>) {
       const orgId = yield* OrganizationId;
-      const [supplier] = yield* Effect.promise(() => db.insert(TB_suppliers).values(input).returning());
+      const [supplier] = yield* db.insert(TB_suppliers).values(input).returning();
       if (!supplier) {
         return yield* Effect.fail(new SupplierNotCreated({}));
       }
-      yield* Effect.promise(() =>
-        db.insert(TB_organization_suppliers).values({ supplier_id: supplier.id, organization_id: orgId }).returning(),
-      );
+      yield* db
+        .insert(TB_organization_suppliers)
+        .values({ supplier_id: supplier.id, organization_id: orgId })
+        .returning();
       return yield* findById(supplier.id);
     });
 
@@ -54,48 +54,43 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       }
       const orgId = yield* OrganizationId;
 
-      const supplier = yield* Effect.promise(() =>
-        db.query.TB_organization_suppliers.findFirst({
-          where: (fields, operations) =>
-            operations.and(
-              operations.eq(fields.supplier_id, parsedId.output),
-              operations.eq(fields.organization_id, orgId),
-            ),
-          with: {
-            supplier: {
-              with: {
-                products: {
-                  with: {
-                    product: {
-                      with: {
-                        labels: true,
-                        organizations: true,
-                      },
+      const supplier = yield* db.query.TB_organization_suppliers.findFirst({
+        where: (fields, operations) =>
+          operations.and(
+            operations.eq(fields.supplier_id, parsedId.output),
+            operations.eq(fields.organization_id, orgId),
+          ),
+        with: {
+          supplier: {
+            with: {
+              products: {
+                with: {
+                  product: {
+                    with: {
+                      labels: true,
+                      organizations: true,
                     },
                   },
                 },
-                contacts: true,
-                notes: {
-                  orderBy: (fields, operations) => [
-                    operations.desc(fields.updatedAt),
-                    operations.desc(fields.createdAt),
-                  ],
-                },
-                organizations: true,
-                purchases: {
-                  with: {
-                    products: {
-                      with: {
-                        product: true,
-                      },
+              },
+              contacts: true,
+              notes: {
+                orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
+              },
+              organizations: true,
+              purchases: {
+                with: {
+                  products: {
+                    with: {
+                      product: true,
                     },
                   },
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!supplier) {
         return yield* Effect.fail(new SupplierNotFound({ id }));
@@ -121,13 +116,11 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return yield* Effect.fail(new SupplierInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_suppliers)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_suppliers.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_suppliers)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_suppliers.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new SupplierNotUpdated({ id: input.id }));
@@ -141,12 +134,10 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       input: InferInput<typeof SupplierContactCreateSchema>,
     ) {
       const supplier = yield* findById(supplierId);
-      const [contact] = yield* Effect.promise(() =>
-        db
-          .insert(TB_supplier_contacts)
-          .values({ ...input, supplierId: supplier.id })
-          .returning(),
-      );
+      const [contact] = yield* db
+        .insert(TB_supplier_contacts)
+        .values({ ...input, supplierId: supplier.id })
+        .returning();
 
       if (!contact) {
         return yield* Effect.fail(new SupplierContactNotCreated({ supplierId }));
@@ -160,12 +151,10 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       input: InferInput<typeof SupplierNoteCreateSchema>,
     ) {
       const supplier = yield* findById(supplierId);
-      const [note] = yield* Effect.promise(() =>
-        db
-          .insert(TB_supplier_notes)
-          .values({ ...input, supplierId: supplier.id })
-          .returning(),
-      );
+      const [note] = yield* db
+        .insert(TB_supplier_notes)
+        .values({ ...input, supplierId: supplier.id })
+        .returning();
 
       if (!note) {
         return yield* Effect.fail(new SupplierNoteNotCreated({ supplierId }));
@@ -176,25 +165,23 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
 
     const findByOrganizationId = Effect.fn("@warehouse/suppliers/findByOrganizationId")(function* () {
       const orgId = yield* OrganizationId;
-      const orgSuppliers = yield* Effect.promise(() =>
-        db.query.TB_organization_suppliers.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
-          with: {
-            supplier: {
-              with: {
-                contacts: true,
-                notes: true,
-                organizations: true,
-                purchases: {
-                  with: {
-                    products: true,
-                  },
+      const orgSuppliers = yield* db.query.TB_organization_suppliers.findMany({
+        where: (fields, operations) => operations.eq(fields.organization_id, orgId),
+        with: {
+          supplier: {
+            with: {
+              contacts: true,
+              notes: true,
+              organizations: true,
+              purchases: {
+                with: {
+                  products: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
       return orgSuppliers.map((orgSupplier) => orgSupplier.supplier);
     });
 
@@ -206,28 +193,26 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         return yield* Effect.fail(new SupplierNotFound({ id: supplierId }));
       }
       const orgId = yield* OrganizationId;
-      const x = yield* Effect.promise(() =>
-        db.query.TB_supplier_purchases.findMany({
-          where: (fields, operations) =>
-            operations.and(
-              operations.eq(fields.supplier_id, parsedSupplierId.output),
-              operations.eq(fields.organization_id, orgId),
-            ),
-          with: {
-            products: {
-              with: {
-                product: {
-                  with: {
-                    labels: true,
-                    organizations: {
-                      with: {
-                        priceHistory: true,
-                        tg: {
-                          with: {
-                            crs: {
-                              with: {
-                                tr: true,
-                              },
+      const x = yield* db.query.TB_supplier_purchases.findMany({
+        where: (fields, operations) =>
+          operations.and(
+            operations.eq(fields.supplier_id, parsedSupplierId.output),
+            operations.eq(fields.organization_id, orgId),
+          ),
+        with: {
+          products: {
+            with: {
+              product: {
+                with: {
+                  labels: true,
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
                             },
                           },
                         },
@@ -238,8 +223,8 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
               },
             },
           },
-        }),
-      );
+        },
+      });
       return x.map((x) => ({
         ...x,
         products: x.products.map((p) => ({
@@ -267,9 +252,7 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       if (!parsedId.success) {
         return yield* Effect.fail(new SupplierInvalidId({ id }));
       }
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_suppliers).where(eq(TB_suppliers.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_suppliers).where(eq(TB_suppliers.id, parsedId.output)).returning();
       if (!deleted) {
         return yield* Effect.fail(new SupplierNotDeleted({ id }));
       }
@@ -281,9 +264,11 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       if (!parsedId.success) {
         return yield* Effect.fail(new SupplierInvalidId({ id }));
       }
-      const [deleted] = yield* Effect.promise(() =>
-        db.update(TB_suppliers).set({ deletedAt: new Date() }).where(eq(TB_suppliers.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_suppliers)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_suppliers.id, parsedId.output))
+        .returning();
       if (!deleted) {
         return yield* Effect.fail(new SupplierNotDeleted({ id }));
       }
@@ -297,13 +282,11 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       if (!parsedId.success) {
         return yield* Effect.fail(new SupplierInvalidId({ id: input.id }));
       }
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_supplier_notes)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_supplier_notes.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_supplier_notes)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_supplier_notes.id, parsedId.output))
+        .returning();
       if (!updated) {
         return yield* Effect.fail(new SupplierNoteNotUpdated({ id: input.id }));
       }
@@ -315,9 +298,10 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       if (!parsedId.success) {
         return yield* Effect.fail(new SupplierInvalidId({ id }));
       }
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_supplier_notes).where(eq(TB_supplier_notes.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .delete(TB_supplier_notes)
+        .where(eq(TB_supplier_notes.id, parsedId.output))
+        .returning();
       if (!deleted) {
         return yield* Effect.fail(new SupplierNoteNotDeleted({ id }));
       }
@@ -333,18 +317,13 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
       if (!parsedSid.success) {
         return yield* Effect.fail(new SupplierInvalidId({ id: sid }));
       }
-      const note = yield* Effect.promise(() =>
-        db.query.TB_supplier_notes.findFirst({
-          where: (fields, operations) =>
-            operations.and(
-              operations.eq(fields.id, parsedId.output),
-              operations.eq(fields.supplierId, parsedSid.output),
-            ),
-          with: {
-            supplier: true,
-          },
-        }),
-      );
+      const note = yield* db.query.TB_supplier_notes.findFirst({
+        where: (fields, operations) =>
+          operations.and(operations.eq(fields.id, parsedId.output), operations.eq(fields.supplierId, parsedSid.output)),
+        with: {
+          supplier: true,
+        },
+      });
       if (!note) {
         return yield* Effect.fail(new SupplierNoteNotFound({ id }));
       }
@@ -353,27 +332,25 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
 
     const getPurchases = Effect.fn("@warehouse/suppliers/getPurchases")(function* () {
       const orgId = yield* OrganizationId;
-      const suppliers = yield* Effect.promise(() =>
-        db.query.TB_organization_suppliers.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
-          with: {
-            supplier: {
-              with: {
-                products: {
-                  with: {
-                    priceHistory: true,
-                  },
+      const suppliers = yield* db.query.TB_organization_suppliers.findMany({
+        where: (fields, operations) => operations.eq(fields.organization_id, orgId),
+        with: {
+          supplier: {
+            with: {
+              products: {
+                with: {
+                  priceHistory: true,
                 },
-                purchases: {
-                  with: {
-                    products: true,
-                  },
+              },
+              purchases: {
+                with: {
+                  products: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
       const s = suppliers.map((supplier) => supplier.supplier);
 
       const products = s.flatMap((supplier) => supplier.products);

@@ -22,8 +22,7 @@ import {
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
     const hashPassword = (password: string) => createHash("sha256").update(password).digest("hex");
 
     const create = Effect.fn("@warehouse/users/create")(function* (userInput: InferInput<typeof UserCreateSchema>) {
@@ -40,7 +39,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         hashed_password: hashPassword(password),
       });
 
-      const [x] = yield* Effect.promise(() => db.insert(TB_users).values(uI).returning());
+      const [x] = yield* db.insert(TB_users).values(uI).returning();
       if (!x) {
         return yield* Effect.fail(new UserNotCreated({}));
       }
@@ -59,124 +58,122 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return yield* Effect.fail(new UserInvalidId({ id }));
       }
 
-      const user = yield* Effect.promise(() =>
-        db.query.TB_users.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-          with: {
-            payment_methods: {
-              with: {
-                payment_method: true,
-              },
+      const user = yield* db.query.TB_users.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          payment_methods: {
+            with: {
+              payment_method: true,
             },
-            payment_history: {
-              with: {
-                paymentMethod: true,
-              },
+          },
+          payment_history: {
+            with: {
+              paymentMethod: true,
             },
-            sessions: {
-              with: {
-                user: {
-                  columns: {
-                    hashed_password: false,
-                  },
+          },
+          sessions: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
                 },
-                org: {
-                  with: {
-                    products: {
-                      with: {
-                        product: {
-                          with: {
-                            labels: true,
-                            brands: true,
-                            suppliers: true,
-                          },
+              },
+              org: {
+                with: {
+                  products: {
+                    with: {
+                      product: {
+                        with: {
+                          labels: true,
+                          brands: true,
+                          suppliers: true,
                         },
                       },
                     },
-                    supps: {
-                      with: {
-                        supplier: true,
-                      },
+                  },
+                  supps: {
+                    with: {
+                      supplier: true,
                     },
-                    customers: {
-                      with: {
-                        customer: true,
-                      },
+                  },
+                  customers: {
+                    with: {
+                      customer: true,
                     },
-                    owner: {
-                      columns: {
-                        hashed_password: false,
-                      },
+                  },
+                  owner: {
+                    columns: {
+                      hashed_password: false,
                     },
-                    users: {
-                      with: {
-                        user: {
-                          columns: {
-                            hashed_password: false,
-                          },
+                  },
+                  users: {
+                    with: {
+                      user: {
+                        columns: {
+                          hashed_password: false,
                         },
                       },
                     },
-                    customerOrders: {
-                      with: {
-                        customer: true,
-                        products: {
-                          with: {
-                            product: true,
-                          },
-                        },
-                        sale: true,
-                      },
-                    },
-                    purchases: {
-                      with: {
-                        supplier: true,
-                        products: {
-                          with: {
-                            product: true,
-                          },
+                  },
+                  customerOrders: {
+                    with: {
+                      customer: true,
+                      products: {
+                        with: {
+                          product: true,
                         },
                       },
+                      sale: true,
                     },
-                    devices: {
-                      with: {
-                        type: true,
-                      },
-                    },
-                    sales: {
-                      with: {
-                        sale: true,
-                      },
-                    },
-                    catalogs: {
-                      with: {
-                        products: {
-                          with: {
-                            product: true,
-                          },
+                  },
+                  purchases: {
+                    with: {
+                      supplier: true,
+                      products: {
+                        with: {
+                          product: true,
                         },
                       },
                     },
-                    whs: {
-                      with: {
-                        warehouse: {
-                          with: {
-                            addresses: {
-                              with: {
-                                address: true,
-                              },
+                  },
+                  devices: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      sale: true,
+                    },
+                  },
+                  catalogs: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  whs: {
+                    with: {
+                      warehouse: {
+                        with: {
+                          addresses: {
+                            with: {
+                              address: true,
                             },
-                            facilities: {
-                              with: {
-                                areas: {
-                                  with: {
-                                    storages: {
-                                      with: {
-                                        type: true,
-                                        area: true,
-                                        products: true,
-                                        children: true,
-                                      },
+                          },
+                          facilities: {
+                            with: {
+                              areas: {
+                                with: {
+                                  storages: {
+                                    with: {
+                                      type: true,
+                                      area: true,
+                                      products: true,
+                                      children: true,
                                     },
                                   },
                                 },
@@ -191,11 +188,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
               },
             },
           },
-          columns: {
-            hashed_password: false,
-          },
-        }),
-      );
+        },
+        columns: {
+          hashed_password: false,
+        },
+      });
 
       if (!user) {
         return yield* Effect.fail(new UserNotFound({ id }));
@@ -211,14 +208,12 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return yield* Effect.fail(new UserInvalidEmail({ email: emailInput }));
       }
 
-      const user = yield* Effect.promise(() =>
-        db.query.TB_users.findFirst({
-          where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
-          columns: {
-            hashed_password: false,
-          },
-        }),
-      );
+      const user = yield* db.query.TB_users.findFirst({
+        where: (fields, operations) => operations.eq(fields.email, parsedEmail.output),
+        columns: {
+          hashed_password: false,
+        },
+      });
 
       if (!user) {
         return yield* Effect.fail(new UserNotFound({ id: emailInput }));
@@ -235,13 +230,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       if (!parsedId.success) {
         return yield* Effect.fail(new UserInvalidId({ id }));
       }
-      const [updatedUser] = yield* Effect.promise(() =>
-        db
-          .update(TB_users)
-          .set({ ...userInput, updatedAt: new Date() })
-          .where(eq(TB_users.id, parsedId.output))
-          .returning(),
-      );
+      const [updatedUser] = yield* db
+        .update(TB_users)
+        .set({ ...userInput, updatedAt: new Date() })
+        .where(eq(TB_users.id, parsedId.output))
+        .returning();
       if (!updatedUser) {
         return yield* Effect.fail(new UserNotUpdated({ id }));
       }
@@ -253,9 +246,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       if (!parsedId.success) {
         return yield* Effect.fail(new UserInvalidId({ id }));
       }
-      const [deletedUser] = yield* Effect.promise(() =>
-        db.delete(TB_users).where(eq(TB_users.id, parsedId.output)).returning(),
-      );
+      const [deletedUser] = yield* db.delete(TB_users).where(eq(TB_users.id, parsedId.output)).returning();
       if (!deletedUser) {
         return yield* Effect.fail(new UserNotDeleted({ id }));
       }
@@ -267,9 +258,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       if (!parsedId.success) {
         return yield* Effect.fail(new UserInvalidId({ id }));
       }
-      const [deletedUser] = yield* Effect.promise(() =>
-        db.update(TB_users).set({ deletedAt: new Date() }).where(eq(TB_users.id, parsedId.output)).returning(),
-      );
+      const [deletedUser] = yield* db
+        .update(TB_users)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_users.id, parsedId.output))
+        .returning();
       if (!deletedUser) {
         return yield* Effect.fail(new UserNotDeleted({ id }));
       }
@@ -285,9 +278,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       if (!parsedId.success) {
         return yield* Effect.fail(new UserInvalidId({ id }));
       }
-      const [updatedUser] = yield* Effect.promise(() =>
-        db.update(TB_users).set({ status: "disabled" }).where(eq(TB_users.id, parsedId.output)).returning(),
-      );
+      const [updatedUser] = yield* db
+        .update(TB_users)
+        .set({ status: "disabled" })
+        .where(eq(TB_users.id, parsedId.output))
+        .returning();
       if (!updatedUser) {
         return yield* Effect.fail(new UserDisableFailed({ id }));
       }
@@ -303,15 +298,13 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return yield* Effect.fail(new UserInvalidEmail({ email: emailInput }));
       }
 
-      const user = yield* Effect.promise(() =>
-        db.query.TB_users.findFirst({
-          where: (users, operations) =>
-            operations.and(
-              operations.eq(users.email, parsedEmail.output),
-              operations.eq(users.hashed_password, hashPassword(password)),
-            ),
-        }),
-      );
+      const user = yield* db.query.TB_users.findFirst({
+        where: (users, operations) =>
+          operations.and(
+            operations.eq(users.email, parsedEmail.output),
+            operations.eq(users.hashed_password, hashPassword(password)),
+          ),
+      });
 
       if (!user) {
         return yield* Effect.fail(new UserAuthenticationFailed({ email: emailInput }));
@@ -325,12 +318,10 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       if (!parsedUserId.success) {
         return yield* Effect.fail(new UserInvalidId({ id: userId }));
       }
-      const org = yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (users_warehouses, operations) => operations.eq(users_warehouses.owner_id, parsedUserId.output),
-          orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
-        }),
-      );
+      const org = yield* db.query.TB_organizations.findFirst({
+        where: (users_warehouses, operations) => operations.eq(users_warehouses.owner_id, parsedUserId.output),
+        orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+      });
       if (!org) {
         return yield* Effect.fail(new UserLastOrgNotFound({ userId }));
       }
@@ -342,12 +333,10 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       if (!parsedUserId.success) {
         return yield* Effect.fail(new UserInvalidId({ id: userId }));
       }
-      const warehouse = yield* Effect.promise(() =>
-        db.query.TB_warehouses.findFirst({
-          where: (users_warehouses, operations) => operations.eq(users_warehouses.ownerId, parsedUserId.output),
-          orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
-        }),
-      );
+      const warehouse = yield* db.query.TB_warehouses.findFirst({
+        where: (users_warehouses, operations) => operations.eq(users_warehouses.ownerId, parsedUserId.output),
+        orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+      });
       if (!warehouse) {
         return yield* Effect.fail(new UserLastWarehouseNotFound({ userId }));
       }
@@ -360,12 +349,10 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         return yield* Effect.fail(new UserInvalidId({ id: userId }));
       }
 
-      const facility = yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findFirst({
-          where: (fields, operations) => operations.eq(fields.ownerId, parsedUserId.output),
-          orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
-        }),
-      );
+      const facility = yield* db.query.TB_warehouse_facilities.findFirst({
+        where: (fields, operations) => operations.eq(fields.ownerId, parsedUserId.output),
+        orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+      });
       if (!facility) {
         return yield* Effect.fail(new UserLastFacilityNotFound({ userId }));
       }

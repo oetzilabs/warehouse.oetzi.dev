@@ -14,13 +14,12 @@ import {
 
 export class CertificateService extends Effect.Service<CertificateService>()("@warehouse/certificates", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/certificates/create")(function* (
       userInput: InferInput<typeof CertificateCreateSchema>,
     ) {
-      const [certificate] = yield* Effect.promise(() => db.insert(TB_certificates).values(userInput).returning());
+      const [certificate] = yield* db.insert(TB_certificates).values(userInput).returning();
 
       if (!certificate) {
         return yield* Effect.fail(new CertificateNotCreated({}));
@@ -35,11 +34,9 @@ export class CertificateService extends Effect.Service<CertificateService>()("@w
         return yield* Effect.fail(new CertificateInvalidId({ id }));
       }
 
-      const certificate = yield* Effect.promise(() =>
-        db.query.TB_certificates.findFirst({
-          where: (certificates, operations) => operations.eq(certificates.id, parsedId.output),
-        }),
-      );
+      const certificate = yield* db.query.TB_certificates.findFirst({
+        where: (certificates, operations) => operations.eq(certificates.id, parsedId.output),
+      });
 
       if (!certificate) {
         return yield* Effect.fail(new CertificateNotFound({ id }));
@@ -56,13 +53,11 @@ export class CertificateService extends Effect.Service<CertificateService>()("@w
         return yield* Effect.fail(new CertificateInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_certificates)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_certificates.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_certificates)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_certificates.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new CertificateNotUpdated({ id: input.id }));
@@ -77,9 +72,7 @@ export class CertificateService extends Effect.Service<CertificateService>()("@w
         return yield* Effect.fail(new CertificateInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_certificates).where(eq(TB_certificates.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_certificates).where(eq(TB_certificates.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new CertificateNotDeleted({ id }));
@@ -89,7 +82,7 @@ export class CertificateService extends Effect.Service<CertificateService>()("@w
     });
 
     const all = Effect.fn("@warehouse/certificates/all")(function* () {
-      return yield* Effect.promise(() => db.query.TB_certificates.findMany());
+      return yield* db.query.TB_certificates.findMany();
     });
 
     return {

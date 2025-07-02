@@ -19,8 +19,7 @@ import {
 
 export class CatalogService extends Effect.Service<CatalogService>()("@warehouse/catalogs", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const slugify = (text: string) => {
       return text
@@ -43,11 +42,9 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       let exists;
 
       do {
-        exists = yield* Effect.promise(() =>
-          db.query.TB_catalogs.findFirst({
-            where: (fields, operations) => operations.eq(fields.barcode, barcode),
-          }),
-        );
+        exists = yield* db.query.TB_catalogs.findFirst({
+          where: (fields, operations) => operations.eq(fields.barcode, barcode),
+        });
         if (!!exists) {
           barcode = `${slugify(input)}-${counter++}`;
         }
@@ -63,12 +60,10 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
 
       let barcode = yield* ensureBarcodeIsUnique(input.name);
 
-      const [catalog] = yield* Effect.promise(() =>
-        db
-          .insert(TB_catalogs)
-          .values({ ...input, ownerId: userId, organizationId: orgId, barcode })
-          .returning(),
-      );
+      const [catalog] = yield* db
+        .insert(TB_catalogs)
+        .values({ ...input, ownerId: userId, organizationId: orgId, barcode })
+        .returning();
 
       if (!catalog) {
         return yield* Effect.fail(new CatalogNotCreated());
@@ -84,32 +79,30 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       }
       const orgId = yield* OrganizationId;
 
-      const catalog = yield* Effect.promise(() =>
-        db.query.TB_catalogs.findFirst({
-          where: (catalogs, operations) => operations.eq(catalogs.id, parsedId.output),
-          with: {
-            products: {
-              with: {
-                product: {
-                  with: {
-                    images: {
-                      with: {
-                        image: true,
-                      },
+      const catalog = yield* db.query.TB_catalogs.findFirst({
+        where: (catalogs, operations) => operations.eq(catalogs.id, parsedId.output),
+        with: {
+          products: {
+            with: {
+              product: {
+                with: {
+                  images: {
+                    with: {
+                      image: true,
                     },
-                    organizations: {
-                      with: {
-                        priceHistory: true,
-                      },
-                    },
-                    brands: true,
                   },
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                    },
+                  },
+                  brands: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!catalog) {
         return yield* Effect.fail(new CatalogNotFound({ id }));
@@ -147,24 +140,20 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return yield* Effect.fail(new CatalogInvalidId({ id: input.id }));
       }
 
-      const existingBarcode = yield* Effect.promise(() =>
-        db.query.TB_catalogs.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-        }),
-      );
+      const existingBarcode = yield* db.query.TB_catalogs.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+      });
       if (!existingBarcode) {
         return yield* Effect.fail(new CatalogNotFound({ id: input.id }));
       }
 
       let updatedBarcode = yield* ensureBarcodeIsUnique(input.name, existingBarcode.barcode);
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_catalogs)
-          .set({ ...input, updatedAt: new Date(), barcode: updatedBarcode })
-          .where(eq(TB_catalogs.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_catalogs)
+        .set({ ...input, updatedAt: new Date(), barcode: updatedBarcode })
+        .where(eq(TB_catalogs.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new CatalogNotUpdated({ id: input.id }));
@@ -179,9 +168,11 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return yield* Effect.fail(new CatalogInvalidId({ id: input }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db.update(TB_catalogs).set({ deletedAt: new Date() }).where(eq(TB_catalogs.id, parsedId.output)).returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_catalogs)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_catalogs.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new CatalogNotUpdated({ id: parsedId.output }));
@@ -196,9 +187,7 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return yield* Effect.fail(new CatalogInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_catalogs).where(eq(TB_catalogs.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_catalogs).where(eq(TB_catalogs.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new CatalogNotDeleted({ id }));
@@ -222,12 +211,10 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return yield* Effect.fail(new ProductInvalidId({ id: productId }));
       }
 
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_catalog_products.findFirst({
-          where: (fields, operations) =>
-            and(eq(fields.catalogId, parsedCatalogId.output), eq(fields.productId, parsedProductId.output)),
-        }),
-      );
+      const exists = yield* db.query.TB_catalog_products.findFirst({
+        where: (fields, operations) =>
+          and(eq(fields.catalogId, parsedCatalogId.output), eq(fields.productId, parsedProductId.output)),
+      });
 
       if (exists) {
         return yield* Effect.fail(
@@ -238,16 +225,14 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         );
       }
 
-      const [entry] = yield* Effect.promise(() =>
-        db
-          .insert(TB_catalog_products)
-          .values({
-            catalogId: parsedCatalogId.output,
-            productId: parsedProductId.output,
-            discount,
-          })
-          .returning(),
-      );
+      const [entry] = yield* db
+        .insert(TB_catalog_products)
+        .values({
+          catalogId: parsedCatalogId.output,
+          productId: parsedProductId.output,
+          discount,
+        })
+        .returning();
 
       return entry;
     });
@@ -266,17 +251,15 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
         return yield* Effect.fail(new ProductInvalidId({ id: productId }));
       }
 
-      const [removed] = yield* Effect.promise(() =>
-        db
-          .delete(TB_catalog_products)
-          .where(
-            and(
-              eq(TB_catalog_products.catalogId, parsedCatalogId.output),
-              eq(TB_catalog_products.productId, parsedProductId.output),
-            ),
-          )
-          .returning(),
-      );
+      const [removed] = yield* db
+        .delete(TB_catalog_products)
+        .where(
+          and(
+            eq(TB_catalog_products.catalogId, parsedCatalogId.output),
+            eq(TB_catalog_products.productId, parsedProductId.output),
+          ),
+        )
+        .returning();
 
       if (!removed) {
         return yield* Effect.fail(
@@ -293,54 +276,53 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
     const findAll = Effect.fn("@warehouse/catalogs/findAll")(function* () {
       const orgId = yield* OrganizationId;
 
-      const catalogs = yield* Effect.promise(() =>
-        db.query.TB_catalogs.findMany({
-          where: (catalogs, operations) => operations.eq(catalogs.organizationId, orgId),
-          with: {
-            products: {
-              with: {
-                product: {
-                  with: {
-                    images: {
-                      with: {
-                        image: true,
-                      },
+      const catalogs = yield* db.query.TB_catalogs.findMany({
+        where: (catalogs, operations) => operations.eq(catalogs.organizationId, orgId),
+        with: {
+          products: {
+            with: {
+              product: {
+                with: {
+                  images: {
+                    with: {
+                      image: true,
                     },
-                    organizations: {
-                      with: {
-                        priceHistory: true,
-                      },
+                  },
+                  organizations: {
+                    with: {
+                      priceHistory: true,
                     },
-                    brands: true,
-                    saleItems: {
-                      with: {
-                        sale: {
-                          with: {
-                            customer: true,
-                          },
+                  },
+                  brands: true,
+                  saleItems: {
+                    with: {
+                      sale: {
+                        with: {
+                          customer: true,
                         },
                       },
                     },
-                    orders: true,
-                    purchases: true,
-                    labels: {
-                      with: {
-                        label: true,
-                      },
+                  },
+                  orders: true,
+                  purchases: true,
+                  labels: {
+                    with: {
+                      label: true,
                     },
-                    stco: {
-                      with: {
-                        condition: true,
-                      },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
                     },
                   },
                 },
               },
             },
           },
-          orderBy: (fields, operations) => [operations.desc(fields.createdAt), operations.desc(fields.deletedAt)],
-        }),
-      );
+        },
+        orderBy: (fields, operations) => [operations.desc(fields.createdAt), operations.desc(fields.deletedAt)],
+      });
+
       return catalogs.map((catalog) => ({
         ...catalog,
         products: catalog.products.map((p) => ({
@@ -384,27 +366,23 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       if (!parsedDeviceId.success) {
         return yield* Effect.fail(new ProductInvalidId({ id: deviceId }));
       }
-      const catalog = yield* Effect.promise(() =>
-        db.query.TB_catalogs.findFirst({
-          where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
+      const catalog = yield* db.query.TB_catalogs.findFirst({
+        where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
+        with: {
+          products: {
+            with: {
+              product: true,
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!catalog) {
         return yield* Effect.fail(new CatalogNotFound({ id: catalogId }));
       }
-      const device = yield* Effect.promise(() =>
-        db.query.TB_devices.findFirst({
-          where: (devices, operations) => operations.eq(devices.id, parsedDeviceId.output),
-        }),
-      );
+      const device = yield* db.query.TB_devices.findFirst({
+        where: (devices, operations) => operations.eq(devices.id, parsedDeviceId.output),
+      });
       if (!device) {
         return yield* Effect.fail(new ProductNotFound({ id: deviceId }));
       }
@@ -418,18 +396,16 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       if (!parsedCatalogId.success) {
         return yield* Effect.fail(new CatalogInvalidId({ id: catalogId }));
       }
-      const catalog = yield* Effect.promise(() =>
-        db.query.TB_catalogs.findFirst({
-          where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
+      const catalog = yield* db.query.TB_catalogs.findFirst({
+        where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
+        with: {
+          products: {
+            with: {
+              product: true,
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!catalog) {
         return yield* Effect.fail(new CatalogNotFound({ id: catalogId }));
@@ -447,18 +423,16 @@ export class CatalogService extends Effect.Service<CatalogService>()("@warehouse
       if (!parsedCatalogId.success) {
         return yield* Effect.fail(new CatalogInvalidId({ id: catalogId }));
       }
-      const catalog = yield* Effect.promise(() =>
-        db.query.TB_catalogs.findFirst({
-          where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
+      const catalog = yield* db.query.TB_catalogs.findFirst({
+        where: (catalogs, operations) => operations.eq(catalogs.id, parsedCatalogId.output),
+        with: {
+          products: {
+            with: {
+              product: true,
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!catalog) {
         return yield* Effect.fail(new CatalogNotFound({ id: catalogId }));

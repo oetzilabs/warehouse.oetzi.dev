@@ -16,13 +16,12 @@ import {
 
 export class DiscountService extends Effect.Service<DiscountService>()("@warehouse/discounts", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/discounts/create")(function* (
       input: InferInput<typeof DiscountV1CreateSchema>,
     ) {
-      const [discount] = yield* Effect.promise(() => db.insert(TB_discounts_v1).values(input).returning());
+      const [discount] = yield* db.insert(TB_discounts_v1).values(input).returning();
 
       if (!discount) {
         return yield* Effect.fail(new DiscountNotCreated({}));
@@ -37,11 +36,9 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
         return yield* Effect.fail(new DiscountInvalidId({ id }));
       }
 
-      const discount = yield* Effect.promise(() =>
-        db.query.TB_discounts_v1.findFirst({
-          where: (discounts, { eq }) => eq(discounts.id, parsedId.output),
-        }),
-      );
+      const discount = yield* db.query.TB_discounts_v1.findFirst({
+        where: (discounts, { eq }) => eq(discounts.id, parsedId.output),
+      });
 
       if (!discount) {
         return yield* Effect.fail(new DiscountNotFound({ id }));
@@ -58,14 +55,12 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
         return yield* Effect.fail(new OrganizationInvalidId({ id: organizationId }));
       }
 
-      const discounts = yield* Effect.promise(() =>
-        db.query.TB_organization_discounts.findMany({
-          where: (fields, { eq }) => eq(fields.organization_id, organizationId),
-          with: {
-            discount: true,
-          },
-        }),
-      );
+      const discounts = yield* db.query.TB_organization_discounts.findMany({
+        where: (fields, { eq }) => eq(fields.organization_id, organizationId),
+        with: {
+          discount: true,
+        },
+      });
 
       // if (discounts.length === 0) {
       //   return yield* Effect.fail(new OrganizationNoDiscounts({ id: organizationId }));
@@ -82,13 +77,11 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
         return yield* Effect.fail(new DiscountInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_discounts_v1)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_discounts_v1.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_discounts_v1)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_discounts_v1.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new DiscountNotUpdated({ id: input.id }));
@@ -103,9 +96,7 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
         return yield* Effect.fail(new DiscountInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_discounts_v1).where(eq(TB_discounts_v1.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_discounts_v1).where(eq(TB_discounts_v1.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new DiscountNotDeleted({ id }));
@@ -120,13 +111,11 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
         return yield* Effect.fail(new DiscountInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db
-          .update(TB_discounts_v1)
-          .set({ deletedAt: new Date() })
-          .where(eq(TB_discounts_v1.id, parsedId.output))
-          .returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_discounts_v1)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_discounts_v1.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new DiscountNotDeleted({ id }));

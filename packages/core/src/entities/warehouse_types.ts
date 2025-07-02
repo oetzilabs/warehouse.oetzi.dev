@@ -7,18 +7,17 @@ import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
 
 export class WarehouseTypeService extends Effect.Service<WarehouseTypeService>()("@warehouse/warehouse-types", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = (data: InferInput<typeof WarehouseTypeCreateSchema>) =>
       Effect.gen(function* (_) {
-        const [warehouseType] = yield* Effect.promise(() => db.insert(TB_warehouse_types).values(data).returning());
+        const [warehouseType] = yield* db.insert(TB_warehouse_types).values(data).returning();
         return warehouseType;
       });
 
     const all = () =>
       Effect.gen(function* (_) {
-        return yield* Effect.promise(() => db.query.TB_warehouse_types.findMany());
+        return yield* db.query.TB_warehouse_types.findMany();
       });
 
     const findById = (id: string) =>
@@ -28,11 +27,9 @@ export class WarehouseTypeService extends Effect.Service<WarehouseTypeService>()
           return yield* Effect.fail(new Error("Invalid warehouse type ID"));
         }
 
-        return yield* Effect.promise(() =>
-          db.query.TB_warehouse_types.findFirst({
-            where: (warehouse_types, operations) => operations.eq(warehouse_types.id, parsedId.output),
-          }),
-        );
+        return yield* db.query.TB_warehouse_types.findFirst({
+          where: (warehouse_types, operations) => operations.eq(warehouse_types.id, parsedId.output),
+        });
       });
 
     const update = (data: InferInput<typeof WarehouseTypeUpdateSchema>) =>
@@ -42,13 +39,11 @@ export class WarehouseTypeService extends Effect.Service<WarehouseTypeService>()
           return yield* Effect.fail(new Error("Invalid warehouse type ID"));
         }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_warehouse_types)
-            .set({ ...data, updatedAt: new Date() })
-            .where(eq(TB_warehouse_types.id, parsedId.output))
-            .returning(),
-        );
+        const [updated] = yield* db
+          .update(TB_warehouse_types)
+          .set({ ...data, updatedAt: new Date() })
+          .where(eq(TB_warehouse_types.id, parsedId.output))
+          .returning();
         return updated;
       });
 
@@ -59,13 +54,8 @@ export class WarehouseTypeService extends Effect.Service<WarehouseTypeService>()
           return yield* Effect.fail(new Error("Invalid warehouse type ID"));
         }
 
-        return yield* Effect.promise(() =>
-          db
-            .delete(TB_warehouse_types)
-            .where(eq(TB_warehouse_types.id, parsedId.output))
-            .returning()
-            .then(([x]) => x),
-        );
+        const [x] = yield* db.delete(TB_warehouse_types).where(eq(TB_warehouse_types.id, parsedId.output)).returning();
+        return x;
       });
 
     return {

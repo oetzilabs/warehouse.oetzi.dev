@@ -14,51 +14,38 @@ import {
 
 export class PaymentMethodService extends Effect.Service<PaymentMethodService>()("@warehouse/payment-methods", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_payment_methods.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        users: {
-          with: {
-            user: {
-              columns: {
-                hashed_password: false,
-              },
-            },
-          },
-        },
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
+    const db = yield* DatabaseService;
 
     const create = (input: InferInput<typeof PaymentMethodCreateSchema>) =>
       Effect.gen(function* (_) {
-        const [paymentMethod] = yield* Effect.promise(() => db.insert(TB_payment_methods).values(input).returning());
+        const [paymentMethod] = yield* db.insert(TB_payment_methods).values(input).returning();
         if (!paymentMethod) {
           return yield* Effect.fail(new PaymentMethodNotCreated({}));
         }
         return paymentMethod;
       });
 
-    const findById = (id: string, relations?: FindManyParams["with"]) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new PaymentMethodInvalidId({ id }));
         }
 
-        const method = yield* Effect.promise(() =>
-          db.query.TB_payment_methods.findFirst({
-            where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-            with: relations ?? withRelations(),
-          }),
-        );
+        const method = yield* db.query.TB_payment_methods.findFirst({
+          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+          with: {
+            users: {
+              with: {
+                user: {
+                  columns: {
+                    hashed_password: false,
+                  },
+                },
+              },
+            },
+          },
+        });
 
         if (!method) {
           return yield* Effect.fail(new PaymentMethodNotFound({ id }));
@@ -74,13 +61,11 @@ export class PaymentMethodService extends Effect.Service<PaymentMethodService>()
           return yield* Effect.fail(new PaymentMethodInvalidId({ id }));
         }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_payment_methods)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_payment_methods.id, parsedId.output))
-            .returning(),
-        );
+        const [updated] = yield* db
+          .update(TB_payment_methods)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_payment_methods.id, parsedId.output))
+          .returning();
         if (!updated) {
           return yield* Effect.fail(new PaymentMethodNotUpdated({ id }));
         }
@@ -94,9 +79,10 @@ export class PaymentMethodService extends Effect.Service<PaymentMethodService>()
           return yield* Effect.fail(new PaymentMethodInvalidId({ id }));
         }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db.delete(TB_payment_methods).where(eq(TB_payment_methods.id, parsedId.output)).returning(),
-        );
+        const [deleted] = yield* db
+          .delete(TB_payment_methods)
+          .where(eq(TB_payment_methods.id, parsedId.output))
+          .returning();
         if (!deleted) {
           return yield* Effect.fail(new PaymentMethodNotDeleted({ id }));
         }
@@ -110,13 +96,11 @@ export class PaymentMethodService extends Effect.Service<PaymentMethodService>()
           return yield* Effect.fail(new PaymentMethodInvalidId({ id }));
         }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db
-            .update(TB_payment_methods)
-            .set({ deletedAt: new Date() })
-            .where(eq(TB_payment_methods.id, parsedId.output))
-            .returning(),
-        );
+        const [deleted] = yield* db
+          .update(TB_payment_methods)
+          .set({ deletedAt: new Date() })
+          .where(eq(TB_payment_methods.id, parsedId.output))
+          .returning();
         if (!deleted) {
           return yield* Effect.fail(new PaymentMethodNotDeleted({ id }));
         }

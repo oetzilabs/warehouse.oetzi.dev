@@ -23,23 +23,7 @@ import {
 
 export class DocumentStorageService extends Effect.Service<DocumentStorageService>()("@warehouse/document-storages", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
-
-    type FindManyParams = NonNullable<Parameters<typeof db.query.TB_document_storages.findMany>[0]>;
-
-    const withRelations = (options?: NonNullable<FindManyParams["with"]>): NonNullable<FindManyParams["with"]> => {
-      const defaultRelations: NonNullable<FindManyParams["with"]> = {
-        documents: true,
-        offer: true,
-        queuedDocuments: true,
-      };
-
-      if (options) {
-        return options;
-      }
-      return defaultRelations;
-    };
+    const db = yield* DatabaseService;
 
     const create = (input: InferInput<typeof DocumentStorageCreateSchema>, organization_id: string) =>
       Effect.gen(function* (_) {
@@ -48,20 +32,18 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
           return yield* Effect.fail(new StorageOrganizationInvalidId({ organizationId: organization_id }));
         }
 
-        const [storage] = yield* Effect.promise(() => db.insert(TB_document_storages).values(input).returning());
+        const [storage] = yield* db.insert(TB_document_storages).values(input).returning();
         if (!storage) {
           return yield* Effect.fail(new StorageNotCreated({}));
         }
 
-        const connectedWithOrg = yield* Effect.promise(() =>
-          db
-            .insert(TB_organizations_storages)
-            .values({
-              organizationId: parsedOrgId.output,
-              storageId: storage.id,
-            })
-            .returning(),
-        );
+        const connectedWithOrg = yield* db
+          .insert(TB_organizations_storages)
+          .values({
+            organizationId: parsedOrgId.output,
+            storageId: storage.id,
+          })
+          .returning();
 
         if (!connectedWithOrg) {
           return yield* Effect.fail(
@@ -72,19 +54,21 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
         return storage;
       });
 
-    const findById = (id: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findById = (id: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, id);
         if (!parsedId.success) {
           return yield* Effect.fail(new StorageInvalidId({ id }));
         }
 
-        const storage = yield* Effect.promise(() =>
-          db.query.TB_document_storages.findFirst({
-            where: (storages, operations) => operations.eq(storages.id, parsedId.output),
-            with: relations,
-          }),
-        );
+        const storage = yield* db.query.TB_document_storages.findFirst({
+          where: (storages, operations) => operations.eq(storages.id, parsedId.output),
+          with: {
+            documents: true,
+            offer: true,
+            queuedDocuments: true,
+          },
+        });
 
         if (!storage) {
           return yield* Effect.fail(new StorageNotFound({ id }));
@@ -93,23 +77,25 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
         return storage;
       });
 
-    const findByOrganizationId = (organizationId: string, relations: FindManyParams["with"] = withRelations()) =>
+    const findByOrganizationId = (organizationId: string) =>
       Effect.gen(function* (_) {
         const parsedId = safeParse(prefixed_cuid2, organizationId);
         if (!parsedId.success) {
           return yield* Effect.fail(new StorageOrganizationInvalidId({ organizationId }));
         }
 
-        const entries = yield* Effect.promise(() =>
-          db.query.TB_organizations_storages.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedId.output),
-            with: {
-              storage: {
-                with: relations,
+        const entries = yield* db.query.TB_organizations_storages.findMany({
+          where: (fields, operations) => operations.eq(fields.organizationId, parsedId.output),
+          with: {
+            storage: {
+              with: {
+                documents: true,
+                offer: true,
+                queuedDocuments: true,
               },
             },
-          }),
-        );
+          },
+        });
 
         return entries.map((entry) => entry.storage);
       });
@@ -121,23 +107,19 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
           return yield* Effect.fail(new StorageInvalidId({ id: input.id }));
         }
 
-        const exists = yield* Effect.promise(() =>
-          db.query.TB_document_storages.findFirst({
-            where: (storages, operations) => operations.eq(storages.id, input.id),
-          }),
-        );
+        const exists = yield* db.query.TB_document_storages.findFirst({
+          where: (storages, operations) => operations.eq(storages.id, input.id),
+        });
 
         if (!exists) {
           return yield* Effect.fail(new StorageNotFound({ id: input.id }));
         }
 
-        const [updated] = yield* Effect.promise(() =>
-          db
-            .update(TB_document_storages)
-            .set({ ...input, updatedAt: new Date() })
-            .where(eq(TB_document_storages.id, input.id))
-            .returning(),
-        );
+        const [updated] = yield* db
+          .update(TB_document_storages)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(TB_document_storages.id, input.id))
+          .returning();
 
         if (!updated) {
           return yield* Effect.fail(new StorageNotUpdated({ id: input.id }));
@@ -153,13 +135,11 @@ export class DocumentStorageService extends Effect.Service<DocumentStorageServic
           return yield* Effect.fail(new StorageInvalidId({ id }));
         }
 
-        const [deleted] = yield* Effect.promise(() =>
-          db
-            .update(TB_document_storages)
-            .set({ deletedAt: new Date() })
-            .where(eq(TB_document_storages.id, parsedId.output))
-            .returning(),
-        );
+        const [deleted] = yield* db
+          .update(TB_document_storages)
+          .set({ deletedAt: new Date() })
+          .where(eq(TB_document_storages.id, parsedId.output))
+          .returning();
 
         if (!deleted) {
           return yield* Effect.fail(new StorageNotDeleted({ id }));

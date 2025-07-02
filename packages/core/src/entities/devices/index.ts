@@ -11,19 +11,16 @@ import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, De
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/devices", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/devices/create")(function* (
       input: Omit<InferInput<typeof DeviceCreateSchema>, "organization_id">,
     ) {
       const orgId = yield* OrganizationId;
-      const [device] = yield* Effect.promise(() =>
-        db
-          .insert(TB_devices)
-          .values({ ...input, organization_id: orgId })
-          .returning(),
-      );
+      const [device] = yield* db
+        .insert(TB_devices)
+        .values({ ...input, organization_id: orgId })
+        .returning();
 
       if (!device) {
         return yield* Effect.fail(new DeviceNotCreated({}));
@@ -38,14 +35,12 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         return yield* Effect.fail(new DeviceInvalidId({ id }));
       }
 
-      const device = yield* Effect.promise(() =>
-        db.query.TB_devices.findFirst({
-          where: (devices, operations) => operations.eq(devices.id, parsedId.output),
-          with: {
-            type: true,
-          },
-        }),
-      );
+      const device = yield* db.query.TB_devices.findFirst({
+        where: (devices, operations) => operations.eq(devices.id, parsedId.output),
+        with: {
+          type: true,
+        },
+      });
 
       if (!device) {
         return yield* Effect.fail(new DeviceNotFound({ id }));
@@ -60,13 +55,11 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         return yield* Effect.fail(new DeviceInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_devices)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_devices.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_devices)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_devices.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new DeviceNotUpdated({ id: input.id }));
@@ -81,9 +74,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         return yield* Effect.fail(new DeviceInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_devices).where(eq(TB_devices.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new DeviceNotDeleted({ id }));
@@ -93,25 +84,23 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
     });
 
     const all = Effect.fn("@warehouse/devices/all")(function* () {
-      return yield* Effect.promise(() => db.query.TB_devices.findMany());
+      return yield* db.query.TB_devices.findMany();
     });
 
     const findByOrganizationId = Effect.fn("@warehouse/devices/findByOrganizationId")(function* () {
       const orgId = yield* OrganizationId;
       // look into all the facilites of the warehouse
-      const orgs = yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, orgId),
-          with: {
-            devices: {
-              with: {
-                type: true,
-              },
-              where: (fields, operators) => operators.isNull(fields.deletedAt),
+      const orgs = yield* db.query.TB_organizations.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, orgId),
+        with: {
+          devices: {
+            with: {
+              type: true,
             },
+            where: (fields, operators) => operators.isNull(fields.deletedAt),
           },
-        }),
-      );
+        },
+      });
       if (!orgs) {
         return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
@@ -119,7 +108,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
     });
 
     const getDeviceTypes = Effect.fn("@warehouse/devices/getDeviceTypes")(function* () {
-      const deviceTypes = yield* Effect.promise(() => db.query.TB_device_types.findMany());
+      const deviceTypes = yield* db.query.TB_device_types.findMany();
       return deviceTypes;
     });
 
@@ -129,9 +118,11 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         return yield* Effect.fail(new DeviceInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.update(TB_devices).set({ deletedAt: new Date() }).where(eq(TB_devices.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_devices)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_devices.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new DeviceNotDeleted({ id }));

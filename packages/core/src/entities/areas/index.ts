@@ -9,8 +9,7 @@ import { AreaInvalidId, AreaNotCreated, AreaNotDeleted, AreaNotFound, AreaNotUpd
 
 export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/areas/create")(function* (
       input: InferInput<typeof WarehouseAreaCreateSchema>,
@@ -20,7 +19,7 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
         return yield* Effect.fail(new FacilityInvalidId({ id: input.warehouse_facility_id }));
       }
 
-      const [area] = yield* Effect.promise(() => db.insert(TB_warehouse_areas).values(input).returning());
+      const [area] = yield* db.insert(TB_warehouse_areas).values(input).returning();
 
       if (!area) {
         return yield* Effect.fail(
@@ -39,21 +38,19 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
         return yield* Effect.fail(new AreaInvalidId({ id }));
       }
 
-      const area = yield* Effect.promise(() =>
-        db.query.TB_warehouse_areas.findFirst({
-          where: (areas, operations) => operations.eq(areas.id, parsedId.output),
-          with: {
-            storages: {
-              with: {
-                type: true,
-                children: true,
-                products: true,
-                labels: true,
-              },
+      const area = yield* db.query.TB_warehouse_areas.findFirst({
+        where: (areas, operations) => operations.eq(areas.id, parsedId.output),
+        with: {
+          storages: {
+            with: {
+              type: true,
+              children: true,
+              products: true,
+              labels: true,
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!area) {
         return yield* Effect.fail(new AreaNotFound({ id }));
@@ -70,13 +67,11 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
         return yield* Effect.fail(new AreaInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_warehouse_areas)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_warehouse_areas.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_warehouse_areas)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_warehouse_areas.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new AreaNotUpdated({ id: input.id }));
@@ -91,9 +86,10 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
         return yield* Effect.fail(new AreaInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_warehouse_areas).where(eq(TB_warehouse_areas.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db
+        .delete(TB_warehouse_areas)
+        .where(eq(TB_warehouse_areas.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new AreaNotDeleted({ id }));
@@ -108,38 +104,34 @@ export class AreaService extends Effect.Service<AreaService>()("@warehouse/areas
         return yield* Effect.fail(new FacilityInvalidId({ id: facilityId }));
       }
 
-      return yield* Effect.promise(() =>
-        db.query.TB_warehouse_areas.findMany({
-          where: (areas, operations) => operations.eq(areas.warehouse_facility_id, parsedId.output),
-          with: {
-            storages: {
-              with: {
-                type: true,
-                children: true,
-                products: true,
-                labels: true,
-              },
+      return yield* db.query.TB_warehouse_areas.findMany({
+        where: (areas, operations) => operations.eq(areas.warehouse_facility_id, parsedId.output),
+        with: {
+          storages: {
+            with: {
+              type: true,
+              children: true,
+              products: true,
+              labels: true,
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     const all = Effect.fn("@warehouse/areas/all")(function* () {
-      return yield* Effect.promise(() =>
-        db.query.TB_warehouse_areas.findMany({
-          with: {
-            storages: {
-              with: {
-                type: true,
-                children: true,
-                products: true,
-                labels: true,
-              },
+      return yield* db.query.TB_warehouse_areas.findMany({
+        with: {
+          storages: {
+            with: {
+              type: true,
+              children: true,
+              products: true,
+              labels: true,
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     return {

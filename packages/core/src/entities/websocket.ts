@@ -4,16 +4,15 @@ import { eq, gte } from "drizzle-orm";
 import { Effect } from "effect";
 import { Resource } from "sst";
 import { safeParse } from "valibot";
-import { DatabaseLive, DatabaseService } from "../drizzle/sql/index";
 import { TB_websockets } from "../drizzle/sql/schema";
+import { DatabaseLive, DatabaseService } from "../drizzle/sql/service";
 import { prefixed_cuid2 } from "../utils/custom-cuid2-valibot";
 import { WebsocketMessage } from "../utils/websocket";
 import { OrganizationService } from "./organizations";
 
 export class WebsocketService extends Effect.Service<WebsocketService>()("@warehouse/websocket", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
     const apiG = new ApiGatewayManagementApi({
       endpoint: Resource.websocket_api.managementEndpoint,
     });
@@ -28,19 +27,16 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
         catch: (e: unknown) => {
           const eTyped = e as { statusCode: number };
           if (eTyped.statusCode === 410 || eTyped instanceof GoneException) {
-            return Effect.promise(() =>
-              db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning(),
-            );
+            return db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning();
           }
           return Effect.fail(e);
         },
       });
 
-    const connect = (connectionId: string) =>
-      Effect.promise(() => db.insert(TB_websockets).values({ connectionId }).returning());
+    const connect = (connectionId: string) => db.insert(TB_websockets).values({ connectionId }).returning();
 
     const disconnect = (connectionId: string) =>
-      Effect.promise(() => db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning());
+      db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning();
 
     const getConnections = (userId: string) =>
       Effect.gen(function* (_) {
@@ -49,12 +45,10 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
           return yield* Effect.fail(new Error("Invalid user ID"));
         }
 
-        return yield* Effect.promise(() =>
-          db
-            .select({ connectionId: TB_websockets.connectionId })
-            .from(TB_websockets)
-            .where(eq(TB_websockets.userId, parsedId.output)),
-        );
+        return yield* db
+          .select({ connectionId: TB_websockets.connectionId })
+          .from(TB_websockets)
+          .where(eq(TB_websockets.userId, parsedId.output));
       });
 
     const update = (connectionId: string, userId: string) =>
@@ -64,13 +58,11 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
           return yield* Effect.fail(new Error("Invalid user ID"));
         }
 
-        const [x] = yield* Effect.promise(() =>
-          db
-            .update(TB_websockets)
-            .set({ updatedAt: new Date(), userId: parsedId.output })
-            .where(eq(TB_websockets.connectionId, connectionId))
-            .returning(),
-        );
+        const [x] = yield* db
+          .update(TB_websockets)
+          .set({ updatedAt: new Date(), userId: parsedId.output })
+          .where(eq(TB_websockets.connectionId, connectionId))
+          .returning();
         return x;
       });
 
@@ -99,12 +91,10 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
 
     const broadcast = (message: WebsocketMessage) =>
       Effect.gen(function* (_) {
-        const connectionIds = yield* Effect.promise(() =>
-          db
-            .select({ connectionId: TB_websockets.connectionId })
-            .from(TB_websockets)
-            .where(gte(TB_websockets.updatedAt, dayjs().subtract(5, "minute").toDate())),
-        );
+        const connectionIds = yield* db
+          .select({ connectionId: TB_websockets.connectionId })
+          .from(TB_websockets)
+          .where(gte(TB_websockets.updatedAt, dayjs().subtract(5, "minute").toDate()));
 
         const results = yield* Effect.all(
           connectionIds.map((conn) => sendMessageToConnection(message, conn.connectionId)),
@@ -115,9 +105,7 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
 
     const revoke = (connectionId: string) =>
       Effect.gen(function* (_) {
-        const entries = yield* Effect.promise(() =>
-          db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning(),
-        );
+        const entries = yield* db.delete(TB_websockets).where(eq(TB_websockets.connectionId, connectionId)).returning();
         if (entries.length === 0) {
           return yield* Effect.fail(new Error("Failed to revoke connection"));
         }
@@ -127,7 +115,7 @@ export class WebsocketService extends Effect.Service<WebsocketService>()("@wareh
 
     const revokeAll = () =>
       Effect.gen(function* (_) {
-        const entries = yield* Effect.promise(() => db.delete(TB_websockets).returning());
+        const entries = yield* db.delete(TB_websockets).returning();
 
         if (entries.length === 0) {
           return yield* Effect.fail(new Error("Failed to revoke all connections"));

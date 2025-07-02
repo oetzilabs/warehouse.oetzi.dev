@@ -39,8 +39,7 @@ import { OrganizationId } from "./id";
 
 export class OrganizationService extends Effect.Service<OrganizationService>()("@warehouse/organizations", {
   effect: Effect.gen(function* (_) {
-    const database = yield* DatabaseService;
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
     const generateRandomLetters = (length: number): string => {
       let result = "";
       const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -71,22 +70,18 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       }
 
       const slug = generateSlug(userInput.name);
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (organizations, operations) => operations.eq(organizations.slug, slug),
-        }),
-      );
+      const exists = yield* db.query.TB_organizations.findFirst({
+        where: (organizations, operations) => operations.eq(organizations.slug, slug),
+      });
 
       if (exists) {
         return yield* Effect.fail(new OrganizationAlreadyExists({ name: userInput.name, slug }));
       }
 
-      const [org] = yield* Effect.promise(() =>
-        db
-          .insert(TB_organizations)
-          .values({ ...userInput, owner_id: parsedUserId.output, slug: generateSlug(userInput.name) })
-          .returning(),
-      );
+      const [org] = yield* db
+        .insert(TB_organizations)
+        .values({ ...userInput, owner_id: parsedUserId.output, slug: generateSlug(userInput.name) })
+        .returning();
       // TODO: Add organization to user's organizations
       const organizationId = Layer.succeed(OrganizationId, org.id);
       const added = yield* addUser(userId).pipe(Effect.provide(organizationId));
@@ -104,99 +99,97 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.fail(new OrganizationInvalidId({ id }));
       }
 
-      const org = yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (organizations, operations) => operations.eq(organizations.id, parsedId.output),
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
+      const org = yield* db.query.TB_organizations.findFirst({
+        where: (organizations, operations) => operations.eq(organizations.id, parsedId.output),
+        with: {
+          products: {
+            with: {
+              product: true,
             },
-            customerOrders: {
-              with: {
-                customer: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          customerOrders: {
+            with: {
+              customer: true,
+              products: {
+                with: {
+                  product: true,
                 },
-                sale: true,
               },
+              sale: true,
             },
-            purchases: {
-              with: {
-                supplier: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          purchases: {
+            with: {
+              supplier: true,
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
-            devices: {
-              with: {
-                type: true,
-              },
+          },
+          devices: {
+            with: {
+              type: true,
             },
-            sales: {
-              with: {
-                sale: true,
-              },
+          },
+          sales: {
+            with: {
+              sale: true,
             },
-            supps: {
-              with: {
-                supplier: true,
-              },
+          },
+          supps: {
+            with: {
+              supplier: true,
             },
-            customers: {
-              with: {
-                customer: true,
-              },
+          },
+          customers: {
+            with: {
+              customer: true,
             },
-            catalogs: {
-              with: {
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          catalogs: {
+            with: {
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
-            users: {
-              with: {
-                user: {
-                  columns: {
-                    hashed_password: false,
-                  },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
                 },
               },
             },
-            owner: {
-              columns: {
-                hashed_password: false,
-              },
+          },
+          owner: {
+            columns: {
+              hashed_password: false,
             },
-            whs: {
-              with: {
-                warehouse: {
-                  with: {
-                    addresses: {
-                      with: {
-                        address: true,
-                      },
+          },
+          whs: {
+            with: {
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
                     },
-                    facilities: {
-                      with: {
-                        areas: {
-                          with: {
-                            storages: {
-                              with: {
-                                type: true,
-                                area: true,
-                                products: true,
-                                children: true,
-                              },
+                  },
+                  facilities: {
+                    with: {
+                      areas: {
+                        with: {
+                          storages: {
+                            with: {
+                              type: true,
+                              area: true,
+                              products: true,
+                              children: true,
                             },
                           },
                         },
@@ -207,8 +200,8 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               },
             },
           },
-        }),
-      );
+        },
+      });
       if (!org) {
         return yield* Effect.fail(new OrganizationNotFound({ id }));
       }
@@ -216,94 +209,92 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
     });
 
     const findBySlug = Effect.fn("@warehouse/organizations/findBySlug")(function* (slug: string) {
-      return yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (organizations, operations) => operations.eq(organizations.slug, slug),
-          with: {
-            customerOrders: {
-              with: {
-                customer: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+      return yield* db.query.TB_organizations.findFirst({
+        where: (organizations, operations) => operations.eq(organizations.slug, slug),
+        with: {
+          customerOrders: {
+            with: {
+              customer: true,
+              products: {
+                with: {
+                  product: true,
                 },
-                sale: true,
               },
+              sale: true,
             },
-            purchases: {
-              with: {
-                supplier: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          purchases: {
+            with: {
+              supplier: true,
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
-            devices: {
-              with: {
-                type: true,
-              },
+          },
+          devices: {
+            with: {
+              type: true,
             },
-            sales: {
-              with: {
-                sale: true,
-              },
+          },
+          sales: {
+            with: {
+              sale: true,
             },
-            products: {
-              with: {
-                product: true,
-              },
+          },
+          products: {
+            with: {
+              product: true,
             },
-            supps: {
-              with: {
-                supplier: true,
-              },
+          },
+          supps: {
+            with: {
+              supplier: true,
             },
-            customers: {
-              with: {
-                customer: true,
-              },
+          },
+          customers: {
+            with: {
+              customer: true,
             },
-            catalogs: {
-              with: {
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          catalogs: {
+            with: {
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
-            users: {
-              with: {
-                user: {
-                  columns: {
-                    hashed_password: false,
-                  },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
                 },
               },
             },
-            whs: {
-              with: {
-                warehouse: {
-                  with: {
-                    addresses: {
-                      with: {
-                        address: true,
-                      },
+          },
+          whs: {
+            with: {
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
                     },
-                    facilities: {
-                      with: {
-                        areas: {
-                          with: {
-                            storages: {
-                              with: {
-                                type: true,
-                                area: true,
-                                products: true,
-                                children: true,
-                              },
+                  },
+                  facilities: {
+                    with: {
+                      areas: {
+                        with: {
+                          storages: {
+                            with: {
+                              type: true,
+                              area: true,
+                              products: true,
+                              children: true,
                             },
                           },
                         },
@@ -314,8 +305,8 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               },
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     const update = Effect.fn("@warehouse/organizations/update")(function* (
@@ -326,13 +317,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.fail(new OrganizationInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_organizations)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_organizations.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_organizations)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_organizations.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new OrganizationNotUpdated({ id: input.id }));
@@ -347,13 +336,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.fail(new OrganizationInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db
-          .update(TB_organizations)
-          .set({ deletedAt: new Date() })
-          .where(eq(TB_organizations.id, parsedId.output))
-          .returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_organizations)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_organizations.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new OrganizationNotDeleted({ id }));
@@ -368,13 +355,11 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.fail(new OrganizationInvalidId({ id }));
       }
 
-      const [deleted] = yield* Effect.promise(() =>
-        db
-          .update(TB_organizations)
-          .set({ deletedAt: new Date() })
-          .where(eq(TB_organizations.id, parsedId.output))
-          .returning(),
-      );
+      const [deleted] = yield* db
+        .update(TB_organizations)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_organizations.id, parsedId.output))
+        .returning();
 
       if (!deleted) {
         return yield* Effect.fail(new OrganizationNotDeleted({ id }));
@@ -391,33 +376,30 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      const user = yield* Effect.promise(() =>
-        db.query.TB_users.findFirst({
-          where: (users, operations) => operations.eq(users.id, parsedUserId.output),
-        }),
-      );
+      const user = yield* db.query.TB_users.findFirst({
+        where: (users, operations) => operations.eq(users.id, parsedUserId.output),
+      });
 
       if (!user) {
         return yield* Effect.fail(new OrganizationUserNotFound({ userId }));
       }
 
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_organization_users.findFirst({
-          where: (organization_users, operations) =>
-            and(
-              operations.eq(organization_users.user_id, parsedUserId.output),
-              operations.eq(organization_users.organization_id, orgId),
-            ),
-        }),
-      );
+      const exists = yield* db.query.TB_organization_users.findFirst({
+        where: (organization_users, operations) =>
+          and(
+            operations.eq(organization_users.user_id, parsedUserId.output),
+            operations.eq(organization_users.organization_id, orgId),
+          ),
+      });
 
       if (exists) {
         return yield* Effect.fail(new OrganizationUserAlreadyExists({ userId, organizationId: orgId }));
       }
 
-      const [entry] = yield* Effect.promise(() =>
-        db.insert(TB_organization_users).values({ user_id: parsedUserId.output, organization_id: orgId }).returning(),
-      );
+      const [entry] = yield* db
+        .insert(TB_organization_users)
+        .values({ user_id: parsedUserId.output, organization_id: orgId })
+        .returning();
 
       if (!entry) {
         return yield* Effect.fail(new OrganizationUserAddFailed({ userId, organizationId: orgId }));
@@ -427,23 +409,19 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
     });
 
     const removeUser = Effect.fn("@warehouse/organizations/removeUser")(function* (userId: string) {
-      const user = yield* Effect.promise(() =>
-        db.query.TB_users.findFirst({
-          where: (users, operations) => operations.eq(users.id, userId),
-        }),
-      );
+      const user = yield* db.query.TB_users.findFirst({
+        where: (users, operations) => operations.eq(users.id, userId),
+      });
       const orgId = yield* OrganizationId;
 
       if (!user) {
         return yield* Effect.fail(new OrganizationUserNotFound({ userId }));
       }
 
-      const [removed] = yield* Effect.promise(() =>
-        db
-          .delete(TB_organization_users)
-          .where(and(eq(TB_organization_users.user_id, userId), eq(TB_organization_users.organization_id, orgId)))
-          .returning(),
-      );
+      const [removed] = yield* db
+        .delete(TB_organization_users)
+        .where(and(eq(TB_organization_users.user_id, userId), eq(TB_organization_users.organization_id, orgId)))
+        .returning();
 
       if (!removed) {
         return yield* Effect.fail(new OrganizationUserRemoveFailed({ userId, organizationId: orgId }));
@@ -455,24 +433,20 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
     const users = Effect.fn("@warehouse/organizations/users")(function* () {
       const orgId = yield* OrganizationId;
 
-      const organizationExists = yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (organizations, operations) => operations.eq(organizations.id, orgId),
-        }),
-      );
+      const organizationExists = yield* db.query.TB_organizations.findFirst({
+        where: (organizations, operations) => operations.eq(organizations.id, orgId),
+      });
 
       if (!organizationExists) {
         return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
 
-      return yield* Effect.promise(() =>
-        db.query.TB_organization_users.findMany({
-          where: (organization_users, operations) => operations.eq(organization_users.organization_id, orgId),
-          with: {
-            user: true,
-          },
-        }),
-      );
+      return yield* db.query.TB_organization_users.findMany({
+        where: (organization_users, operations) => operations.eq(organization_users.organization_id, orgId),
+        with: {
+          user: true,
+        },
+      });
     });
 
     const findByUserId = Effect.fn("@warehouse/organizations/findByUserId")(function* (userId: string) {
@@ -481,99 +455,97 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.fail(new OrganizationUserInvalidId({ userId }));
       }
 
-      return yield* Effect.promise(() =>
-        db.query.TB_organizations.findMany({
-          where: (organizations, operations) => operations.eq(organizations.owner_id, parsedId.output),
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
+      return yield* db.query.TB_organizations.findMany({
+        where: (organizations, operations) => operations.eq(organizations.owner_id, parsedId.output),
+        with: {
+          products: {
+            with: {
+              product: true,
             },
-            customerOrders: {
-              with: {
-                customer: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          customerOrders: {
+            with: {
+              customer: true,
+              products: {
+                with: {
+                  product: true,
                 },
-                sale: true,
               },
+              sale: true,
             },
-            purchases: {
-              with: {
-                supplier: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          purchases: {
+            with: {
+              supplier: true,
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
-            devices: {
-              with: {
-                type: true,
-              },
+          },
+          devices: {
+            with: {
+              type: true,
             },
-            sales: {
-              with: {
-                sale: true,
-              },
+          },
+          sales: {
+            with: {
+              sale: true,
             },
-            supps: {
-              with: {
-                supplier: true,
-              },
+          },
+          supps: {
+            with: {
+              supplier: true,
             },
-            customers: {
-              with: {
-                customer: true,
-              },
+          },
+          customers: {
+            with: {
+              customer: true,
             },
-            catalogs: {
-              with: {
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          catalogs: {
+            with: {
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
-            users: {
-              with: {
-                user: {
-                  columns: {
-                    hashed_password: false,
-                  },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
                 },
               },
             },
-            owner: {
-              columns: {
-                hashed_password: false,
-              },
+          },
+          owner: {
+            columns: {
+              hashed_password: false,
             },
-            whs: {
-              with: {
-                warehouse: {
-                  with: {
-                    addresses: {
-                      with: {
-                        address: true,
-                      },
+          },
+          whs: {
+            with: {
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
                     },
-                    facilities: {
-                      with: {
-                        areas: {
-                          with: {
-                            storages: {
-                              with: {
-                                type: true,
-                                area: true,
-                                products: true,
-                                children: true,
-                              },
+                  },
+                  facilities: {
+                    with: {
+                      areas: {
+                        with: {
+                          storages: {
+                            with: {
+                              type: true,
+                              area: true,
+                              products: true,
+                              children: true,
                             },
                           },
                         },
@@ -584,8 +556,8 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
               },
             },
           },
-        }),
-      );
+        },
+      });
     });
 
     const addCustomerOrder = Effect.fn("@warehouse/organizations/addCustomerOrder")(function* (
@@ -605,17 +577,15 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      return yield* Effect.promise(() =>
-        db
-          .insert(TB_customer_orders)
-          .values({
-            ...data,
-            organization_id: orgId,
-            customer_id: parsedCustomerId.output,
-            id: parsedOrderId.output,
-          })
-          .returning(),
-      );
+      return yield* db
+        .insert(TB_customer_orders)
+        .values({
+          ...data,
+          organization_id: orgId,
+          customer_id: parsedCustomerId.output,
+          id: parsedOrderId.output,
+        })
+        .returning();
     });
 
     const removeCustomerOrder = Effect.fn("@warehouse/organizations/removeCustomerOrder")(function* (
@@ -634,18 +604,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      return yield* Effect.promise(() =>
-        db
-          .delete(TB_customer_orders)
-          .where(
-            and(
-              eq(TB_customer_orders.organization_id, orgId),
-              eq(TB_customer_orders.id, parsedOrderId.output),
-              eq(TB_customer_orders.customer_id, parsedCustomerId.output),
-            ),
-          )
-          .returning(),
-      );
+      return yield* db
+        .delete(TB_customer_orders)
+        .where(
+          and(
+            eq(TB_customer_orders.organization_id, orgId),
+            eq(TB_customer_orders.id, parsedOrderId.output),
+            eq(TB_customer_orders.customer_id, parsedCustomerId.output),
+          ),
+        )
+        .returning();
     });
 
     const addSupplierPurchase = Effect.fn("@warehouse/organizations/addSupplierPurchase")(function* (
@@ -659,15 +627,13 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       }
       const orgId = yield* OrganizationId;
 
-      const [purchase] = yield* Effect.promise(() =>
-        db
-          .insert(TB_supplier_purchases)
-          .values({
-            ...data,
-            organization_id: orgId,
-          })
-          .returning(),
-      );
+      const [purchase] = yield* db
+        .insert(TB_supplier_purchases)
+        .values({
+          ...data,
+          organization_id: orgId,
+        })
+        .returning();
 
       if (!purchase) {
         return yield* Effect.fail(new SupplierPurchaseNotCreated({}));
@@ -686,18 +652,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      return yield* Effect.promise(() =>
-        db
-          .update(TB_supplier_purchases)
-          .set({ deletedAt: new Date() })
-          .where(
-            and(
-              eq(TB_supplier_purchases.organization_id, orgId),
-              eq(TB_supplier_purchases.id, parsedSupplierPurchaseId.output),
-            ),
-          )
-          .returning(),
-      );
+      return yield* db
+        .update(TB_supplier_purchases)
+        .set({ deletedAt: new Date() })
+        .where(
+          and(
+            eq(TB_supplier_purchases.organization_id, orgId),
+            eq(TB_supplier_purchases.id, parsedSupplierPurchaseId.output),
+          ),
+        )
+        .returning();
     });
 
     const removeProduct = Effect.fn("@warehouse/organizations/removeProduct")(function* (productId: string) {
@@ -709,15 +673,13 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_organizations_products.findFirst({
-          where: (organization_products, operations) =>
-            and(
-              operations.eq(organization_products.organizationId, orgId),
-              operations.eq(organization_products.productId, parsedProductId.output),
-            ),
-        }),
-      );
+      const exists = yield* db.query.TB_organizations_products.findFirst({
+        where: (organization_products, operations) =>
+          and(
+            operations.eq(organization_products.organizationId, orgId),
+            operations.eq(organization_products.productId, parsedProductId.output),
+          ),
+      });
 
       if (!exists) {
         return yield* Effect.fail(
@@ -725,18 +687,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       }
 
-      return yield* Effect.promise(() =>
-        db
-          .update(TB_organizations_products)
-          .set({ deletedAt: new Date() })
-          .where(
-            and(
-              eq(TB_organizations_products.organizationId, orgId),
-              eq(TB_organizations_products.productId, parsedProductId.output),
-            ),
-          )
-          .returning(),
-      );
+      return yield* db
+        .update(TB_organizations_products)
+        .set({ deletedAt: new Date() })
+        .where(
+          and(
+            eq(TB_organizations_products.organizationId, orgId),
+            eq(TB_organizations_products.productId, parsedProductId.output),
+          ),
+        )
+        .returning();
     });
 
     const reAddProduct = Effect.fn("@warehouse/organizations/reAddProduct")(function* (productId: string) {
@@ -747,15 +707,13 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       }
       const orgId = yield* OrganizationId;
 
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_organizations_products.findFirst({
-          where: (organization_products, operations) =>
-            and(
-              operations.eq(organization_products.organizationId, orgId),
-              operations.eq(organization_products.productId, parsedProductId.output),
-            ),
-        }),
-      );
+      const exists = yield* db.query.TB_organizations_products.findFirst({
+        where: (organization_products, operations) =>
+          and(
+            operations.eq(organization_products.organizationId, orgId),
+            operations.eq(organization_products.productId, parsedProductId.output),
+          ),
+      });
 
       if (!exists) {
         return yield* Effect.fail(
@@ -763,18 +721,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         );
       }
 
-      return yield* Effect.promise(() =>
-        db
-          .update(TB_organizations_products)
-          .set({ deletedAt: null })
-          .where(
-            and(
-              eq(TB_organizations_products.organizationId, orgId),
-              eq(TB_organizations_products.productId, parsedProductId.output),
-            ),
-          )
-          .returning(),
-      );
+      return yield* db
+        .update(TB_organizations_products)
+        .set({ deletedAt: null })
+        .where(
+          and(
+            eq(TB_organizations_products.organizationId, orgId),
+            eq(TB_organizations_products.productId, parsedProductId.output),
+          ),
+        )
+        .returning();
     });
 
     const addProduct = Effect.fn("@warehouse/organizations/addProduct")(function* (
@@ -789,37 +745,31 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      const exists = yield* Effect.promise(() =>
-        db.query.TB_organizations_products.findFirst({
-          where: (organization_products, operations) =>
-            and(
-              operations.eq(organization_products.organizationId, orgId),
-              operations.eq(organization_products.productId, parsedProductId.output),
-            ),
-        }),
-      );
+      const exists = yield* db.query.TB_organizations_products.findFirst({
+        where: (organization_products, operations) =>
+          and(
+            operations.eq(organization_products.organizationId, orgId),
+            operations.eq(organization_products.productId, parsedProductId.output),
+          ),
+      });
 
       if (exists) {
-        return yield* Effect.promise(() =>
-          db
-            .update(TB_organizations_products)
-            .set({ deletedAt: null })
-            .where(
-              and(
-                eq(TB_organizations_products.organizationId, orgId),
-                eq(TB_organizations_products.productId, parsedProductId.output),
-              ),
-            )
-            .returning(),
-        );
+        return yield* db
+          .update(TB_organizations_products)
+          .set({ deletedAt: null })
+          .where(
+            and(
+              eq(TB_organizations_products.organizationId, orgId),
+              eq(TB_organizations_products.productId, parsedProductId.output),
+            ),
+          )
+          .returning();
       }
 
-      return yield* Effect.promise(() =>
-        db
-          .insert(TB_organizations_products)
-          .values({ ...data, organizationId: orgId, productId: parsedProductId.output })
-          .returning(),
-      );
+      return yield* db
+        .insert(TB_organizations_products)
+        .values({ ...data, organizationId: orgId, productId: parsedProductId.output })
+        .returning();
     });
 
     const findProductById = Effect.fn("@warehouse/organizations/findProductById")(function* (productId: string) {
@@ -831,15 +781,13 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
       const orgId = yield* OrganizationId;
 
-      const orgP = yield* Effect.promise(() =>
-        db.query.TB_organizations_products.findFirst({
-          where: (organization_products, operations) =>
-            and(
-              operations.eq(organization_products.organizationId, orgId),
-              operations.eq(organization_products.productId, parsedProductId.output),
-            ),
-        }),
-      );
+      const orgP = yield* db.query.TB_organizations_products.findFirst({
+        where: (organization_products, operations) =>
+          and(
+            operations.eq(organization_products.organizationId, orgId),
+            operations.eq(organization_products.productId, parsedProductId.output),
+          ),
+      });
       if (!orgP) {
         return yield* Effect.fail(new OrganizationProductNotFound({ productId: productId, organizationId: orgId }));
       }
@@ -848,74 +796,72 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
 
     const getDashboardData = Effect.fn("@warehouse/organizations/getDashboardData")(function* () {
       const orgId = yield* OrganizationId;
-      const org = yield* Effect.promise(() =>
-        db.query.TB_organizations.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, orgId),
-          with: {
-            products: {
-              with: {
-                product: true,
-              },
+      const org = yield* db.query.TB_organizations.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, orgId),
+        with: {
+          products: {
+            with: {
+              product: true,
             },
-            supps: {
-              with: {
-                supplier: true,
-              },
+          },
+          supps: {
+            with: {
+              supplier: true,
             },
-            customers: {
-              with: {
-                customer: true,
-              },
+          },
+          customers: {
+            with: {
+              customer: true,
             },
-            customerOrders: {
-              with: {
-                customer: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
-                },
-                sale: true,
-              },
-            },
-            purchases: {
-              with: {
-                supplier: true,
-                products: {
-                  with: {
-                    product: true,
-                  },
+          },
+          customerOrders: {
+            with: {
+              customer: true,
+              products: {
+                with: {
+                  product: true,
                 },
               },
+              sale: true,
             },
-            devices: {
-              with: {
-                type: true,
-              },
-            },
-            sales: {
-              with: {
-                sale: true,
-              },
-            },
-            catalogs: true,
-            owner: {
-              columns: {
-                hashed_password: false,
-              },
-            },
-            users: {
-              with: {
-                user: {
-                  columns: {
-                    hashed_password: false,
-                  },
+          },
+          purchases: {
+            with: {
+              supplier: true,
+              products: {
+                with: {
+                  product: true,
                 },
               },
             },
           },
-        }),
-      );
+          devices: {
+            with: {
+              type: true,
+            },
+          },
+          sales: {
+            with: {
+              sale: true,
+            },
+          },
+          catalogs: true,
+          owner: {
+            columns: {
+              hashed_password: false,
+            },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+            },
+          },
+        },
+      });
       if (!org) {
         return yield* Effect.fail(new OrganizationNotFound({ id: orgId }));
       }
@@ -931,18 +877,16 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
         return yield* Effect.fail(new OrganizationProductInvalidId({ id: productId }));
       }
       const orgId = yield* OrganizationId;
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_organizations_products)
-          .set({ ...data, updatedAt: new Date() })
-          .where(
-            and(
-              eq(TB_organizations_products.productId, parsedProductId.output),
-              eq(TB_organizations_products.organizationId, orgId),
-            ),
-          )
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_organizations_products)
+        .set({ ...data, updatedAt: new Date() })
+        .where(
+          and(
+            eq(TB_organizations_products.productId, parsedProductId.output),
+            eq(TB_organizations_products.organizationId, orgId),
+          ),
+        )
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new OrganizationProductNotUpdated({ productId, organizationId: orgId }));

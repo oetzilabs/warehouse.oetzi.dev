@@ -1,5 +1,7 @@
+import { SqlError } from "@effect/sql/SqlError";
 import { and, eq } from "drizzle-orm";
 import { Effect } from "effect";
+import { ConfigError } from "effect/ConfigError";
 import { safeParse, type InferInput } from "valibot";
 import {
   TB_organizations_warehouses,
@@ -33,8 +35,7 @@ import {
 
 export class WarehouseService extends Effect.Service<WarehouseService>()("@warehouse/warehouses", {
   effect: Effect.gen(function* (_) {
-    const database = yield* _(DatabaseService);
-    const db = yield* database.instance;
+    const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/warehouses/create")(function* (
       userInput: InferInput<typeof WarehouseCreateSchema>,
@@ -50,20 +51,18 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseUserInvalidId({ userId }));
       }
 
-      const [warehouse] = yield* Effect.promise(() => db.insert(TB_warehouses).values(userInput).returning());
+      const [warehouse] = yield* db.insert(TB_warehouses).values(userInput).returning();
       if (!warehouse) {
         return yield* Effect.fail(new WarehouseNotCreated({}));
       }
 
-      const connectedToOrg = yield* Effect.promise(() =>
-        db
-          .insert(TB_organizations_warehouses)
-          .values({
-            organizationId: parsedOrgId.output,
-            warehouseId: warehouse.id,
-          })
-          .returning(),
-      );
+      const connectedToOrg = yield* db
+        .insert(TB_organizations_warehouses)
+        .values({
+          organizationId: parsedOrgId.output,
+          warehouseId: warehouse.id,
+        })
+        .returning();
 
       if (!connectedToOrg) {
         return yield* Effect.fail(
@@ -71,15 +70,13 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         );
       }
 
-      const connectedToUser = yield* Effect.promise(() =>
-        db
-          .insert(TB_users_warehouses)
-          .values({
-            userId: parsedUserId.output,
-            warehouseId: warehouse.id,
-          })
-          .returning(),
-      );
+      const connectedToUser = yield* db
+        .insert(TB_users_warehouses)
+        .values({
+          userId: parsedUserId.output,
+          warehouseId: warehouse.id,
+        })
+        .returning();
 
       if (!connectedToUser) {
         return yield* Effect.fail(
@@ -96,44 +93,42 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseInvalidId({ id }));
       }
 
-      const warehouse = yield* Effect.promise(() =>
-        db.query.TB_warehouses.findFirst({
-          where: (warehouses, operations) => operations.eq(warehouses.id, parsedId.output),
-          with: {
-            addresses: {
-              with: {
-                address: true,
-              },
+      const warehouse = yield* db.query.TB_warehouses.findFirst({
+        where: (warehouses, operations) => operations.eq(warehouses.id, parsedId.output),
+        with: {
+          addresses: {
+            with: {
+              address: true,
             },
-            facilities: {
-              with: {
-                areas: {
-                  with: {
-                    storages: {
-                      with: {
-                        type: true,
-                        area: true,
-                        products: true,
-                        children: true,
-                      },
+          },
+          facilities: {
+            with: {
+              areas: {
+                with: {
+                  storages: {
+                    with: {
+                      type: true,
+                      area: true,
+                      products: true,
+                      children: true,
                     },
                   },
                 },
               },
             },
-            owner: {
-              columns: {
-                hashed_password: false,
-              },
-            },
-            products: {
-              with: {
-                product: true,
-              },
+          },
+          owner: {
+            columns: {
+              hashed_password: false,
             },
           },
-        }),
-      );
+          products: {
+            with: {
+              product: true,
+            },
+          },
+        },
+      });
 
       if (!warehouse) {
         return yield* Effect.fail(new WarehouseNotFound({ id }));
@@ -150,13 +145,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseInvalidId({ id: input.id }));
       }
 
-      const [updated] = yield* Effect.promise(() =>
-        db
-          .update(TB_warehouses)
-          .set({ ...input, updatedAt: new Date() })
-          .where(eq(TB_warehouses.id, parsedId.output))
-          .returning(),
-      );
+      const [updated] = yield* db
+        .update(TB_warehouses)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(TB_warehouses.id, parsedId.output))
+        .returning();
 
       if (!updated) {
         return yield* Effect.fail(new WarehouseNotUpdated({ id: input.id }));
@@ -171,29 +164,23 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseInvalidId({ id }));
       }
 
-      const entries = yield* Effect.promise(() =>
-        db.query.TB_organizations_warehouses.findMany({
-          where: (fields, operations) => operations.eq(fields.warehouseId, parsedId.output),
-          with: {
-            organization: true,
-          },
-        }),
-      );
+      const entries = yield* db.query.TB_organizations_warehouses.findMany({
+        where: (fields, operations) => operations.eq(fields.warehouseId, parsedId.output),
+        with: {
+          organization: true,
+        },
+      });
 
       if (entries.length > 0) {
         // remove the warehouse from the associated organizations
-        yield* Effect.promise(() =>
-          db
-            .delete(TB_organizations_warehouses)
-            .where(eq(TB_organizations_warehouses.warehouseId, parsedId.output))
-            .returning(),
-        );
+        yield* db
+          .delete(TB_organizations_warehouses)
+          .where(eq(TB_organizations_warehouses.warehouseId, parsedId.output))
+          .returning();
       }
 
       // remove the warehouse itself
-      const [deleted] = yield* Effect.promise(() =>
-        db.delete(TB_warehouses).where(eq(TB_warehouses.id, parsedId.output)).returning(),
-      );
+      const [deleted] = yield* db.delete(TB_warehouses).where(eq(TB_warehouses.id, parsedId.output)).returning();
 
       if (!deleted) {
         return yield* Effect.fail(new WarehouseNotDeleted({ id }));
@@ -209,32 +196,30 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
           return yield* Effect.fail(new WarehouseOrganizationInvalidId({ organizationId }));
         }
 
-        const entries = yield* Effect.promise(() =>
-          db.query.TB_organizations_warehouses.findMany({
-            where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
-            with: {
-              warehouse: {
-                with: {
-                  addresses: {
-                    with: {
-                      address: true,
-                    },
+        const entries = yield* db.query.TB_organizations_warehouses.findMany({
+          where: (fields, operations) => operations.eq(fields.organizationId, parsedOrgId.output),
+          with: {
+            warehouse: {
+              with: {
+                addresses: {
+                  with: {
+                    address: true,
                   },
-                  owner: {
-                    columns: {
-                      hashed_password: false,
-                    },
+                },
+                owner: {
+                  columns: {
+                    hashed_password: false,
                   },
-                  products: {
-                    with: {
-                      product: true,
-                    },
+                },
+                products: {
+                  with: {
+                    product: true,
                   },
                 },
               },
             },
-          }),
-        );
+          },
+        });
 
         if (entries.length === 0) {
           return yield* Effect.fail(new WarehouseNotFoundForOrganization({ organizationId }));
@@ -262,13 +247,11 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseInvalidId({ id }));
       }
 
-      const entries = yield* Effect.promise(() =>
-        db
-          .update(TB_warehouses)
-          .set({ deletedAt: new Date() })
-          .where(eq(TB_warehouses.id, parsedId.output))
-          .returning(),
-      );
+      const entries = yield* db
+        .update(TB_warehouses)
+        .set({ deletedAt: new Date() })
+        .where(eq(TB_warehouses.id, parsedId.output))
+        .returning();
 
       if (entries.length === 0) {
         return yield* Effect.fail(new WarehouseNotCreated({ message: "Failed to safe remove warehouse" }));
@@ -278,7 +261,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
     });
 
     const all = Effect.fn("@warehouse/warehouses/all")(function* () {
-      return yield* Effect.promise(() => db.query.TB_warehouses.findMany());
+      return yield* db.query.TB_warehouses.findMany();
     });
 
     const findByUserId = Effect.fn("@warehouse/warehouses/findByUserId")(function* (userId: string) {
@@ -287,18 +270,16 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseUserInvalidId({ userId }));
       }
 
-      const entries = yield* Effect.promise(() =>
-        db.query.TB_users_warehouses.findMany({
-          where: (fields, operations) => operations.eq(fields.userId, parsedUserId.output),
-          with: {
-            warehouse: {
-              with: {
-                facilities: true,
-              },
+      const entries = yield* db.query.TB_users_warehouses.findMany({
+        where: (fields, operations) => operations.eq(fields.userId, parsedUserId.output),
+        with: {
+          warehouse: {
+            with: {
+              facilities: true,
             },
           },
-        }),
-      );
+        },
+      });
 
       return entries.map((entry) => entry.warehouse);
     });
@@ -308,11 +289,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       if (!parsedId.success) {
         return yield* Effect.fail(new WarehouseInvalidId({ id }));
       }
-      const area = yield* Effect.promise(() =>
-        db.query.TB_warehouse_areas.findFirst({
-          where: (fields, operations) => operations.eq(fields.id, parsedId.output),
-        }),
-      );
+      const area = yield* db.query.TB_warehouse_areas.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+      });
       if (!area) {
         return yield* Effect.fail(new WarehouseNotFound({ id }));
       }
@@ -327,26 +306,24 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseInvalidId({ id: warehouseId }));
       }
 
-      const f = yield* Effect.promise(() =>
-        db.query.TB_warehouse_facilities.findFirst({
-          where: (fields, operations) => operations.eq(fields.ownerId, parsedId.output),
-          orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
-          with: {
-            areas: {
-              with: {
-                storages: {
-                  with: {
-                    type: true,
-                    area: true,
-                    products: true,
-                    children: true,
-                  },
+      const f = yield* db.query.TB_warehouse_facilities.findFirst({
+        where: (fields, operations) => operations.eq(fields.ownerId, parsedId.output),
+        orderBy: (fields, operations) => [operations.desc(fields.createdAt)],
+        with: {
+          areas: {
+            with: {
+              storages: {
+                with: {
+                  type: true,
+                  area: true,
+                  products: true,
+                  children: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
       if (!f) {
         return yield* Effect.fail(new FacilityNotFound({ id: parsedId.output }));
       }
@@ -364,35 +341,33 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new ProductInvalidId({ id: pid }));
       }
 
-      const whProduct = yield* Effect.promise(() =>
-        db.query.TB_warehouse_products.findFirst({
-          where: (fields, operations) =>
-            operations.and(eq(fields.warehouseId, parsedWhId.output), eq(fields.productId, parsedPid.output)),
-          with: {
-            product: {
-              with: {
-                labels: true,
-                suppliers: {
-                  with: {
-                    supplier: true,
-                  },
+      const whProduct = yield* db.query.TB_warehouse_products.findFirst({
+        where: (fields, operations) =>
+          operations.and(eq(fields.warehouseId, parsedWhId.output), eq(fields.productId, parsedPid.output)),
+        with: {
+          product: {
+            with: {
+              labels: true,
+              suppliers: {
+                with: {
+                  supplier: true,
                 },
-                brands: true,
-                certs: {
-                  with: {
-                    cert: true,
-                  },
+              },
+              brands: true,
+              certs: {
+                with: {
+                  cert: true,
                 },
-                stco: {
-                  with: {
-                    condition: true,
-                  },
+              },
+              stco: {
+                with: {
+                  condition: true,
                 },
               },
             },
           },
-        }),
-      );
+        },
+      });
 
       if (!whProduct) {
         return yield* Effect.fail(new ProductNotFound({ id: pid }));
@@ -411,17 +386,15 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new ProductInvalidId({ id: pid }));
       }
 
-      const whProduct = yield* Effect.promise(() =>
-        db
-          .delete(TB_warehouse_products)
-          .where(
-            and(
-              eq(TB_warehouse_products.warehouseId, parsedWhId.output),
-              eq(TB_warehouse_products.productId, parsedPid.output),
-            ),
-          )
-          .returning(),
-      );
+      const whProduct = yield* db
+        .delete(TB_warehouse_products)
+        .where(
+          and(
+            eq(TB_warehouse_products.warehouseId, parsedWhId.output),
+            eq(TB_warehouse_products.productId, parsedPid.output),
+          ),
+        )
+        .returning();
 
       if (!whProduct) {
         return yield* Effect.fail(new ProductNotDeleted({ id: pid }));
@@ -432,7 +405,7 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
 
     const deepStorageChildren = (
       storage: StorageInfo,
-    ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId | MissingConfig> =>
+    ): Effect.Effect<StorageInfo, StorageNotFound | StorageInvalidId | MissingConfig | SqlError | ConfigError> =>
       Effect.gen(function* (_) {
         const storageService = yield* StorageService;
         const s = yield* storageService.findById(storage.id);
@@ -490,57 +463,55 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       const areas = facilites.flatMap((fc) => fc.areas);
       const storages = areas.flatMap((a) => a.storages);
 
-      const strs = yield* Effect.promise(() =>
-        db.query.TB_storages.findMany({
-          where: (fields, operations) =>
-            operations.inArray(
-              fields.id,
-              storages.map((f) => f.id),
-            ),
-          with: {
-            type: true,
-            area: true,
-            products: {
-              with: {
-                product: {
-                  with: {
-                    images: {
-                      with: {
-                        image: true,
-                      },
+      const strs = yield* db.query.TB_storages.findMany({
+        where: (fields, operations) =>
+          operations.inArray(
+            fields.id,
+            storages.map((f) => f.id),
+          ),
+        with: {
+          type: true,
+          area: true,
+          products: {
+            with: {
+              product: {
+                with: {
+                  images: {
+                    with: {
+                      image: true,
                     },
-                    brands: true,
-                    saleItems: {
-                      with: {
-                        sale: {
-                          with: {
-                            customer: true,
-                          },
+                  },
+                  brands: true,
+                  saleItems: {
+                    with: {
+                      sale: {
+                        with: {
+                          customer: true,
                         },
                       },
                     },
-                    orders: {
-                      with: {
-                        customerOrder: true,
-                      },
+                  },
+                  orders: {
+                    with: {
+                      customerOrder: true,
                     },
-                    labels: {
-                      with: {
-                        label: true,
-                      },
+                  },
+                  labels: {
+                    with: {
+                      label: true,
                     },
-                    stco: {
-                      with: {
-                        condition: true,
-                      },
+                  },
+                  stco: {
+                    with: {
+                      condition: true,
                     },
-                    suppliers: {
-                      with: {
-                        supplier: {
-                          with: {
-                            contacts: true,
-                            notes: true,
-                          },
+                  },
+                  suppliers: {
+                    with: {
+                      supplier: {
+                        with: {
+                          contacts: true,
+                          notes: true,
                         },
                       },
                     },
@@ -548,12 +519,12 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
                 },
               },
             },
-            children: true,
-            labels: true,
-            parent: true,
           },
-        }),
-      );
+          children: true,
+          labels: true,
+          parent: true,
+        },
+      });
 
       const stats = yield* Effect.all(strs.map((storage) => countStorageStats(storage)));
       const totals = stats.reduce(
