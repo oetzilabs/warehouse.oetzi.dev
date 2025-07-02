@@ -12,4 +12,4 @@ export const program = <A, I>(brokerUrl: string, clientId: string, handlers: Inf
     yield* Effect.addFinalizer(() => Effect.all(unsubscribers));
     yield* Effect.log("Starting...");
     return yield* Effect.forever(Effect.void);
-  }).pipe(Effect.provide(MQTTLive));
+  }).pipe(Effect.provide([MQTTLive]));

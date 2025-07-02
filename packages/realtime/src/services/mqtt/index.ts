@@ -1,4 +1,4 @@
-import { Effect, Option, Ref, Schedule, Schema } from "effect";
+import { Array, Effect, Option, Ref, Schedule, Schema } from "effect";
 import { MqttClient, TcpTransport } from "mqtts";
 import { InfallibleEventHandler } from "../../types";
 import { MQTTConnectionError, MQTTPublishError } from "./errors";
@@ -7,78 +7,76 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
   effect: Effect.gen(function* (_) {
     const clientRef = yield* Ref.make<MqttClient | null>(null);
 
-    const connect = (brokerUrl: string, clientId: string) =>
-      Effect.gen(function* (_) {
-        const retryPolicy = Schedule.intersect(Schedule.exponential("1 seconds"), Schedule.recurs(5));
-        const client = yield* Effect.retry(
-          Effect.gen(function* (_) {
-            const url = new URL(brokerUrl);
-            if (!url.port)
-              return yield* Effect.fail(new MQTTConnectionError({ message: "Invalid broker URL, misising PORT" }));
-            const client = new MqttClient({
-              transport: new TcpTransport({
-                host: url.hostname,
-                port: parseInt(url.port),
-              }),
-              autoReconnect: true,
-            });
+    const connect = Effect.fn("@warehouse/mqtt/connect")(function* (brokerUrl: string, clientId: string) {
+      const retryPolicy = Schedule.intersect(Schedule.exponential("1 seconds"), Schedule.recurs(5));
+      const client = yield* Effect.retry(
+        Effect.gen(function* (_) {
+          const url = new URL(brokerUrl);
+          if (!url.port)
+            return yield* Effect.fail(new MQTTConnectionError({ message: "Invalid broker URL, misising PORT" }));
+          const client = new MqttClient({
+            transport: new TcpTransport({
+              host: url.hostname,
+              port: parseInt(url.port),
+            }),
+            autoReconnect: true,
+          });
 
-            yield* Effect.async<MqttClient, MQTTConnectionError>((resume) => {
-              client.on("connect", (connack) => {
-                if (connack.isSuccess) {
-                  resume(Effect.succeed(client));
-                } else {
-                  resume(Effect.fail(new MQTTConnectionError({ message: "Failed to connect to MQTT" })));
-                }
-              });
-              client.on("error", (error) => {
+          yield* Effect.async<MqttClient, MQTTConnectionError>((resume) => {
+            client.on("connect", (connack) => {
+              if (connack.isSuccess) {
+                resume(Effect.succeed(client));
+              } else {
+                resume(Effect.fail(new MQTTConnectionError({ message: "Failed to connect to MQTT" })));
+              }
+            });
+            client.on("error", (error) => {
+              console.log(error);
+              resume(Effect.fail(new MQTTConnectionError({ message: String(error) })));
+            });
+            client.on("SUBACK", (packet) => {});
+            client
+              .connect({
+                clean: true,
+                clientId: clientId,
+                keepAlive: 60,
+              })
+              .catch((error) => {
                 console.log(error);
                 resume(Effect.fail(new MQTTConnectionError({ message: String(error) })));
+              })
+              .then(() => {
+                resume(Effect.succeed(client));
               });
-              client.on("SUBACK", (packet) => {});
-              client
-                .connect({
-                  clean: true,
-                  clientId: clientId,
-                  keepAlive: 60,
-                })
-                .catch((error) => {
-                  console.log(error);
-                  resume(Effect.fail(new MQTTConnectionError({ message: String(error) })));
-                })
-                .then(() => {
-                  resume(Effect.succeed(client));
-                });
-            });
-            return client;
-          }),
-          retryPolicy,
-        );
+          });
+          return client;
+        }),
+        retryPolicy,
+      );
 
-        yield* Ref.set(clientRef, client);
-        return yield* Effect.succeed(client);
+      yield* Ref.set(clientRef, client);
+      return yield* Effect.succeed(client);
+    });
+
+    const publish = Effect.fn("@warehouse/mqtt/publish")(function* (topic: string, message: string) {
+      const client = yield* Ref.get(clientRef);
+      if (!client) return yield* Effect.fail(new MQTTPublishError({ message: "Client not connected" }));
+
+      yield* Effect.tryPromise({
+        try: () => client.publish({ topic, payload: message, qosLevel: 1 }),
+        catch: (error) => Effect.fail(new MQTTPublishError({ message: "Failed to publish to MQTT" })),
       });
+    });
 
-    const publish = (topic: string, message: string) =>
-      Effect.gen(function* () {
-        const client = yield* Ref.get(clientRef);
-        if (!client) return yield* Effect.fail(new MQTTPublishError({ message: "Client not connected" }));
-
-        yield* Effect.tryPromise({
-          try: () => client.publish({ topic, payload: message, qosLevel: 1 }),
-          catch: (error) => Effect.fail(new MQTTPublishError({ message: "Failed to publish to MQTT" })),
-        });
-      });
-
-    const subscribe = <A, I>(handlers: InfallibleEventHandler<A, I>[]) =>
-      Effect.gen(function* (_) {
-        const client = yield* Ref.get(clientRef);
-        if (!client) return yield* Effect.fail(new MQTTPublishError({ message: "Client not connected" }));
-        const td = new TextDecoder();
-        const unsubbers: Effect.Effect<void, never, never>[] = [];
-        yield* Effect.forEach(handlers, (handler) =>
+    const subscribe = Effect.fn("@warehouse/mqtt/subscribe")(function* <A, I>(
+      handlers: InfallibleEventHandler<A, I>[],
+    ) {
+      const client = yield* Ref.get(clientRef);
+      if (!client) return yield* Effect.fail(new MQTTPublishError({ message: "Client not connected" }));
+      const td = new TextDecoder();
+      return yield* Effect.all(
+        handlers.map((handler) =>
           Effect.gen(function* () {
-            // const id = SubscriptionId.make(createId());
             const unsub = yield* Effect.promise(() =>
               client.listenSubscribe(handler.channel, (message) => {
                 Effect.runFork(
@@ -91,13 +89,15 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
                 );
               }),
             );
-            unsubbers.push(Effect.sync(() => unsub()));
+            return Effect.sync(() => unsub());
           }),
-        );
-        return unsubbers;
-      });
+        ),
+      );
+    });
 
-    const disconnect = (client: MqttClient) => Effect.promise(() => client.disconnect());
+    const disconnect = Effect.fn("@warehouse/mqtt/disconnect")(function* (client: MqttClient) {
+      return yield* Effect.promise(() => client.disconnect());
+    });
 
     return {
       connect,
