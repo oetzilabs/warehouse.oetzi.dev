@@ -14,6 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { A, useLocation, useNavigate, useResolvedPath } from "@solidjs/router";
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import BookOpenText from "lucide-solid/icons/book-open-text";
@@ -33,7 +34,7 @@ import SidebarOpen from "lucide-solid/icons/sidebar-open";
 import Tags from "lucide-solid/icons/tags";
 import TriangleAlert from "lucide-solid/icons/triangle-alert";
 import UsersRound from "lucide-solid/icons/users-round";
-import { JSXElement, ParentProps, Show, Suspense } from "solid-js";
+import { createSignal, JSXElement, ParentProps, Show, Suspense } from "solid-js";
 
 const Link = (
   props: ParentProps<{
@@ -66,10 +67,14 @@ export default function DashboardLayout(props: { children: JSXElement }) {
   const location = useLocation();
   const relativePath = useResolvedPath(() => location.pathname);
   const navigate = useNavigate();
+  const [open, setOpen] = makePersisted(createSignal(true), {
+    name: "sidebar-open",
+    storage: cookieStorage,
+  });
 
   return (
     <div class="w-full flex flex-col gap-0 h-full bg-muted dark:bg-[rgb(18,18,21)]">
-      <SidebarProvider class="!border-r-0 !pr-0 dark:bg-[rgb(18,18,21)]">
+      <SidebarProvider defaultOpen={open()} class="!border-r-0 !pr-0 dark:bg-[rgb(18,18,21)]">
         <Sidebar class="bg-muted !border-r-0 !pr-0 dark:bg-[rgb(18,18,21)]">
           <Show when={user.currentOrganization()}>
             {(org) => (
@@ -244,7 +249,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
         <div class="w-full h-full flex flex-col p-2">
           <div class="relative w-full h-full flex flex-col overflow-auto border rounded-lg bg-background">
             <div class="sticky top-0 left-0 z-50 w-full h-max flex p-2 bg-background">
-              <SidebarButtonTrigger />
+              <SidebarButtonTrigger onToggle={setOpen} />
             </div>
             <Suspense
               fallback={
@@ -263,12 +268,13 @@ export default function DashboardLayout(props: { children: JSXElement }) {
   );
 }
 
-const SidebarButtonTrigger = () => {
+const SidebarButtonTrigger = (props: { onToggle: (open: boolean) => void }) => {
   const { toggleSidebar, open } = useSidebar();
   return (
     <Button
       onClick={() => {
         toggleSidebar();
+        props.onToggle(open());
       }}
       size="icon"
       variant="ghost"

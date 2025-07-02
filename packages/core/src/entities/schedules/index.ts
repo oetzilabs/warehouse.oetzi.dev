@@ -202,12 +202,20 @@ export class ScheduleService extends Effect.Service<ScheduleService>()("@warehou
       );
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/schedules/findByOrganizationId")(function* () {
+    const findByOrganizationId = Effect.fn("@warehouse/schedules/findByOrganizationId")(function* (
+      range?: [Date, Date],
+    ) {
       const orgId = yield* OrganizationId;
 
       const orders = yield* Effect.promise(() =>
         db.query.TB_customer_orders.findMany({
-          where: (fields, operations) => operations.eq(fields.organization_id, orgId),
+          where: (fields, operations) =>
+            operations.and(
+              operations.eq(fields.organization_id, orgId),
+              ...(range
+                ? [operations.gte(fields.createdAt, range[0]), operations.lte(fields.createdAt, range[1])]
+                : []),
+            ),
           with: {
             custSched: {
               with: {

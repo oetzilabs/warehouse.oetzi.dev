@@ -3,13 +3,13 @@ import { ScheduleLive, ScheduleService } from "@warehouseoetzidev/core/src/entit
 import { Effect } from "effect";
 import { run } from "./utils";
 
-export const getSchedules = query(async () => {
+export const getSchedules = query(async (range?: [Date, Date]) => {
   "use server";
   return run(
     "@query/schedules-by-organization",
     Effect.gen(function* (_) {
       const scheduleService = yield* ScheduleService;
-      const schedules = yield* scheduleService.findByOrganizationId();
+      const schedules = yield* scheduleService.findByOrganizationId(range);
       return schedules;
     }).pipe(Effect.provide(ScheduleLive)),
     json([]),

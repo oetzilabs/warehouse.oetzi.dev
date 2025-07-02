@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getSchedules } from "@/lib/api/schedules";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,9 @@ import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import ArrowRight from "lucide-solid/icons/arrow-right";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import Loader2 from "lucide-solid/icons/loader-2";
+import X from "lucide-solid/icons/x";
 import { Accessor, Component, createSignal, For, Index, Show, Suspense } from "solid-js";
 
 dayjs.extend(isoWeek);
@@ -18,7 +21,6 @@ type ViewType = "month" | "week";
 
 interface CustomCalendarProps {
   view: ViewType;
-  onSelectSchedule: (schedule: ScheduleInfo["customers"][number]) => void;
   schedules: Accessor<ScheduleInfo[]>;
 }
 
@@ -66,46 +68,47 @@ const CustomCalendar: Component<CustomCalendarProps> = (props) => {
                   <Index each={month().weeks}>
                     {(week) => (
                       <Index each={week()}>
-                        {(day) => {
-                          const cellSchedules = getSchedulesForDate(day());
-                          return (
-                            <Calendar.Cell
-                              as="div"
-                              class={cn(
-                                "min-h-[120px] flex flex-col items-center justify-center",
-                                "data-[outside-month]:bg-neutral-50 data-[outside-month]:text-neutral-400",
-                                "data-[today]:bg-blue-50",
-                              )}
-                            >
-                              <div class="border w-full h-full p-1 rounded-md space-y-1">
-                                <Calendar.CellTrigger
-                                  day={day()}
-                                  as={Button}
-                                  size="sm"
-                                  variant="ghost"
-                                  class={cn(
-                                    "w-full rounded-sm",
-                                    "data-[today]:border data-[today]:border-primary/50",
-                                    "data-[selected]:bg-primary/50 data-[selected]:text-primary-foreground",
-                                  )}
-                                >
-                                  {day().getDate()}
-                                </Calendar.CellTrigger>
-                                <div class="w-full h-full space-y-1">
-                                  <For each={cellSchedules}>
-                                    {(schedule) => (
-                                      <div class="flex flex-col w-full">
-                                        <For each={schedule.customers}>
-                                          {(customer) => (
-                                            <div
+                        {(day) => (
+                          <Calendar.Cell
+                            as="div"
+                            class={cn(
+                              "min-h-[120px] flex flex-col items-center justify-center",
+                              "data-[outside-month]:bg-neutral-50 data-[outside-month]:text-neutral-400",
+                              "data-[today]:bg-blue-50",
+                            )}
+                          >
+                            <div class="border w-full h-full p-1 rounded-md space-y-1">
+                              <Calendar.CellTrigger
+                                day={day()}
+                                as={Button}
+                                size="sm"
+                                variant="ghost"
+                                class={cn(
+                                  "w-full rounded-sm",
+                                  "data-[today]:border data-[today]:border-primary/50",
+                                  "data-[selected]:bg-primary/50 data-[selected]:text-primary-foreground",
+                                )}
+                              >
+                                {day().getDate()}
+                              </Calendar.CellTrigger>
+                              <div class="w-full h-full space-y-1">
+                                <For each={getSchedulesForDate(day())}>
+                                  {(schedule) => (
+                                    <div class="flex flex-col w-full">
+                                      <For each={schedule.customers}>
+                                        {(customer) => (
+                                          <Popover>
+                                            <PopoverTrigger
+                                              as="div"
                                               class={cn(
-                                                "p-1.5 rounded text-xs cursor-pointer transition-colors hover:opacity-80",
+                                                "p-1.5 rounded text-xs cursor-pointer transition-colors hover:opacity-80 border",
                                                 {
-                                                  "bg-blue-100 text-blue-800": customer.type === "pickup",
-                                                  "bg-green-100 text-green-800": customer.type === "delivery",
+                                                  "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-700":
+                                                    customer.type === "pickup",
+                                                  "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700":
+                                                    customer.type === "delivery",
                                                 },
                                               )}
-                                              onClick={() => props.onSelectSchedule(customer)}
                                             >
                                               <p class="font-semibold truncate">
                                                 {customer.customer.name} ({customer.type})
@@ -114,17 +117,73 @@ const CustomCalendar: Component<CustomCalendarProps> = (props) => {
                                                 {dayjs(schedule.scheduleStart).format("h:mm A")} -{" "}
                                                 {dayjs(schedule.scheduleEnd).format("h:mm A")}
                                               </p>
-                                            </div>
-                                          )}
-                                        </For>
-                                      </div>
-                                    )}
-                                  </For>
-                                </div>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                              class={cn("flex flex-col gap-4 w-full p-0", {
+                                                "bg-blue-100 border-blue-200 dark:bg-blue-900 dark:border-blue-700":
+                                                  customer.type === "pickup",
+                                                "bg-emerald-100 border-emerald-200 dark:bg-emerald-900 dark:border-emerald-700":
+                                                  customer.type === "delivery",
+                                              })}
+                                            >
+                                              <div class="flex flex-col gap-2 w-full">
+                                                <div class="flex flex-row gap-4 w-full items-center justify-between p-2">
+                                                  <span class="text-xs">{customer.customer.name}</span>
+                                                  <span
+                                                    class={cn(
+                                                      "px-1 py-0.5 text-[10px] font-semibold rounded-sm uppercase w-max",
+                                                      {
+                                                        "bg-blue-200 text-blue-800": customer.type === "pickup",
+                                                        "bg-emerald-200 text-emerald-800": customer.type === "delivery",
+                                                      },
+                                                    )}
+                                                  >
+                                                    {customer.type}
+                                                  </span>
+                                                </div>
+                                                <div
+                                                  class={cn("flex flex-col border-t", {
+                                                    "border-blue-200 dark:border-blue-700": customer.type === "pickup",
+                                                    "border-emerald-200 dark:border-emerald-700":
+                                                      customer.type === "delivery",
+                                                  })}
+                                                >
+                                                  <For each={customer.order?.products ?? []}>
+                                                    {(product) => (
+                                                      <div class="text-xs flex flex-row gap-2 border-b last:border-b-0 p-2">
+                                                        {product.quantity}x {product.product.name}
+                                                      </div>
+                                                    )}
+                                                  </For>
+                                                </div>
+                                                <div class="flex flex-row gap-2 items-center p-2 justify-between">
+                                                  <div class="text-xs">
+                                                    {dayjs(
+                                                      customer.order?.updatedAt ?? customer.order?.createdAt,
+                                                    ).format("MMM DD, YYYY - h:mm A")}
+                                                  </div>
+                                                  <Button
+                                                    as={A}
+                                                    variant="outline"
+                                                    href={`/orders/${customer.order?.id}`}
+                                                    class="gap-2 bg-background text-xs !px-2 !py-1 rounded-sm !h-auto"
+                                                  >
+                                                    Open
+                                                    <ArrowUpRight class="!size-3" />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            </PopoverContent>
+                                          </Popover>
+                                        )}
+                                      </For>
+                                    </div>
+                                  )}
+                                </For>
                               </div>
-                            </Calendar.Cell>
-                          );
-                        }}
+                            </div>
+                          </Calendar.Cell>
+                        )}
                       </Index>
                     )}
                   </Index>
@@ -140,66 +199,7 @@ const CustomCalendar: Component<CustomCalendarProps> = (props) => {
 
 interface ScheduleSidebarProps {
   schedule: Accessor<ScheduleInfo["customers"][number] | null>;
-  isOpen: Accessor<boolean>;
-  onClose: () => void;
 }
-
-const ScheduleSidebar: Component<ScheduleSidebarProps> = (props) => {
-  return (
-    <div class="w-full max-w-xl flex flex-col border-l">
-      <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between p-2 pl-4">
-          <h2 class="font-semibold">Schedule Details</h2>
-          <Button variant="ghost" size="icon" onClick={props.onClose}>
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Button>
-        </div>
-        <div class="flex flex-col gap-4 w-full px-4">
-          <Show when={props.schedule()}>
-            {(schedule) => (
-              <div class="flex flex-col gap-4 w-full">
-                <span
-                  class={cn("px-2 py-1 text-xs font-semibold rounded-full uppercase w-max", {
-                    "bg-blue-200 text-blue-800": schedule().type === "pickup",
-                    "bg-green-200 text-green-800": schedule().type === "delivery",
-                  })}
-                >
-                  {schedule().type}
-                </span>
-                <div class="flex flex-col border rounded-lg">
-                  <h3 class="font-semibold px-4 py-2 border-b">Products</h3>
-                  <div class="flex flex-col gap-2 p-4">
-                    <For each={schedule().order?.products ?? []}>
-                      {(product) => (
-                        <div class="flex flex-row gap-2 border-b last:border-b-0">
-                          {product.quantity}x {product.product.name}
-                        </div>
-                      )}
-                    </For>
-                  </div>
-                </div>
-                {/* <Show when={schedule.notes}>
-                        <div class="mt-4 p-2 bg-neutral-100 rounded">
-                          <h4 class="font-semibold">Notes</h4>
-                          <p>{schedule.notes}</p>
-                        </div>
-                      </Show>
-                      <Show when={schedule.alerts}>
-                        <div class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 rounded text-yellow-800">
-                          <h4 class="font-semibold">Alert</h4>
-                          <p>{schedule.alerts}</p>
-                        </div>
-                      </Show> */}
-              </div>
-            )}
-          </Show>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export const route = {
   preload: async (props) => {
@@ -218,17 +218,6 @@ export default function SchedulesPage(
   const data = createAsync(() => getSchedules(), { deferStream: true, initialValue: props.data.schedules });
 
   const [view, setView] = createSignal<ViewType>("month");
-  const [selectedSchedule, setSelectedSchedule] = createSignal<ScheduleInfo["customers"][number] | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = createSignal(false);
-
-  const handleSelectSchedule = (schedule: ScheduleInfo["customers"][number]) => {
-    setSelectedSchedule(schedule);
-    setIsSidebarOpen(true);
-  };
-
-  const handleCloseSidebar = () => {
-    setIsSidebarOpen(false);
-  };
 
   return (
     <div class="w-full border-t flex flex-row grow">
@@ -258,15 +247,10 @@ export default function SchedulesPage(
               </div>
             }
           >
-            <Show when={data()}>
-              {(schedules) => (
-                <CustomCalendar view={view()} onSelectSchedule={handleSelectSchedule} schedules={schedules} />
-              )}
-            </Show>
+            <Show when={data()}>{(schedules) => <CustomCalendar view={view()} schedules={schedules} />}</Show>
           </Suspense>
         </main>
       </div>
-      <ScheduleSidebar schedule={selectedSchedule} isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
     </div>
   );
 }

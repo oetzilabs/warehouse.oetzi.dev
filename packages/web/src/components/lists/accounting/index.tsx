@@ -84,7 +84,7 @@ export const AccountingList = (props: AccountingListProps) => {
   const summarizedData = () => summarizeTransactionsByDay(filteredData());
 
   return (
-    <div class="w-full flex flex-col gap-4">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="border rounded-lg overflow-clip">
         <Table class="table-auto">
           <TableHeader class="py-4 !h-auto">

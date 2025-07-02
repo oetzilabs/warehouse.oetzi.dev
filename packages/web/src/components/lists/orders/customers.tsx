@@ -112,7 +112,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-4">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}

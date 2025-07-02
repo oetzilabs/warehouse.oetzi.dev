@@ -32,10 +32,12 @@ export const route = {
 } satisfies RouteDefinition;
 
 export default function DashboardPage() {
+  const start = new Date();
+  const end = dayjs(start).endOf("month").toDate();
   const data = createAsync(async () => getDashboardData(), { deferStream: true });
   const notifications = createAsync(async () => getNotifications(), { deferStream: true });
   const inventory = createAsync(async () => getInventory(), { deferStream: true });
-  const schedules = createAsync(async () => getSchedules(), { deferStream: true });
+  const schedules = createAsync(async () => getSchedules([start, end]), { deferStream: true });
   const pendingSupplyOrders = createAsync(async () => getPendingPurchases(), { deferStream: true });
 
   const acceptNotificationAction = useAction(acceptNotification);

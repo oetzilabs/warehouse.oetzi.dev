@@ -70,8 +70,8 @@ export default function SupplierPage() {
     >
       <Show when={supplier()}>
         {(supplierInfo) => (
-          <div class="container flex flex-col gap-4 py-0 relative">
-            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+          <div class="container flex flex-col gap-0 py-0 relative">
+            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background pb-4">
               <div class="flex flex-row items-center gap-4">
                 <Button variant="outline" size="sm" as={A} href="/suppliers">
                   <ArrowLeft class="size-4" />
@@ -97,7 +97,7 @@ export default function SupplierPage() {
               </div>
             </div>
 
-            <div class="flex flex-col gap-4 w-full h-content">
+            <div class="flex flex-col gap-4 w-full h-content pb-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
                 <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                   <div class="flex flex-row items-center gap-2 justify-between">

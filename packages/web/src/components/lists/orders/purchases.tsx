@@ -116,7 +116,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-4">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
