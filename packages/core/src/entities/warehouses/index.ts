@@ -17,6 +17,7 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { MissingConfig } from "../config";
 import { FacilityLive, FacilityService } from "../facilities";
 import { FacilityNotFound } from "../facilities/errors";
+import { OrganizationId } from "../organizations/id";
 import { ProductInvalidId, ProductNotDeleted, ProductNotFound } from "../products/errors";
 import { StorageInfo, StorageLive, StorageService } from "../storages";
 import { StorageInvalidId, StorageNotFound } from "../storages/errors";
@@ -39,13 +40,9 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
 
     const create = Effect.fn("@warehouse/warehouses/create")(function* (
       userInput: InferInput<typeof WarehouseCreateSchema>,
-      organizationId: string,
       userId: string,
     ) {
-      const parsedOrgId = safeParse(prefixed_cuid2, organizationId);
-      if (!parsedOrgId.success) {
-        return yield* Effect.fail(new WarehouseOrganizationInvalidId({ organizationId }));
-      }
+      const orgId = yield* OrganizationId;
       const parsedUserId = safeParse(prefixed_cuid2, userId);
       if (!parsedUserId.success) {
         return yield* Effect.fail(new WarehouseUserInvalidId({ userId }));
@@ -59,14 +56,14 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
       const connectedToOrg = yield* db
         .insert(TB_organizations_warehouses)
         .values({
-          organizationId: parsedOrgId.output,
+          organizationId: orgId,
           warehouseId: warehouse.id,
         })
         .returning();
 
       if (!connectedToOrg) {
         return yield* Effect.fail(
-          new WarehouseOrganizationLinkFailed({ organizationId: parsedOrgId.output, warehouseId: warehouse.id }),
+          new WarehouseOrganizationLinkFailed({ organizationId: orgId, warehouseId: warehouse.id }),
         );
       }
 

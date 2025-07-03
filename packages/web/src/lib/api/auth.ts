@@ -1,5 +1,6 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
+import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { Cause, Chunk, Effect, Exit } from "effect";
 import { status } from "effect/Fiber";
 import { getCookie, setCookie } from "vinxi/http";
@@ -140,9 +141,10 @@ export const signupViaEmail = action(async (email: string, password: string, pas
   if (sessionToken) {
     await Effect.runPromise(
       Effect.gen(function* (_) {
-        const authService = yield* _(AuthService);
+        const authService = yield* AuthService;
+        yield* Effect.log("Removing session");
         return yield* authService.removeSession(sessionToken);
-      }).pipe(Effect.provide(AuthLive)),
+      }).pipe(Effect.provide([AuthLive, createOtelLayer("@action/signup-via-email/remove-session")])),
     );
 
     setCookie("session_token", "", {
@@ -155,9 +157,10 @@ export const signupViaEmail = action(async (email: string, password: string, pas
 
   const signupAttempt = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const authService = yield* _(AuthService);
+      const authService = yield* AuthService;
+      yield* Effect.log("Signing up");
       return yield* authService.signup(email, password);
-    }).pipe(Effect.provide(AuthLive)),
+    }).pipe(Effect.provide([AuthLive, createOtelLayer("@action/signup-via-email/signup-attempt")])),
   );
 
   return Exit.match(signupAttempt, {
@@ -175,9 +178,10 @@ export const signupViaEmail = action(async (email: string, password: string, pas
     onFailure: (cause) => {
       const causes = Cause.failures(cause);
       const errors = Chunk.toReadonlyArray(causes).map((c) => {
-        return c.message;
+        return `[${c._tag ?? "unknown"}] ${c.message}`;
       });
-      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=unknown`, {
+      console.log(errors);
+      throw redirect(`/error?message=${encodeURI(errors.join(", "))}&function=signupViaEmail`, {
         status: 500,
         statusText: `Internal Server Error: ${errors.join(", ")}`,
       });

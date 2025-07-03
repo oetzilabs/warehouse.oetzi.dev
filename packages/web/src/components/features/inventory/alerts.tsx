@@ -65,7 +65,18 @@ export const Alerts = () => {
         <Show when={alertsData()}>
           {(alerts) => (
             <div class="flex flex-col items-center w-full border rounded-lg overflow-hidden">
-              <For each={alerts()}>
+              <For
+                each={alerts()}
+                fallback={
+                  <div class="flex flex-col items-center justify-center h-full bg-muted-foreground/[0.025] dark:bg-muted/15 w-full">
+                    <div class="w-full h-full flex items-center justify-center p-4 ">
+                      <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                        No alerts! You are good to go!
+                      </div>
+                    </div>
+                  </div>
+                }
+              >
                 {(a) => (
                   <div class="flex flex-row gap-4 items-center w-full border-b last:border-b-0 p-4 bg-muted-foreground/[0.025] dark:bg-muted/15">
                     <div class="flex-1 flex flex-col gap-4">

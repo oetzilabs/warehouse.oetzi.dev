@@ -10,15 +10,6 @@ import { toast } from "solid-sonner";
 export default function OnboardingPage() {
   const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
-  const { setBreadcrumbs } = useBreadcrumbs();
-  onMount(() => {
-    setBreadcrumbs([
-      {
-        label: "Onboarding",
-        href: "/onboarding",
-      },
-    ]);
-  });
 
   const hasOnboarded = (user: NonNullable<Awaited<ReturnType<typeof getAuthenticatedUser>>>, sessionToken: string) => {
     const session = user.sessions.find((s) => s.access_token === sessionToken);
@@ -32,8 +23,8 @@ export default function OnboardingPage() {
 
   return (
     <div class="w-full h-full flex items-start md:items-center md:justify-center grow">
-      <div class="w-full max-w-6xl md:min-h-[450px] md:h-max h-full border-0 md:border rounded-none md:rounded-lg md:shadow-2xl shadow-none overflow-clip grow">
-        <div class="grid grid-cols-1 md:grid-cols-2 w-full h-full">
+      <div class="flex w-full max-w-6xl h-[600px] border-0 md:border rounded-none md:rounded-lg overflow-clip grow">
+        <div class="flex flex-row w-full grow">
           <div class="flex p-6 w-full flex-col gap-1 h-full grow">
             <div class="w-full flex flex-row items-center justify-between">
               <span class="text-xl font-medium w-max">Welcome to WareHouse.</span>
@@ -59,10 +50,8 @@ export default function OnboardingPage() {
               >
                 <div class="flex flex-col gap-2 w-full grow">
                   <span class="text-sm font-medium text-muted-foreground/80">
-                    In order to use WareHouse, you need to prepare some initial configurations, such as setting up your
-                    workspace, connecting your preferred storage provider, and defining the basic structure of your
-                    environment. This helps ensure everything runs smoothly and is tailored to your workflow. Once
-                    you're done, you'll be ready to start managing and deploying your resources efficiently.
+                    To get started with WareHouse, please follow the onboarding assistant step by step. Choose the
+                    option that best fits your needs to begin using WareHouse.
                   </span>
                   <div class="w-full flex flex-col gap-4 grow">
                     <div class="flex grow w-full" />
@@ -71,7 +60,7 @@ export default function OnboardingPage() {
                         Start
                         <Play class="size-4" />
                       </Button>
-                      <Button
+                      {/* <Button
                         size="sm"
                         type="button"
                         disabled
@@ -82,7 +71,7 @@ export default function OnboardingPage() {
                       >
                         Import
                         <UploadFile class="size-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </div>

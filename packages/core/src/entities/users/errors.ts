@@ -4,6 +4,10 @@ export class UserNotFound extends Schema.TaggedError<UserNotFound>()("UserNotFou
   id: Schema.String,
 }) {}
 
+export class UserNotFoundViaEmail extends Schema.TaggedError<UserNotFoundViaEmail>()("UserNotFoundViaEmail", {
+  email: Schema.String,
+}) {}
+
 export class UserInvalidId extends Schema.TaggedError<UserInvalidId>()("UserInvalidId", {
   id: Schema.String,
 }) {}
@@ -22,7 +26,7 @@ export class UserAuthenticationFailed extends Schema.TaggedError<UserAuthenticat
   "UserAuthenticationFailed",
   {
     email: Schema.String,
-  }
+  },
 ) {}
 
 export class UserNotUpdated extends Schema.TaggedError<UserNotUpdated>()("UserNotUpdated", {
@@ -47,12 +51,12 @@ export class UserLastWarehouseNotFound extends Schema.TaggedError<UserLastWareho
   "UserLastWarehouseNotFound",
   {
     userId: Schema.String,
-  }
+  },
 ) {}
 
 export class UserLastFacilityNotFound extends Schema.TaggedError<UserLastFacilityNotFound>()(
   "UserLastFacilityNotFound",
   {
     userId: Schema.String,
-  }
+  },
 ) {}

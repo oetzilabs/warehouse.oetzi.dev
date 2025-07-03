@@ -51,9 +51,9 @@ export default function SignUpPage() {
 
   return (
     <>
-      <div class="flex grow w-full">
+      <div class="flex grow w-full h-full">
         <div class="flex flex-col w-full h-full grow items-center justify-center">
-          <div class="w-full max-w-xl flex flex-col border rounded-sm px-10 py-4 -mt-40 gap-4">
+          <div class="w-full max-w-xl flex flex-col border rounded-lg p-4 gap-4 -translate-y-1/2">
             <span class="text-lg font-bold text-neutral-800 dark:text-neutral-200">Sign Up</span>
             <form
               class="flex flex-col gap-4 w-full"

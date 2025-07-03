@@ -1,21 +1,18 @@
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { getAuthenticatedUser } from "@/lib/api/auth";
-import { createMediaQuery } from "@kobalte/utils";
-import { A, createAsync, RouteDefinition } from "@solidjs/router";
+import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
+import { A, RouteDefinition } from "@solidjs/router";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import { Show } from "solid-js";
 
 export const route = {
-  preload: (props) => {
-    getAuthenticatedUser({ skipOnboarding: true });
+  preload: async (props) => {
+    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const sessionToken = await getSessionToken();
+    return { user, sessionToken };
   },
 } satisfies RouteDefinition;
 
 export default function IndexPage() {
-  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
-  const isMobile = createMediaQuery("(max-width: 640px)", true);
-
   return (
     <>
       <div class="flex flex-col h-full w-full overflow-y-auto bg-background">
@@ -52,7 +49,9 @@ export default function IndexPage() {
           <div class="relative isolate w-full flex flex-col items-center justify-center py-20 z-10 bg-background">
             <div class="container !px-8 lg:!px-4 flex flex-col items-start justify-start gap-20">
               <div class="w-full flex flex-row items-center justify-between gap-4">
-                <h2 class="text-lg/8 font-semibold text-neutral-900">Trusted and used by these companies</h2>
+                <h2 class="text-lg/8 font-semibold text-neutral-900 dark:text-neutral-100">
+                  Trusted and used by these companies
+                </h2>
                 <div class="flex flex-row gap-4 items-center">
                   <span class="text-sm text-muted-foreground">Missing your company?</span>
                   <Button as={A} href="/request-hero" size="sm" variant="outline" class="bg-background">
@@ -73,7 +72,9 @@ export default function IndexPage() {
           <div class="relative isolate w-full flex flex-col items-center justify-center py-20 z-10 bg-background">
             <div class="container !px-8 lg:!px-4 flex flex-col items-start justify-start gap-20">
               <div class="w-full flex flex-row items-center justify-between gap-4">
-                <h2 class="text-lg/8 font-semibold text-neutral-900">Features? We got you covered!</h2>
+                <h2 class="text-lg/8 font-semibold text-neutral-900 dark:text-neutral-100">
+                  Features? We got you covered!
+                </h2>
                 <div class="flex flex-row gap-4 items-center">
                   <span class="text-sm text-muted-foreground">Want to add a feature?</span>
                   <Button as={A} href="/blog/roadmap" size="sm" variant="outline" class="bg-background">

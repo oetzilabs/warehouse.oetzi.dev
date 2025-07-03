@@ -895,7 +895,12 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       return updated;
     });
 
+    const all = Effect.fn("@warehouse/organizations/all")(function* () {
+      return yield* db.query.TB_organizations.findMany();
+    });
+
     return {
+      all,
       create,
       findById,
       findBySlug,

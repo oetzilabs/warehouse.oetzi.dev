@@ -16,6 +16,7 @@ import {
   UserNotCreated,
   UserNotDeleted,
   UserNotFound,
+  UserNotFoundViaEmail,
   UserNotUpdated,
   UserPasswordRequired,
 } from "./errors";
@@ -39,14 +40,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         hashed_password: hashPassword(password),
       });
 
-      const [x] = yield* db.insert(TB_users).values(uI).returning();
-      if (!x) {
-        return yield* Effect.fail(new UserNotCreated({}));
-      }
-
-      const user = yield* findById(x.id);
+      const [user] = yield* db.insert(TB_users).values(uI).returning();
       if (!user) {
-        return yield* Effect.fail(new UserNotCreated({ message: "Failed to create user" }));
+        return yield* Effect.fail(new UserNotCreated({}));
       }
 
       return user;
@@ -69,6 +65,11 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           payment_history: {
             with: {
               paymentMethod: true,
+            },
+          },
+          orgs: {
+            with: {
+              org: true,
             },
           },
           sessions: {
@@ -216,7 +217,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       });
 
       if (!user) {
-        return yield* Effect.fail(new UserNotFound({ id: emailInput }));
+        return yield* Effect.fail(new UserNotFoundViaEmail({ email: emailInput }));
       }
 
       return user;

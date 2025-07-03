@@ -1,180 +1,131 @@
-import { action, json, query, redirect } from "@solidjs/router";
-import { OrganizationCreateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
+import { action, json, query } from "@solidjs/router";
+import { OrganizationCreateSchema, OrganizationUpdateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { SessionLive, SessionService } from "@warehouseoetzidev/core/src/entities/sessions";
+import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { Effect, Layer } from "effect";
-import { getRequestEvent } from "solid-js/web";
 import { InferInput } from "valibot";
 import { getAuthenticatedUser } from "./auth";
-import { withSession } from "./session";
+import { run, runWithSession } from "./utils";
 
-export const getOrganizations = query(async () => {
+// Get all organizations for the authenticated user
+export const getOrganizations = query(() => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const session = auth[1];
-  if (!session) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const org = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
-      return yield* service.findByUserId(user.id);
-    }).pipe(Effect.provide(OrganizationLive)),
+  return runWithSession(
+    "@query/organizations",
+    Effect.fn(
+      function* (session) {
+        const service = yield* UserService;
+        const user = yield* service.findById(session.user_id);
+        return user.orgs.map((o) => o.org);
+      },
+      (effect) => effect.pipe(Effect.provide(UserLive)),
+    ),
+    json([]),
   );
-  return org;
 }, "organizations");
 
-export const getOrganizationBySlug = query(async (slug: string) => {
+// Get organization by slug
+export const getOrganizationBySlug = query((slug: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const org = await Effect.runPromise(
+  return run(
+    "@query/organization-by-slug",
     Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
+      const service = yield* OrganizationService;
       return yield* service.findBySlug(slug);
     }).pipe(Effect.provide(OrganizationLive)),
+    undefined,
   );
-  return org;
 }, "organization-by-slug");
 
-export const createOrganization = action(async (data: InferInput<typeof OrganizationCreateSchema>) => {
+// Create organization and update session
+export const createOrganization = action((data: InferInput<typeof OrganizationCreateSchema>) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-
-  const session = auth[1];
-  if (!session) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-
-  const org = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
-      const orgCreated = yield* service.create(data, user.id);
-      const sessionService = yield* _(SessionService);
-      const updatedSession = yield* sessionService.update({ id: session.id, current_organization_id: orgCreated.id });
-      if (!updatedSession) {
-        return yield* Effect.fail(new Error("Failed to update session"));
-      }
-      return orgCreated;
-    }).pipe(Effect.provide(OrganizationLive), Effect.provide(SessionLive)),
+  return runWithSession(
+    "@action/create-organization",
+    Effect.fn(
+      function* (session) {
+        const service = yield* OrganizationService;
+        const orgCreated = yield* service.create(data, session.user_id);
+        const sessionService = yield* SessionService;
+        const updatedSession = yield* sessionService.update({
+          id: session.session_id,
+          current_organization_id: orgCreated.id,
+        });
+        if (!updatedSession) {
+          return yield* Effect.fail(new Error("Failed to update session"));
+        }
+        return json(orgCreated, {
+          revalidate: [getCurrentOrganization.key, getAuthenticatedUser.key],
+        });
+      },
+      (effect) => effect.pipe(Effect.provide(OrganizationLive), Effect.provide(SessionLive)),
+    ),
+    json(undefined, {
+      revalidate: [getCurrentOrganization.key, getAuthenticatedUser.key],
+    }),
   );
-
-  return json(org, {
-    revalidate: [getCurrentOrganization.key, getAuthenticatedUser.key],
-  });
 });
 
-export const getCurrentOrganization = query(async () => {
+// Update organization
+export const updateOrganization = action((data: InferInput<typeof OrganizationUpdateSchema>) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const session = auth[1];
-  if (!session) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const orgId = session.current_organization_id;
-  if (!orgId) {
-    return undefined;
-  }
-  const org = await Effect.runPromise(
+  return run(
+    "@action/update-organization",
     Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
-      return yield* service.findById(orgId);
+      const service = yield* OrganizationService;
+      const org = yield* service.update(data);
+      return json(org, {
+        revalidate: [getOrganizations.key, getOrganizationBySlug.keyFor(org.slug), getCurrentOrganization.key],
+      });
     }).pipe(Effect.provide(OrganizationLive)),
+    json(undefined, {
+      revalidate: [getOrganizations.key, getOrganizationBySlug.key, getCurrentOrganization.key],
+    }),
   );
-  return org;
+});
+
+// Get current organization from session
+export const getCurrentOrganization = query(() => {
+  "use server";
+  return runWithSession(
+    "@query/current-organization",
+    Effect.fn(
+      function* (session) {
+        const service = yield* OrganizationService;
+        return yield* service.findById(session.current_organization_id);
+      },
+      (effect) => effect.pipe(Effect.provide(OrganizationLive)),
+    ),
+    undefined,
+  );
 }, "current-organization");
 
-export const setCurrentOrganization = action(async (id: string) => {
+// Set current organization (returns org if found)
+export const setCurrentOrganization = action((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const org = await Effect.runPromise(
+  return run(
+    "@action/set-current-organization",
     Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
-      return yield* service.findById(id);
+      const service = yield* OrganizationService;
+      const org = yield* service.findById(id);
+      if (!org) throw new Error("Organization not found");
+      return org;
     }).pipe(Effect.provide(OrganizationLive)),
+    undefined,
   );
-  if (!org) {
-    throw new Error("Organization not found");
-  }
-  return org;
 });
 
-export const deleteOrganization = action(async (id: string) => {
+// Delete organization
+export const deleteOrganization = action((id: string) => {
   "use server";
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const removedOrganization = await Effect.runPromise(
+  return run(
+    "@action/delete-organization",
     Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
+      const service = yield* OrganizationService;
       return yield* service.safeRemove(id);
     }).pipe(Effect.provide(OrganizationLive)),
+    undefined,
   );
-  return removedOrganization;
-});
-
-export const disconnectFromOrganization = action(async (orgId: string) => {
-  "use server";
-
-  const auth = await withSession();
-  if (!auth) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const user = auth[0];
-  if (!user) {
-    throw new Error("You have to be logged in to perform this action.");
-  }
-  const session = auth[1];
-  if (!session) {
-    throw redirect("/", { status: 403, statusText: "Forbidden" });
-  }
-  const organizationId = Layer.succeed(OrganizationId, orgId);
-
-  const removedFromOrganization = await Effect.runPromise(
-    Effect.gen(function* (_) {
-      const service = yield* _(OrganizationService);
-      return yield* service.removeUser(user.id);
-    }).pipe(Effect.provide(OrganizationLive), Effect.provide(organizationId)),
-  );
-  return removedFromOrganization;
 });

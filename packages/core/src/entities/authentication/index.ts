@@ -1,10 +1,14 @@
 import dayjs from "dayjs";
-import { Context, Effect, Redacted } from "effect";
+import { Effect, Layer, Redacted } from "effect";
 import jwt from "jsonwebtoken";
 import ms from "ms";
 import { WarehouseConfig, WarehouseConfigLive } from "../config";
+import { FacilityLive, FacilityService } from "../facilities";
+import { OrganizationLive, OrganizationService } from "../organizations";
+import { OrganizationId } from "../organizations/id";
 import { SessionLive, SessionService } from "../sessions";
 import { UserLive, UserService } from "../users";
+import { WarehouseLive, WarehouseService } from "../warehouses";
 import {
   AuthInvalidToken,
   AuthLoginFailed,
@@ -131,34 +135,71 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       // we could use JTI to blocklist the session... (for now we wont do that, too much hastle to set it up)
     });
 
-    const signup = Effect.fn("@warehouse/auth/signup")(function* (email: string, password: string) {
-      const user = yield* userService.findByEmail(email);
-      if (user) {
-        return yield* Effect.fail(new AuthUserAlreadyExists({ email }));
-      }
-      const attempt = yield* userService.create({ email, password, name: email, status: "active" });
-      if (!attempt) {
-        return yield* Effect.fail(new AuthSignupFailed({ email }));
-      }
+    const signup = Effect.fn("@warehouse/auth/signup")(
+      function* (email: string, password: string) {
+        let user = yield* userService
+          .findByEmail(email)
+          .pipe(Effect.catchTag("UserNotFoundViaEmail", () => Effect.succeed(undefined)));
+        let organizationId: string | null = null;
+        let warehouseId: string | null = null;
+        let facilityId: string | null = null;
+        if (user) {
+          organizationId = yield* userService.findLastOrganization(user.id).pipe(Effect.map((o) => o.id)) ?? null;
+          warehouseId = yield* userService.findLastWarehouse(user.id).pipe(Effect.map((w) => w.id)) ?? null;
+          facilityId = yield* userService.findLastFacility(user.id).pipe(Effect.map((f) => f.id)) ?? null;
+        } else {
+          const attempt = yield* userService.create({ email, password, name: email, status: "active" });
+          if (!attempt) {
+            return yield* Effect.fail(new AuthSignupFailed({ email, message: "Failed to create user" }));
+          }
+          user = yield* userService.findByEmail(email);
+          yield* Effect.log("User created", { email });
 
-      // Generate the JWT
-      const expiresIn = ms("7 Days"); // Configure your JWT expiration time
-      const accessToken = yield* generateJwt(attempt.id, expiresIn);
+          // create default organization, warehouse, and facility, easier for the user to get onboarded
+          const organizationService = yield* OrganizationService;
+          const organization = yield* organizationService.create({ name: "Default Organization" }, user.id);
+          yield* Effect.log("Organization created", { organizationId: organization.id, email });
+          const orgId = Layer.succeed(OrganizationId, organization.id);
+          const warehouseService = yield* WarehouseService;
+          const warehouse = yield* warehouseService
+            .create({ name: "Default Warehouse" }, user.id)
+            .pipe(Effect.provide(orgId));
+          yield* Effect.log("Warehouse created", { warehouseId: warehouse.id, email });
+          const facilityService = yield* FacilityService;
+          const facility = yield* facilityService.create({
+            name: "Default Facility",
+            warehouse_id: warehouse.id,
+            ownerId: user.id,
+          });
+          yield* Effect.log("Facility created", { facilityId: facility.id, email });
+          organizationId = organization.id;
+          warehouseId = warehouse.id;
+          facilityId = facility.id;
+        }
 
-      // Create a session record (if needed for blocklisting/tracking)
-      const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
-      const session = yield* sessionService.create({
-        expiresAt,
-        userId: attempt.id,
-        access_token: accessToken, // Store the JWT in the database session record
-      });
+        // Generate the JWT
+        const expiresIn = ms("7 Days"); // Configure your JWT expiration time
+        const accessToken = yield* generateJwt(user.id, expiresIn);
 
-      if (!session) {
-        return yield* Effect.fail(new AuthSessionCreateFailed({ userId: attempt.id }));
-      }
+        // Create a session record (if needed for blocklisting/tracking)
+        const expiresAt = dayjs().add(7, "days").toDate(); // Match this with JWT expiration
+        const session = yield* sessionService.create({
+          expiresAt,
+          userId: user.id,
+          access_token: accessToken, // Store the JWT in the database session record
+          current_organization_id: organizationId,
+          current_warehouse_id: warehouseId,
+          current_warehouse_facility_id: facilityId,
+        });
 
-      return { user: attempt, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
-    });
+        if (!session) {
+          return yield* Effect.fail(new AuthSessionCreateFailed({ userId: user.id }));
+        }
+
+        return { user: user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
+      },
+      (effect) => effect.pipe(Effect.provide([OrganizationLive, WarehouseLive, FacilityLive])),
+    );
 
     return {
       verify,

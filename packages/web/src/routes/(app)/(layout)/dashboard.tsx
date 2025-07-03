@@ -177,7 +177,18 @@ export default function DashboardPage() {
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
                         <div class="flex flex-col grow h-full">
-                          <For each={d().orders.customers.values}>
+                          <For
+                            each={d().orders.customers.values}
+                            fallback={
+                              <div class="flex flex-col items-center justify-center h-full">
+                                <div class="w-full h-full flex items-center justify-center py-10">
+                                  <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                                    No orders found
+                                  </div>
+                                </div>
+                              </div>
+                            }
+                          >
                             {(item) => (
                               <div class="flex flex-row items-center gap-3 p-4 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-muted-foreground/[0.025] dark:hover:bg-muted/15 transition-colors h-full">
                                 <OrderStatusBadge status={item.order.status} />
@@ -231,7 +242,18 @@ export default function DashboardPage() {
                       </div>
                       <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800">
                         <div class="flex flex-col  grow">
-                          <For each={d().orders.suppliers.values}>
+                          <For
+                            each={d().orders.suppliers.values}
+                            fallback={
+                              <div class="flex flex-col items-center justify-center h-full">
+                                <div class="w-full h-full flex items-center justify-center py-10">
+                                  <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                                    No purchases found
+                                  </div>
+                                </div>
+                              </div>
+                            }
+                          >
                             {(item) => (
                               <div class="flex flex-row items-center gap-3 p-4 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-muted-foreground/[0.025] dark:hover:bg-muted/15 transition-colors">
                                 <OrderStatusBadge status={item.order.status} />
