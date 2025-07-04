@@ -51,38 +51,29 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       }[],
     ) {
       const orgId = yield* OrganizationId;
-      const r = yield* Effect.async<CustomerOrderSelect, OrderNotCreated>((resume) => {
-        db.transaction(async (tx) => {
-          try {
-            const [order] = await tx
-              .insert(TB_customer_orders)
-              .values({ ...userInput, organization_id: orgId })
-              .returning();
-
-            if (!order) throw new Error("Failed to create order");
-
-            const productsToInsert = products.map((p) => ({
-              customerOrderId: order.id,
-              productId: p.product_id,
-              quantity: p.quantity,
-            }));
-
-            await tx.insert(TB_customer_order_products).values(productsToInsert).returning();
-
-            resume(Effect.succeed(order));
-          } catch (error) {
-            resume(
-              Effect.fail(
-                new OrderNotCreated({
-                  message: error instanceof Error ? error.message : "Unknown error during order creation",
-                }),
-              ),
-            );
-            return tx.rollback();
-          }
-        });
-      });
-      return r;
+      const [order] = yield* db
+        .insert(TB_customer_orders)
+        .values({ ...userInput, organization_id: orgId })
+        .returning();
+      if (!order)
+        return yield* Effect.fail(
+          new OrderNotCreated({
+            message: "Failed to create order",
+          }),
+        );
+      const productsToInsert = products.map((p) => ({
+        customerOrderId: order.id,
+        productId: p.product_id,
+        quantity: p.quantity,
+      }));
+      const addedProducts = yield* db.insert(TB_customer_order_products).values(productsToInsert).returning();
+      if (!addedProducts)
+        return yield* Effect.fail(
+          new OrderNotCreated({
+            message: "Failed to add products to order",
+          }),
+        );
+      return order;
     });
 
     const findById = Effect.fn("@warehouse/customer-orders/findById")(
@@ -545,62 +536,42 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         } satisfies Omit<SaleItemCreate, "saleId">;
       });
 
-      const result = yield* Effect.async<{ sale: CreatedSale; items: SaleProduct[] }, SaleConversionFailed>(
-        (resume) => {
-          db.transaction(async (tx) => {
-            try {
-              // Create barcode
-              const barcode = `sale-${cuid2.createId()}`;
+      const barcode = `sale-${cuid2.createId()}`;
 
-              // Insert sale
-              const [sale] = await tx
-                .insert(TB_sales)
-                .values({
-                  customerId: cid,
-                  organizationId: orgId,
-                  status: "created",
-                  barcode,
-                })
-                .returning();
+      // Insert sale
+      const [sale] = yield* db
+        .insert(TB_sales)
+        .values({
+          customerId: cid,
+          organizationId: orgId,
+          status: "created",
+          barcode,
+        })
+        .returning();
 
-              if (!sale) throw new Error("Failed to create sale");
+      if (!sale) throw new Error("Failed to create sale");
 
-              // Insert sale items
-              const items = await tx
-                .insert(TB_sale_items)
-                .values(itemsFromOrder.map((i) => ({ ...i, saleId: sale.id })))
-                .returning();
+      // Insert sale items
+      const items = yield* db
+        .insert(TB_sale_items)
+        .values(itemsFromOrder.map((i) => ({ ...i, saleId: sale.id })))
+        .returning();
 
-              // Update order status
-              await tx
-                .update(TB_customer_orders)
-                .set({ saleId: sale.id, status: "processing", updatedAt: new Date() })
-                .where(eq(TB_customer_orders.id, id))
-                .returning();
+      // Update order status
+      yield* db
+        .update(TB_customer_orders)
+        .set({ saleId: sale.id, status: "processing", updatedAt: new Date() })
+        .where(eq(TB_customer_orders.id, id))
+        .returning();
 
-              // Create organization-sale relation
-              await tx
-                .insert(TB_organizations_sales)
-                .values({
-                  organizationId: orgId,
-                  saleId: sale.id,
-                })
-                .returning();
-
-              resume(Effect.succeed({ sale, items }));
-            } catch (error) {
-              resume(
-                Effect.fail(
-                  new SaleConversionFailed({
-                    message: error instanceof Error ? error.message : "Unknown error during sale conversion",
-                  }),
-                ),
-              );
-              return tx.rollback();
-            }
-          });
-        },
-      );
+      // Create organization-sale relation
+      yield* db
+        .insert(TB_organizations_sales)
+        .values({
+          organizationId: orgId,
+          saleId: sale.id,
+        })
+        .returning();
 
       if (!result.sale) {
         return yield* Effect.fail(new SaleNotCreated());

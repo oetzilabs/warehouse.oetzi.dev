@@ -57,13 +57,19 @@ export default function DashboardPage() {
                     <For
                       each={notifs()}
                       fallback={
-                        <Alert class="bg-muted-foreground/10 dark:bg-muted/30">
-                          <Check class="size-4" />
-                          <AlertTitle>No notifications!</AlertTitle>
-                          <AlertDescription>
-                            <span>You're all caught up! No new notifications.</span>
-                          </AlertDescription>
-                        </Alert>
+                        <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
+                          <div class="flex flex-row items-start gap-2 w-full justify-between">
+                            <div class="flex flex-row items-center gap-2">
+                              <Check class="size-4" />
+                              <span class="text-sm font-medium">No notifications!</span>
+                            </div>
+                            <Button size="sm" as={A} href="/notifications">
+                              View all messages
+                              <ArrowUpRight class="size-4" />
+                            </Button>
+                          </div>
+                          <span class="text-xs text-muted-foreground">You're all caught up! No new notifications.</span>
+                        </div>
                       }
                     >
                       {(notification) => (

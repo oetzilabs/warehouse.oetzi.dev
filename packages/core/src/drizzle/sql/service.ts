@@ -1,4 +1,3 @@
-import { SqlClient } from "@effect/sql";
 import * as PgDrizzle from "@effect/sql-drizzle/Pg";
 import { PgClient } from "@effect/sql-pg";
 import { Effect, Layer } from "effect";

@@ -48,105 +48,81 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       additions: Omit<NewProductFormData, "product">, // 'additions' is not directly used in the current transaction logic, but keeping it for consistency if it's used elsewhere
     ) {
       const orgId = yield* OrganizationId; // Run the Effect to get orgId
-      const r = yield* Effect.async<ProductSelect, ProductNotCreated | OrganizationProductNotAdded>((resume) => {
-        db.transaction(async (tx) => {
-          try {
-            const [product] = await tx.insert(TB_products).values(input).returning();
+      const [product] = yield* db.insert(TB_products).values(input).returning();
+      if (!product) {
+        return yield* Effect.fail(new ProductNotCreated({}));
+      }
+      
+      const [org_product] = yield* db
+        .insert(TB_organizations_products)
+        .values({ organizationId: orgId, productId: product.id })
+        .returning();
 
-            if (!product) {
-              throw new ProductNotCreated({});
-            }
-
-            const [org_product] = await tx
-              .insert(TB_organizations_products)
-              .values({ organizationId: orgId, productId: product.id })
-              .returning();
-
-            if (!org_product) {
-              throw new OrganizationProductNotAdded({
-                organizationId: orgId,
-                productId: product.id,
-              });
-            }
-            // add the price to the price history
-            await tx
-              .insert(TB_organization_product_price_history)
-              .values({
-                productId: product.id,
-                organizationId: orgId,
-                effectiveDate: new Date(),
-                currency: additions.price.currency,
-                sellingPrice: additions.price.sellingPrice,
-              })
-              .returning();
-            // add the purchase price to the price history of the supplier of the product
-            if (additions.suppliers.length > 0) {
-              for (const supplier of additions.suppliers) {
-                await tx
-                  .insert(TB_supplier_products)
-                  .values({ productId: product.id, supplierId: supplier.supplier })
-                  .returning();
-                await tx
-                  .insert(TB_supplier_product_price_history)
-                  .values({
-                    productId: product.id,
-                    supplierId: supplier.supplier,
-                    effectiveDate: new Date(),
-                    currency: supplier.currency ?? "EUR",
-                    supplierPrice: supplier.purchasePrice ?? 0.0,
-                  })
-                  .returning();
-              }
-            }
-            if (additions.images.length > 0) {
-              // upload the image
-              // assume its uploaded.
-              /*
-                for (const image of additions.images) {
-                  const image = await uploadImage(additions.images);
-                  await tx.insert(TB_product_images).values({ productId: product.id, imageId: image.id }).returning();
-                }
-                */
-            }
-            if (additions.labels.length > 0) {
-              // add labels
-              for (const labelId of additions.labels) {
-                await tx.insert(TB_products_to_labels).values({ productId: product.id, labelId: labelId }).returning();
-              }
-            }
-            for (const certificateId of additions.certificates) {
-              await tx
-                .insert(TB_products_to_certifications)
-                .values({ productId: product.id, certificationId: certificateId })
-                .returning();
-            }
-            for (const conditionId of additions.conditions) {
-              await tx
-                .insert(TB_products_to_storage_conditions)
-                .values({ productId: product.id, conditionId: conditionId })
-                .returning();
-            }
-
-            resume(Effect.succeed(product));
-          } catch (error) {
-            if (error instanceof ProductNotCreated) {
-              resume(Effect.fail(error));
-            } else if (error instanceof OrganizationProductNotAdded) {
-              resume(Effect.fail(error));
-            } else {
-              resume(
-                Effect.fail(
-                  new ProductNotCreated({
-                    message: `An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"}`,
-                  }),
-                ),
-              );
-            }
-            await tx.rollback();
+      if (!org_product) {
+        return yield* Effect.fail(new OrganizationProductNotAdded({
+          organizationId: orgId,
+          productId: product.id,
+        }));
+      }
+      // add the price to the price history
+      yield* db
+        .insert(TB_organization_product_price_history)
+        .values({
+          productId: product.id,
+          organizationId: orgId,
+          effectiveDate: new Date(),
+          currency: additions.price.currency,
+          sellingPrice: additions.price.sellingPrice,
+        })
+        .returning();
+      // add the purchase price to the price history of the supplier of the product
+      if (additions.suppliers.length > 0) {
+        for (const supplier of additions.suppliers) {
+          yield* db
+            .insert(TB_supplier_products)
+            .values({ productId: product.id, supplierId: supplier.supplier })
+            .returning();
+          yield* db
+            .insert(TB_supplier_product_price_history)
+            .values({
+              productId: product.id,
+              supplierId: supplier.supplier,
+              effectiveDate: new Date(),
+              currency: supplier.currency ?? "EUR",
+              supplierPrice: supplier.purchasePrice ?? 0.0,
+            })
+            .returning();
+        }
+      }
+      if (additions.images.length > 0) {
+        // upload the image
+        // assume its uploaded.
+        /*
+          for (const image of additions.images) {
+            const image = await uploadImage(additions.images);
+            yield* db.insert(TB_product_images).values({ productId: product.id, imageId: image.id }).returning();
           }
-        });
-      });
-      return r;
+          */
+      }
+      if (additions.labels.length > 0) {
+        // add labels
+        for (const labelId of additions.labels) {
+          yield* db.insert(TB_products_to_labels).values({ productId: product.id, labelId: labelId }).returning();
+        }
+      }
+      for (const certificateId of additions.certificates) {
+        yield* db
+          .insert(TB_products_to_certifications)
+          .values({ productId: product.id, certificationId: certificateId })
+          .returning();
+      }
+      for (const conditionId of additions.conditions) {
+        yield* db
+          .insert(TB_products_to_storage_conditions)
+          .values({ productId: product.id, conditionId: conditionId })
+          .returning();
+      }
+      return product;
     });
 
     const findById = Effect.fn("@warehouse/products/findById")(function* (id: string) {
