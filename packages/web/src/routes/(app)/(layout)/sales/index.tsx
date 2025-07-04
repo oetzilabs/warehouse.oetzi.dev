@@ -118,13 +118,13 @@ export default function SalesPage() {
             >
               <Show when={sales()}>
                 {(ss) => (
-                  <Tabs defaultValue="all" class="w-full max-w-full">
+                  <Tabs defaultValue="clean" class="w-full max-w-full">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
-                        value="all"
+                        value="clean"
                         class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
                       >
-                        All Non-Deleted Sales ({ss().filter((s) => s.status !== "deleted" || !s.deletedAt).length})
+                        Sales ({ss().filter((s) => !["deleted", "cancelled"].includes(s.status)).length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="confirmed"
@@ -138,15 +138,33 @@ export default function SalesPage() {
                       >
                         Deleted ({ss().filter((s) => s.status === "deleted" || s.deletedAt).length})
                       </TabsTrigger>
+                      <TabsTrigger
+                        value="cancelled"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                      >
+                        Cancelled ({ss().filter((s) => s.status === "cancelled").length})
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="all"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                      >
+                        All ({ss().length})
+                      </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="all" class="pt-2">
-                      <SalesList data={() => ss().filter((s) => s.status !== "deleted" || !s.deletedAt)} />
+                    <TabsContent value="clean" class="pt-2">
+                      <SalesList data={() => ss().filter((s) => !["deleted", "cancelled"].includes(s.status))} />
                     </TabsContent>
                     <TabsContent value="confirmed" class="pt-2">
                       <SalesList data={() => ss().filter((s) => s.status === "confirmed")} />
                     </TabsContent>
                     <TabsContent value="deleted" class="pt-2">
                       <SalesList data={() => ss().filter((s) => s.status === "deleted" || s.deletedAt)} />
+                    </TabsContent>
+                    <TabsContent value="cancelled" class="pt-2">
+                      <SalesList data={() => ss().filter((s) => s.status === "cancelled")} />
+                    </TabsContent>
+                    <TabsContent value="all" class="pt-2">
+                      <SalesList data={() => ss()} />
                     </TabsContent>
                   </Tabs>
                 )}

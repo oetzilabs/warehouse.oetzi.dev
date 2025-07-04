@@ -73,15 +73,15 @@ export default function CustomerOrdersPage() {
             >
               <Show when={data()}>
                 {(os) => (
-                  <Tabs defaultValue="all" class="w-full max-w-full">
+                  <Tabs defaultValue="clean" class="w-full max-w-full">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
-                        value="all"
+                        value="clean"
                         class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
                       >
                         <Tags class="size-4" />
                         <span class="sr-only md:not-sr-only">
-                          All Non-Delted Orders ({os().filter((o) => o.status !== "deleted" || !o.deletedAt).length})
+                          Orders ({os().filter((o) => !["completed", "deleted"].includes(o.status)).length})
                         </span>
                       </TabsTrigger>
                       <TabsTrigger
@@ -102,7 +102,19 @@ export default function CustomerOrdersPage() {
                           Deleted ({os().filter((o) => o.status === "deleted" || o.deletedAt).length})
                         </span>
                       </TabsTrigger>
+                      <TabsTrigger
+                        value="all"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                      >
+                        <Tags class="size-4" />
+                        <span class="sr-only md:not-sr-only">All ({os().length})</span>
+                      </TabsTrigger>
                     </TabsList>
+                    <TabsContent value="clean" class="pt-2">
+                      <CustomersOrdersList
+                        data={() => os().filter((o) => !["deleted", "completed"].includes(o.status))}
+                      />
+                    </TabsContent>
                     <TabsContent value="all" class="pt-2">
                       <CustomersOrdersList data={() => os().filter((o) => o.status !== "deleted" || !o.deletedAt)} />
                     </TabsContent>

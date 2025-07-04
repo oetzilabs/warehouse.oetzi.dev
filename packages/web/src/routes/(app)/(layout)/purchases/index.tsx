@@ -71,13 +71,13 @@ export default function PurchasesPage() {
             >
               <Show when={data()}>
                 {(ps) => (
-                  <Tabs defaultValue="all" class="w-full max-w-full">
+                  <Tabs defaultValue="clean" class="w-full max-w-full">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
-                        value="all"
+                        value="clean"
                         class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
                       >
-                        All Non-Deleted Purchases ({ps().filter((p) => p.status !== "deleted" || !p.deletedAt).length})
+                        Purchases ({ps().filter((o) => !["completed", "deleted"].includes(o.status)).length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="completed"
@@ -91,15 +91,24 @@ export default function PurchasesPage() {
                       >
                         Deleted ({ps().filter((o) => o.status === "deleted" || o.deletedAt).length})
                       </TabsTrigger>
+                      <TabsTrigger
+                        value="all"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                      >
+                        All ({ps().length})
+                      </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="all" class="pt-2">
-                      <PurchasesList data={() => ps().filter((o) => o.status !== "deleted" || !o.deletedAt)} />
+                    <TabsContent value="clean" class="pt-2">
+                      <PurchasesList data={() => ps().filter((o) => !["completed", "deleted"].includes(o.status))} />
                     </TabsContent>
                     <TabsContent value="completed" class="pt-2">
                       <PurchasesList data={() => ps().filter((o) => o.status === "completed")} />
                     </TabsContent>
                     <TabsContent value="deleted" class="pt-2">
                       <PurchasesList data={() => ps().filter((o) => o.status === "deleted" || o.deletedAt)} />
+                    </TabsContent>
+                    <TabsContent value="all" class="pt-2">
+                      <PurchasesList data={() => ps()} />
                     </TabsContent>
                   </Tabs>
                 )}

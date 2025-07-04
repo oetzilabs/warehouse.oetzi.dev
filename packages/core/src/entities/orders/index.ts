@@ -573,11 +573,11 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         })
         .returning();
 
-      if (!result.sale) {
+      if (!sale) {
         return yield* Effect.fail(new SaleNotCreated());
       }
 
-      return result;
+      return sale;
     });
 
     const generatePDF = Effect.fn("@warehouse/customer-orders/generatePDF")(
@@ -700,4 +700,8 @@ export type CustomerOrderInfo = NonNullable<
 >;
 export type CustomerOrderByOrganizationIdInfo = NonNullable<
   Awaited<Effect.Effect.Success<ReturnType<CustomerOrderService["findByOrganizationId"]>>>
+>[number];
+
+export type CustomerOrderByUserIdInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<CustomerOrderService["findByUserId"]>>>
 >[number];

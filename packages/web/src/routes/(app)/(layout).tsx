@@ -95,9 +95,9 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                     </SidebarMenuItem>
                     {/* <SidebarSeparator /> */}
                     <SidebarMenuItem>
-                      <Link href="/inventory">
+                      <Link href="/stock">
                         <PackageOpen class="size-4" />
-                        Inventory
+                        Stock
                         <SidebarMenuBadge class="mr-0.5">
                           <TriangleAlert class="size-4" />
                         </SidebarMenuBadge>

@@ -445,3 +445,6 @@ export const SalesLive = SalesService.Default;
 export type SaleInfo = NonNullable<Effect.Effect.Success<ReturnType<SalesService["findById"]>>>;
 export type CreatedSale = NonNullable<Effect.Effect.Success<ReturnType<SalesService["create"]>>>;
 export type SaleProduct = NonNullable<Awaited<Effect.Effect.Success<ReturnType<SalesService["addProduct"]>>>>;
+export type SalesByOrganizationIdInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<SalesService["findByOrganizationId"]>>>
+>[number];

@@ -1,5 +1,10 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import {
+  CustomerOrderByUserIdInfo,
+  CustomerOrderInfo,
+  CustomerOrderLive,
+  CustomerOrderService,
+} from "@warehouseoetzidev/core/src/entities/orders";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationNotFound } from "@warehouseoetzidev/core/src/entities/organizations/errors";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
@@ -15,9 +20,10 @@ export const getCustomerOrders = query(() => {
     "@query/customer-order-by-warehouse-id",
     Effect.gen(function* (_) {
       const orderService = yield* CustomerOrderService;
-      return yield* orderService.findByOrganizationId();
+      const orders = yield* orderService.findByOrganizationId();
+      return json(orders);
     }).pipe(Effect.provide(CustomerOrderLive)),
-    json([]),
+    json([] as CustomerOrderInfo[]),
   );
 }, "customer-order-by-warehouse-id");
 
@@ -34,11 +40,11 @@ export const getOrdersByUserId = query(() => {
           return yield* Effect.fail(new Error("User not found"));
         }
         const orders = yield* orderService.findByUserId(user.id);
-        return orders;
+        return json(orders);
       },
       (effect) => effect.pipe(Effect.provide(UserLive), Effect.provide(CustomerOrderLive)),
     ),
-    json([]),
+    json([] as CustomerOrderByUserIdInfo[]),
   );
 }, "order-by-user-id");
 
@@ -50,7 +56,10 @@ export const getOrderById = query(async (oid: string) => {
       const orderService = yield* CustomerOrderService;
       return yield* orderService.findById(oid);
     }).pipe(Effect.provide(CustomerOrderLive)),
-    json(undefined),
+    (errors) =>
+      json(errors, {
+        status: 500,
+      }),
   );
 }, "order-by-id");
 
@@ -64,7 +73,10 @@ export const deleteOrder = action((oid: string) => {
       yield* orderService.update({ id: oid, status: "deleted", deletedAt: new Date() });
       return true;
     }).pipe(Effect.provide(CustomerOrderLive)),
-    json(false),
+    (errors) =>
+      json(errors, {
+        status: 500,
+      }),
   );
 });
 
@@ -79,7 +91,10 @@ export const convertToSale = action((id: string, cid: string, products: Array<{ 
         revalidate: [getCustomerOrders.key, getOrdersByUserId.key, getOrderById.keyFor(id), getSales.key],
       });
     }).pipe(Effect.provide(CustomerOrderLive)),
-    json(undefined),
+    (errors) =>
+      json(errors, {
+        status: 500,
+      }),
   );
 });
 
@@ -95,14 +110,18 @@ export const downloadOrderSheet = action(async (id: string) => {
         const organizationService = yield* OrganizationService;
         const org = yield* organizationService.findById(session.current_organization_id);
         const pdf = yield* orderService.generatePDF(id, org, { page: { size: "A4", orientation: "portrait" } });
-        return yield* Effect.succeed({
+        const x = {
           pdf: pdf.toString("base64"),
           name: order.barcode ?? order.createdAt.toISOString(),
-        });
+        } satisfies { pdf: string; name: string };
+        return json(x);
       },
       (effect) => effect.pipe(Effect.provide(CustomerOrderLive), Effect.provide(OrganizationLive)),
     ),
-    json(undefined),
+    (errors) =>
+      json(errors, {
+        status: 500,
+      }),
   );
 });
 
@@ -118,7 +137,7 @@ export const createOrder = action(
     return run(
       "@action/create-order",
       Effect.gen(function* (_) {
-        const orderService = yield* _(CustomerOrderService);
+        const orderService = yield* CustomerOrderService;
         const barcode = `order-${Math.floor(Math.random() * 1000000)}`;
         const order = yield* orderService.create(
           { customer_id: data.customer_id, title: "New Order", description: "", barcode },
@@ -133,7 +152,10 @@ export const createOrder = action(
           ],
         });
       }).pipe(Effect.provide(CustomerOrderLive)),
-      json(undefined),
+      (errors) =>
+        json(errors, {
+          status: 500,
+        }),
     );
   },
 );

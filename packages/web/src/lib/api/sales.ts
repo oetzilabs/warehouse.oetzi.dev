@@ -1,38 +1,15 @@
 import { action, json, query, redirect } from "@solidjs/router";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
-import { SalesLive, SalesService } from "@warehouseoetzidev/core/src/entities/sales";
+import {
+  SaleInfo,
+  SalesByOrganizationIdInfo,
+  SalesLive,
+  SalesService,
+} from "@warehouseoetzidev/core/src/entities/sales";
 import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
 import { Cause, Chunk, Effect, Exit, Layer } from "effect";
 import { run, runWithSession } from "./utils";
-
-export const getSalesLastFewMonths = query(() => {
-  "use server";
-  return run(
-    "@query/sales-last-few-months",
-    Effect.gen(function* (_) {
-      const months = new Array(6)
-        .fill(0)
-        .map((_, i) => i + 1)
-        .map((i) => dayjs().subtract(i, "month"));
-      const range = months.map((m) => m.toDate());
-      const salesService = yield* SalesService;
-      const sales = yield* salesService.findWithinRange(range[0], range[5]);
-      return {
-        labels: months.map((m) => m.format("MMM")),
-        datasets: [
-          {
-            label: "Sales",
-            data: [0],
-            fill: false,
-            pointStyle: false,
-          },
-        ],
-      };
-    }).pipe(Effect.provide(SalesLive)),
-    json([]),
-  );
-}, "sales-last-few-months");
 
 export const getSales = query(() => {
   "use server";
@@ -44,9 +21,9 @@ export const getSales = query(() => {
       if (!sales) {
         return yield* Effect.fail(new Error("Sale not found"));
       }
-      return sales;
+      return json(sales);
     }).pipe(Effect.provide(SalesLive)),
-    json([]),
+    json([] as SalesByOrganizationIdInfo[]),
   );
 }, "sales-by-organization-id");
 
@@ -57,12 +34,13 @@ export const getSaleById = query((sid: string) => {
     Effect.gen(function* (_) {
       const salesService = yield* SalesService;
       const sale = yield* salesService.findById(sid);
-      if (!sale) {
-        return yield* Effect.fail(new Error("Sale not found"));
-      }
       return sale;
     }).pipe(Effect.provide(SalesLive)),
-    json(undefined),
+    (error) =>
+      json(error, {
+        status: 404,
+        statusText: "Not Found",
+      }),
   );
 }, "sale-by-id");
 
