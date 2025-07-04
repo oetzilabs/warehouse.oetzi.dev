@@ -14,7 +14,7 @@ import { email, minLength, pipe, string } from "valibot";
 
 export const route = {
   preload: () => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
     return { user, sessionToken };
   },

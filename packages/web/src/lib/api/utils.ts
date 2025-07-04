@@ -1,3 +1,4 @@
+import { CustomResponse } from "@solidjs/router";
 import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
 import { MissingConfig } from "@warehouseoetzidev/core/src/entities/config";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
@@ -10,7 +11,13 @@ class NoUser extends Schema.TaggedError<NoUser>()("NoUser", {}) {}
 class NoSession extends Schema.TaggedError<NoSession>()("NoSession", {}) {}
 class NoSessionToken extends Schema.TaggedError<NoSessionToken>()("NoSessionToken", {}) {}
 
-export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, OrganizationId>, onFailure: F) => {
+type FormattedError = { name: string; message: string };
+
+export const run = async <A, E, F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>)>(
+  name: string,
+  program: Effect.Effect<A, E, OrganizationId>,
+  onFailure: F,
+) => {
   const otelUrl = Exit.match(
     await Effect.runPromiseExit(
       Effect.gen(function* () {
@@ -76,12 +83,18 @@ export const run = async <A, E, F>(name: string, program: Effect.Effect<A, E, Or
   return result as A;
 };
 
-export const runWithSession = async <A, E, F>(
+export const runWithSession = async <
+  A,
+  E,
+  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
+>(
   name: string,
   program: (session: {
     user_id: string;
     session_id: string;
     current_organization_id: string;
+    current_warehouse_id: string | null;
+    current_facility_id: string | null;
   }) => Effect.Effect<A, E, OrganizationId>,
   onFailure: F,
 ) => {
@@ -135,6 +148,8 @@ export const runWithSession = async <A, E, F>(
         user_id: verified.user.id,
         session_id: verified.session.id,
         current_organization_id: orgId,
+        current_warehouse_id: verified.session.current_warehouse_id,
+        current_facility_id: verified.session.current_warehouse_facility_id,
       }).pipe(Effect.provide(organizationIdLayer));
     },
     (effect) => effect.pipe(Effect.provide([AuthLive, createOtelLayer(name, otelUrl)])),
@@ -144,9 +159,10 @@ export const runWithSession = async <A, E, F>(
     onSuccess: (data) => data,
     onFailure: (cause) => {
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
-      console.error(`${name} errors:`, errors);
+      const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
+      console.error(es);
       if (typeof onFailure === "function") {
-        return onFailure();
+        return onFailure(es);
       }
       return onFailure;
     },

@@ -1,25 +1,11 @@
-import { useBreadcrumbs } from "@/components/providers/Breadcrumbs";
+import { useUser } from "@/components/providers/User";
 import { Button } from "@/components/ui/button";
-import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { A, createAsync } from "@solidjs/router";
+import { A } from "@solidjs/router";
 import Play from "lucide-solid/icons/play";
-import UploadFile from "lucide-solid/icons/upload";
-import { createMemo, onMount, Show } from "solid-js";
-import { toast } from "solid-sonner";
+import { Show } from "solid-js";
 
 export default function OnboardingPage() {
-  const user = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
-  const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
-
-  const hasOnboarded = (user: NonNullable<Awaited<ReturnType<typeof getAuthenticatedUser>>>, sessionToken: string) => {
-    const session = user.sessions.find((s) => s.access_token === sessionToken);
-    if (!session) {
-      return false;
-    }
-    return (
-      session.current_organization_id !== null && session.current_warehouse_id !== null && user.has_finished_onboarding
-    );
-  };
+  const { ready, user } = useUser();
 
   return (
     <div class="w-full h-full flex items-start md:items-center md:justify-center grow">
@@ -35,7 +21,7 @@ export default function OnboardingPage() {
             </div>
             <div class="w-full flex flex-col gap-4 grow">
               <Show
-                when={user() && sessionToken() && !hasOnboarded(user()!, sessionToken()!)}
+                when={ready() && !(user()?.has_finished_onboarding ?? false)}
                 fallback={
                   <div class="w-full">
                     <span class="text-sm font-medium text-muted-foreground/80">

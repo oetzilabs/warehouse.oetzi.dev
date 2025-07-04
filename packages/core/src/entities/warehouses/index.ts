@@ -48,7 +48,10 @@ export class WarehouseService extends Effect.Service<WarehouseService>()("@wareh
         return yield* Effect.fail(new WarehouseUserInvalidId({ userId }));
       }
 
-      const [warehouse] = yield* db.insert(TB_warehouses).values(userInput).returning();
+      const [warehouse] = yield* db
+        .insert(TB_warehouses)
+        .values({ ...userInput, ownerId: parsedUserId.output })
+        .returning();
       if (!warehouse) {
         return yield* Effect.fail(new WarehouseNotCreated({}));
       }

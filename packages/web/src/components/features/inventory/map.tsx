@@ -90,7 +90,7 @@ export const StorageMap = (props: StorageMapProps) => {
               <For each={props.inventory().storages}>
                 {(storage) => (
                   <A
-                    href={`/inventory/storages/${storage.id}`}
+                    href={`/storages/${storage.id}`}
                     class={cn(
                       "absolute border border-neutral-400 dark:border-neutral-500 bg-muted flex rounded-sm overflow-clip",
                       {

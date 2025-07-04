@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."warehouse_areas" ADD COLUMN "barcode" text;--> statement-breakpoint
+ALTER TABLE "warehouse"."warehouse_areas" ADD CONSTRAINT "warehouse_areas_barcode_unique" UNIQUE("barcode");

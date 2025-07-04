@@ -31,7 +31,14 @@ export const LastSoldProducts = () => {
             </div>
             <div class="flex flex-col border-t border-neutral-200 dark:border-neutral-800 grow">
               <div class="flex flex-col grow">
-                <For each={data()}>
+                <For
+                  each={data()}
+                  fallback={
+                    <div class="flex flex-col items-center justify-center h-full py-10 text-sm text-muted-foreground">
+                      Nothing Sold Yet
+                    </div>
+                  }
+                >
                   {(product) => (
                     <div class="flex flex-row items-center gap-3 p-4 border-b last:border-b-0 border-neutral-200 dark:border-neutral-800 hover:bg-muted-foreground/[0.025] dark:hover:bg-muted/15 transition-colors">
                       <div class="flex flex-col grow">

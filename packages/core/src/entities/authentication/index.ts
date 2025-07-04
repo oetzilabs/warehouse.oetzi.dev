@@ -170,6 +170,12 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
             name: "Default Facility",
             warehouse_id: warehouse.id,
             ownerId: user.id,
+            bounding_box: {
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 100,
+            },
           });
           yield* Effect.log("Facility created", { facilityId: facility.id, email });
           organizationId = organization.id;

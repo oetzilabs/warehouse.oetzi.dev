@@ -13,7 +13,7 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: () => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
     return { user, sessionToken };
   },

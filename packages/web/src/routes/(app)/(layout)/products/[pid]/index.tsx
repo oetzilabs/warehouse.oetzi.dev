@@ -48,7 +48,7 @@ dayjs.extend(relativeTime);
 
 export const route = {
   preload: (props) => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
     const product = getProductById(props.params.pid);
     return { user, sessionToken, product };

@@ -16,7 +16,7 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       if (!storage) {
         return yield* Effect.fail(new StorageNotCreated());
       }
-      return findById(storage.id);
+      return yield* findById(storage.id);
     });
 
     const findById = Effect.fn("@warehouse/storages/findById")(function* (id: string) {
@@ -215,6 +215,10 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
         return yield* Effect.suspend(() => findRoot(parentId));
       });
 
+    const getTypes = Effect.fn("@warehouse/storages/getTypes")(function* () {
+      return yield* db.query.TB_storage_types.findMany();
+    });
+
     return {
       create,
       findById,
@@ -225,6 +229,7 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       findChildren,
       findParent,
       findRoot,
+      getTypes,
     } as const;
   }),
   dependencies: [DatabaseLive],

@@ -6,7 +6,7 @@ import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 
 export const route = {
   preload: async (props) => {
-    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const user = await getAuthenticatedUser();
     const sessionToken = await getSessionToken();
     return { user, sessionToken };
   },

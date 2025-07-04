@@ -19,7 +19,7 @@ const BarcodeScanner = clientOnly(() => import("@/components/features/scanner/ba
 
 export const route = {
   preload: async (props) => {
-    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const user = await getAuthenticatedUser();
     const sessionToken = await getSessionToken();
     const data = await getProductById(props.params.pid);
     return { user, sessionToken };

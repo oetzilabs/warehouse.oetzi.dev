@@ -28,7 +28,7 @@ export function useUser() {
 }
 
 export function UserProvider(props: ParentProps) {
-  const getUser = createAsync(() => getAuthenticatedUser({ skipOnboarding: true }), { deferStream: true });
+  const getUser = createAsync(() => getAuthenticatedUser(), { deferStream: true });
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
 
   const user = createMemo(() => {

@@ -18,7 +18,7 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: async () => {
-    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const user = await getAuthenticatedUser();
     const sessionToken = await getSessionToken();
     const customers = await getCustomers();
     return { user, sessionToken, customers };

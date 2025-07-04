@@ -22,6 +22,7 @@ export const TB_warehouse_areas = commonTable(
     warehouse_facility_id: text("warehouse_facility_id")
       .notNull()
       .references(() => TB_warehouse_facilities.id, { onDelete: "cascade" }),
+    barcode: text("barcode").unique(),
   },
   "wha",
 );

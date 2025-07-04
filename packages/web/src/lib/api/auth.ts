@@ -32,45 +32,31 @@ export const logout = action(async () => {
   });
 });
 
-export const getAuthenticatedUser = query(
-  async (
-    options: { skipOnboarding?: boolean } = {
-      skipOnboarding: false,
+export const getAuthenticatedUser = query(async () => {
+  "use server";
+  const sessionToken = getCookie("session_token");
+
+  if (!sessionToken) {
+    return undefined;
+  }
+  const verifiedExit = await Effect.runPromiseExit(
+    Effect.gen(function* (_) {
+      const authService = yield* AuthService;
+      return yield* authService.verify(sessionToken);
+    }).pipe(Effect.provide(AuthLive)),
+  );
+  return Exit.match(verifiedExit, {
+    onSuccess: (verified) => verified.user,
+    onFailure: (cause) => {
+      const causes = Cause.failures(cause);
+      const errors = Chunk.toReadonlyArray(causes).map((c) => {
+        return { name: c._tag ?? "unknown", message: c.message ?? "unknown" };
+      });
+      console.log(errors);
+      return undefined;
     },
-  ) => {
-    "use server";
-    const sessionToken = getCookie("session_token");
-
-    if (!sessionToken) {
-      return undefined;
-    }
-    try {
-      const verified = await Effect.runPromise(
-        Effect.gen(function* (_) {
-          const authService = yield* _(AuthService);
-          return yield* authService.verify(sessionToken);
-        }).pipe(Effect.provide(AuthLive)),
-      );
-      if (!verified) {
-        return redirect("/", {
-          status: 303,
-          headers: {
-            "Set-Cookie": "session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0",
-          },
-        });
-      }
-
-      if (!options.skipOnboarding && !verified.user.has_finished_onboarding) {
-        return redirect("/onboarding");
-      }
-
-      return verified.user;
-    } catch (e) {
-      return undefined;
-    }
-  },
-  "user",
-);
+  });
+}, "user");
 
 export const getSessionToken = query(async () => {
   "use server";

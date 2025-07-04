@@ -21,3 +21,7 @@ export class FacilityNotDeleted extends Schema.TaggedError<FacilityNotDeleted>()
   id: Schema.String,
   message: Schema.optional(Schema.String),
 }) {}
+
+export class FacilityBadBoundingBox extends Schema.TaggedError<FacilityBadBoundingBox>()("FacilityBadBoundingBox", {
+  id: Schema.String,
+}) {}

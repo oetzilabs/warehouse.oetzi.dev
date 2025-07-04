@@ -16,7 +16,7 @@ import { toast } from "solid-sonner";
 
 export const route = {
   preload: async (props) => {
-    const user = await getAuthenticatedUser({ skipOnboarding: true });
+    const user = await getAuthenticatedUser();
     const sessionToken = await getSessionToken();
     const inventories = await getInventory();
     const alerts = await getInventoryAlerts();
@@ -26,10 +26,6 @@ export const route = {
 
 export default function InventoryPage() {
   const data = createAsync(() => getInventory(), { deferStream: true });
-  const [view, setView] = makePersisted(createSignal<"list" | "map">("list"), {
-    name: "inventory-view",
-    storage: cookieStorage,
-  });
 
   return (
     <Show when={data()}>
@@ -43,13 +39,13 @@ export default function InventoryPage() {
                     <ArrowLeft class="size-4" />
                     Back
                   </Button>
-                  <h1 class="font-semibold leading-none">Inventory Summary</h1>
+                  <h1 class="font-semibold leading-none">Stock</h1>
                 </div>
                 <div class="flex items-center gap-0">
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="outline"
-                    class="w-9 rounded-r-none bg-background"
+                    class="bg-background"
                     onClick={() => {
                       toast.promise(revalidate([getInventory.key, getInventoryAlerts.key]), {
                         loading: "Refreshing inventory...",
@@ -59,47 +55,13 @@ export default function InventoryPage() {
                     }}
                   >
                     <RotateCw class="size-4" />
-                  </Button>
-                  <Button size="sm" class="pl-2.5 rounded-l-none">
-                    <Plus class="size-4" />
-                    <span class="sr-only md:not-sr-only">Create</span>
+                    <span class="sr-only md:not-sr-only">Refresh</span>
                   </Button>
                 </div>
               </div>
               <Alerts />
               <div class="flex flex-col gap-4 w-full grow pt-4">
-                {/* <div class="flex flex-row items-center justify-end gap-4">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    class="bg-background"
-                    onClick={() => {
-                      setView((v) => (v === "list" ? "map" : "list"));
-                    }}
-                  >
-                    <Show when={view() === "list"}>
-                      <>
-                        <span>List</span>
-                        <List class="size-4" />
-                      </>
-                    </Show>
-                    <Show when={view() !== "list"}>
-                      <>
-                        <span>Map</span>
-                        <MapIcon class="size-4" />
-                      </>
-                    </Show>
-                  </Button>
-                </div> */}
                 <InventoryList inventory={inventory} />
-                {/* <Switch>
-                  <Match when={view() === "list"}>
-                    
-                  </Match>
-                  <Match when={view() === "map"}>
-                    <StorageMap inventory={inventory} />
-                  </Match>
-                </Switch> */}
               </div>
             </div>
           </div>

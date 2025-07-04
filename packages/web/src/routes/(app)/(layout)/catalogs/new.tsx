@@ -51,7 +51,7 @@ const { format: formatMonth } = new Intl.DateTimeFormat("en", { month: "long" })
 
 export const route = {
   preload: () => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
     return { user, sessionToken };
   },

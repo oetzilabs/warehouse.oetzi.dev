@@ -71,7 +71,7 @@ export const Alerts = () => {
                   <div class="flex flex-col items-center justify-center h-full bg-muted-foreground/[0.025] dark:bg-muted/15 w-full">
                     <div class="w-full h-full flex items-center justify-center p-4 ">
                       <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
-                        No alerts! You are good to go!
+                        All stock levels look good!
                       </div>
                     </div>
                   </div>

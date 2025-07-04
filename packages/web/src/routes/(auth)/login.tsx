@@ -1,18 +1,10 @@
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { getAuthenticatedUser, loginViaEmail } from "@/lib/api/auth";
-import { createMediaQuery } from "@kobalte/utils";
-import { A, createAsync, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
+import { TextField, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
+import { loginViaEmail } from "@/lib/api/auth";
+import { A, useAction, useSubmission } from "@solidjs/router";
 import ArrowRight from "lucide-solid/icons/arrow-right";
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import { toast } from "solid-sonner";
-import { TextField, TextFieldInput, TextFieldLabel } from "../../components/ui/text-field";
-
-export const route = {
-  preload: (props) => {
-    getAuthenticatedUser();
-  },
-} satisfies RouteDefinition;
 
 export default function LoginPage() {
   const [email, setEmail] = createSignal("");

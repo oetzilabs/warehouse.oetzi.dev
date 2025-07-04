@@ -92,7 +92,7 @@ export default function DashboardPage() {
                   {(inv) => (
                     <A
                       class="flex flex-col gap-4 p-4 w-full border-b md:border-b-0 border-r hover:bg-muted-foreground/5 h-full min-h-36 md:min-h-28"
-                      href="/inventory"
+                      href="/stock"
                     >
                       <div class="flex items-center gap-4 justify-between w-full">
                         <span class="font-semibold">Stock</span>
@@ -182,8 +182,8 @@ export default function DashboardPage() {
                             fallback={
                               <div class="flex flex-col items-center justify-center h-full">
                                 <div class="w-full h-full flex items-center justify-center py-10">
-                                  <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
-                                    No orders found
+                                  <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground select-none">
+                                    You haven't received any orders yet. Create one now to get started.
                                   </div>
                                 </div>
                               </div>
@@ -247,8 +247,8 @@ export default function DashboardPage() {
                             fallback={
                               <div class="flex flex-col items-center justify-center h-full">
                                 <div class="w-full h-full flex items-center justify-center py-10">
-                                  <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
-                                    No purchases found
+                                  <div class="w-full h-full flex items-center justify-center text-sm text-muted-foreground select-none">
+                                    You haven't sent any purchases yet. Set up your first supplier to get started.
                                   </div>
                                 </div>
                               </div>
@@ -288,32 +288,13 @@ export default function DashboardPage() {
                     <Show when={dashboardFeatures.lastSoldProducts.enabled}>
                       <LastSoldProducts />
                     </Show>
-                    <Show
-                      when={hasMissingData()}
-                      fallback={
-                        <div class="flex flex-row items-center justify-center gap-2 text-sm py-4">
-                          <span>Too much information?</span>
-                          <A
-                            href="/settings"
-                            class="flex flex-row gap-2 items-center justify-center text-neutral-500 dark:text-neutral-400 "
-                          >
-                            Configure
-                            <ArrowUpRight class="size-4" />
-                          </A>
-                        </div>
-                      }
-                    >
-                      <div class="flex flex-row items-center justify-center gap-2 text-sm py-4">
-                        <span>Missing some information?</span>
-                        <A
-                          href="/settings"
-                          class="flex flex-row gap-2 items-center justify-center text-neutral-500 dark:text-neutral-400 "
-                        >
-                          Configure
-                          <ArrowUpRight class="size-4" />
-                        </A>
-                      </div>
-                    </Show>
+                    <div class="flex items-center justify-center gap-2 text-sm py-4 text-neutral-500 dark:text-neutral-400">
+                      <span>Want to customize this view?</span>
+                      <A href="/settings" class="flex items-center gap-1 hover:underline">
+                        Configure
+                        <ArrowUpRight class="size-4" />
+                      </A>
+                    </div>
                   </div>
                 )}
               </Show>

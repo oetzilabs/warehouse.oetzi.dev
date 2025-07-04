@@ -28,13 +28,14 @@ export const updateOrganizationDetails = action((data: InferInput<typeof Organiz
       },
       (effect) => effect.pipe(Effect.provide([OrganizationLive, UserLive])),
     ),
-    json(undefined, {
-      revalidate: [
-        getOrganizations.key,
-        getOrganizationBySlug.key,
-        getCurrentOrganization.key,
-        getAuthenticatedUser.key,
-      ],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [
+          getOrganizations.key,
+          getOrganizationBySlug.key,
+          getCurrentOrganization.key,
+          getAuthenticatedUser.key,
+        ],
+      }),
   );
 });

@@ -4,7 +4,7 @@ import { createAsync, RouteDefinition, useParams } from "@solidjs/router";
 
 export const route = {
   preload: () => {
-    const user = getAuthenticatedUser({ skipOnboarding: true });
+    const user = getAuthenticatedUser();
     const sessionToken = getSessionToken();
     return { user, sessionToken };
   },
