@@ -80,7 +80,7 @@ export const run = async <
       // yield* Effect.log("auth-middleware/fingerprint", fp);
       const sessionToken = getCookie("session_token");
       if (!sessionToken) {
-        return yield* Effect.fail(NoSessionToken);
+        return yield* Effect.fail(new NoSessionToken({ message: "No session token" }));
       }
 
       const authService = yield* AuthService;
@@ -106,9 +106,10 @@ export const run = async <
     onSuccess: (data) => data,
     onFailure: (cause) => {
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
-      console.error(`${name} errors:`, errors, cause);
+      const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
+      // console.error(`${name} errors:`, errors, cause);
       if (typeof onFailure === "function") {
-        return onFailure();
+        return onFailure(es);
       }
       return onFailure;
     },
@@ -198,7 +199,7 @@ export const runWithSession = async <
     onFailure: (cause) => {
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
       const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
-      console.error(es);
+      // console.error(es);
       if (typeof onFailure === "function") {
         return onFailure(es);
       }
