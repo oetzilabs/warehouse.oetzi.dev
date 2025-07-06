@@ -11,6 +11,7 @@ import { ProductLive, ProductService } from "../products";
 import { ProductInvalidId, ProductNotFound } from "../products/errors";
 import { StorageInfo } from "../storages";
 import { StorageInvalidId, StorageNotFound } from "../storages/errors";
+import { InvalidProductIds } from "./errors";
 
 export class InventoryService extends Effect.Service<InventoryService>()("@warehouse/inventory", {
   effect: Effect.gen(function* (_) {
@@ -404,7 +405,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
     const getStockForProducts = Effect.fn("@warehouse/inventory/getStockForProducts")(function* (productIds: string[]) {
       const parsedIds = safeParse(array(prefixed_cuid2), productIds);
       if (!parsedIds.success) {
-        return yield* Effect.fail(new Error("Invalid product ids"));
+        return yield* Effect.fail(new InvalidProductIds({ ids: productIds }));
       }
       const orgId = yield* OrganizationId;
       const products = yield* db.query.TB_products.findMany({

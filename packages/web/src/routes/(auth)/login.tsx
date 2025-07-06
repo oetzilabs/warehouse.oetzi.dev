@@ -1,19 +1,21 @@
+import { useUser } from "@/components/providers/User";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput, TextFieldLabel } from "@/components/ui/text-field";
-import { loginViaEmail } from "@/lib/api/auth";
-import { A, useAction, useSubmission } from "@solidjs/router";
+import { getAuthenticatedUser, getSessionToken, loginViaEmail } from "@/lib/api/auth";
+import { A, revalidate, useAction, useSubmission } from "@solidjs/router";
 import ArrowRight from "lucide-solid/icons/arrow-right";
 import { createSignal } from "solid-js";
 import { toast } from "solid-sonner";
 
 export default function LoginPage() {
+  const user = useUser();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
 
   const loginAction = useAction(loginViaEmail);
   const isLoggining = useSubmission(loginViaEmail);
 
-  const doLogin = () => {
+  const doLogin = async () => {
     const value = email();
     if (!value) {
       toast.error("Please enter an email");
@@ -29,13 +31,14 @@ export default function LoginPage() {
       error: "There was an error logging you in",
       success: "You have been logged in, redirecting to home page!",
     });
+    user.reload();
   };
 
   return (
     <>
-      <div class="flex h-full w-full items-center justify-center">
-        <div class="flex flex-col w-full  grow items-center justify-center">
-          <div class="w-full max-w-xl flex flex-col border-none md:border rounded-none md:rounded-sm px-10 py-4 -mt-40 gap-4">
+      <div class="flex h-full w-full pt-20">
+        <div class="flex flex-col w-full grow items-center ">
+          <div class="w-full max-w-xl flex flex-col gap-4 ">
             <span class="text-lg font-bold text-neutral-800 dark:text-neutral-200">Login</span>
             <form
               class="flex flex-col gap-4 w-full"
@@ -60,9 +63,9 @@ export default function LoginPage() {
                 />
               </TextField>
               <div class="flex w-full justify-between">
-                <A href="/signup" class="text-sm hover:underline">
+                <Button as={A} size="sm" variant="outline" href="/signup" class="bg-background">
                   Sign Up
-                </A>
+                </Button>
                 <Button
                   class="w-max self-end"
                   size="sm"

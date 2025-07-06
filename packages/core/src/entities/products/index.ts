@@ -52,17 +52,19 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       if (!product) {
         return yield* Effect.fail(new ProductNotCreated({}));
       }
-      
+
       const [org_product] = yield* db
         .insert(TB_organizations_products)
         .values({ organizationId: orgId, productId: product.id })
         .returning();
 
       if (!org_product) {
-        return yield* Effect.fail(new OrganizationProductNotAdded({
-          organizationId: orgId,
-          productId: product.id,
-        }));
+        return yield* Effect.fail(
+          new OrganizationProductNotAdded({
+            organizationId: orgId,
+            productId: product.id,
+          }),
+        );
       }
       // add the price to the price history
       yield* db
@@ -798,3 +800,4 @@ export type OrganizationProductInfo = NonNullable<
 export type ProductSupplierInfo = NonNullable<
   Awaited<Effect.Effect.Success<ReturnType<ProductService["findById"]>>>
 >["suppliers"][number];
+export type PriceHistory = NonNullable<Awaited<Effect.Effect.Success<ReturnType<ProductService["getPriceHistory"]>>>>;

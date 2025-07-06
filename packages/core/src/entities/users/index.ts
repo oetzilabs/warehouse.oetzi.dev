@@ -79,6 +79,8 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
                   hashed_password: false,
                 },
               },
+              wh: true,
+              fc: true,
               org: {
                 with: {
                   products: {

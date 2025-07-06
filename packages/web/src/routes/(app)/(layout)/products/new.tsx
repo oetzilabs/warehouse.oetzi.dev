@@ -47,9 +47,9 @@ export default function NewProductPage() {
         <div class="w-full flex flex-col gap-4">
           <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
             <div class="flex items-center gap-4">
-              <Button size="sm" variant="outline" class="bg-background" as={A} href="/products">
+              <Button size="sm" variant="outline" class="bg-background px-2 md:px-3" as={A} href="/products">
                 <ArrowLeft class="size-4" />
-                Back to Products
+                <span class="sr-only lg:not-sr-only">Back to Products</span>
               </Button>
               <h1 class="font-semibold leading-none">New Product</h1>
             </div>

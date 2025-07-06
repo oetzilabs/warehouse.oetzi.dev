@@ -1,8 +1,7 @@
-import { action, json, query, redirect } from "@solidjs/router";
+import { action, query, redirect } from "@solidjs/router";
 import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
 import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { Cause, Chunk, Effect, Exit } from "effect";
-import { status } from "effect/Fiber";
 import { getCookie, setCookie } from "vinxi/http";
 
 export const logout = action(async () => {
@@ -28,7 +27,7 @@ export const logout = action(async () => {
   }
 
   return redirect("/", {
-    revalidate: [getAuthenticatedUser.key],
+    revalidate: [getAuthenticatedUser.key, getSessionToken.key],
   });
 });
 
@@ -70,7 +69,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
   if (sessionToken) {
     await Effect.runPromise(
       Effect.gen(function* (_) {
-        const authService = yield* _(AuthService);
+        const authService = yield* AuthService;
         return yield* authService.removeSession(sessionToken);
       }).pipe(Effect.provide(AuthLive)),
     );
@@ -85,7 +84,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
 
   const loginAttempt = await Effect.runPromiseExit(
     Effect.gen(function* (_) {
-      const authService = yield* _(AuthService);
+      const authService = yield* AuthService;
       return yield* authService.login(email, password);
     }).pipe(Effect.provide(AuthLive)),
   );
@@ -158,7 +157,7 @@ export const signupViaEmail = action(async (email: string, password: string, pas
         expires: session.expiresAt,
       });
       return redirect("/", {
-        revalidate: [getAuthenticatedUser.key],
+        revalidate: [getAuthenticatedUser.key, getSessionToken.key],
       });
     },
     onFailure: (cause) => {

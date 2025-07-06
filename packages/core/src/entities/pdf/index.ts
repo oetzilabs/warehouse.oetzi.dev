@@ -28,6 +28,7 @@ import {
   Table,
   Text,
 } from "./components";
+import { PDFGenerationError } from "./errors";
 
 export type PaperSize = "A4" | "A5";
 export type PaperOrientation = "portrait" | "landscape";
@@ -68,7 +69,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     };
 
     const generateBarcode = Effect.fn("@warehouse/pdf/generateBarcode")(function* (text: string) {
-      return yield* Effect.async<string, Error>((resume) => {
+      return yield* Effect.async<string, PDFGenerationError>((resume) => {
         bwipjs.toBuffer(
           {
             bcid: "code128",
@@ -79,7 +80,14 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
             textxalign: "center",
           },
           (err, png) => {
-            if (err) resume(Effect.fail(typeof err === "string" ? new Error(err) : err));
+            if (err)
+              resume(
+                Effect.fail(
+                  typeof err === "string"
+                    ? PDFGenerationError.make({ message: err, cause: err })
+                    : PDFGenerationError.make({ cause: err, message: "Uknown error while generating barcode" }),
+                ),
+              );
             resume(Effect.succeed("data:image/png;base64," + png.toString("base64")));
           },
         );
@@ -281,12 +289,14 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
         },
       });
 
-      return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
+      return yield* Effect.async<Buffer<ArrayBuffer>, PDFGenerationError>((resume) => {
         const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
         const chunks: Uint8Array[] = [];
         pdfDoc.on("data", (chunk) => chunks.push(chunk));
         pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
-        pdfDoc.on("error", (error) => resume(Effect.fail(error)));
+        pdfDoc.on("error", (error) =>
+          resume(Effect.fail(PDFGenerationError.make({ cause: error, message: error.message }))),
+        );
         pdfDoc.end();
       });
     });
@@ -302,7 +312,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       },
     ) {
       if (!data.barcode) {
-        return yield* Effect.fail(new Error("Barcode is missing"));
+        return yield* Effect.fail(PDFGenerationError.make({ message: "Barcode is missing" }));
       }
       const qr = yield* generateQRCode(data.barcode);
       const barcodeData = yield* generateBarcode(data.barcode);
@@ -547,12 +557,14 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
         },
       });
 
-      return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
+      return yield* Effect.async<Buffer<ArrayBuffer>, PDFGenerationError>((resume) => {
         const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
         const chunks: Uint8Array[] = [];
         pdfDoc.on("data", (chunk) => chunks.push(chunk));
         pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
-        pdfDoc.on("error", (error) => resume(Effect.fail(error)));
+        pdfDoc.on("error", (error) =>
+          resume(Effect.fail(PDFGenerationError.make({ cause: error, message: error.message }))),
+        );
         pdfDoc.end();
       });
     });
@@ -568,7 +580,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
       },
     ) {
       if (!data.barcode) {
-        return yield* Effect.fail(new Error("Barcode is missing"));
+        return yield* Effect.fail(PDFGenerationError.make({ message: "Barcode is missing" }));
       }
       const qr = yield* generateQRCode(data.barcode);
       const barcodeData = yield* generateBarcode(data.barcode);
@@ -763,12 +775,14 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
         },
       });
 
-      return yield* Effect.async<Buffer<ArrayBuffer>, Error>((resume) => {
+      return yield* Effect.async<Buffer<ArrayBuffer>, PDFGenerationError>((resume) => {
         const pdfDoc = new PdfPrinter(fonts).createPdfKitDocument(basePdf);
         const chunks: Uint8Array[] = [];
         pdfDoc.on("data", (chunk) => chunks.push(chunk));
         pdfDoc.on("end", () => resume(Effect.succeed(Buffer.concat(chunks))));
-        pdfDoc.on("error", (error) => resume(Effect.fail(error)));
+        pdfDoc.on("error", (error) =>
+          resume(Effect.fail(PDFGenerationError.make({ cause: error, message: error.message }))),
+        );
         pdfDoc.end();
       });
     });

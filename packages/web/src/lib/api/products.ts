@@ -2,9 +2,18 @@ import { action, json, query } from "@solidjs/router";
 import { BrandLive, BrandService } from "@warehouseoetzidev/core/src/entities/brands";
 import { InventoryLive, InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
-import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
+import {
+  OrganizationProductInfo,
+  PriceHistory,
+  ProductLive,
+  ProductService,
+} from "@warehouseoetzidev/core/src/entities/products";
 import { ProductNotFound } from "@warehouseoetzidev/core/src/entities/products/errors";
-import { ProductLabelsLive, ProductLabelsService } from "@warehouseoetzidev/core/src/entities/products/labels";
+import {
+  ProductLabelsLive,
+  ProductLabelsService,
+  ProductLabelWithoutProductInfo,
+} from "@warehouseoetzidev/core/src/entities/products/labels";
 import { NewProductFormData } from "@warehouseoetzidev/core/src/entities/products/schemas";
 import { SupplierLive } from "@warehouseoetzidev/core/src/entities/suppliers";
 import { Effect } from "effect";
@@ -17,9 +26,9 @@ export const getProducts = query(() => {
     Effect.gen(function* (_) {
       const productsService = yield* ProductService;
       const products = yield* productsService.findByOrganizationId();
-      return products;
+      return json(products);
     }).pipe(Effect.provide(ProductLive)),
-    json([]),
+    json([] as OrganizationProductInfo[]),
   );
 }, "products");
 
@@ -30,9 +39,9 @@ export const getProductLabels = query(() => {
     Effect.gen(function* (_) {
       const productLabelsService = yield* ProductLabelsService;
       const labels = yield* productLabelsService.findAllWithoutProducts();
-      return labels;
+      return json(labels);
     }).pipe(Effect.provide(ProductLabelsLive)),
-    json([]),
+    json([] as ProductLabelWithoutProductInfo),
   );
 }, "labels");
 
@@ -47,9 +56,9 @@ export const getProductById = query((pid: string) => {
       const orgP = yield* orgService.findProductById(pid);
       const stock = yield* productService.getStockCount(product.id);
 
-      return { ...product, isInSortiment: orgP.deletedAt === null, stock };
+      return json({ ...product, isInSortiment: orgP.deletedAt === null, stock });
     }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
-    json(undefined),
+    (errors) => json(errors),
   );
 }, "product-by-id");
 
@@ -61,9 +70,10 @@ export const deleteProduct = action((id: string) => {
       const productService = yield* ProductService;
       const orgService = yield* OrganizationService;
       const product = yield* productService.findById(id);
-      return yield* orgService.removeProduct(product.id);
+      const result = yield* orgService.removeProduct(product.id);
+      return json(result);
     }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
-    json(undefined),
+    (errors) => json(errors),
   );
 });
 
@@ -90,7 +100,7 @@ export const downloadProductSheet = action(
             page: { size: options.size, orientation: "portrait" },
           });
 
-          return yield* Effect.succeed({
+          return json({
             pdf: pdf.toString("base64"),
             name: product.name,
           });
@@ -98,7 +108,7 @@ export const downloadProductSheet = action(
         (effect) =>
           effect.pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive), Effect.provide(SupplierLive)),
       ),
-      json(undefined),
+      (errors) => json(errors),
     );
   },
 );
@@ -161,7 +171,7 @@ export const getProductBrands = query(() => {
     Effect.gen(function* (_) {
       const brandsService = yield* BrandService;
       const brands = yield* brandsService.all();
-      return brands;
+      return json(brands);
     }).pipe(Effect.provide(BrandLive)),
     json([]),
   );
@@ -183,9 +193,10 @@ export const assignBrand = action((id: string, brandId: string) => {
         revalidate: [getProductById.keyFor(id), getProducts.key],
       });
     }).pipe(Effect.provide(ProductLive)),
-    json(undefined, {
-      revalidate: [getProductById.keyFor(id), getProducts.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      }),
   );
 });
 
@@ -215,9 +226,10 @@ export const updateProductStock = action(
           revalidate: [getProductById.keyFor(id), getProducts.key],
         });
       }).pipe(Effect.provide(OrganizationLive), Effect.provide(ProductLive)),
-      json(undefined, {
-        revalidate: [getProductById.keyFor(id), getProducts.key],
-      }),
+      (errors) =>
+        json(errors, {
+          revalidate: [getProductById.keyFor(id), getProducts.key],
+        }),
     );
   },
 );
@@ -235,9 +247,10 @@ export const reAddProduct = action((id: string) => {
         revalidate: [getProductById.keyFor(id), getProducts.key],
       });
     }).pipe(Effect.provide(ProductLive), Effect.provide(OrganizationLive)),
-    json(undefined, {
-      revalidate: [getProductById.keyFor(id), getProducts.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      }),
   );
 });
 
@@ -249,9 +262,26 @@ export const getLatestPricesByProductId = query((id: string) => {
       const productService = yield* ProductService;
       const product = yield* productService.findById(id);
       const currentPrices = yield* productService.getPriceHistory(product.id);
-      return currentPrices;
+      return json(currentPrices);
     }).pipe(Effect.provide(ProductLive)),
-    json([]),
+    json({
+      latestSellingPrice: {
+        organizationId: "",
+        productId: "",
+        effectiveDate: new Date(),
+        sellingPrice: 0,
+        currency: "",
+      },
+      latestPurchasePrices: [
+        {
+          supplierId: "",
+          productId: "",
+          effectiveDate: new Date(),
+          supplierPrice: 0,
+          currency: "",
+        },
+      ],
+    } as PriceHistory),
   );
 }, "product-by-id");
 
@@ -272,9 +302,10 @@ export const clearBrand = action((id: string) => {
         revalidate: [getProductById.keyFor(id), getProducts.key],
       });
     }).pipe(Effect.provide(ProductLive)),
-    json(undefined, {
-      revalidate: [getProductById.keyFor(id), getProducts.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getProductById.keyFor(id), getProducts.key],
+      }),
   );
 });
 
@@ -286,9 +317,9 @@ export const getProductStock = query((id: string) => {
       const inventoryService = yield* InventoryService;
       const stock = yield* inventoryService.getStockForProducts([id]);
 
-      return stock[0].stock;
+      return json(stock[0].stock);
     }).pipe(Effect.provide(InventoryLive)),
-    json(undefined),
+    json(0),
   );
 }, "product-stock-by-id");
 
@@ -305,8 +336,9 @@ export const createProduct = action((data: NewProductFormData) => {
         revalidate: [getProductById.keyFor(result.id), getProducts.key],
       });
     }).pipe(Effect.provide(ProductLive)),
-    json(undefined, {
-      revalidate: [getProductById.key, getProducts.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getProductById.key, getProducts.key],
+      }),
   );
 });

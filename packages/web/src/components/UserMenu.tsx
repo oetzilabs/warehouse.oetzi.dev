@@ -9,12 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAuthenticatedUser, logout } from "@/lib/api/auth";
+import { getAuthenticatedUser, getSessionToken, logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { A, revalidate, useAction, useSubmission } from "@solidjs/router";
 import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import LifeBuoy from "lucide-solid/icons/life-buoy";
-import LogIn from "lucide-solid/icons/log-in";
 import LogOut from "lucide-solid/icons/log-out";
 import MessagesSquare from "lucide-solid/icons/messages-square";
 import Settings from "lucide-solid/icons/settings";
@@ -33,9 +33,9 @@ export default function UserMenu() {
       <Switch
         fallback={
           <div class="flex flex-row gap-2 items-center justify-end w-full">
-            <Button as={A} href="/login" variant="outline" size="sm">
-              <LogIn class="size-4" />
+            <Button as={A} href="/login" size="sm" class="rounded-l-none">
               Login
+              <ArrowUpRight class="size-4" />
             </Button>
           </div>
         }
@@ -90,7 +90,7 @@ export default function UserMenu() {
                       success: "Logged out successfully.",
                       error: "Error logging out",
                     });
-                    await revalidate([getAuthenticatedUser.key]);
+                    await revalidate([getAuthenticatedUser.key, getSessionToken.key]);
                   }}
                 >
                   <LogOut class="size-4" />

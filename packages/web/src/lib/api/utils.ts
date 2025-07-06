@@ -4,16 +4,46 @@ import { MissingConfig } from "@warehouseoetzidev/core/src/entities/config";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { Cause, Chunk, Config, Effect, Exit, Layer, Schema } from "effect";
-import { getCookie } from "vinxi/http";
+import { getCookie, getEvent, getRequestFingerprint } from "vinxi/http";
 
-class NoOrganization extends Schema.TaggedError<NoOrganization>()("NoOrganization", {}) {}
-class NoUser extends Schema.TaggedError<NoUser>()("NoUser", {}) {}
-class NoSession extends Schema.TaggedError<NoSession>()("NoSession", {}) {}
-class NoSessionToken extends Schema.TaggedError<NoSessionToken>()("NoSessionToken", {}) {}
+class NoOrganization extends Schema.TaggedError<NoOrganization>()("NoOrganization", {
+  message: Schema.optional(Schema.String),
+}) {}
+class NoUser extends Schema.TaggedError<NoUser>()("NoUser", { message: Schema.optional(Schema.String) }) {}
+class NoSession extends Schema.TaggedError<NoSession>()("NoSession", { message: Schema.optional(Schema.String) }) {}
+class NoSessionToken extends Schema.TaggedError<NoSessionToken>()("NoSessionToken", {
+  message: Schema.optional(Schema.String),
+}) {}
+
+class NoVinxiEvent extends Schema.TaggedError<NoVinxiEvent>()("NoVinxiEvent", {
+  message: Schema.optional(Schema.String),
+}) {}
+class NoFingerprint extends Schema.TaggedError<NoFingerprint>()("NoFingerprint", {
+  message: Schema.optional(Schema.String),
+}) {}
 
 type FormattedError = { name: string; message: string };
 
-export const run = async <A, E, F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>)>(
+const fingerprint = Effect.fn("fingerprint")(function* () {
+  const e = getEvent();
+  if (!e) {
+    return yield* Effect.fail(new NoVinxiEvent());
+  }
+  const fp = yield* Effect.promise(() => getRequestFingerprint(e));
+  if (!fp) {
+    return yield* Effect.fail(new NoFingerprint());
+  }
+  return fp;
+});
+
+export const run = async <
+  A,
+  E extends {
+    _tag: string;
+    message?: string;
+  },
+  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
+>(
   name: string,
   program: Effect.Effect<A, E, OrganizationId>,
   onFailure: F,
@@ -45,6 +75,9 @@ export const run = async <A, E, F extends A | ((error: FormattedError) => Custom
 
   const innerProgram = Effect.fn("auth-middleware")(
     function* () {
+      const fp = yield* fingerprint();
+      yield* Effect.annotateCurrentSpan("auth-middleware/fingerprint", fp);
+      // yield* Effect.log("auth-middleware/fingerprint", fp);
       const sessionToken = getCookie("session_token");
       if (!sessionToken) {
         return yield* Effect.fail(NoSessionToken);
@@ -54,14 +87,14 @@ export const run = async <A, E, F extends A | ((error: FormattedError) => Custom
       const verified = yield* authService.verify(sessionToken);
 
       if (!verified.user) {
-        return yield* Effect.fail(NoUser);
+        return yield* Effect.fail(new NoUser({ message: "No user" }));
       }
       if (!verified.session) {
-        return yield* Effect.fail(NoSession);
+        return yield* Effect.fail(new NoSession({ message: "No session" }));
       }
       const orgId = verified.session.current_organization_id;
       if (!orgId) {
-        return yield* Effect.fail(NoOrganization);
+        return yield* Effect.fail(new NoOrganization({ message: "No organization" }));
       }
       const organizationId = Layer.succeed(OrganizationId, orgId);
       return yield* program.pipe(Effect.provide(organizationId));
@@ -85,7 +118,10 @@ export const run = async <A, E, F extends A | ((error: FormattedError) => Custom
 
 export const runWithSession = async <
   A,
-  E,
+  E extends {
+    _tag: string;
+    message?: string;
+  },
   F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
 >(
   name: string,
@@ -124,24 +160,26 @@ export const runWithSession = async <
   );
   const innerProgram = Effect.fn("auth-middleware")(
     function* () {
+      const fp = yield* fingerprint();
+      yield* Effect.annotateCurrentSpan("auth-middleware/fingerprint", fp);
       const sessionToken = getCookie("session_token");
       if (!sessionToken) {
-        return yield* Effect.fail(NoSessionToken);
+        return yield* Effect.fail(new NoSessionToken({ message: "No session token" }));
       }
 
       const authService = yield* AuthService;
       const verified = yield* authService.verify(sessionToken);
 
       if (!verified.user) {
-        return yield* Effect.fail(NoUser);
+        return yield* Effect.fail(new NoUser({ message: "No user" }));
       }
 
       if (!verified.session) {
-        return yield* Effect.fail(NoSession);
+        return yield* Effect.fail(new NoSession({ message: "No session" }));
       }
       const orgId = verified.session.current_organization_id;
       if (!orgId) {
-        return yield* Effect.fail(NoOrganization);
+        return yield* Effect.fail(new NoOrganization({ message: "No organization" }));
       }
       const organizationIdLayer = Layer.succeed(OrganizationId, orgId);
       return yield* program({

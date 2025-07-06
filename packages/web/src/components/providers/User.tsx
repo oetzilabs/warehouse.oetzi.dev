@@ -1,22 +1,22 @@
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { createAsync } from "@solidjs/router";
-import { type FacilityInfo } from "@warehouseoetzidev/core/src/entities/facilities";
-import { type OrganizationInfo } from "@warehouseoetzidev/core/src/entities/organizations";
+import { createAsync, revalidate } from "@solidjs/router";
 import { type SessionInfo } from "@warehouseoetzidev/core/src/entities/sessions";
 import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
-import { type WarehouseInfo } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Accessor, createContext, createMemo, createSignal, onMount, ParentProps, useContext } from "solid-js";
+import { toast } from "solid-sonner";
 
 export const UserContext = createContext<{
   user: Accessor<UserInfo | null>;
-  session: Accessor<SessionInfo | null>;
-  currentOrganization: Accessor<SessionInfo["org"] | null>;
+  session: Accessor<UserInfo["sessions"][number] | null>;
+  currentOrganization: Accessor<UserInfo["sessions"][number]["org"] | null>;
   ready: Accessor<boolean>;
+  reload: () => void;
 }>({
   user: () => null,
   session: () => null,
   currentOrganization: () => null,
   ready: () => false,
+  reload: () => {},
 });
 
 export function useUser() {
@@ -30,6 +30,10 @@ export function useUser() {
 export function UserProvider(props: ParentProps) {
   const getUser = createAsync(() => getAuthenticatedUser(), { deferStream: true });
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
+
+  const reload = () => {
+    toast.promise(revalidate([getAuthenticatedUser.key, getSessionToken.key]));
+  };
 
   const user = createMemo(() => {
     const u = getUser();
@@ -71,6 +75,7 @@ export function UserProvider(props: ParentProps) {
         currentOrganization,
         session: currentSession,
         ready,
+        reload,
       }}
     >
       {props.children}

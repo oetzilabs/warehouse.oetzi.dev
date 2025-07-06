@@ -3,6 +3,7 @@ import { LastOrderInfo } from "@/components/last-order-info";
 import { Button } from "@/components/ui/button";
 import { getInventory, getInventoryAlerts } from "@/lib/api/inventory";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import PackageSearch from "lucide-solid/icons/package-search";
 import { For, Show, Suspense } from "solid-js";
 import { Skeleton } from "../../ui/skeleton";
@@ -11,7 +12,13 @@ export const Alerts = () => {
   const alertsData = createAsync(() => getInventoryAlerts(), { deferStream: true });
   return (
     <div class="flex flex-col gap-4">
-      <h2 class="font-semibold text-lg">Alerts</h2>
+      <div class="flex flex-row items-center justify-between gap-4">
+        <h2 class="font-semibold text-lg">Alerts</h2>
+        <Button size="sm" as={A} href="/stock/alerts">
+          <span class="sr-only lg:not-sr-only">Previous Alerts</span>
+          <ArrowUpRight class="size-4" />
+        </Button>
+      </div>
       <Suspense
         fallback={
           <div class="flex flex-col items-center w-full border rounded-lg overflow-hidden bg-muted-foreground/[0.025] dark:bg-muted/15">
