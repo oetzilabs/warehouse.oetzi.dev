@@ -34,6 +34,7 @@ import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import Settings from "lucide-solid/icons/settings-2";
@@ -253,14 +254,14 @@ export default function CatalogPage() {
                         when={catalogInfo().products.length > 0}
                         fallback={
                           <>
-                            <Plus class="size-4" />
                             Add Product{selectedProducts().length > 0 && ` (${selectedProducts().length})`}
+                            <Plus class="size-4" />
                           </>
                         }
                       >
                         <>
-                          <Settings class="size-4" />
-                          Edit Products
+                          Change Products
+                          <Package class="size-4" />
                         </>
                       </Show>
                     </DialogTrigger>
@@ -338,6 +339,7 @@ export default function CatalogPage() {
                       </div>
                       <DialogFooter>
                         <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setAddProductDialogOpen(false);
@@ -348,7 +350,8 @@ export default function CatalogPage() {
                           Cancel
                         </Button>
                         <Button
-                          disabled={selectedProducts().length === 0 || isAddingProductsToCatalog.pending}
+                          size="sm"
+                          disabled={isAddingProductsToCatalog.pending}
                           onClick={() => {
                             toast.promise(addProductsToCatalogAction(catalogInfo().id, selectedProducts()), {
                               loading: "Adding products...",
@@ -362,11 +365,9 @@ export default function CatalogPage() {
                             });
                           }}
                         >
-                          {isAddingProductsToCatalog.pending ? (
+                          <Show when={isAddingProductsToCatalog.pending} fallback={<>Save</>}>
                             <Loader2 class="size-4 animate-spin" />
-                          ) : (
-                            <>Add Products ({selectedProducts().length})</>
-                          )}
+                          </Show>
                         </Button>
                       </DialogFooter>
                     </DialogContent>
