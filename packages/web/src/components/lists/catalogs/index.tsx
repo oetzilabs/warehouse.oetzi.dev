@@ -42,7 +42,7 @@ export const CatalogsList = (props: CatalogsListProps) => {
           <For
             each={catalog.products.map((p) => p.product)}
             fallback={
-              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground h-full w-full p-4">
+              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground h-full w-full p-4 select-none">
                 No products added
               </div>
             }

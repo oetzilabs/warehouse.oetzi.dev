@@ -1,9 +1,12 @@
 import { getAuthenticatedUser } from "@/lib/api/auth";
 import { action, json, query } from "@solidjs/router";
 import { CatalogCreateSchema, CatalogUpdateSchema } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
-import { CatalogLive, CatalogService } from "@warehouseoetzidev/core/src/entities/catalogs";
-import { DeviceLive, DeviceService } from "@warehouseoetzidev/core/src/entities/devices";
-import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
+import {
+  CatalogAllFromOrganizationInfo,
+  CatalogLive,
+  CatalogService,
+} from "@warehouseoetzidev/core/src/entities/catalogs";
+import { NewCatalogFormData } from "@warehouseoetzidev/core/src/entities/catalogs/schemas";
 import { Effect } from "effect";
 import { InferInput } from "valibot";
 import { run, runWithSession } from "./utils";
@@ -14,9 +17,10 @@ export const getCatalogs = query(() => {
     "@query/catalogs",
     Effect.gen(function* (_) {
       const service = yield* CatalogService;
-      return yield* service.findAll();
+      const catalogs = yield* service.findAll();
+      return json(catalogs);
     }).pipe(Effect.provide(CatalogLive)),
-    json([]),
+    json([] as CatalogAllFromOrganizationInfo[]),
   );
 }, "organization-catalogs");
 
@@ -27,13 +31,13 @@ export const getCatalogById = query((id: string) => {
     Effect.gen(function* (_) {
       const service = yield* CatalogService;
       const catalog = yield* service.findById(id);
-      return catalog;
+      return json(catalog);
     }).pipe(Effect.provide(CatalogLive)),
-    undefined,
+    (errors) => json(errors),
   );
 }, "catalog-by-id");
 
-export const createCatalog = action((data: InferInput<typeof CatalogCreateSchema>) => {
+export const createCatalog = action((data: NewCatalogFormData) => {
   "use server";
   return runWithSession(
     "@action/create-catalog",
@@ -41,6 +45,9 @@ export const createCatalog = action((data: InferInput<typeof CatalogCreateSchema
       function* (session) {
         const service = yield* CatalogService;
         const result = yield* service.create(data, session.user_id);
+        const productsAdded = yield* Effect.all(
+          data.products.map((p) => service.addProduct(result.id, p.id, p.discount)),
+        );
         return json(result, {
           revalidate: [getAuthenticatedUser.key, getCatalogs.key],
           headers: {
@@ -51,9 +58,10 @@ export const createCatalog = action((data: InferInput<typeof CatalogCreateSchema
       },
       (effect) => effect.pipe(Effect.provide(CatalogLive)),
     ),
-    json(undefined, {
-      revalidate: [getAuthenticatedUser.key, getCatalogs.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getAuthenticatedUser.key, getCatalogs.key],
+      }),
   );
 });
 
@@ -68,9 +76,10 @@ export const updateCatalog = action((data: InferInput<typeof CatalogUpdateSchema
         revalidate: [getAuthenticatedUser.key, getCatalogs.key, getCatalogById.keyFor(catalog.id)],
       });
     }).pipe(Effect.provide(CatalogLive)),
-    json(undefined, {
-      revalidate: [getAuthenticatedUser.key, getCatalogs.key, getCatalogById.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getAuthenticatedUser.key, getCatalogs.key, getCatalogById.key],
+      }),
   );
 });
 
@@ -88,9 +97,10 @@ export const deleteCatalog = action((id: string) => {
         },
       });
     }).pipe(Effect.provide(CatalogLive)),
-    json(undefined, {
-      revalidate: [getAuthenticatedUser.key, getCatalogs.key, getCatalogById.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getAuthenticatedUser.key, getCatalogs.key, getCatalogById.key],
+      }),
   );
 });
 
@@ -102,9 +112,10 @@ export const printSheet = action((id: string, deviceId: string, productId: strin
       const catalogService = yield* CatalogService;
       return yield* catalogService.printSheet(id, deviceId, productId);
     }).pipe(Effect.provide(CatalogLive)),
-    json(undefined, {
-      revalidate: [getCatalogById.keyFor(id), getCatalogs.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getCatalogById.keyFor(id), getCatalogs.key],
+      }),
   );
 });
 
@@ -148,8 +159,9 @@ export const addProductsToCatalog = action((id: string, products: string[]) => {
         revalidate: [getCatalogById.keyFor(id), getCatalogs.key],
       });
     }).pipe(Effect.provide(CatalogLive)),
-    json(undefined, {
-      revalidate: [getCatalogById.keyFor(id), getCatalogs.key],
-    }),
+    (errors) =>
+      json(errors, {
+        revalidate: [getCatalogById.keyFor(id), getCatalogs.key],
+      }),
   );
 });

@@ -462,3 +462,7 @@ export const CatalogLive = CatalogService.Default;
 
 // Type exports
 export type CatalogInfo = NonNullable<Effect.Effect.Success<Awaited<ReturnType<CatalogService["findById"]>>>>;
+
+export type CatalogAllFromOrganizationInfo = NonNullable<
+  Effect.Effect.Success<Awaited<ReturnType<CatalogService["findAll"]>>>
+>[number];
