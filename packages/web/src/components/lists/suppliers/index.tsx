@@ -1,15 +1,12 @@
-import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
-import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type SupplierInfo } from "@warehouseoetzidev/core/src/entities/suppliers";
 import dayjs from "dayjs";
+import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import { Accessor, createSignal, For, Show } from "solid-js";
-import { createStore } from "solid-js/store";
+import { Accessor, createMemo, createSignal, Show } from "solid-js";
 import { GenericList } from "../default";
 
 type SuppliersListProps = {
@@ -18,50 +15,6 @@ type SuppliersListProps = {
 
 export const SuppliersList = (props: SuppliersListProps) => {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<SupplierInfo>>({
-    disabled: () => props.data().length === 0,
-    dateRange: {
-      start: props.data().length === 0 ? new Date() : (props.data()[0]?.createdAt ?? new Date()),
-      end: props.data().length === 0 ? new Date() : (props.data()[props.data().length - 1]?.createdAt ?? new Date()),
-      preset: "clear",
-    },
-    search: { term: dsearch(), fields: ["name", "email", "phone"], fuseOptions: { keys: ["name", "email", "phone"] } },
-    sort: {
-      default: "name",
-      current: "name",
-      direction: "desc",
-      variants: [
-        {
-          field: "date",
-          label: "Date",
-          fn: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
-        },
-        {
-          field: "name",
-          label: "Name",
-          fn: (a, b) => a.name.localeCompare(b.name),
-        },
-      ],
-    },
-    filter: {
-      default: null,
-      current: null,
-      variants: [],
-    },
-  });
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
-  const filteredData = useFilter(props.data, filterConfig);
 
   const renderSupplierItem = (supplier: SupplierInfo) => (
     <>
@@ -95,6 +48,22 @@ export const SuppliersList = (props: SuppliersListProps) => {
     </>
   );
 
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.data();
+    if (!term) {
+      return set;
+    }
+    const options: IFuseOptions<SupplierInfo> = {
+      isCaseSensitive: false,
+      threshold: 0.4,
+      minMatchCharLength: 1,
+      keys: ["name", "description", "email", "phone", "contacts.name", "contacts.email"],
+    };
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
+
   return (
     <div class="w-full flex flex-col gap-4 pb-4">
       <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
@@ -102,15 +71,11 @@ export const SuppliersList = (props: SuppliersListProps) => {
           value={search()}
           onChange={(e) => {
             setSearch(e);
-            debouncedSearch(e);
           }}
           class="w-full max-w-full"
         >
           <TextFieldInput placeholder="Search suppliers" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.data} />
-        </div>
       </div>
 
       <GenericList
@@ -119,7 +84,7 @@ export const SuppliersList = (props: SuppliersListProps) => {
         renderItem={renderSupplierItem}
         emptyMessage="No suppliers have been added"
         noResultsMessage="No suppliers have been found"
-        searchTerm={() => filterConfig.search.term}
+        searchTerm={search}
       />
     </div>
   );

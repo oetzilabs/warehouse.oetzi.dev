@@ -43,7 +43,6 @@ export default function DashboardPage() {
   const acceptNotificationAction = useAction(acceptNotification);
   const isAcceptingNotification = useSubmission(acceptNotification);
   const { dashboardFeatures } = useDashboardFeatures();
-  const hasMissingData = createMemo(() => Object.values(dashboardFeatures).some((v) => !v.enabled));
 
   return (
     <div class="flex flex-col w-full grow py-0">
@@ -294,10 +293,9 @@ export default function DashboardPage() {
                     <Show when={dashboardFeatures.lastSoldProducts.enabled}>
                       <LastSoldProducts />
                     </Show>
-                    <div class="flex items-center justify-center gap-2 text-sm py-4 text-neutral-500 dark:text-neutral-400">
-                      <span>Want to customize this view?</span>
+                    <div class="flex items-center justify-center gap-2 text-sm py-4 pb-8 text-neutral-500 dark:text-neutral-400">
                       <A href="/settings" class="flex items-center gap-1 hover:underline">
-                        Configure
+                        Customize Dashboard
                         <ArrowUpRight class="size-4" />
                       </A>
                     </div>

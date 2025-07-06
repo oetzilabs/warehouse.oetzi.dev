@@ -96,13 +96,7 @@ export default function NewCustomerPage() {
           form.handleSubmit();
         }}
       >
-        <form.Field
-          name="name"
-          validators={{
-            onChange: pipe(string(), minLength(3)),
-            onBlur: pipe(string(), minLength(3)),
-          }}
-        >
+        <form.Field name="name">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">
@@ -114,19 +108,10 @@ export default function NewCustomerPage() {
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>
-        <form.Field
-          name="email"
-          validators={{
-            onChange: pipe(string(), email()),
-            onBlur: pipe(string(), email()),
-          }}
-        >
+        <form.Field name="email">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Email</TextFieldLabel>
@@ -137,13 +122,10 @@ export default function NewCustomerPage() {
                 onInput={(e) => field().handleChange(e.currentTarget.value)}
                 onBlur={field().handleBlur}
               />
-              <Show when={!field().state.meta.isValid}>
-                <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-              </Show>
             </TextField>
           )}
         </form.Field>
-        <form.Field name="phone" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="phone">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Phone</TextFieldLabel>
@@ -157,7 +139,7 @@ export default function NewCustomerPage() {
             </TextField>
           )}
         </form.Field>
-        <form.Field name="image" validators={{ onChange: pipe(string()), onBlur: pipe(string()) }}>
+        <form.Field name="image">
           {(field) => (
             <TextField class="gap-2 flex flex-col">
               <TextFieldLabel class="capitalize pl-1">Image URL</TextFieldLabel>

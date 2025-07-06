@@ -4,11 +4,9 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "test:paths": "vitest src/entities/paths.test.ts",
     "typecheck": "tsc -noEmit",
-    "start": "bun run src/target/bun.ts",
-    "start:node": "node --loader ts-node/esm src/target/node.ts",
-    "start:node2": "tsx src/target/node.ts"
+    "start:server": "bun run src/server/index.ts",
+    "start:client": "bun run src/client/index.ts"
   },
   "devDependencies": {
     "@tsconfig/node22": "22.0.1",

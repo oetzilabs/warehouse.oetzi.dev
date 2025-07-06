@@ -4,7 +4,8 @@ import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { DocumentInfo } from "@warehouseoetzidev/core/src/entities/documents";
 import dayjs from "dayjs";
-import { Accessor, createSignal, For } from "solid-js";
+import Fuse, { IFuseOptions } from "fuse.js";
+import { Accessor, createMemo, createSignal, For } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
 
@@ -14,73 +15,6 @@ type DocumentsListProps = {
 
 export const DocumentList = (props: DocumentsListProps) => {
   const [search, setSearch] = createSignal("");
-  const [dsearch, setDSearch] = createSignal("");
-
-  const defaultSort = {
-    default: "date",
-    current: "date",
-    direction: "desc" as const,
-    variants: [
-      {
-        field: "date",
-        label: "Date",
-        fn: (a: DocumentInfo, b: DocumentInfo) => {
-          return dayjs(a.createdAt).diff(dayjs(b.createdAt));
-        },
-      },
-      {
-        field: "name",
-        label: "Name",
-        fn: (a: DocumentInfo, b: DocumentInfo) => {
-          return a.name.localeCompare(b.name);
-        },
-      },
-    ],
-  } as FilterConfig<DocumentInfo>["sort"];
-
-  const uniqueTypesMap = new Map<string, string>();
-  props.documents().forEach((doc) => {
-    if (!uniqueTypesMap.has(doc.type)) {
-      uniqueTypesMap.set(doc.type, doc.type);
-    }
-  });
-
-  const uniqueTypeVariants = Array.from(uniqueTypesMap.values()).map((type) => ({
-    type: `document_type:${type}`,
-    label: type.charAt(0).toUpperCase() + type.slice(1),
-    fn: (item: DocumentInfo) => item.type === type,
-  }));
-
-  const [filterConfig, setFilterConfig] = createStore<FilterConfig<DocumentInfo>>({
-    disabled: () => props.documents().length === 0,
-    dateRange: {
-      start: props.documents().length === 0 ? new Date() : props.documents()[0].createdAt,
-      end: props.documents().length === 0 ? new Date() : props.documents()[props.documents().length - 1].createdAt,
-      preset: "clear",
-    },
-    search: {
-      term: dsearch(),
-      fields: ["name", "path"],
-      fuseOptions: { keys: ["name", "type", "path"] },
-    },
-    sort: defaultSort,
-    filter: {
-      default: null,
-      current: null,
-      variants: uniqueTypeVariants,
-    },
-  });
-
-  const debouncedSearch = leadingAndTrailing(
-    debounce,
-    (text: string) => {
-      setDSearch(text);
-      setFilterConfig((prev) => ({ ...prev, search: { ...prev.search!, term: text } }));
-    },
-    500,
-  );
-
-  const filteredData = useFilter(props.documents, filterConfig);
 
   const renderDocumentItem = (doc: DocumentInfo) => (
     <div class="flex flex-row items-center justify-between p-4">
@@ -99,6 +33,22 @@ export const DocumentList = (props: DocumentsListProps) => {
     </div>
   );
 
+  const filteredData = createMemo(() => {
+    const term = search();
+    const set = props.documents();
+    if (!term) {
+      return set;
+    }
+    const options: IFuseOptions<DocumentInfo[][number]> = {
+      isCaseSensitive: false,
+      threshold: 0.4,
+      minMatchCharLength: 1,
+      keys: ["name", "description", "content", "type", "path"],
+    };
+    const fuse = new Fuse(set, options);
+    return fuse.search(term).map((d) => d.item);
+  });
+
   return (
     <div class="w-full flex flex-col gap-4 pb-4">
       <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
@@ -106,15 +56,11 @@ export const DocumentList = (props: DocumentsListProps) => {
           value={search()}
           onChange={(e) => {
             setSearch(e);
-            debouncedSearch(e);
           }}
           class="w-full max-w-full"
         >
           <TextFieldInput placeholder="Search documents" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
-        <div class="w-max">
-          <FilterPopover config={filterConfig} onChange={setFilterConfig} data={props.documents} />
-        </div>
       </div>
 
       <GenericList
@@ -123,7 +69,7 @@ export const DocumentList = (props: DocumentsListProps) => {
         renderItem={renderDocumentItem}
         emptyMessage="No documents have been added"
         noResultsMessage="No documents match your search"
-        searchTerm={() => filterConfig.search.term}
+        searchTerm={search}
       />
     </div>
   );

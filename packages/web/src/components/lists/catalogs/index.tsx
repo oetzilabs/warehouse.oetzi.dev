@@ -42,19 +42,28 @@ export const CatalogsList = (props: CatalogsListProps) => {
           <For
             each={catalog.products.map((p) => p.product)}
             fallback={
-              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground h-full w-full">
+              <div class="flex flex-col gap-4 items-center justify-center text-sm text-muted-foreground h-full w-full p-4">
                 No products added
               </div>
             }
           >
             {(product) => (
               <div class="flex flex-col gap-4 items-center justify-center p-4 border-b last:border-b-0 bg-background">
-                <div class="flex flex-col gap-2 w-full h-full">
-                  <span class="text-sm font-medium">{product.name}</span>
-                  <span class="text-xs text-muted-foreground">
-                    Price: {product.sellingPrice.toFixed(2)} {product.currency}
-                  </span>
-                  <span class="text-xs text-muted-foreground">{product.sku}</span>
+                <div class="flex flex-col gap-3 w-full h-full">
+                  <div class="flex flex-row items-center gap-4 justify-between w-full">
+                    <span class="text-sm font-medium truncate">{product.name}</span>
+                    <span class="px-2 py-1 border text-xs rounded-lg leading-none  text-white bg-emerald-400 border-emerald-500 dark:bg-emerald-700 dark:border-emerald-600">
+                      action
+                    </span>
+                  </div>
+                  <div class="flex flex-row items-center gap-2 justify-between w-full">
+                    <span class="text-xs text-muted-foreground">
+                      Price: {product.sellingPrice.toFixed(2)} {product.currency}
+                    </span>
+                    <span class="text-xs font-medium">Dicount: 0%</span>
+                  </div>
+
+                  {/* <span class="text-xs text-muted-foreground">{product.sku}</span> */}
                 </div>
               </div>
             )}

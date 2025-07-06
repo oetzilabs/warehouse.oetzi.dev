@@ -1,8 +1,8 @@
 import { BunRuntime } from "@effect/platform-bun";
 import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
 import { Config, Effect, Schema } from "effect";
+import { createEventHandler } from "../types";
 import { program } from "./program";
-import { createEventHandler } from "./types";
 
 BunRuntime.runMain(
   Effect.gen(function* () {
@@ -17,11 +17,12 @@ BunRuntime.runMain(
             function* (topic, params, data) {
               yield* Effect.log("Received message for topic", { topic, params, data });
             },
-            (effect) => effect.pipe(Effect.provide([createOtelLayer("@warehouse/realtime/handle/:any")])),
+            (effect) =>
+              effect.pipe(Effect.provide([createOtelLayer("@warehouse/realtime/client/handle/realtime/:any")])),
           ),
         }),
       ]),
-    ).pipe(Effect.provide([createOtelLayer("@warehouse/realtime")]));
+    ).pipe(Effect.provide([createOtelLayer("@warehouse/realtime/client")]));
   }),
 );
 
