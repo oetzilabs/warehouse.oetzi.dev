@@ -29,7 +29,12 @@ export default function LoginPage() {
     toast.promise(loginAction(value, p), {
       loading: "Hold on a second, we're logging you in",
       error: "There was an error logging you in",
-      success: "You have been logged in, redirecting to home page!",
+      success: (data) => {
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
+        return "You have been logged in, redirecting to home page!";
+      },
     });
     user.reload();
   };

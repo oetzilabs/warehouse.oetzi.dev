@@ -208,3 +208,63 @@ export const runWithSession = async <
   });
   return result as A;
 };
+
+export const runUnAuthenticated = async <
+  A,
+  E extends {
+    _tag: string;
+    message?: string;
+  },
+  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
+>(
+  functionName: string,
+  effect: Effect.Effect<A, E, never>,
+  onFailure: F,
+) => {
+  const otelUrl = Exit.match(
+    await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const url = yield* Config.string("OTEL_URL")
+          .pipe(Config.withDefault("http://localhost:4318/v1/traces"))
+          .pipe(
+            Effect.catchTags({
+              ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "OTEL_URL" })),
+            }),
+          );
+        if (!url) {
+          return yield* Effect.fail(new Error("No OTEL_URL found in config"));
+        }
+        return url;
+      }),
+    ),
+    {
+      onSuccess: (url) => url,
+      onFailure: (cause) => {
+        console.error("Failed to get OTEL_URL from config", cause);
+        return "http://localhost:4318/v1/traces";
+      },
+    },
+  );
+  const innerProgram = Effect.fn("auth-middleware")(
+    function* () {
+      const fp = yield* fingerprint();
+      yield* Effect.annotateCurrentSpan("auth-middleware/fingerprint", fp);
+      return yield* effect;
+    },
+    (effect) => effect.pipe(Effect.provide([createOtelLayer(functionName, otelUrl)])),
+  );
+
+  const result = Exit.match(await Effect.runPromiseExit(innerProgram()), {
+    onSuccess: (data) => data,
+    onFailure: (cause) => {
+      const errors = Chunk.toReadonlyArray(Cause.failures(cause));
+      const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
+      // console.error(es);
+      if (typeof onFailure === "function") {
+        return onFailure(es);
+      }
+      return onFailure;
+    },
+  });
+  return result as A;
+};

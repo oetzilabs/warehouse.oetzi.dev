@@ -12,6 +12,7 @@ import { getPendingPurchases } from "@/lib/api/purchases";
 import { getSchedules } from "@/lib/api/schedules";
 import { A, createAsync, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import CalendarClock from "lucide-solid/icons/calendar-clock";
 import Check from "lucide-solid/icons/check";
@@ -23,6 +24,8 @@ import Plus from "lucide-solid/icons/plus";
 import Workflow from "lucide-solid/icons/workflow";
 import { createMemo, For, Show } from "solid-js";
 import { toast } from "solid-sonner";
+
+dayjs.extend(localizedFormat);
 
 export const route = {
   preload: async () => {
@@ -72,21 +75,32 @@ export default function DashboardPage() {
                       }
                     >
                       {(notification) => (
-                        <Alert>
-                          <Info class="size-4" />
-                          <AlertTitle>{notification.title}</AlertTitle>
-                          <AlertDescription>{notification.content}</AlertDescription>
-                          <AlertClose
-                            disabled={isAcceptingNotification.pending}
-                            onClick={() => {
-                              toast.promise(acceptNotificationAction(notification.id), {
-                                loading: "Closing notification...",
-                                success: "Closed notification",
-                                error: "Failed to close notification",
-                              });
-                            }}
-                          />
-                        </Alert>
+                        <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
+                          <div class="flex flex-row items-start gap-2 w-full justify-between">
+                            <div class="flex flex-row items-center gap-2">
+                              <Info class="size-4" />
+                              <span class="text-sm font-medium">{notification.title}</span>
+                              <span class="">·</span>
+                              <span class="text-sm">{dayjs(notification.createdAt).format("LLL")}</span>
+                            </div>
+                            <Button
+                              size="sm"
+                              disabled={isAcceptingNotification.pending}
+                              onClick={() => {
+                                toast.promise(acceptNotificationAction(notification.id), {
+                                  loading: "Closing notification...",
+                                  success: "Closed notification",
+                                  error: "Failed to close notification",
+                                });
+                              }}
+                            >
+                              Mark as read
+                            </Button>
+                          </div>
+                          <div class="prose prose-sm prose-neutral dark:prose-invert">
+                            <span>{notification.content}</span>
+                          </div>
+                        </div>
                       )}
                     </For>
                   </div>

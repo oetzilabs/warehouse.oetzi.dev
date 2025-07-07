@@ -69,19 +69,10 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
     });
 
     const verify = Effect.fn("@warehouse/auth/verify")(function* (token: string) {
-      // Verify the JWT first
+      // yield* Effect.log("Verifying token", { token });
       const decodedToken = yield* verifyJwt(token);
-
-      const session = yield* sessionService.findByToken(token);
-      if (!session) {
-        return yield* Effect.fail(new AuthSessionNotFound({ token }));
-      }
-
       const user = yield* userService.findById(decodedToken.userId);
-      // console.dir(user, { depth: Infinity });
-      if (!user) {
-        return yield* Effect.fail(new AuthUserNotFound({ userId: decodedToken.userId }));
-      }
+      const session = yield* sessionService.findByToken(token);
       return yield* Effect.succeed({ user, session });
     });
 
@@ -91,10 +82,6 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         return yield* Effect.fail(new AuthLoginFailed({ email }));
       }
       const user = yield* userService.findByEmail(email);
-      if (!user) {
-        // This case should ideally not happen if verifyPassword succeeded, but for safety
-        return yield* Effect.fail(new AuthUserNotFound({ userId: email }));
-      }
 
       // Generate the JWT
       const expiresIn = ms("7 Days"); // Configure your JWT expiration time
@@ -113,9 +100,6 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
         current_warehouse_id: lastWarehouse?.id ?? null,
         current_warehouse_facility_id: lastFacility?.id ?? null,
       });
-      if (!session) {
-        return yield* Effect.fail(new AuthSessionCreateFailed({ userId: user.id }));
-      }
 
       return { user, session: { access_token: accessToken, expiresAt: expiresAt } } as const; // Return the JWT and its expiration
     });

@@ -1,0 +1,2 @@
+ALTER TABLE "warehouse"."organizations_notifications" ADD COLUMN "read_by" varchar;--> statement-breakpoint
+ALTER TABLE "warehouse"."organizations_notifications" ADD CONSTRAINT "organizations_notifications_read_by_users_id_fk" FOREIGN KEY ("read_by") REFERENCES "warehouse"."users"("id") ON DELETE no action ON UPDATE no action;

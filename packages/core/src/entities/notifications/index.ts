@@ -12,6 +12,7 @@ import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationId } from "../organizations/id";
 import {
   NotificationInvalidId,
+  NotificationInvalidUserId,
   NotificationNotCreated,
   NotificationNotDeleted,
   NotificationNotFound,
@@ -19,6 +20,8 @@ import {
   NotificationOrganizationInvalidId,
   NotificationOrganizationLinkFailed,
 } from "./errors";
+
+export type GetNotificationsOptions = { ignoreRead?: boolean };
 
 export class NotificationService extends Effect.Service<NotificationService>()("@warehouse/notifications", {
   effect: Effect.gen(function* (_) {
@@ -155,29 +158,61 @@ export class NotificationService extends Effect.Service<NotificationService>()("
       return true;
     });
 
-    const findByOrganizationId = Effect.fn("@warehouse/notifications/findByOrganizationId")(function* () {
+    const findByOrganizationId = Effect.fn("@warehouse/notifications/findByOrganizationId")(function* (
+      options: GetNotificationsOptions = { ignoreRead: false },
+    ) {
       const orgId = yield* OrganizationId;
 
       const notifications = yield* db.query.TB_organizations_notifications.findMany({
         where: (fields, operations) =>
-          operations.and(operations.eq(fields.organizationId, orgId), operations.isNull(fields.readAt)),
+          options.ignoreRead
+            ? operations.eq(fields.organizationId, orgId)
+            : operations.and(operations.eq(fields.organizationId, orgId), operations.isNull(fields.readAt)),
         with: {
           notification: true,
+          readBy: true,
         },
       });
 
-      return notifications.map((n) => n.notification);
+      return notifications.map((n) => ({ ...n.notification, readAt: n.readAt, readByUserId: n.readByUserId }));
     });
 
-    const accept = Effect.fn("@warehouse/notifications/accept")(function* (id: string) {
+    const accept = Effect.fn("@warehouse/notifications/accept")(function* (id: string, userId: string) {
       const parsedId = safeParse(prefixed_cuid2, id);
       if (!parsedId.success) {
         return yield* Effect.fail(new NotificationInvalidId({ id }));
       }
+      const parsedUserId = safeParse(prefixed_cuid2, userId);
+      if (!parsedUserId.success) {
+        return yield* Effect.fail(new NotificationInvalidUserId({ id: userId }));
+      }
 
       const [updated] = yield* db
         .update(TB_organizations_notifications)
-        .set({ readAt: new Date() })
+        .set({ readAt: new Date(), readByUserId: parsedUserId.output })
+        .where(eq(TB_organizations_notifications.notificationId, parsedId.output))
+        .returning();
+
+      if (!updated) {
+        return yield* Effect.fail(new NotificationNotUpdated({ id }));
+      }
+
+      return updated;
+    });
+
+    const markUnread = Effect.fn("@warehouse/notifications/markUnread")(function* (id: string, userId: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new NotificationInvalidId({ id }));
+      }
+      const parsedUserId = safeParse(prefixed_cuid2, userId);
+      if (!parsedUserId.success) {
+        return yield* Effect.fail(new NotificationInvalidUserId({ id: userId }));
+      }
+
+      const [updated] = yield* db
+        .update(TB_organizations_notifications)
+        .set({ readAt: null, readByUserId: null })
         .where(eq(TB_organizations_notifications.notificationId, parsedId.output))
         .returning();
 
@@ -196,6 +231,7 @@ export class NotificationService extends Effect.Service<NotificationService>()("
       safeRemove,
       findByOrganizationId,
       accept,
+      markUnread,
       sync,
     } as const;
   }),
@@ -206,3 +242,6 @@ export const NotificationLive = NotificationService.Default;
 
 // Type exports
 export type NotificationInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<NotificationService["findById"]>>>>;
+export type OrganizationNotificationInfo = NonNullable<
+  Awaited<Effect.Effect.Success<ReturnType<NotificationService["findByOrganizationId"]>>>
+>[number];

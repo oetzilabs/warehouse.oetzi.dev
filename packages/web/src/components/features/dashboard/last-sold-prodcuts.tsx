@@ -35,7 +35,7 @@ export const LastSoldProducts = () => {
                   each={data()}
                   fallback={
                     <div class="flex flex-col items-center justify-center h-full py-10 text-sm text-muted-foreground">
-                      Nothing Sold Yet
+                      None yet - your last sold products will show up here once you've made some sales.
                     </div>
                   }
                 >

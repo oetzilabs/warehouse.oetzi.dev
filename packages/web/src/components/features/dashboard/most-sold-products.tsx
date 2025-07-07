@@ -32,8 +32,8 @@ export const MostSoldProducts = () => {
                 <For
                   each={data()}
                   fallback={
-                    <div class="flex flex-col items-center justify-center h-full py-10 text-sm text-muted-foreground">
-                      None yet — your top sellers will show up here once you've made some sales.
+                    <div class="flex flex-col items-center justify-center h-full py-10 text-sm text-muted-foreground select-none">
+                      None yet - your top sellers will show up here once you've made some sales.
                     </div>
                   }
                 >

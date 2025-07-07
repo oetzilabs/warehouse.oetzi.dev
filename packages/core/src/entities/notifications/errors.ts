@@ -8,6 +8,13 @@ export class NotificationInvalidId extends Schema.TaggedError<NotificationInvali
   id: Schema.String,
 }) {}
 
+export class NotificationInvalidUserId extends Schema.TaggedError<NotificationInvalidUserId>()(
+  "NotificationInvalidUserId",
+  {
+    id: Schema.String,
+  },
+) {}
+
 export class NotificationNotCreated extends Schema.TaggedError<NotificationNotCreated>()("NotificationNotCreated", {
   message: Schema.optional(Schema.String),
 }) {}

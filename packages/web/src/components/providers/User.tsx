@@ -32,7 +32,15 @@ export function UserProvider(props: ParentProps) {
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
 
   const reload = () => {
-    toast.promise(revalidate([getAuthenticatedUser.key, getSessionToken.key]));
+    setReady(false);
+    toast.promise(revalidate([getAuthenticatedUser.key, getSessionToken.key]), {
+      error: "Failed to reload user",
+      loading: "Reloading user...",
+      success: (d) => {
+        setReady(true);
+        return "Reloaded";
+      },
+    });
   };
 
   const user = createMemo(() => {
@@ -44,6 +52,9 @@ export function UserProvider(props: ParentProps) {
   const currentSession = createMemo(() => {
     const u = user();
     if (!u) {
+      return null;
+    }
+    if (!u.sessions) {
       return null;
     }
     const t = sessionToken();
