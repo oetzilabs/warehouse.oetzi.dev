@@ -31,7 +31,7 @@ const fingerprint = Effect.fn("fingerprint")(function* () {
   }
   const fp = yield* Effect.promise(() => getRequestFingerprint(e));
   if (!fp) {
-    return yield* Effect.fail(new NoFingerprint());
+    return "unknown-device";
   }
   return fp;
 });
