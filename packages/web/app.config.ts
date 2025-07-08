@@ -5,7 +5,9 @@ import pkg from "@vinxi/plugin-mdx";
 
 const { default: mdx } = pkg;
 
-const withSST: Parameters<typeof defineConfig>[0]["server"] = Object.keys(process.env).some((k) => k.startsWith("SST"))
+const withSST: NonNullable<Parameters<typeof defineConfig>[0]>["server"] = Object.keys(process.env).some((k) =>
+  k.startsWith("SST"),
+)
   ? { preset: "aws-lambda", awsLambda: { streaming: true } }
   : {
       preset: "bun",
