@@ -76,8 +76,9 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
       return yield* Effect.succeed({ user, session });
     });
 
-    const login = Effect.fn("@warehouse/auth/login")(function* (email: string, password: string) {
-      const attempt = yield* userService.verifyPassword(email, password);
+    const login = Effect.fn("@warehouse/auth/login")(function* (email: string, password: Redacted.Redacted<string>) {
+      const p = Redacted.value(password);
+      const attempt = yield* userService.verifyPassword(email, p);
       if (!attempt) {
         return yield* Effect.fail(new AuthLoginFailed({ email }));
       }
@@ -202,3 +203,5 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
 }) {}
 
 export const AuthLive = AuthService.Default;
+
+export type AuthVerified = NonNullable<Awaited<Effect.Effect.Success<ReturnType<AuthService["verify"]>>>>;

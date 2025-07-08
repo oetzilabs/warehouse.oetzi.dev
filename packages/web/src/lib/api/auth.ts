@@ -1,6 +1,6 @@
 import { action, json, query, redirect } from "@solidjs/router";
-import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/authentication";
-import { Effect, Schema } from "effect";
+import { AuthLive, AuthService, type AuthVerified } from "@warehouseoetzidev/core/src/entities/authentication";
+import { Effect, Redacted, Schema } from "effect";
 import { getCookie, setCookie } from "vinxi/http";
 import { run, runUnAuthenticated } from "./utils";
 
@@ -37,20 +37,23 @@ export const logout = action(async () => {
   );
 });
 
+type AuthedUser = AuthVerified["user"] | null;
+
 export const getAuthenticatedUser = query(async () => {
   "use server";
+  const sessionToken = getCookie("session_token");
+  if (!sessionToken) {
+    return null;
+  }
   return runUnAuthenticated(
     "@query/get-authenticated-user",
     Effect.gen(function* (_) {
-      const sessionToken = getCookie("session_token");
-      if (!sessionToken) {
-        return null;
-      }
       const authService = yield* AuthService;
-      const verified = yield* authService.verify(sessionToken);
-      return json(verified.user);
+      const verified = yield* authService.verify(sessionToken).pipe(Effect.catchAll(() => Effect.succeed(null)));
+      const result: AuthedUser = verified?.user ?? null;
+      return json(result);
     }).pipe(Effect.provide(AuthLive)),
-    json(null),
+    json(null as AuthedUser),
   );
 }, "user");
 
@@ -65,7 +68,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
     "@action/login-via-email",
     Effect.gen(function* (_) {
       const authService = yield* AuthService;
-      const { session } = yield* authService.login(email, password);
+      const { session } = yield* authService.login(email, Redacted.make(password));
       setCookie("session_token", session.access_token, {
         httpOnly: true,
         sameSite: "lax",
