@@ -122,8 +122,8 @@ export const program = Effect.fn("@warehouse/build/fn")(
         concurrency: entrypoints.filter((entrypoint) => entrypoint.dependsOn.length === 0).length,
       },
     );
-    yield* fs.makeDirectory(".output", { recursive: true });
-    yield* fs.writeFileString(".output/build-output.json", JSON.stringify(result, null, 2));
+    yield* fs.makeDirectory(".warehouse/output", { recursive: true });
+    yield* fs.writeFileString(".warehouse/build-output.json", JSON.stringify(result, null, 2));
     const zipFiles = yield* Effect.forEach(
       result.flatMap((r) =>
         r.outputs.map((output) => ({
@@ -137,7 +137,7 @@ export const program = Effect.fn("@warehouse/build/fn")(
           return { name, output: zipped };
         }),
     );
-    yield* Effect.all(zipFiles.map((z) => fs.writeFile(".output/" + z.name + ".zip", z.output)));
+    yield* Effect.all(zipFiles.map((z) => fs.writeFile(".warehouse/output" + z.name + ".zip", z.output)));
     return result;
   },
   (effect) => effect.pipe(Effect.provide([BunContext.layer, createOtelLayer("@warehouse/build")]), Effect.scoped),
