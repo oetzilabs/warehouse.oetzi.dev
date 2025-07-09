@@ -137,7 +137,7 @@ export const program = Effect.fn("@warehouse/build/fn")(
           return { name, output: zipped };
         }),
     );
-    yield* Effect.all(zipFiles.map((z) => fs.writeFile(".warehouse/output" + z.name + ".zip", z.output)));
+    yield* Effect.all(zipFiles.map((z) => fs.writeFile(".warehouse/output/" + z.name + ".zip", z.output)));
     return result;
   },
   (effect) => effect.pipe(Effect.provide([BunContext.layer, createOtelLayer("@warehouse/build")]), Effect.scoped),
