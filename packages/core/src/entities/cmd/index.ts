@@ -1,24 +1,54 @@
 import { Command } from "@effect/platform";
-import { Effect, pipe, Stream } from "effect";
+import { Config, Effect, pipe, Stream } from "effect";
 
 export const cmdExec = Effect.fn("@warehouse/cmd")(function* (com: Command.Command, ignore_logging: boolean = false) {
+  const separator = process.platform === "win32" ? ";" : ":";
+  const PathConfig = yield* Config.string("PATH").pipe(Config.withDefault(""));
+  const PATH = PathConfig.split(separator)
+    .filter((p) => !p.includes(" "))
+    .join(separator);
+  const env = Command.env({
+    PATH,
+  });
+
+  // TODO: Save the output of the stdout and stderr to a variable.
+
   return yield* pipe(
-    Command.start(com),
+    Command.start(com.pipe(env)),
     Effect.flatMap((_process) =>
       Effect.gen(function* (_) {
         const stdoutStream = _process.stdout.pipe(Stream.decodeText("utf8"));
         const stderrStream = _process.stderr.pipe(Stream.decodeText("utf8"));
+        const stdoutCollection: string[] = [];
+        const stderrCollection: string[] = [];
 
         yield* stdoutStream.pipe(
-          Stream.runForEach((line) => (ignore_logging ? Effect.void : Effect.log(line))),
+          Stream.runForEach((line) =>
+            ignore_logging
+              ? Effect.void
+              : Effect.gen(function* () {
+                  stdoutCollection.push(line);
+                  yield* Effect.log(line);
+                }),
+          ),
           Effect.fork,
         );
 
         yield* stderrStream.pipe(
-          Stream.runForEach((line) => (ignore_logging ? Effect.void : Effect.logError(line))),
+          Stream.runForEach((line) =>
+            ignore_logging
+              ? Effect.void
+              : Effect.gen(function* () {
+                  stderrCollection.push(line);
+                  yield* Effect.log(line);
+                }),
+          ),
           Effect.fork,
         );
-        return _process;
+        return Object.assign(_process, {
+          stdout: stdoutCollection,
+          stderr: stderrCollection,
+        });
       }),
     ),
   );

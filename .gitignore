@@ -20,3 +20,5 @@ packages/imagemagick-layer
 packages/ghostscript-layer
 out
 snapshots
+.output
+.output/build-output.json
