@@ -5,6 +5,8 @@
   "scripts": {
     "test": "vitest",
     "typecheck": "tsc -noEmit",
+    "build:server": "bun build ./src/server/index.ts --compile --outfile='.output/server/main'",
+    "build:client": "bun build ./src/client/index.ts --compile --outfile='.output/client/main'",
     "start:server": "bun run src/server/index.ts",
     "start:client": "bun run src/client/index.ts"
   },
