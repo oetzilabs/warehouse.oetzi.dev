@@ -93,7 +93,6 @@ export const program = Effect.fn("@warehouse/build/fn")(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
-    yield* Effect.log("Running on:", process.execPath);
     const packageDirs = yield* findPackages(process.cwd());
     const bc = yield* Effect.forEach(
       entrypoints
