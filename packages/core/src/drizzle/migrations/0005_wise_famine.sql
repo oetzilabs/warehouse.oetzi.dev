@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse"."customer_schedules" ADD CONSTRAINT "customer_schedules_customer_id_schedule_id_order_id_pk" PRIMARY KEY("customer_id","schedule_id","order_id");

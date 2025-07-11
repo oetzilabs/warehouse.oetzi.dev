@@ -4,6 +4,7 @@ import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
+import { TB_document_storage_feature } from "./storage_feature";
 import { TB_document_storage_offers_feature_sets } from "./storage_offers_feature_sets";
 import { TB_document_storages } from "./storages";
 
@@ -25,6 +26,10 @@ export const TB_document_storage_offers = commonTable(
 export const document_storage_offer_relations = relations(TB_document_storage_offers, ({ one, many }) => ({
   featureSets: many(TB_document_storage_offers_feature_sets),
   storages: many(TB_document_storages),
+  features: one(TB_document_storage_feature, {
+    fields: [TB_document_storage_offers.id],
+    references: [TB_document_storage_feature.id],
+  }),
 }));
 
 export type DocumentStorageOfferSelect = typeof TB_document_storage_offers.$inferSelect;

@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -20,18 +21,22 @@ export const supplier_schedule_status = schema.enum("supplier_schedule_status", 
   "cancelled", // Cancelled
 ]);
 
-export const TB_supplier_schedules = schema.table("supplier_schedules", (t) => ({
-  supplierId: t
-    .varchar("supplier_id")
-    .notNull()
-    .references(() => TB_suppliers.id),
-  scheduleId: t
-    .varchar("schedule_id")
-    .notNull()
-    .references(() => TB_schedules.id),
-  purchaseId: t.varchar("purchase_id").references(() => TB_supplier_purchases.id),
-  type: supplier_schedule_type("type").notNull(),
-}));
+export const TB_supplier_schedules = schema.table(
+  "supplier_schedules",
+  (t) => ({
+    supplierId: t
+      .varchar("supplier_id")
+      .notNull()
+      .references(() => TB_suppliers.id),
+    scheduleId: t
+      .varchar("schedule_id")
+      .notNull()
+      .references(() => TB_schedules.id),
+    purchaseId: t.varchar("purchase_id").references(() => TB_supplier_purchases.id),
+    type: supplier_schedule_type("type").notNull(),
+  }),
+  (table) => [primaryKey({ columns: [table.supplierId, table.scheduleId] })],
+);
 
 export const supplier_schedules_relations = relations(TB_supplier_schedules, ({ one }) => ({
   supplier: one(TB_suppliers, {
