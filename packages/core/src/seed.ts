@@ -15,4 +15,7 @@ export const seedProgram = Effect.fn("@warehouse/database/seed/fn")(
     ),
 );
 
-// BunRuntime.runMain(seedProgram());
+if(import.meta.path === Bun.main){
+  BunRuntime.runMain(seedProgram());
+}
+
