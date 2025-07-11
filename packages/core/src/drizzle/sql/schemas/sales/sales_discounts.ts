@@ -5,6 +5,7 @@ import { TB_discounts_v1 } from "../discounts";
 import { TB_products } from "../products/products";
 import { schema } from "../utils";
 import { TB_sales } from "./sales";
+import { TB_sale_items } from "./sales_items";
 
 export const TB_sales_discounts = schema.table(
   "sales_discounts",
@@ -37,6 +38,10 @@ export const sales_discounts_relations = relations(TB_sales_discounts, ({ one })
   discount: one(TB_discounts_v1, {
     fields: [TB_sales_discounts.discountId],
     references: [TB_discounts_v1.id],
+  }),
+  items: one(TB_sale_items, {
+    fields: [TB_sales_discounts.saleId, TB_sales_discounts.productId],
+    references: [TB_sale_items.saleId, TB_sale_items.productId],
   }),
 }));
 

@@ -52,7 +52,9 @@
   ],
   "trustedDependencies": [
     "@parcel/watcher",
+    "@rocicorp/zero-sqlite3",
     "aws-sdk",
+    "bun",
     "canvas",
     "esbuild",
     "msgpackr-extract",

@@ -7,6 +7,7 @@ import { commonTable } from "../entity";
 import { TB_organizations } from "../organizations/organizations";
 import { TB_sales } from "../sales/sales";
 import { TB_user_orders } from "../users/user_orders";
+import { TB_users } from "../users/users";
 import { schema } from "../utils";
 import { TB_customer_order_products } from "./customer_order_products";
 import { TB_customer_schedules } from "./customer_schedules";
@@ -34,6 +35,7 @@ export const TB_customer_orders = commonTable(
     customer_id: varchar("customer_id")
       .references(() => TB_customers.id)
       .notNull(),
+    creator_id: varchar("creator_id").references(() => TB_users.id),
   },
   "cord",
 );
@@ -49,6 +51,10 @@ export const customer_order_relations = relations(TB_customer_orders, ({ one, ma
   }),
   custSched: many(TB_customer_schedules),
   users: many(TB_user_orders),
+  creator: one(TB_users, {
+    fields: [TB_customer_orders.creator_id],
+    references: [TB_users.id],
+  }),
   sale: one(TB_sales, {
     fields: [TB_customer_orders.saleId],
     references: [TB_sales.id],
