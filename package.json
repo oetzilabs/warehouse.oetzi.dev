@@ -7,7 +7,6 @@
     "dev": "sst dev",
     "local:dev": "cd packages/web && bun run dev",
     "build": "sst build",
-    "build:local": "bun run build.ts",
     "deploy": "sst deploy",
     "remove": "sst remove",
     "console": "sst console",

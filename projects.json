@@ -1,0 +1,24 @@
+{
+  "projects": [
+    {
+      "id": "@warehouseoetzidev/web",
+      "entrypoint": "@warehouseoetzidev/web",
+      "dependsOn": [],
+      "outputs": [".output", ".vinxi"]
+    },
+    {
+      "id": "@warehouseoetzidev/realtime/server",
+      "entrypoint": "@warehouseoetzidev/realtime",
+      "command": "bun build ./src/server/index.ts --compile --outfile=.output/server/main",
+      "dependsOn": [],
+      "outputs": [".output/server"]
+    },
+    {
+      "id": "@warehouseoetzidev/realtime/client",
+      "entrypoint": "@warehouseoetzidev/realtime",
+      "command": "bun build ./src/client/index.ts --compile --outfile=.output/client/main",
+      "dependsOn": ["@warehouseoetzidev/realtime/server"],
+      "outputs": [".output/client"]
+    }
+  ]
+}

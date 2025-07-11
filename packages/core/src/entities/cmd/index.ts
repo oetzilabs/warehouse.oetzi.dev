@@ -23,26 +23,18 @@ export const cmdExec = Effect.fn("@warehouse/cmd")(function* (com: Command.Comma
         const stderrCollection: string[] = [];
 
         yield* stdoutStream.pipe(
-          Stream.runForEach((line) =>
-            ignore_logging
-              ? Effect.void
-              : Effect.gen(function* () {
-                  stdoutCollection.push(line);
-                  yield* Effect.log(line);
-                }),
-          ),
+          Stream.runForEach((line) => {
+            stdoutCollection.push(line);
+            return ignore_logging ? Effect.void : Effect.log(line);
+          }),
           Effect.fork,
         );
 
         yield* stderrStream.pipe(
-          Stream.runForEach((line) =>
-            ignore_logging
-              ? Effect.void
-              : Effect.gen(function* () {
-                  stderrCollection.push(line);
-                  yield* Effect.log(line);
-                }),
-          ),
+          Stream.runForEach((line) => {
+            stdoutCollection.push(line);
+            return ignore_logging ? Effect.void : Effect.log(line);
+          }),
           Effect.fork,
         );
         return Object.assign(_process, {
