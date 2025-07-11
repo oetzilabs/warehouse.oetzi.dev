@@ -15,7 +15,7 @@ export const generateProgram = Effect.fn("@warehouse/database/generate/fn")(
       PATH,
     });
     const generateCommandString = "run drizzle-kit generate";
-    const generateCommand = Command.make("bun", ...generateCommandString.split(" ")).pipe(env);
+    const generateCommand = Command.make(process.execPath, ...generateCommandString.split(" ")).pipe(env);
     const p1 = yield* cmdExec(generateCommand);
     const exitCode = yield* p1.exitCode;
     if (exitCode !== 0) {
@@ -24,7 +24,9 @@ export const generateProgram = Effect.fn("@warehouse/database/generate/fn")(
     return yield* Effect.succeed(true);
   },
   (effect) =>
-    effect.pipe(Effect.provide([BunContext.layer, createOtelLayer("@warehouse/database/migrate")]), Effect.scoped),
+    effect.pipe(Effect.provide([BunContext.layer, createOtelLayer("@warehouse/database/migrate")]), Effect.scoped)
 );
 
-// BunRuntime.runMain(generateProgram());
+if (import.meta.path === Bun.main) {
+  BunRuntime.runMain(generateProgram());
+}

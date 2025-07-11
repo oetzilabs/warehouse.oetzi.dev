@@ -1,0 +1,3 @@
+ALTER TABLE "warehouse"."supplier_schedules" ADD CONSTRAINT "supplier_schedules_supplier_id_schedule_id_pk" PRIMARY KEY("supplier_id","schedule_id");--> statement-breakpoint
+ALTER TABLE "warehouse"."customer_orders" ADD COLUMN "creator_id" varchar;--> statement-breakpoint
+ALTER TABLE "warehouse"."customer_orders" ADD CONSTRAINT "customer_orders_creator_id_users_id_fk" FOREIGN KEY ("creator_id") REFERENCES "warehouse"."users"("id") ON DELETE no action ON UPDATE no action;

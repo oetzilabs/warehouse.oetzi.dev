@@ -15,7 +15,7 @@ export const migrateProgram = Effect.fn("@warehouse/database/migrate/fn")(
       PATH,
     });
     const migrateCommandString = "run drizzle-kit migrate";
-    const migrateCommand = Command.make("bun", ...migrateCommandString.split(" ")).pipe(env);
+    const migrateCommand = Command.make(process.execPath, ...migrateCommandString.split(" ")).pipe(env);
     const p2 = yield* cmdExec(migrateCommand);
     const exitCode2 = yield* p2.exitCode;
     if (exitCode2 !== 0) {
@@ -27,4 +27,7 @@ export const migrateProgram = Effect.fn("@warehouse/database/migrate/fn")(
     effect.pipe(Effect.provide([BunContext.layer, createOtelLayer("@warehouse/database/migrate")]), Effect.scoped),
 );
 
-// BunRuntime.runMain(migrateProgram());
+if(import.meta.path === Bun.main){
+  BunRuntime.runMain(migrateProgram());
+}
+
