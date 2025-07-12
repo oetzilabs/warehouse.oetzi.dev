@@ -17,6 +17,7 @@ export const UserContext = createContext<{
   ready: Accessor<boolean>;
   reload: () => void;
   z: Accessor<Zero<Schema, Mutators> | undefined>;
+  loggined: Accessor<boolean>;
 }>({
   user: () => null,
   session: () => null,
@@ -24,6 +25,7 @@ export const UserContext = createContext<{
   ready: () => false,
   reload: () => {},
   z: () => undefined,
+  loggined: () => false,
 });
 
 export function useUser() {
@@ -37,6 +39,7 @@ export function useUser() {
 export function UserProvider(props: ParentProps) {
   const getUser = createAsync(() => getAuthenticatedUser(), { deferStream: true });
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
+  const [loggined, setLoggined] = createSignal(false);
 
   const [z, setZ] = createSignal<Zero<Schema, Mutators> | undefined>(undefined);
 
@@ -87,22 +90,33 @@ export function UserProvider(props: ParentProps) {
   onMount(() => {
     const cs = currentSession();
     if (!cs) {
+      setLoggined(false);
+      setReady(true);
       return;
     }
     const cu = getUser();
     if (!cu) {
+      setLoggined(false);
+      setReady(true);
+      return;
+    }
+    const cst = sessionToken();
+    if (!cst) {
+      setLoggined(false);
+      setReady(true);
       return;
     }
     setZ(
       createZero({
-        userID: cs.userId,
-        auth: cs.access_token,
-        server: import.meta.env.VITE_PUBLIC_SERVER,
+        userID: cs.userId ?? "anon",
+        auth: cst,
+        server: import.meta.env.VITE_ZERO_SERVER,
         schema,
         mutators: createMutators(cu),
         kvStore: "idb",
       }),
     );
+    setLoggined(true);
     setReady(true);
   });
 
@@ -115,6 +129,7 @@ export function UserProvider(props: ParentProps) {
         ready,
         reload,
         z,
+        loggined,
       }}
     >
       {props.children}
