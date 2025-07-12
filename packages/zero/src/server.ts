@@ -5,6 +5,7 @@ import { AuthLive, AuthService } from "@warehouseoetzidev/core/src/entities/auth
 import { Effect } from "effect";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
+import "hono/bun";
 import { handlePush } from "./push";
 import { must } from "./utils";
 
@@ -34,4 +35,7 @@ app.post(
   },
 );
 
-export default app;
+export default {
+  port: 4000,
+  fetch: app.fetch,
+};

@@ -10,12 +10,11 @@ export const seedProgram = Effect.fn("@warehouse/database/seed/fn")(
   },
   (effect) =>
     effect.pipe(
-      Effect.provide([createOtelLayer("@warehouse/database/seed"), SeedLive, BunContext.layer]),
+      Effect.provide([SeedLive, BunContext.layer, createOtelLayer("@warehouse/database/seed")]),
       Effect.scoped,
     ),
 );
 
-if(import.meta.path === Bun.main){
+if (import.meta.path === Bun.main) {
   BunRuntime.runMain(seedProgram());
 }
-
