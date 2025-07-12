@@ -108,7 +108,7 @@ export function UserProvider(props: ParentProps) {
     }
     setZ(
       createZero({
-        userID: cs.userId ?? "anon",
+        userID: cs.userId,
         auth: cst,
         server: import.meta.env.VITE_ZERO_SERVER,
         schema,
