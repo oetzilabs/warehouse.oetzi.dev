@@ -22,6 +22,7 @@ import {
 
 interface JwtPayload {
   userId: string;
+  sub: string;
 }
 
 export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth", {
@@ -40,7 +41,7 @@ export class AuthService extends Effect.Service<AuthService>()("@warehouse/auth"
 
     // Function to generate a JWT
     const generateJwt = Effect.fn("@warehouse/auth/generateJwt")(function* (userId: string, expiresIn: number) {
-      const payload: JwtPayload = { userId };
+      const payload: JwtPayload = { userId, sub: userId };
       return jwt.sign(payload, jwtSecrets[0], { expiresIn });
     });
 

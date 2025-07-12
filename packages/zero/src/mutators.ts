@@ -30,7 +30,7 @@ export function createMutators(authData: AuthVerified["user"] | undefined) {
   } as const satisfies CustomMutatorDefs<typeof schema>;
 }
 
-function mustBeLoggedIn(authData: AuthVerified | undefined): AuthVerified {
+function mustBeLoggedIn(authData: AuthVerified["user"] | undefined): AuthVerified["user"] {
   if (authData === undefined) {
     throw new Error("Must be logged in");
   }

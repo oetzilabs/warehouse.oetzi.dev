@@ -43,7 +43,7 @@ export default function UserMenu() {
         <Match when={!user.ready()}>
           <Skeleton class="w-24 h-8" />
         </Match>
-        <Match when={user.ready() && user.user() !== null && user.session() !== null && user.user()}>
+        <Match when={user.ready() && user.loggined() && user.user()}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>
               <DropdownMenuTrigger
