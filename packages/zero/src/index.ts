@@ -29,8 +29,13 @@ export type UserOrder = Row<typeof schema.tables.TB_user_orders>;
 export type UserPaymentMethod = Row<typeof schema.tables.TB_user_payment_methods>;
 export type UserWarehouse = Row<typeof schema.tables.TB_users_warehouses>;
 
-export const permissions = definePermissions<AuthVerified, Schema>(schema, () => {
+const permissions = definePermissions<AuthVerified, Schema>(schema, () => {
   return {
+    // TB_users: {
+    //   row: {
+    //     select: ANYONE_CAN,
+    //   },
+    // },
     // medium: {
     //   row: {
     //     select: ANYONE_CAN,
@@ -49,4 +54,4 @@ export const permissions = definePermissions<AuthVerified, Schema>(schema, () =>
   } satisfies PermissionsConfig<AuthVerified, Schema>;
 });
 
-export { schema, Schema };
+export { schema, Schema, permissions };

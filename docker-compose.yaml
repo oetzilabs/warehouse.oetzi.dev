@@ -1,8 +1,10 @@
 services:
   db:
     image: postgres:16.4-alpine3.20
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     volumes:
       - data:/var/lib/postgresql/data
+      - ./packages/docker/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     environment: 
       POSTGRES_PASSWORD: warehousepassword
       POSTGRES_USER: warehouseuser
