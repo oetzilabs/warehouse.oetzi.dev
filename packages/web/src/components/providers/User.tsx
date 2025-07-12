@@ -16,12 +16,14 @@ export const UserContext = createContext<{
   currentOrganization: Accessor<UserInfo["sessions"][number]["org"] | null>;
   ready: Accessor<boolean>;
   reload: () => void;
+  z: Accessor<Zero<Schema, Mutators> | undefined>;
 }>({
   user: () => null,
   session: () => null,
   currentOrganization: () => null,
   ready: () => false,
   reload: () => {},
+  z: () => undefined,
 });
 
 export function useUser() {
@@ -112,6 +114,7 @@ export function UserProvider(props: ParentProps) {
         session: currentSession,
         ready,
         reload,
+        z,
       }}
     >
       {props.children}
