@@ -3,7 +3,7 @@ import { Toaster } from "@/components/providers/Toaster";
 import { TranslationsProvider } from "@/components/providers/TranslationProvider";
 import { ColorModeProvider, ColorModeScript, cookieStorageManagerSSR } from "@kobalte/core";
 import { MetaProvider, Title } from "@solidjs/meta";
-import { Router } from "@solidjs/router";
+import { createAsync, Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 // import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 // import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";

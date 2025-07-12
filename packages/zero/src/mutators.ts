@@ -4,7 +4,7 @@ import { schema } from ".";
 
 // import { AuthData } from "./auth";
 
-export function createMutators(authData: AuthVerified | undefined) {
+export function createMutators(authData: AuthVerified["user"] | undefined) {
   // export function createMutators() {
   return {
     // message: {
