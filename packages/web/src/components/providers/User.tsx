@@ -1,7 +1,12 @@
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
+import { escapeLike, Zero } from "@rocicorp/zero";
+import { createQuery, createZero } from "@rocicorp/zero/solid";
 import { createAsync, revalidate } from "@solidjs/router";
 import { type SessionInfo } from "@warehouseoetzidev/core/src/entities/sessions";
 import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
+import { schema, Schema } from "@warehouseoetzidev/zero/src/index";
+import { createMutators, Mutators } from "@warehouseoetzidev/zero/src/mutators";
+// import { Schema } from "effect";
 import { Accessor, createContext, createMemo, createSignal, onMount, ParentProps, useContext } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -30,6 +35,8 @@ export function useUser() {
 export function UserProvider(props: ParentProps) {
   const getUser = createAsync(() => getAuthenticatedUser(), { deferStream: true });
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
+
+  const [z, setZ] = createSignal<Zero<Schema, Mutators> | undefined>(undefined);
 
   const reload = () => {
     setReady(false);
@@ -76,6 +83,24 @@ export function UserProvider(props: ParentProps) {
   const [ready, setReady] = createSignal(false);
 
   onMount(() => {
+    const cs = currentSession();
+    if (!cs) {
+      return;
+    }
+    const cu = getUser();
+    if (!cu) {
+      return;
+    }
+    setZ(
+      createZero({
+        userID: cs.userId,
+        auth: cs.access_token,
+        server: import.meta.env.VITE_PUBLIC_SERVER,
+        schema,
+        mutators: createMutators(cu),
+        kvStore: "idb",
+      }),
+    );
     setReady(true);
   });
 
