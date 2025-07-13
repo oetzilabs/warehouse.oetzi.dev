@@ -33,6 +33,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Edit from "lucide-solid/icons/edit";
+import Forklift from "lucide-solid/icons/forklift";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
 import RotateCw from "lucide-solid/icons/rotate-cw";
@@ -73,10 +74,9 @@ export default function SupplierPage() {
           <div class="container flex flex-col gap-0 py-0 relative">
             <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background pb-4">
               <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href="/suppliers">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
+                <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                  <Forklift class="size-4" />
+                </div>
                 <h1 class="text-xl font-semibold">Supplier</h1>
               </div>
               <div class="flex flex-row items-center gap-2">

@@ -31,6 +31,7 @@ import { ProductInfo } from "@warehouseoetzidev/core/src/entities/products";
 import dayjs from "dayjs";
 import Fuse from "fuse.js";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import BookOpenText from "lucide-solid/icons/book-open-text";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
@@ -89,10 +90,9 @@ export default function CatalogPage() {
   return (
     <div class="container flex flex-col gap-4 py-0 relative">
       <div class="flex flex-row items-center gap-4">
-        <Button variant="outline" size="sm" as={A} href="/catalogs" class="w-max">
-          <ArrowLeft class="size-4" />
-          Catalogs
-        </Button>
+        <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+          <BookOpenText class="size-4" />
+        </div>
         <span class="font-medium">Catalog</span>
       </div>
       <Suspense

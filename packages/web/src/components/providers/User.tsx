@@ -1,6 +1,6 @@
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
-import { escapeLike, Zero } from "@rocicorp/zero";
-import { createQuery, createZero } from "@rocicorp/zero/solid";
+// import { escapeLike, Zero } from "@rocicorp/zero";
+// import { createQuery, createZero } from "@rocicorp/zero/solid";
 import { createAsync, revalidate } from "@solidjs/router";
 import { type SessionInfo } from "@warehouseoetzidev/core/src/entities/sessions";
 import { type UserInfo } from "@warehouseoetzidev/core/src/entities/users";
@@ -16,7 +16,7 @@ export const UserContext = createContext<{
   currentOrganization: Accessor<UserInfo["sessions"][number]["org"] | null>;
   ready: Accessor<boolean>;
   reload: () => void;
-  z: Accessor<Zero<Schema, Mutators> | undefined>;
+  // z: Accessor<Zero<Schema, Mutators>>;
   loggined: Accessor<boolean>;
 }>({
   user: () => null,
@@ -24,7 +24,7 @@ export const UserContext = createContext<{
   currentOrganization: () => null,
   ready: () => false,
   reload: () => {},
-  z: () => undefined,
+  // z: () => undefined,
   loggined: () => false,
 });
 
@@ -41,7 +41,7 @@ export function UserProvider(props: ParentProps) {
   const sessionToken = createAsync(() => getSessionToken(), { deferStream: true });
   const [loggined, setLoggined] = createSignal(false);
 
-  const [z, setZ] = createSignal<Zero<Schema, Mutators> | undefined>(undefined);
+  // const [z, setZ] = createSignal<Zero<Schema, Mutators>>();
 
   const reload = () => {
     setReady(false);
@@ -106,16 +106,16 @@ export function UserProvider(props: ParentProps) {
       setReady(true);
       return;
     }
-    setZ(
-      createZero({
-        userID: cs.userId,
-        auth: cst,
-        server: import.meta.env.VITE_ZERO_SERVER,
-        schema,
-        mutators: createMutators(cu),
-        kvStore: "idb",
-      }),
-    );
+    // setZ(
+    //   createZero({
+    //     userID: cs.userId,
+    //     auth: cst,
+    //     server: import.meta.env.VITE_ZERO_SERVER,
+    //     schema,
+    //     mutators: createMutators(cu),
+    //     kvStore: "idb",
+    //   }),
+    // );
     setLoggined(true);
     setReady(true);
   });
@@ -128,7 +128,7 @@ export function UserProvider(props: ParentProps) {
         session: currentSession,
         ready,
         reload,
-        z,
+        // z: () => z()!,
         loggined,
       }}
     >

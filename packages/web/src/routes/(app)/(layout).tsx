@@ -14,10 +14,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { createQuery } from "@rocicorp/zero/solid";
 import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { A, useLocation, useNavigate, useResolvedPath } from "@solidjs/router";
+import ArrowLeft from "lucide-solid/icons/arrow-left";
 import BadgeEuro from "lucide-solid/icons/badge-euro";
 import BookOpenText from "lucide-solid/icons/book-open-text";
+import Coins from "lucide-solid/icons/coins";
 import Cpu from "lucide-solid/icons/cpu";
 import Forklift from "lucide-solid/icons/forklift";
 import Support from "lucide-solid/icons/heart-plus";
@@ -63,6 +66,22 @@ const Link = (
 
 export default function DashboardLayout(props: { children: JSXElement }) {
   const user = useUser();
+
+  // const z = user.z();
+
+  // const [orgData] = createQuery(() => {
+  //   const userId = user.user()?.id;
+  //   const mainQuery = z!.query.TB_organizations.related("owner")
+  //     .related("customerOrders")
+  //     .related("purchases")
+  //     .related("sales")
+  //     .related("customers")
+  //     .related("products");
+  //   if (!userId) {
+  //     return mainQuery.limit(0);
+  //   }
+  //   return mainQuery.limit(1).where("owner_id", "=", userId);
+  // });
 
   const location = useLocation();
   const relativePath = useResolvedPath(() => location.pathname);
@@ -214,7 +233,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                       </SidebarMenuItem>
                       <SidebarMenuItem>
                         <Link href="/accounting">
-                          <Notebook class="size-4" />
+                          <Coins class="size-4" />
                           Accounting
                           <SidebarMenuBadge class="mr-1"></SidebarMenuBadge>
                         </Link>
@@ -248,8 +267,23 @@ export default function DashboardLayout(props: { children: JSXElement }) {
         </Sidebar>
         <div class="w-full h-full flex flex-col p-2">
           <div class="relative w-full h-full flex flex-col overflow-auto border rounded-lg bg-background">
-            <div class="sticky top-0 left-0 z-50 w-full h-max flex p-2 bg-background">
+            <div class="sticky top-0 left-0 z-50 w-full h-max flex p-2 bg-background gap-2">
               <SidebarButtonTrigger onToggle={setOpen} />
+              <Show when={true}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    if (window.history.length > 1) {
+                      navigate(-1);
+                    }
+                  }}
+                  class="px-2 md:px-3"
+                >
+                  <ArrowLeft class="size-4" />
+                  <span class="sr-only md:not-sr-only">Back</span>
+                </Button>
+              </Show>
             </div>
             <Suspense
               fallback={
@@ -277,8 +311,7 @@ const SidebarButtonTrigger = (props: { onToggle: (open: boolean) => void }) => {
         props.onToggle(open());
       }}
       size="icon"
-      variant="ghost"
-      class="bg-background"
+      variant="secondary"
     >
       <Show when={open()} fallback={<SidebarOpen class="size-4" />}>
         <SidebarClose class="size-4" />

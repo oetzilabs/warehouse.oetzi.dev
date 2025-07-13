@@ -16,15 +16,11 @@ export default function EditDevicePage() {
   return (
     <div class="container py-4 flex flex-col gap-4 relative">
       <div class="flex flex-row items-center gap-4">
-        <Button variant="outline" size="sm" as={A} href={`/devices/${params.did}`}>
-          <ArrowLeft class="size-4" />
-          Back
-        </Button>
         <h1 class="text-xl font-semibold">Edit Device</h1>
       </div>
       <Suspense
         fallback={
-          <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+          <div class="w-full grow flex items-center justify-center flex-col gap-2 p-10">
             <Loader2 class="size-4 animate-spin" />
             <span class="text-sm">Loading...</span>
           </div>

@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { A, createAsync, useAction, useNavigate, useParams } from "@solidjs/router";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import BadgeEuro from "lucide-solid/icons/badge-euro";
 import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
@@ -79,10 +80,9 @@ export default function SalePage() {
           <div class="container flex flex-col gap-4 py-0 relative">
             <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
               <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href="/sales">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
+                <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                  <BadgeEuro class="size-4" />
+                </div>
                 <div class="flex flex-row items-baseline gap-2">
                   <h1 class="text-xl font-semibold">Sale</h1>
                 </div>

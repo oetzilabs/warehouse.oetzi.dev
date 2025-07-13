@@ -30,6 +30,7 @@ import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import Receipt from "lucide-solid/icons/receipt";
 import Send from "lucide-solid/icons/send";
+import ShoppingCart from "lucide-solid/icons/shopping-cart";
 import Tag from "lucide-solid/icons/tag";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
@@ -97,11 +98,10 @@ export default function CustomerOrderPage() {
         {(orderInfo) => (
           <div class="container flex flex-col gap-4 py-0 relative">
             <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
-              <div class="flex flex-row items-center gap-4 py-2">
-                <Button variant="outline" size="sm" as={A} href="/orders">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
+              <div class="flex flex-row items-center gap-4 py-0">
+                <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                  <ShoppingCart class="size-4" />
+                </div>
                 <div class="flex flex-row items-baseline gap-2">
                   <h1 class="leading-none font-semibold">Customer Order</h1>
                 </div>
