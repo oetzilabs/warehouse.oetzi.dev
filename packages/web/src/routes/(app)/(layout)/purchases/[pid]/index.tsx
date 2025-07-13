@@ -29,6 +29,7 @@ import Plus from "lucide-solid/icons/plus";
 import Printer from "lucide-solid/icons/printer";
 import Receipt from "lucide-solid/icons/receipt";
 import Send from "lucide-solid/icons/send";
+import Tags from "lucide-solid/icons/tags";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -66,10 +67,9 @@ export default function PurchasePage() {
           <div class="container flex flex-col gap-4 py-0 relative">
             <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
               <div class="flex flex-row items-center gap-4 py-2">
-                <Button variant="outline" size="sm" as={A} href="/purchases">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
+                <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                  <Tags class="size-4" />
+                </div>
                 <div class="flex flex-row items-baseline gap-2">
                   <h1 class="leading-none font-semibold">Purchase</h1>
                 </div>

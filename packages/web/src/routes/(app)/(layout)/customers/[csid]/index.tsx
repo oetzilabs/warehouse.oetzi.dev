@@ -35,6 +35,7 @@ import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
 import RotateCw from "lucide-solid/icons/rotate-cw";
+import UsersRound from "lucide-solid/icons/users-round";
 import X from "lucide-solid/icons/x";
 import { createSignal, For, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -57,43 +58,41 @@ export default function CustomerPage() {
   const isDeletingCustomer = useSubmission(deleteCustomer);
 
   return (
-    <Suspense
-      fallback={
-        <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-          <Loader2 class="size-4 animate-spin" />
-          <span class="text-sm">Loading...</span>
+    <div class="container flex flex-col gap-4 py-0 relative">
+      <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+        <div class="flex flex-row items-center gap-4">
+          <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+            <UsersRound class="size-4" />
+          </div>
+          <h1 class="text-xl font-semibold">Customer</h1>
         </div>
-      }
-    >
-      <Show when={customer()}>
-        {(customerInfo) => (
-          <div class="container flex flex-col gap-4 py-0 relative">
-            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
-              <div class="flex flex-row items-center gap-4">
-                <Button variant="outline" size="sm" as={A} href="/customers">
-                  <ArrowLeft class="size-4" />
-                  Back
-                </Button>
-                <h1 class="text-xl font-semibold">Customer</h1>
-              </div>
-              <div class="flex flex-row items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    toast.promise(revalidate(getCustomerById.keyFor(customerInfo().customer.id)), {
-                      loading: "Refreshing supplier...",
-                      success: "Refreshed supplier",
-                      error: "Failed to refresh supplier",
-                    });
-                  }}
-                >
-                  <RotateCw class="size-4" />
-                  Refresh
-                </Button>
-              </div>
-            </div>
-
+        <div class="flex flex-row items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              toast.promise(revalidate(getCustomerById.keyFor(customerInfo().customer.id)), {
+                loading: "Refreshing supplier...",
+                success: "Refreshed supplier",
+                error: "Failed to refresh supplier",
+              });
+            }}
+          >
+            <RotateCw class="size-4" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+      <Suspense
+        fallback={
+          <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+            <Loader2 class="size-4 animate-spin" />
+            <span class="text-sm">Loading...</span>
+          </div>
+        }
+      >
+        <Show when={customer()}>
+          {(customerInfo) => (
             <div class="flex flex-col gap-4">
               <div class="col-span-full md:col-span-2 flex flex-col gap-4">
                 <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
@@ -179,9 +178,9 @@ export default function CustomerPage() {
                 <Notes id={() => customerInfo().customer.id} list={() => customerInfo().customer.notes} />
               </div>
             </div>
-          </div>
-        )}
-      </Show>
-    </Suspense>
+          )}
+        </Show>
+      </Suspense>
+    </div>
   );
 }

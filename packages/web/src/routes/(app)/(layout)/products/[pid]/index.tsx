@@ -37,6 +37,7 @@ import Edit from "lucide-solid/icons/edit";
 import Loader2 from "lucide-solid/icons/loader-2";
 import Map from "lucide-solid/icons/map";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import PackageSearch from "lucide-solid/icons/package-search";
 import Plus from "lucide-solid/icons/plus";
 import RulerDimensionLine from "lucide-solid/icons/ruler-dimension-line";
 import Weight from "lucide-solid/icons/weight";
@@ -96,10 +97,10 @@ export default function ProductPage() {
             <div class="container flex flex-col gap-0 relative">
               <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background pb-4">
                 <div class="flex flex-row items-center gap-4">
-                  <Button variant="outline" size="sm" as={A} href="/products">
-                    <ArrowLeft class="size-4" />
-                    Back
-                  </Button>
+                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                    <PackageSearch class="size-4" />
+                  </div>
+                  <h1 class="font-semibold leading-none">Product</h1>
                 </div>
                 <div class="flex flex-row items-center gap-2">
                   <Button size="sm" as={A} href={`/map?products=${productInfo().id}`}>

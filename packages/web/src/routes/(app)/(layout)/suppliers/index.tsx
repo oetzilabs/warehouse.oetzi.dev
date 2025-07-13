@@ -10,6 +10,7 @@ import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getSuppliers } from "@/lib/api/suppliers";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Forklift from "lucide-solid/icons/forklift";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Upload from "lucide-solid/icons/upload";
@@ -36,10 +37,9 @@ export default function SuppliersPage() {
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full ">
                 <div class="flex flex-row items-center gap-4">
-                  <Button variant="outline" size="sm" as={A} href="/dashboard" class="bg-background">
-                    <ArrowLeft class="size-4" />
-                    Back
-                  </Button>
+                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                    <Forklift class="size-4" />
+                  </div>
                   <h1 class="font-semibold leading-none">Suppliers</h1>
                 </div>
                 <div class="flex items-center gap-0">

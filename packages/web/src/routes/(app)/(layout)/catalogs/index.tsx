@@ -7,6 +7,7 @@ import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { CatalogInfo } from "@warehouseoetzidev/core/src/entities/catalogs";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import BookOpenText from "lucide-solid/icons/book-open-text";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { createSignal, Show } from "solid-js";
@@ -59,10 +60,9 @@ export default function CatalogsPage() {
         <div class="w-full flex flex-col gap-0">
           <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
             <div class="flex flex-row items-center gap-4">
-              <Button variant="outline" size="sm" as={A} href="/dashboard" class="w-max">
-                <ArrowLeft class="size-4" />
-                Dashboard
-              </Button>
+              <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                <BookOpenText class="size-4" />
+              </div>
               <h1 class="font-medium">Catalog</h1>
             </div>
             <div class="flex items-center gap-0">

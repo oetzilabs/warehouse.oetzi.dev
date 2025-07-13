@@ -9,6 +9,7 @@ import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
 import { AccountingCurrencyTotalsEntry, AccountingInfo } from "@warehouseoetzidev/core/src/entities/accounting";
 import dayjs from "dayjs";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Coins from "lucide-solid/icons/coins";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import { createSignal, For, onMount, Show } from "solid-js";
 import { toast } from "solid-sonner";
@@ -129,10 +130,9 @@ export default function AccountingPage() {
             <div class="w-full flex flex-col gap-4">
               <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
                 <div class="flex flex-row items-center gap-4">
-                  <Button variant="outline" size="sm" as={A} href="/dashboard" class="bg-background">
-                    <ArrowLeft class="size-4" />
-                    Back
-                  </Button>
+                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                    <Coins class="size-4" />
+                  </div>
                   <h1 class="font-semibold leading-none">Accounting</h1>
                 </div>
                 <div class="flex items-center gap-0">

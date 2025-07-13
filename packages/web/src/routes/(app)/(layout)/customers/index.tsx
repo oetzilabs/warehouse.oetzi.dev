@@ -13,6 +13,7 @@ import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import Upload from "lucide-solid/icons/upload";
+import UsersRound from "lucide-solid/icons/users-round";
 import { Show } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -36,10 +37,9 @@ export default function CustomersPage() {
             <div class="w-full flex flex-col gap-4">
               <div class="flex items-center gap-4 justify-between w-full ">
                 <div class="flex flex-row items-center gap-4">
-                  <Button variant="outline" size="sm" as={A} href="/dashboard" class="bg-background">
-                    <ArrowLeft class="size-4" />
-                    Back
-                  </Button>
+                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                    <UsersRound class="size-4" />
+                  </div>
                   <h1 class="font-semibold leading-none">Customers</h1>
                 </div>
                 <div class="flex items-center gap-0">

@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getDevices } from "@/lib/api/devices";
 import { A, createAsync, revalidate, RouteDefinition, useAction, useSubmission } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Cpu from "lucide-solid/icons/cpu";
 import Plus from "lucide-solid/icons/plus";
 import PrinterPlus from "lucide-solid/icons/printer";
 import RotateCw from "lucide-solid/icons/rotate-cw";
@@ -30,10 +31,9 @@ export default function DevicesPage() {
             <div class="w-full flex flex-col gap-0">
               <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
                 <div class="flex flex-row items-center gap-4">
-                  <Button size="sm" variant="outline" class="bg-background" as={A} href="/dashboard">
-                    <ArrowLeft class="size-4" />
-                    Dashboard
-                  </Button>
+                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                    <Cpu class="size-4" />
+                  </div>
                   <h1 class="font-semibold leading-none">Devices</h1>
                 </div>
                 <div class="flex items-center gap-0">

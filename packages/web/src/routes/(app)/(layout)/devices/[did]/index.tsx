@@ -68,27 +68,6 @@ export default function DevicePage() {
       <Show when={device()}>
         {(deviceInfo) => (
           <div class="container flex flex-col gap-4 py-0 relative">
-            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
-              <Button variant="outline" size="sm" as={A} href="/devices" class="w-max">
-                <ArrowLeft class="size-4" />
-                Back
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  toast.promise(revalidate(getDeviceById.keyFor(deviceInfo().id)), {
-                    loading: "Refreshing device...",
-                    success: "Refreshed device",
-                    error: "Failed to refresh device",
-                  });
-                }}
-              >
-                <RotateCw class="size-4" />
-                Refresh
-              </Button>
-            </div>
-
             <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
               <div class="flex flex-row items-center gap-2 justify-between">
                 <div class="flex flex-row items-baseline gap-2">
