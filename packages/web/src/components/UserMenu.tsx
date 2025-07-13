@@ -19,7 +19,7 @@ import LogOut from "lucide-solid/icons/log-out";
 import MessagesSquare from "lucide-solid/icons/messages-square";
 import Settings from "lucide-solid/icons/settings";
 import User from "lucide-solid/icons/user";
-import { Match, Show, Switch } from "solid-js";
+import { createMemo, Match, Show, Switch } from "solid-js";
 import { toast } from "solid-sonner";
 import { useUser } from "./providers/User";
 
@@ -27,6 +27,15 @@ export default function UserMenu() {
   const user = useUser();
   const logoutAction = useAction(logout);
   const isLoggingOut = useSubmission(logout);
+
+  const isLoggedIn = createMemo(() => user.loggined());
+  const userData = createMemo(() => {
+    const il = isLoggedIn();
+    if (!il) return null;
+    const u = user.user();
+    if (!u) return null;
+    return u;
+  });
 
   return (
     <div class="w-max flex text-base gap-2">
@@ -43,7 +52,7 @@ export default function UserMenu() {
         <Match when={!user.ready()}>
           <Skeleton class="w-24 h-8" />
         </Match>
-        <Match when={user.ready() && user.loggined() && user.user()}>
+        <Match when={userData()}>
           {(s) => (
             <DropdownMenu placement="bottom-end" gutter={6}>
               <DropdownMenuTrigger
