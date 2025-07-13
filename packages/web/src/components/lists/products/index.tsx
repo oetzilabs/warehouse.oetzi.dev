@@ -113,7 +113,7 @@ export const ProductsList = (props: ProductsListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-4 pb-4">
+    <div class="w-full flex flex-col gap-2 pb-2">
       <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
@@ -134,6 +134,7 @@ export const ProductsList = (props: ProductsListProps) => {
         noResultsMessage="No products have been found"
         searchTerm={search}
         variant="grid"
+        gridClass="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2"
         itemClass="hover:shadow-md !rounded-lg"
       />
     </div>

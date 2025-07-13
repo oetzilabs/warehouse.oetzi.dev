@@ -54,170 +54,188 @@ export default function PurchasePage() {
   const isDeletingPurchase = useSubmission(deletePurchase);
 
   return (
-    <Suspense
-      fallback={
-        <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-          <Loader2 class="size-4 animate-spin" />
-          <span class="text-sm">Loading...</span>
-        </div>
-      }
-    >
-      <Show when={purchase()}>
-        {(purchaseInfo) => (
-          <div class="container flex flex-col gap-4 py-0 relative">
-            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
-              <div class="flex flex-row items-center gap-4 py-2">
-                <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
-                  <Tags class="size-4" />
-                </div>
-                <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="leading-none font-semibold">Purchase</h1>
-                </div>
-              </div>
-              <div class="flex flex-row items-center gap-2">
-                <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
-                    <MoreHorizontal class="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href="./edit">
-                      <Edit class="size-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
-                      <DialogTrigger
-                        as={DropdownMenuItem}
-                        class="!text-red-500 gap-2 cursor-pointer"
-                        closeOnSelect={false}
-                        onSelect={() => {
-                          setTimeout(() => setDeleteDialogOpen(true), 10);
+    <div class="flex flex-row w-full grow p-2 gap-2">
+      <div class="flex flex-col gap-2 w-full">
+        <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+          <div class="flex flex-row items-center gap-4 py-2">
+            <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+              <Tags class="size-4" />
+            </div>
+            <div class="flex flex-row items-baseline gap-2">
+              <h1 class="leading-none font-semibold">Purchase</h1>
+            </div>
+          </div>
+          <div class="flex flex-row items-center gap-2">
+            <DropdownMenu placement="bottom-end">
+              <DropdownMenuTrigger as={Button} variant="outline" size="icon">
+                <MoreHorizontal class="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href="./edit">
+                  <Edit class="size-4" />
+                  Edit
+                </DropdownMenuItem>
+                <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
+                  <DialogTrigger
+                    as={DropdownMenuItem}
+                    class="!text-red-500 gap-2 cursor-pointer"
+                    closeOnSelect={false}
+                    onSelect={() => {
+                      setTimeout(() => setDeleteDialogOpen(true), 10);
+                    }}
+                  >
+                    <X class="size-4" />
+                    Delete
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure you want to delete this order?</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. This will permanently delete the order and all its data.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        disabled={isDeletingPurchase.pending}
+                        onClick={() => {
+                          const promise = new Promise(async (resolve, reject) => {
+                            const p = await deletePurchaseAction(params.pid).catch(reject);
+                            setDeleteDialogOpen(false);
+                            navigate(`/suppliers/${params.spid}`);
+                            return resolve(p);
+                          });
+                          toast.promise(promise, {
+                            loading: "Deleting order...",
+                            success: "Order deleted",
+                            error: "Failed to delete order",
+                          });
                         }}
                       >
-                        <X class="size-4" />
                         Delete
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Are you sure you want to delete this order?</DialogTitle>
-                          <DialogDescription>
-                            This action cannot be undone. This will permanently delete the order and all its data.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            disabled={isDeletingPurchase.pending}
-                            onClick={() => {
-                              const promise = new Promise(async (resolve, reject) => {
-                                const p = await deletePurchaseAction(purchaseInfo().id).catch(reject);
-                                setDeleteDialogOpen(false);
-                                navigate(`/suppliers/${params.spid}`);
-                                return resolve(p);
-                              });
-                              toast.promise(promise, {
-                                loading: "Deleting order...",
-                                success: "Order deleted",
-                                error: "Failed to delete order",
-                              });
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <Suspense
+          fallback={
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
             </div>
-
-            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
-              <div class="flex flex-row items-center gap-2 justify-between">
-                <h2 class="text-2xl font-bold tracking-wide">#{purchaseInfo().barcode ?? "N/A"}</h2>
-                <div class="flex flex-row items-center gap-2">
-                  <Show when={purchaseInfo().status}>
-                    <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
-                      {purchaseInfo().status}
+          }
+        >
+          <Show when={purchase()}>
+            {(purchaseInfo) => (
+              <>
+                <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+                  <div class="flex flex-row items-center gap-2 justify-between">
+                    <h2 class="text-2xl font-bold tracking-wide">#{purchaseInfo().barcode ?? "N/A"}</h2>
+                    <div class="flex flex-row items-center gap-2">
+                      <Show when={purchaseInfo().status}>
+                        <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
+                          {purchaseInfo().status}
+                        </span>
+                      </Show>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Created: {dayjs(purchaseInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
                     </span>
-                  </Show>
-                </div>
-              </div>
-              <div class="flex flex-col gap-1">
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Created: {dayjs(purchaseInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                </span>
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Updated: {dayjs(purchaseInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
-                </span>
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Total Items:{" "}
-                  {purchaseInfo()
-                    .products.map((p) => p.quantity)
-                    .reduce((a, b) => a + b, 0)}
-                </span>
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Products: {purchaseInfo().products.length}
-                </span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col border rounded-lg overflow-clip">
-                  <div class="w-full p-4 border-b bg-muted/30">
-                    <h2 class="font-medium">Products</h2>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Updated: {dayjs(purchaseInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
+                    </span>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Total Items:{" "}
+                      {purchaseInfo()
+                        .products.map((p) => p.quantity)
+                        .reduce((a, b) => a + b, 0)}
+                    </span>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Products: {purchaseInfo().products.length}
+                    </span>
                   </div>
-                  <div class="flex flex-col gap-0">
-                    <For each={purchaseInfo().products}>
-                      {(product) => (
-                        <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
-                          <div class="flex flex-row items-center justify-between">
-                            <div class="flex flex-col gap-0.5">
-                              <span class="font-medium">{product.product.name}</span>
-                              <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
-                              <Show when={product.product.organizations[0].tg}>
-                                <span class="text-sm text-muted-foreground">
-                                  {product.product.organizations[0].tg?.name} (
-                                  {product.product.organizations[0].tg?.crs[0]?.tr.rate}%)
-                                </span>
-                              </Show>
-                            </div>
-                            <div class="flex flex-col items-end">
-                              <div class="flex flex-row items-baseline gap-1">
-                                <span class="text-sm text-muted-foreground">
-                                  {product.product.sellingPrice.toFixed(2)}
-                                </span>
-                                <span class="font-medium">x{product.quantity}</span>
+                </div>
+
+                <div class="w-full flex flex-col gap-4">
+                  <div class="col-span-full md:col-span-2 flex flex-col gap-4">
+                    <div class="flex flex-col border rounded-lg overflow-clip">
+                      <div class="w-full p-4 border-b bg-muted/30">
+                        <h2 class="font-medium">Products</h2>
+                      </div>
+                      <div class="flex flex-col gap-0">
+                        <For each={purchaseInfo().products}>
+                          {(product) => (
+                            <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
+                              <div class="flex flex-row items-center justify-between">
+                                <div class="flex flex-col gap-0.5">
+                                  <span class="font-medium">{product.product.name}</span>
+                                  <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
+                                  <Show when={product.product.organizations[0].tg}>
+                                    <span class="text-sm text-muted-foreground">
+                                      {product.product.organizations[0].tg?.name} (
+                                      {product.product.organizations[0].tg?.crs[0]?.tr.rate}%)
+                                    </span>
+                                  </Show>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                  <div class="flex flex-row items-baseline gap-1">
+                                    <span class="text-sm text-muted-foreground">
+                                      {product.product.sellingPrice.toFixed(2)}
+                                    </span>
+                                    <span class="font-medium">x{product.quantity}</span>
+                                  </div>
+                                  <span class="text-sm text-muted-foreground">
+                                    {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
+                                    {product.product.currency}
+                                  </span>
+                                  <Show when={product.product.organizations[0].tg}>
+                                    <span class="text-xs text-muted-foreground">
+                                      {(
+                                        (product.product.sellingPrice *
+                                          product.quantity *
+                                          (product.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
+                                        100
+                                      ).toFixed(2)}{" "}
+                                      {product.product.currency} Tax
+                                    </span>
+                                  </Show>
+                                </div>
                               </div>
-                              <span class="text-sm text-muted-foreground">
-                                {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
-                                {product.product.currency}
-                              </span>
-                              <Show when={product.product.organizations[0].tg}>
-                                <span class="text-xs text-muted-foreground">
-                                  {(
-                                    (product.product.sellingPrice *
-                                      product.quantity *
-                                      (product.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
-                                    100
-                                  ).toFixed(2)}{" "}
-                                  {product.product.currency} Tax
-                                </span>
-                              </Show>
                             </div>
-                          </div>
-                        </div>
-                      )}
-                    </For>
+                          )}
+                        </For>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
+              </>
+            )}
+          </Show>
+        </Suspense>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full">
+        <Suspense
+          fallback={
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          }
+        >
+          <Show when={purchase()}>
+            {(purchaseInfo) => (
+              <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Summary</h2>
                   <div class="flex flex-col">
                     <For
@@ -331,7 +349,7 @@ export default function PurchasePage() {
                 </div>
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
-                  <div class="flex flex-col xl:flex-row gap-4 w-full">
+                  <div class="flex flex-col gap-2 w-full">
                     <Button size="lg" variant="outline" class="bg-background w-full">
                       <Receipt class="size-6" />
                       Download Invoice
@@ -341,7 +359,7 @@ export default function PurchasePage() {
                       Send Order
                     </Button>
                   </div>
-                  <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="w-full flex flex-col gap-4">
                     <Suspense
                       fallback={
                         <div class="w-full bg-muted-foreground/5 rounded-md p-8 gap-4 flex items-center justify-center col-span-full">
@@ -374,8 +392,7 @@ export default function PurchasePage() {
                                 onClick={() => {
                                   console.log("Selected printer:", printer);
                                 }}
-                                size="lg"
-                                class="w-full"
+                                class="w-max"
                               >
                                 <Printer class="size-4 mr-2" />
                                 {printer.name || printer.type.name}
@@ -388,10 +405,10 @@ export default function PurchasePage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-      </Show>
-    </Suspense>
+            )}
+          </Show>
+        </Suspense>
+      </div>
+    </div>
   );
 }

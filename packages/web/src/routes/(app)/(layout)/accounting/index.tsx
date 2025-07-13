@@ -123,36 +123,36 @@ export default function AccountingPage() {
   });
 
   return (
-    <Show when={accounting()}>
-      {(accountingList) => (
-        <div class="container flex flex-col grow py-0 relative">
-          <div class="w-full flex flex-row h-full">
-            <div class="w-full flex flex-col gap-4">
-              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
-                <div class="flex flex-row items-center gap-4">
-                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
-                    <Coins class="size-4" />
-                  </div>
-                  <h1 class="font-semibold leading-none">Accounting</h1>
-                </div>
-                <div class="flex items-center gap-0">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      toast.promise(revalidate(getAccountingList.key), {
-                        loading: "Refreshing accounting...",
-                        success: "Accounting refreshed",
-                        error: "Failed to refresh accounting",
-                      });
-                    }}
-                  >
-                    <RotateCw class="size-4" />
-                    Refresh
-                  </Button>
-                </div>
+    <div class="flex flex-row w-full grow p-2 gap-2">
+      <div class="w-full flex flex-row h-full">
+        <div class="w-full flex flex-col gap-0">
+          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-2">
+            <div class="flex flex-row items-center gap-4">
+              <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                <Coins class="size-4" />
               </div>
-              <div class="flex flex-col gap-4 w-full grow">
+              <h1 class="font-semibold leading-none">Accounting</h1>
+            </div>
+            <div class="flex items-center gap-0">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  toast.promise(revalidate(getAccountingList.key), {
+                    loading: "Refreshing accounting...",
+                    success: "Accounting refreshed",
+                    error: "Failed to refresh accounting",
+                  });
+                }}
+              >
+                <RotateCw class="size-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <Show when={accounting()}>
+            {(accountingList) => (
+              <div class="flex flex-col gap-2 w-full grow">
                 <div class="flex flex-col gap-2 w-full">
                   <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
                     <div class="flex flex-col gap-2 w-full h-full p-4">
@@ -161,7 +161,7 @@ export default function AccountingPage() {
                   </div>
                 </div>
                 <AccountingList data={() => accountingList().transactions} />
-                <div class="flex flex-col items-start justify-start gap-4 border rounded-lg overflow-clip">
+                <div class="flex flex-col items-start justify-start gap-2 border rounded-lg overflow-clip">
                   <Table class="table-auto">
                     <TableHeader>
                       <TableRow>
@@ -241,8 +241,8 @@ export default function AccountingPage() {
                     </TableBody>
                   </Table>
                 </div>
-                <div class="flex flex-col gap-1 items-end justify-start px-4">
-                  <div class="hidden md:flex flex-col gap-1 items-end justify-start px-4">
+                <div class="flex flex-col gap-1 items-end justify-start">
+                  <div class="hidden md:flex flex-col gap-1 items-end justify-start px-2">
                     <span class="text-xs text-muted-foreground text-right">
                       * Storno: Income that is subtracted from the income total
                     </span>
@@ -250,17 +250,21 @@ export default function AccountingPage() {
                       ** Supplier Storno: Expenses that are subtracted from the expenses total
                     </span>
                   </div>
-                  <div class="flex flex-col gap-1 items-end justify-start px-4 md:hidden">
+                  <div class="flex flex-col gap-1 items-end justify-start px-2 md:hidden">
                     <span class="text-xs text-muted-foreground text-right">
                       * Storno and Supplier Storne has been subtracted from the totals
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            )}
+          </Show>
         </div>
-      )}
-    </Show>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="flex flex-col w-0 md:w-[500px] h-full">
+        <div class="flex flex-col w-0 md:w-[500px] grow"></div>
+      </div>
+    </div>
   );
 }

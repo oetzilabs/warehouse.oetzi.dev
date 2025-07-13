@@ -37,19 +37,13 @@ export const SupplierForm: Component<SupplierFormProps> = (props) => {
 
   return (
     <form
-      class="space-y-4 w-full max-w-2xl"
+      class="space-y-4 w-full"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
       }}
     >
-      <form.Field
-        name="name"
-        validators={{
-          onChange: pipe(string(), minLength(1)),
-          onBlur: pipe(string(), minLength(1)),
-        }}
-      >
+      <form.Field name="name">
         {(field) => (
           <TextField class="gap-2 flex flex-col">
             <TextFieldLabel class="capitalize pl-1">
@@ -62,19 +56,10 @@ export const SupplierForm: Component<SupplierFormProps> = (props) => {
               onBlur={field().handleBlur}
               required
             />
-            <Show when={!field().state.meta.isValid && field().state.meta.isTouched}>
-              <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-            </Show>
           </TextField>
         )}
       </form.Field>
-      <form.Field
-        name="email"
-        validators={{
-          onChange: pipe(string(), minLength(1)),
-          onBlur: pipe(string(), minLength(1)),
-        }}
-      >
+      <form.Field name="email">
         {(field) => (
           <TextField class="gap-2 flex flex-col">
             <TextFieldLabel class="capitalize pl-1">
@@ -87,9 +72,6 @@ export const SupplierForm: Component<SupplierFormProps> = (props) => {
               onBlur={field().handleBlur}
               required
             />
-            <Show when={!field().state.meta.isValid && field().state.meta.isTouched}>
-              <TextFieldErrorMessage>{field().state.meta.errors[0]?.message}</TextFieldErrorMessage>
-            </Show>
           </TextField>
         )}
       </form.Field>
@@ -154,7 +136,7 @@ export const SupplierForm: Component<SupplierFormProps> = (props) => {
         })}
       >
         {(state) => (
-          <Button type="submit" disabled={!state().canSubmit || state().isSubmitting}>
+          <Button type="submit" size="sm" disabled={!state().canSubmit || state().isSubmitting}>
             <Show when={state().isSubmitting} fallback={props.submitText ?? "Submit"}>
               <Loader2 class="size-4 animate-spin" />
               {props.submittingText ?? "Submitting..."}

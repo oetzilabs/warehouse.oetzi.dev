@@ -9,6 +9,7 @@ import { clientOnly } from "@solidjs/start";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Loader2 from "lucide-solid/icons/loader-2";
+import Package from "lucide-solid/icons/package";
 import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
 import SaveIcon from "lucide-solid/icons/save";
@@ -33,17 +34,16 @@ export default function UpdateProductInventoryPage() {
   const isUpdatingInventoryForProduct = useSubmission(updateInventoryForProduct);
 
   return (
-    <Show when={data()}>
-      {(product) => (
-        <div class="container flex flex-col grow py-0 relative">
-          <div class="w-full flex flex-row h-full gap-4">
+    <div class="flex flex-row w-full grow p-2 gap-2">
+      <div class="w-full flex flex-row h-full gap-4">
+        <Show when={data()}>
+          {(product) => (
             <div class="w-full flex flex-col gap-4">
-              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
+              <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
                 <div class="flex flex-row items-center gap-2">
-                  <Button variant="outline" size="sm" as={A} href="/inventory">
-                    <ArrowLeft class="size-4" />
-                    Back
-                  </Button>
+                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                    <Package class="size-4" />
+                  </div>
                   <h1 class="font-semibold leading-none">Update Inventory for {product().name}</h1>
                 </div>
                 <div class="flex items-center gap-0">
@@ -80,10 +80,12 @@ export default function UpdateProductInventoryPage() {
                 />
               </div>
             </div>
-          </div>
-        </div>
-      )}
-    </Show>
+          )}
+        </Show>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full"></div>
+    </div>
   );
 }
 

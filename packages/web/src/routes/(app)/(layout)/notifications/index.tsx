@@ -30,10 +30,10 @@ export default function NotificationsPage() {
   const isMarkingNotificationUnread = useSubmission(markNotificationUnread);
 
   return (
-    <div class="container flex flex-col grow py-0 relative">
+    <div class="flex flex-row w-full grow p-2 gap-2">
       <div class="w-full flex flex-row h-full gap-4">
         <div class="w-full flex flex-col bg-background">
-          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
+          <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
             <div class="flex flex-row items-center gap-4">
               <Button size="sm" as={A} href="/dashboard" variant="outline" class="bg-background">
                 <ArrowLeft class="size-4" />
@@ -155,6 +155,8 @@ export default function NotificationsPage() {
           </div>
         </div>
       </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full"></div>
     </div>
   );
 }

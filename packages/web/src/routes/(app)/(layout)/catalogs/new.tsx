@@ -100,7 +100,7 @@ export default function NewCatalogPage() {
     <div class="container flex flex-row grow py-0">
       <NewCatalogFormProvider>
         <div class="w-full flex flex-col gap-4">
-          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
+          <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
             <div class="flex items-center gap-4">
               <Button size="sm" variant="outline" class="bg-background px-2 md:px-3" onClick={() => navigate(-1)}>
                 <ArrowLeft class="size-4" />

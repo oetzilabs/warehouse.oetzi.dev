@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { getSupplierById, updateSupplier } from "@/lib/api/suppliers";
 import { A, createAsync, useAction, useNavigate, useParams } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
+import Forklift from "lucide-solid/icons/forklift";
 import Loader2 from "lucide-solid/icons/loader-2";
 import { Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -14,51 +15,54 @@ export default function EditSupplierPage() {
   const updateSupplierAction = useAction(updateSupplier);
 
   return (
-    <div class="container py-4 flex flex-col gap-4 relative">
-      <div class="flex flex-row items-center gap-4">
-        <Button variant="outline" size="sm" as={A} href={`/suppliers/${params.spid}`}>
-          <ArrowLeft class="size-4" />
-          Back
-        </Button>
-        <h1 class="text-xl font-semibold">Edit Supplier</h1>
-      </div>
-      <Suspense
-        fallback={
-          <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-            <Loader2 class="size-4 animate-spin" />
-            <span class="text-sm">Loading...</span>
+    <div class="flex flex-row w-full grow p-2 gap-2">
+      <div class="flex flex-col gap-2 w-full grow">
+        <div class="flex flex-row items-center gap-4">
+          <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+            <Forklift class="size-4" />
           </div>
-        }
-      >
-        <Show when={supplier()}>
-          {(supplierInfo) => (
-            <SupplierForm
-              defaultValues={{
-                id: supplierInfo().supplier.id,
-                name: supplierInfo().supplier.name,
-                email: supplierInfo().supplier.email,
-                phone: supplierInfo().supplier.phone ?? "",
-                bank_details: supplierInfo().supplier.bank_details,
-                code: supplierInfo().supplier.code,
-                payment_terms: supplierInfo().supplier.payment_terms,
-                website: supplierInfo().supplier.website,
-              }}
-              onSubmit={async (values) => {
-                const promise = updateSupplierAction(values);
-                toast.promise(promise, {
-                  loading: "Updating supplier...",
-                  success: "Supplier updated successfully",
-                  error: "Failed to update supplier",
-                });
-                await promise;
-                navigate(`/suppliers/${params.spid}`);
-              }}
-              submitText="Save Changes"
-              submittingText="Saving..."
-            />
-          )}
-        </Show>
-      </Suspense>
+          <h1 class="text-xl font-semibold">Edit Supplier</h1>
+        </div>
+        <Suspense
+          fallback={
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          }
+        >
+          <Show when={supplier()}>
+            {(supplierInfo) => (
+              <SupplierForm
+                defaultValues={{
+                  id: supplierInfo().supplier.id,
+                  name: supplierInfo().supplier.name,
+                  email: supplierInfo().supplier.email,
+                  phone: supplierInfo().supplier.phone ?? "",
+                  bank_details: supplierInfo().supplier.bank_details,
+                  code: supplierInfo().supplier.code,
+                  payment_terms: supplierInfo().supplier.payment_terms,
+                  website: supplierInfo().supplier.website,
+                }}
+                onSubmit={async (values) => {
+                  const promise = updateSupplierAction(values);
+                  toast.promise(promise, {
+                    loading: "Updating supplier...",
+                    success: "Supplier updated successfully",
+                    error: "Failed to update supplier",
+                  });
+                  await promise;
+                  navigate(`/suppliers/${params.spid}`);
+                }}
+                submitText="Save Changes"
+                submittingText="Saving..."
+              />
+            )}
+          </Show>
+        </Suspense>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full"></div>
     </div>
   );
 }

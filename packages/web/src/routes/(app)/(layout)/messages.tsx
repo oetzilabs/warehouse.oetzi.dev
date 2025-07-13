@@ -47,7 +47,7 @@ export default function MessagesPage() {
   const [selectedMail, setSelectedMail] = createSignal<MessageInfo | null>(null);
 
   return (
-    <Resizable sizes={sizes()} onSizesChange={setSizes} class="grow h-auto border-t">
+    <Resizable sizes={sizes()} onSizesChange={setSizes} class="grow h-auto">
       <ResizablePanel
         initialSize={sizes()[0] ?? 0.1}
         minSize={0.1}

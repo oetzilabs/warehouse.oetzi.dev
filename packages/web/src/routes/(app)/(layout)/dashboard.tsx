@@ -48,64 +48,11 @@ export default function DashboardPage() {
   const { dashboardFeatures } = useDashboardFeatures();
 
   return (
-    <div class="flex flex-col w-full grow py-0">
-      <div class="flex flex-col gap-4 w-full grow container">
+    <div class="flex flex-col-reverse md:flex-row w-full grow p-2 gap-2">
+      <div class="flex flex-col gap-4 w-full grow">
         <div class="flex flex-col w-full h-content">
           <div class="w-full h-content">
             <div class="flex flex-col w-full h-content gap-4">
-              <Show when={notifications()}>
-                {(notifs) => (
-                  <div class="flex flex-col w-full h-content gap-4">
-                    <For
-                      each={notifs()}
-                      fallback={
-                        <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
-                          <div class="flex flex-row items-start gap-2 w-full justify-between">
-                            <div class="flex flex-row items-center gap-2">
-                              <Check class="size-4" />
-                              <span class="text-sm font-medium">No notifications!</span>
-                            </div>
-                            <Button size="sm" as={A} href="/notifications">
-                              View all messages
-                              <ArrowUpRight class="size-4" />
-                            </Button>
-                          </div>
-                          <span class="text-xs text-muted-foreground">You're all caught up! No new notifications.</span>
-                        </div>
-                      }
-                    >
-                      {(notification) => (
-                        <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
-                          <div class="flex flex-row items-start gap-2 w-full justify-between">
-                            <div class="flex flex-row items-center gap-2">
-                              <Info class="size-4" />
-                              <span class="text-sm font-medium">{notification.title}</span>
-                              <span class="">·</span>
-                              <span class="text-sm">{dayjs(notification.createdAt).format("LLL")}</span>
-                            </div>
-                            <Button
-                              size="sm"
-                              disabled={isAcceptingNotification.pending}
-                              onClick={() => {
-                                toast.promise(acceptNotificationAction(notification.id), {
-                                  loading: "Closing notification...",
-                                  success: "Closed notification",
-                                  error: "Failed to close notification",
-                                });
-                              }}
-                            >
-                              Mark as read
-                            </Button>
-                          </div>
-                          <div class="prose prose-sm prose-neutral dark:prose-invert">
-                            <span>{notification.content}</span>
-                          </div>
-                        </div>
-                      )}
-                    </For>
-                  </div>
-                )}
-              </Show>
               <div class="grid grid-cols-2 md:grid-cols-4 w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 items-center">
                 <Show when={inventory()}>
                   {(inv) => (
@@ -319,6 +266,66 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-full md:w-[500px] h-full">
+        <Show when={notifications()}>
+          {(notifs) => (
+            <div class="flex flex-col w-full h-content gap-4">
+              <For
+                each={notifs()}
+                fallback={
+                  <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
+                    <div class="flex flex-row items-start gap-2 w-full justify-between">
+                      <div class="flex flex-row items-center gap-2">
+                        <Check class="size-4" />
+                        <span class="text-sm font-medium">No notifications!</span>
+                      </div>
+                      <Button size="sm" as={A} href="/notifications">
+                        View all messages
+                        <ArrowUpRight class="size-4" />
+                      </Button>
+                    </div>
+                    <span class="text-xs text-muted-foreground">You're all caught up! No new notifications.</span>
+                  </div>
+                }
+              >
+                {(notification) => (
+                  <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
+                    <div class="flex flex-row items-start gap-2 w-full justify-between">
+                      <div class="flex flex-row items-center gap-2">
+                        <Info class="size-4" />
+                        <span class="text-sm font-medium">{notification.title}</span>
+                      </div>
+                    </div>
+                    <div class="prose prose-sm prose-neutral dark:prose-invert">
+                      <span>{notification.content}</span>
+                    </div>
+                    <div class="flex flex-row items-center justify-between gap-2">
+                      <div class="">
+                        <span class="text-xs">{dayjs(notification.createdAt).format("LLL")}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        class="w-max"
+                        disabled={isAcceptingNotification.pending}
+                        onClick={() => {
+                          toast.promise(acceptNotificationAction(notification.id), {
+                            loading: "Closing notification...",
+                            success: "Closed notification",
+                            error: "Failed to close notification",
+                          });
+                        }}
+                      >
+                        Mark as read
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          )}
+        </Show>
       </div>
     </div>
   );

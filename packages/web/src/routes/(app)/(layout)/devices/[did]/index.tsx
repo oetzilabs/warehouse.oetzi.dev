@@ -57,18 +57,18 @@ export default function DevicePage() {
   const isTestPrinting = useSubmission(testPrint);
 
   return (
-    <Suspense
-      fallback={
-        <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-          <Loader2 class="size-4 animate-spin" />
-          <span class="text-sm">Loading...</span>
-        </div>
-      }
-    >
-      <Show when={device()}>
-        {(deviceInfo) => (
-          <div class="container flex flex-col gap-4 py-0 relative">
-            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+    <div class="flex flex-row w-full grow p-2 gap-2">
+      <Suspense
+        fallback={
+          <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+            <Loader2 class="size-4 animate-spin" />
+            <span class="text-sm">Loading...</span>
+          </div>
+        }
+      >
+        <Show when={device()}>
+          {(deviceInfo) => (
+            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground w-full h-max">
               <div class="flex flex-row items-center gap-2 justify-between">
                 <div class="flex flex-row items-baseline gap-2">
                   <h2 class="text-2xl font-bold tracking-wide uppercase">{deviceInfo().name}</h2>
@@ -149,24 +149,11 @@ export default function DevicePage() {
                 </span>
               </div>
             </div>
-            <div class="">
-              {/* <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  toast.promise(testPrintAction(), {
-                    loading: "Printing...",
-                    success: "Printed",
-                    error: "Failed to print",
-                  })
-                }
-              >
-                Test Print
-              </Button> */}
-            </div>
-          </div>
-        )}
-      </Show>
-    </Suspense>
+          )}
+        </Show>
+      </Suspense>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full"></div>
+    </div>
   );
 }

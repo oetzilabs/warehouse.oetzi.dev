@@ -32,10 +32,10 @@ export default function ProductsPage() {
   const data = createAsync(() => getProducts(), { deferStream: true });
 
   return (
-    <div class="container flex flex-col grow py-0 relative">
+    <div class="flex flex-row w-full grow p-2 gap-2">
       <div class="w-full flex flex-row h-full">
         <div class="w-full flex flex-col gap-4">
-          <div class="flex items-center gap-4 justify-between w-full ">
+          <div class="flex items-center gap-2 justify-between w-full ">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <PackageSearch class="size-4" />
@@ -75,7 +75,7 @@ export default function ProductsPage() {
               </DropdownMenu>
             </div>
           </div>
-          <div class="flex flex-col gap-4 w-full grow">
+          <div class="flex flex-col gap-2 w-full grow">
             <Suspense
               fallback={
                 <div class="flex flex-col gap-4 w-full">
@@ -110,13 +110,13 @@ export default function ProductsPage() {
                         Out of Stock ({productsList().filter((p) => p.status === "out_of_stock").length})
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="all" class="pt-2">
+                    <TabsContent value="all">
                       <ProductsList data={productsList} />
                     </TabsContent>
-                    <TabsContent value="active" class="pt-2">
+                    <TabsContent value="active">
                       <ProductsList data={() => productsList().filter((p) => p.status !== "out_of_stock")} />
                     </TabsContent>
-                    <TabsContent value="out_of_stock" class="pt-2">
+                    <TabsContent value="out_of_stock">
                       <ProductsList data={() => productsList().filter((p) => p.status === "out_of_stock")} />
                     </TabsContent>
                   </Tabs>
@@ -126,6 +126,8 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full"></div>
     </div>
   );
 }

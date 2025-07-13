@@ -24,44 +24,42 @@ export default function DevicesPage() {
   const data = createAsync(() => getDevices(), { deferStream: true });
 
   return (
-    <Show when={data()}>
-      {(devicesList) => (
-        <div class="container flex flex-col grow py-0 relative">
-          <div class="w-full flex flex-row h-full">
-            <div class="w-full flex flex-col gap-0">
-              <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-4">
-                <div class="flex flex-row items-center gap-4">
-                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
-                    <Cpu class="size-4" />
-                  </div>
-                  <h1 class="font-semibold leading-none">Devices</h1>
-                </div>
-                <div class="flex items-center gap-0">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    class="w-9 rounded-r-none bg-background"
-                    onClick={() => {
-                      toast.promise(revalidate(getDevices.key), {
-                        loading: "Refreshing devices...",
-                        success: "Devices refreshed",
-                        error: "Failed to refresh devices",
-                      });
-                    }}
-                  >
-                    <RotateCw class="size-4" />
-                  </Button>
-                  <Button as={A} href="/devices/new" size="sm" class="pl-2.5 rounded-l-none pr-2.5 md:pr-3">
-                    <Plus class="size-4" />
-                    <span class="sr-only md:not-sr-only">Add Device</span>
-                  </Button>
-                </div>
+    <div class="flex flex-row w-full grow p-2 gap-2">
+      <div class="w-full flex flex-row h-full">
+        <div class="w-full flex flex-col gap-0">
+          <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
+            <div class="flex flex-row items-center gap-4">
+              <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                <Cpu class="size-4" />
               </div>
-              <DevicesList data={devicesList} />
+              <h1 class="font-semibold leading-none">Devices</h1>
+            </div>
+            <div class="flex items-center gap-0">
+              <Button
+                size="icon"
+                variant="outline"
+                class="w-9 rounded-r-none bg-background"
+                onClick={() => {
+                  toast.promise(revalidate(getDevices.key), {
+                    loading: "Refreshing devices...",
+                    success: "Devices refreshed",
+                    error: "Failed to refresh devices",
+                  });
+                }}
+              >
+                <RotateCw class="size-4" />
+              </Button>
+              <Button as={A} href="/devices/new" size="sm" class="pl-2.5 rounded-l-none pr-2.5 md:pr-3">
+                <Plus class="size-4" />
+                <span class="sr-only md:not-sr-only">Add Device</span>
+              </Button>
             </div>
           </div>
+          <Show when={data()}>{(devicesList) => <DevicesList data={devicesList} />}</Show>
         </div>
-      )}
-    </Show>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full"></div>
+    </div>
   );
 }

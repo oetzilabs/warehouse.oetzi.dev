@@ -86,289 +86,310 @@ export default function CustomerOrderPage() {
   };
 
   return (
-    <Suspense
-      fallback={
-        <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-          <Loader2 class="size-4 animate-spin" />
-          <span class="text-sm">Loading...</span>
-        </div>
-      }
-    >
-      <Show when={order()}>
-        {(orderInfo) => (
-          <div class="container flex flex-col gap-4 py-0 relative">
-            <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
-              <div class="flex flex-row items-center gap-4 py-0">
-                <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
-                  <ShoppingCart class="size-4" />
-                </div>
-                <div class="flex flex-row items-baseline gap-2">
-                  <h1 class="leading-none font-semibold">Customer Order</h1>
-                </div>
-              </div>
-              <div class="flex flex-row items-center gap-2">
-                <DropdownMenu placement="bottom-end">
-                  <DropdownMenuTrigger as={Button} variant="outline" size="icon">
-                    <MoreHorizontal class="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href="./edit">
-                      <Edit class="size-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
-                      <DialogTrigger
-                        as={DropdownMenuItem}
-                        class="!text-red-500 gap-2 cursor-pointer"
-                        closeOnSelect={false}
-                        onSelect={() => {
-                          setTimeout(() => setDeleteDialogOpen(true), 10);
+    <div class="flex flex-row gap-2 p-2 relative grow">
+      <div class="w-full flex flex-col gap-2">
+        <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+          <div class="flex flex-row items-center gap-4">
+            <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+              <ShoppingCart class="size-4" />
+            </div>
+            <div class="flex flex-row items-baseline gap-2">
+              <h1 class="leading-none font-semibold">Customer Order</h1>
+            </div>
+          </div>
+          <div class="flex flex-row items-center gap-2">
+            <DropdownMenu placement="bottom-end">
+              <DropdownMenuTrigger as={Button} variant="outline" size="icon">
+                <MoreHorizontal class="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem class="gap-2 cursor-pointer" as={A} href="./edit">
+                  <Edit class="size-4" />
+                  Edit
+                </DropdownMenuItem>
+                <Dialog open={deleteDialogOpen()} onOpenChange={setDeleteDialogOpen}>
+                  <DialogTrigger
+                    as={DropdownMenuItem}
+                    class="!text-red-500 gap-2 cursor-pointer"
+                    closeOnSelect={false}
+                    onSelect={() => {
+                      setTimeout(() => setDeleteDialogOpen(true), 10);
+                    }}
+                  >
+                    <X class="size-4" />
+                    Delete
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure you want to delete this order?</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. This will permanently delete the order and all its data.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        disabled={isDeletingOrder.pending}
+                        onClick={() => {
+                          toast.promise(deleteOrderAction(params.oid), {
+                            loading: "Deleting order...",
+                            success: (data) => {
+                              setDeleteDialogOpen(false);
+                              navigate(`/orders`);
+                              return "Order deleted";
+                            },
+                            error: "Failed to delete order",
+                          });
                         }}
                       >
-                        <X class="size-4" />
                         Delete
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Are you sure you want to delete this order?</DialogTitle>
-                          <DialogDescription>
-                            This action cannot be undone. This will permanently delete the order and all its data.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            disabled={isDeletingOrder.pending}
-                            onClick={() => {
-                              toast.promise(deleteOrderAction(orderInfo().id), {
-                                loading: "Deleting order...",
-                                success: (data) => {
-                                  setDeleteDialogOpen(false);
-                                  navigate(`/orders`);
-                                  return "Order deleted";
-                                },
-                                error: "Failed to delete order",
-                              });
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
-              <div class="flex flex-row items-center gap-2 justify-between">
-                <h2 class="text-2xl font-bold tracking-wide">#{orderInfo().barcode ?? "N/A"}</h2>
-                <div class="flex flex-row items-center gap-2">
-                  <Show when={orderInfo().status}>
-                    {(status) => (
-                      <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
-                        {status()}
-                      </span>
-                    )}
-                  </Show>
-                </div>
-              </div>
-              <div class="flex flex-col gap-1">
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Created: {dayjs(orderInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
-                </span>
-                <Show when={orderInfo().updatedAt}>
-                  <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                    Updated: {dayjs(orderInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
-                  </span>
-                </Show>
-                <Show when={orderInfo().deletedAt}>
-                  <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                    Updated: {dayjs(orderInfo().deletedAt).format("MMM DD, YYYY - h:mm A")}
-                  </span>
-                </Show>
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Total Items:{" "}
-                  {orderInfo()
-                    .products.map((p) => p.quantity)
-                    .reduce((a, b) => a + b, 0)}
-                </span>
-                <span class="text-sm text-muted-foreground dark:text-primary-foreground">
-                  Products: {orderInfo().products.length}
-                </span>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="col-span-full md:col-span-2 flex flex-col gap-4">
-                <div class="flex flex-col border rounded-lg overflow-clip">
-                  <div class="flex flex-row items-center justify-between w-full p-4 border-b bg-muted/30">
-                    <h2 class="font-medium">Products</h2>
-                    <div class="flex flex-row">
-                      <Button size="sm">
-                        <Pen class="size-4" />
-                        Edit
                       </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <Suspense
+          fallback={
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          }
+        >
+          <Show when={order()}>
+            {(orderInfo) => (
+              <div class="flex flex-col gap-2 w-full">
+                <div class="flex flex-col gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+                  <div class="flex flex-row items-center gap-2 justify-between">
+                    <h2 class="text-2xl font-bold tracking-wide">#{orderInfo().barcode ?? "N/A"}</h2>
+                    <div class="flex flex-row items-center gap-2">
+                      <Show when={orderInfo().status}>
+                        {(status) => (
+                          <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
+                            {status()}
+                          </span>
+                        )}
+                      </Show>
                     </div>
                   </div>
-                  <div class="flex flex-col gap-0">
-                    <For
-                      each={orderInfo().products}
-                      fallback={
-                        <div class="flex items-center justify-center py-4">
-                          <span class="text-sm text-muted-foreground">No products added</span>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Created: {dayjs(orderInfo().createdAt).format("MMM DD, YYYY - h:mm A")}
+                    </span>
+                    <Show when={orderInfo().updatedAt}>
+                      <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                        Updated: {dayjs(orderInfo().updatedAt).format("MMM DD, YYYY - h:mm A")}
+                      </span>
+                    </Show>
+                    <Show when={orderInfo().deletedAt}>
+                      <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                        Updated: {dayjs(orderInfo().deletedAt).format("MMM DD, YYYY - h:mm A")}
+                      </span>
+                    </Show>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Total Items:{" "}
+                      {orderInfo()
+                        .products.map((p) => p.quantity)
+                        .reduce((a, b) => a + b, 0)}
+                    </span>
+                    <span class="text-sm text-muted-foreground dark:text-primary-foreground">
+                      Products: {orderInfo().products.length}
+                    </span>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div class="flex flex-col gap-2">
+                    <div class="flex flex-col border rounded-lg overflow-clip">
+                      <div class="flex flex-row items-center justify-between w-full p-4 border-b bg-muted/30">
+                        <h2 class="font-medium">Products</h2>
+                        <div class="flex flex-row">
+                          <Button size="sm">
+                            <Pen class="size-4" />
+                            Edit
+                          </Button>
                         </div>
-                      }
-                    >
-                      {(product) => (
-                        <div class="flex flex-col border-b last:border-b-0 p-4 gap-4">
-                          <div class="flex flex-row items-center justify-between">
-                            <div class="flex flex-col gap-0.5">
-                              <span class="font-medium">{product.product.name}</span>
-                              <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
-                              <Show when={product.product.organizations[0].tg}>
-                                <span class="text-sm text-muted-foreground">
-                                  {product.product.organizations[0].tg?.name} (
-                                  {product.product.organizations[0].tg?.crs[0]?.tr.rate}%)
-                                </span>
-                              </Show>
+                      </div>
+                      <div class="flex flex-col gap-0">
+                        <For
+                          each={orderInfo().products}
+                          fallback={
+                            <div class="flex items-center justify-center py-4">
+                              <span class="text-sm text-muted-foreground">No products added</span>
                             </div>
-                            <div class="flex flex-col items-end">
-                              <div class="flex flex-row items-baseline gap-1">
-                                <span class="text-sm text-muted-foreground">
-                                  {product.product.sellingPrice.toFixed(2)}
-                                </span>
-                                <span class="font-medium">x{product.quantity}</span>
-                              </div>
-                              <span class="text-sm text-muted-foreground">
-                                {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
-                                {product.product.currency}
-                              </span>
-                              <Show when={product.product.organizations[0].tg}>
-                                <span class="text-xs text-muted-foreground">
-                                  {(
-                                    (product.product.sellingPrice *
-                                      product.quantity *
-                                      (product.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
-                                    100
-                                  ).toFixed(2)}{" "}
-                                  {product.product.currency} Tax
-                                </span>
-                              </Show>
-                            </div>
-                          </div>
-                          <Suspense
-                            fallback={
-                              <div class="flex items-center justify-center py-4">
-                                <Loader2 class="size-4 animate-spin" />
-                              </div>
-                            }
-                          >
-                            <Show
-                              when={discounts()}
-                              fallback={
-                                <div class="text-center py-4 text-sm text-muted-foreground">No discounts available</div>
-                              }
-                            >
-                              {(availableDiscounts) => (
-                                <Show when={availableDiscounts().length > 0}>
-                                  <div class="flex flex-col gap-4 ">
-                                    <div class="grid grid-cols-2 gap-2">
-                                      <For
-                                        each={orderInfo()
-                                          .sale?.discounts.filter((d) => d.productId === product.product.id)
-                                          .map((d) => d.discount)}
-                                      >
-                                        {(discount) => (
-                                          <div class="flex flex-row items-center gap-2">
-                                            <span class="text-sm text-muted-foreground">
-                                              {discount.name} ({discount.code})
-                                            </span>
-                                            <span class="text-sm font-medium">
-                                              -{(discount.value ?? 0).toFixed(2)}{" "}
-                                              {discount.type === "percentage" ? "%" : ""}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </For>
-
-                                      <Dialog open={dialogOpen()} onOpenChange={setDialogOpen}>
-                                        <DialogTrigger
-                                          as={Button}
-                                          size="lg"
-                                          variant="outline"
-                                          class="size-40 bg-background"
-                                        >
-                                          <Tag class="size-4" />
-                                          Apply Coupon
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                          <DialogHeader>
-                                            <DialogTitle>Apply Discount</DialogTitle>
-                                            <DialogDescription>
-                                              Select a discount to apply to this product
-                                            </DialogDescription>
-                                          </DialogHeader>
-                                          <div class="flex flex-col gap-2 py-4">
-                                            <div class="grid grid-cols-1 gap-2">
-                                              <For
-                                                each={availableDiscounts()}
-                                                fallback={
-                                                  <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
-                                                    There are no discounts available.
-                                                  </div>
-                                                }
-                                              >
-                                                {(discount) => (
-                                                  <Button
-                                                    variant="outline"
-                                                    class="w-full justify-start"
-                                                    onClick={() => {
-                                                      // TODO: Implement discount application
-                                                      console.log("Apply discount:", discount);
-                                                    }}
-                                                  >
-                                                    <div class="flex flex-col items-start">
-                                                      <span class="font-medium">{discount.name}</span>
-                                                      <span class="text-xs text-muted-foreground">
-                                                        {discount.code} - {discount.value}
-                                                        {discount.type === "percentage" ? "%" : ""} off
-                                                      </span>
-                                                    </div>
-                                                  </Button>
-                                                )}
-                                              </For>
-                                            </div>
-                                          </div>
-                                          <DialogFooter>
-                                            <Button
-                                              variant="outline"
-                                              onClick={() => {
-                                                setDialogOpen(false);
-                                              }}
-                                            >
-                                              Cancel
-                                            </Button>
-                                          </DialogFooter>
-                                        </DialogContent>
-                                      </Dialog>
-                                    </div>
+                          }
+                        >
+                          {(product) => (
+                            <div class="flex flex-col border-b last:border-b-0 p-4 gap-4">
+                              <div class="flex flex-row items-center justify-between">
+                                <div class="flex flex-col gap-0.5">
+                                  <span class="font-medium">{product.product.name}</span>
+                                  <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
+                                  <Show when={product.product.organizations[0].tg}>
+                                    <span class="text-sm text-muted-foreground">
+                                      {product.product.organizations[0].tg?.name} (
+                                      {product.product.organizations[0].tg?.crs[0]?.tr.rate}%)
+                                    </span>
+                                  </Show>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                  <div class="flex flex-row items-baseline gap-1">
+                                    <span class="text-sm text-muted-foreground">
+                                      {product.product.sellingPrice.toFixed(2)}
+                                    </span>
+                                    <span class="font-medium">x{product.quantity}</span>
                                   </div>
+                                  <span class="text-sm text-muted-foreground">
+                                    {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
+                                    {product.product.currency}
+                                  </span>
+                                  <Show when={product.product.organizations[0].tg}>
+                                    <span class="text-xs text-muted-foreground">
+                                      {(
+                                        (product.product.sellingPrice *
+                                          product.quantity *
+                                          (product.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
+                                        100
+                                      ).toFixed(2)}{" "}
+                                      {product.product.currency} Tax
+                                    </span>
+                                  </Show>
+                                </div>
+                              </div>
+                              <Suspense
+                                fallback={
+                                  <div class="flex items-center justify-center py-4">
+                                    <Loader2 class="size-4 animate-spin" />
+                                  </div>
+                                }
+                              >
+                                <Show
+                                  when={discounts()}
+                                  fallback={
+                                    <div class="text-center py-4 text-sm text-muted-foreground">
+                                      No discounts available
+                                    </div>
+                                  }
+                                >
+                                  {(availableDiscounts) => (
+                                    <Show when={availableDiscounts().length > 0}>
+                                      <div class="flex flex-col gap-4 ">
+                                        <div class="grid grid-cols-2 gap-2">
+                                          <For
+                                            each={orderInfo()
+                                              .sale?.discounts.filter((d) => d.productId === product.product.id)
+                                              .map((d) => d.discount)}
+                                          >
+                                            {(discount) => (
+                                              <div class="flex flex-row items-center gap-2">
+                                                <span class="text-sm text-muted-foreground">
+                                                  {discount.name} ({discount.code})
+                                                </span>
+                                                <span class="text-sm font-medium">
+                                                  -{(discount.value ?? 0).toFixed(2)}{" "}
+                                                  {discount.type === "percentage" ? "%" : ""}
+                                                </span>
+                                              </div>
+                                            )}
+                                          </For>
+
+                                          <Dialog open={dialogOpen()} onOpenChange={setDialogOpen}>
+                                            <DialogTrigger
+                                              as={Button}
+                                              size="lg"
+                                              variant="outline"
+                                              class="size-40 bg-background"
+                                            >
+                                              <Tag class="size-4" />
+                                              Apply Coupon
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                              <DialogHeader>
+                                                <DialogTitle>Apply Discount</DialogTitle>
+                                                <DialogDescription>
+                                                  Select a discount to apply to this product
+                                                </DialogDescription>
+                                              </DialogHeader>
+                                              <div class="flex flex-col gap-2 py-4">
+                                                <div class="grid grid-cols-1 gap-2">
+                                                  <For
+                                                    each={availableDiscounts()}
+                                                    fallback={
+                                                      <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg">
+                                                        There are no discounts available.
+                                                      </div>
+                                                    }
+                                                  >
+                                                    {(discount) => (
+                                                      <Button
+                                                        variant="outline"
+                                                        class="w-full justify-start"
+                                                        onClick={() => {
+                                                          // TODO: Implement discount application
+                                                          console.log("Apply discount:", discount);
+                                                        }}
+                                                      >
+                                                        <div class="flex flex-col items-start">
+                                                          <span class="font-medium">{discount.name}</span>
+                                                          <span class="text-xs text-muted-foreground">
+                                                            {discount.code} - {discount.value}
+                                                            {discount.type === "percentage" ? "%" : ""} off
+                                                          </span>
+                                                        </div>
+                                                      </Button>
+                                                    )}
+                                                  </For>
+                                                </div>
+                                              </div>
+                                              <DialogFooter>
+                                                <Button
+                                                  variant="outline"
+                                                  onClick={() => {
+                                                    setDialogOpen(false);
+                                                  }}
+                                                >
+                                                  Cancel
+                                                </Button>
+                                              </DialogFooter>
+                                            </DialogContent>
+                                          </Dialog>
+                                        </div>
+                                      </div>
+                                    </Show>
+                                  )}
                                 </Show>
-                              )}
-                            </Show>
-                          </Suspense>
-                        </div>
-                      )}
-                    </For>
+                              </Suspense>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <div class="col-span-full md:col-span-1 flex flex-col gap-4">
-                <div class="flex flex-col gap-2 p-4 border rounded-lg">
+            )}
+          </Show>
+        </Suspense>
+      </div>
+      <div class="hidden md:flex w-px h-full bg-border"></div>
+      <div class="w-0 md:w-[500px] h-full flex grow">
+        <Suspense
+          fallback={
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          }
+        >
+          <Show when={order()}>
+            {(orderInfo) => (
+              <div class="flex flex-col gap-2 w-full">
+                <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Summary</h2>
                   <div class="flex flex-col">
                     <For
@@ -481,7 +502,7 @@ export default function CustomerOrderPage() {
                 </div>
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Actions</h2>
-                  <div class="flex flex-row gap-4 w-full">
+                  <div class="flex flex-row gap-2 w-full">
                     <ConvertToSaleDialog
                       orderId={orderInfo().id}
                       customerId={orderInfo().customer.id}
@@ -489,7 +510,7 @@ export default function CustomerOrderPage() {
                       products={orderInfo().products}
                     />
                   </div>
-                  <div class="flex flex-col xl:flex-row gap-4 w-full">
+                  <div class="flex flex-col gap-2 w-full">
                     <Button
                       size="lg"
                       variant="outline"
@@ -513,7 +534,7 @@ export default function CustomerOrderPage() {
                       Send Order
                     </Button>
                   </div>
-                  <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="w-full flex flex-col gap-2">
                     <Suspense
                       fallback={
                         <div class="w-full bg-muted-foreground/5 rounded-md p-2 flex items-center justify-center col-span-full">
@@ -560,10 +581,10 @@ export default function CustomerOrderPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-      </Show>
-    </Suspense>
+            )}
+          </Show>
+        </Suspense>
+      </div>
+    </div>
   );
 }
