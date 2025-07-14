@@ -54,9 +54,9 @@ export default function PurchasePage() {
   const isDeletingPurchase = useSubmission(deletePurchase);
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="flex flex-col gap-2 w-full">
-        <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+    <div class="flex flex-col md:flex-row w-full grow p-2 gap-2">
+      <div class="flex flex-col gap-2 w-full pr-0 md:pr-2 border-r-0 md:border-r">
+        <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
           <div class="flex flex-row items-center gap-4 py-2">
             <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
               <Tags class="size-4" />
@@ -222,8 +222,7 @@ export default function PurchasePage() {
           </Show>
         </Suspense>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full">
+      <div class="w-full md:w-[500px] h-full">
         <Suspense
           fallback={
             <div class="w-full h-full flex items-center justify-center flex-col gap-2">

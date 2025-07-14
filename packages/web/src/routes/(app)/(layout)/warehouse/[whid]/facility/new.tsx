@@ -43,14 +43,10 @@ export default function NewFacilityPage() {
   }));
 
   return (
-    <div class="container flex flex-row grow py-0 relative">
+    <div class="flex flex-row grow p-2 relative">
       <div class="w-full flex flex-col gap-4">
-        <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
+        <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
           <div class="flex flex-row items-center gap-4">
-            <Button as={A} href={`/warehouse/${params.whid}`} variant="outline" class="bg-background" size="sm">
-              <ArrowLeft class="size-4" />
-              Back
-            </Button>
             <h1 class="text-sm font-semibold leading-none">New Facility</h1>
           </div>
           <div class="flex items-center gap-4">

@@ -29,7 +29,7 @@ export default function PurchasesPage() {
     <div class="flex flex-row w-full grow p-2 gap-2">
       <div class="w-full flex flex-row h-full gap-4">
         <div class="w-full flex flex-col bg-background">
-          <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
+          <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <Tags class="size-4" />
@@ -98,16 +98,16 @@ export default function PurchasesPage() {
                         All ({ps().length})
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="clean" class="pt-2">
+                    <TabsContent value="clean">
                       <PurchasesList data={() => ps().filter((o) => !["completed", "deleted"].includes(o.status))} />
                     </TabsContent>
-                    <TabsContent value="completed" class="pt-2">
+                    <TabsContent value="completed">
                       <PurchasesList data={() => ps().filter((o) => o.status === "completed")} />
                     </TabsContent>
-                    <TabsContent value="deleted" class="pt-2">
+                    <TabsContent value="deleted">
                       <PurchasesList data={() => ps().filter((o) => o.status === "deleted" || o.deletedAt)} />
                     </TabsContent>
-                    <TabsContent value="all" class="pt-2">
+                    <TabsContent value="all">
                       <PurchasesList data={() => ps()} />
                     </TabsContent>
                   </Tabs>

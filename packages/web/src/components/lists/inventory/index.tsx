@@ -43,8 +43,8 @@ export const InventoryList = (props: InventoryListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-0 relative pb-4">
-      <div class="flex flex-col gap-4">
+    <div class="w-full flex flex-col gap-0 relative pb-2">
+      <div class="flex flex-col gap-2">
         <Show when={props.inventory().storages.length > 0}>
           <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
             <TextField
@@ -59,7 +59,7 @@ export const InventoryList = (props: InventoryListProps) => {
           </div>
         </Show>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           <For
             each={filteredData()}
             fallback={

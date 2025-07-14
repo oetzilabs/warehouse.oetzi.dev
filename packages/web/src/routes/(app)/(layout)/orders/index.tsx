@@ -29,9 +29,9 @@ export default function CustomerOrdersPage() {
 
   return (
     <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="w-full flex flex-row h-full gap-4">
+      <div class="w-full flex flex-row h-full gap-2">
         <div class="w-full flex flex-col bg-background">
-          <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
+          <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <ShoppingCart class="size-4" />
@@ -110,18 +110,18 @@ export default function CustomerOrdersPage() {
                         <span class="sr-only md:not-sr-only">All ({os().length})</span>
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="clean" class="pt-2">
+                    <TabsContent value="clean">
                       <CustomersOrdersList
                         data={() => os().filter((o) => !["deleted", "completed"].includes(o.status))}
                       />
                     </TabsContent>
-                    <TabsContent value="all" class="pt-2">
+                    <TabsContent value="all">
                       <CustomersOrdersList data={() => os().filter((o) => o.status !== "deleted" || !o.deletedAt)} />
                     </TabsContent>
-                    <TabsContent value="completed" class="pt-2">
+                    <TabsContent value="completed">
                       <CustomersOrdersList data={() => os().filter((o) => o.status === "completed")} />
                     </TabsContent>
-                    <TabsContent value="deleted" class="pt-2">
+                    <TabsContent value="deleted">
                       <CustomersOrdersList data={() => os().filter((o) => o.status === "deleted" || o.deletedAt)} />
                     </TabsContent>
                   </Tabs>

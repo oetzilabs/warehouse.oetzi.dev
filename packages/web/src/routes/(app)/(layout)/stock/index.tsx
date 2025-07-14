@@ -30,9 +30,9 @@ export default function InventoryPage() {
 
   return (
     <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="w-full flex flex-row h-full gap-4">
-        <div class="w-full flex flex-col gap-0">
-          <div class="sticky top-12 z-10 flex items-center gap-4 justify-between w-full bg-background pb-2">
+      <div class="w-full flex flex-row h-full gap-2">
+        <div class="w-full flex flex-col gap-2">
+          <div class="flex items-center gap-2 justify-between w-full bg-background">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <PackageOpen class="size-4" />
@@ -58,13 +58,9 @@ export default function InventoryPage() {
             </div>
           </div>
           <Alerts />
-          <Show when={data()}>
-            {(inventory) => (
-              <div class="flex flex-col gap-4 w-full grow pt-4">
-                <InventoryList inventory={inventory} />
-              </div>
-            )}
-          </Show>
+          <div class="flex flex-col gap-4 w-full grow">
+            <Show when={data()}>{(inventory) => <InventoryList inventory={inventory} />}</Show>
+          </div>
         </div>
       </div>
       <div class="hidden md:flex w-px h-full bg-border"></div>

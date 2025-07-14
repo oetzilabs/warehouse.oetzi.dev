@@ -14,7 +14,7 @@ export default function EditDevicePage() {
   const updateDeviceAction = useAction(updateDevice);
 
   return (
-    <div class="container py-4 flex flex-col gap-4 relative">
+    <div class="p-2 flex flex-col gap-2 relative">
       <div class="flex flex-row items-center gap-4">
         <h1 class="text-xl font-semibold">Edit Device</h1>
       </div>

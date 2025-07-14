@@ -23,13 +23,9 @@ export default function WarehousePage() {
   return (
     <Show when={warehouse()}>
       {(wh) => (
-        <div class="flex flex-col gap-4 container w-full grow py-0 relative">
-          <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+        <div class="flex flex-col gap-2 w-full grow p-2 relative">
+          <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
             <div class="flex flex-row items-center gap-4">
-              <Button variant="outline" as={A} href="/warehouse" size="sm" class="bg-background">
-                <ArrowLeft class="size-4" />
-                Back
-              </Button>
               <h1 class="text-sm font-semibold leading-none">Warehouse {wh().name}</h1>
             </div>
             <div class="flex items-center gap-4">

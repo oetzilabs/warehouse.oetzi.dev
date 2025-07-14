@@ -48,13 +48,9 @@ export default function NewDevicePage() {
   }));
 
   return (
-    <div class="container py-0 flex flex-col gap-4 relative">
-      <div class="flex items-center justify-between bg-background sticky top-12 z-10 pb-4">
+    <div class="p-2 flex flex-col gap-2 relative">
+      <div class="flex items-center justify-between bg-background pb-2">
         <div class="flex items-center gap-4">
-          <Button variant="outline" size="sm" as={A} href="/devices">
-            <ArrowLeft class="size-4" />
-            Back
-          </Button>
           <h1 class="text-lg font-semibold">New Device</h1>
         </div>
       </div>

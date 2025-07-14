@@ -11,10 +11,11 @@ interface GenericListProps<T> {
   variant?: "list" | "grid";
   gridClass?: string;
   itemClass?: string;
+  flexClass?: string;
 }
 
 export const GenericList = <T,>(props: GenericListProps<T>) => {
-  const [local, others] = splitProps(props, ["variant", "gridClass", "itemClass"]);
+  const [local, others] = splitProps(props, ["variant", "gridClass", "itemClass", "flexClass"]);
   const variant = () => local.variant ?? "list";
   return (
     <div
@@ -24,6 +25,7 @@ export const GenericList = <T,>(props: GenericListProps<T>) => {
           "flex flex-col gap-4": variant() === "list" || others.data().length === 0,
         },
         local.gridClass,
+        local.flexClass,
       )}
     >
       <For

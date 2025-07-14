@@ -86,9 +86,9 @@ export default function CustomerOrderPage() {
   };
 
   return (
-    <div class="flex flex-row gap-2 p-2 relative grow">
-      <div class="w-full flex flex-col gap-2">
-        <div class="sticky top-12 z-10 flex flex-row items-center justify-between gap-0 w-full bg-background">
+    <div class="flex flex-col md:flex-row gap-2 p-2 relative grow">
+      <div class="w-full flex flex-col gap-2 pr-0 md:pr-2 border-r-0 md:border-r">
+        <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
           <div class="flex flex-row items-center gap-4">
             <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
               <ShoppingCart class="size-4" />
@@ -376,8 +376,7 @@ export default function CustomerOrderPage() {
           </Show>
         </Suspense>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full flex grow">
+      <div class="w-full md:w-[500px] h-full flex grow">
         <Suspense
           fallback={
             <div class="w-full h-full flex items-center justify-center flex-col gap-2">

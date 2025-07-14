@@ -4,7 +4,7 @@ import { For } from "solid-js";
 
 export default function SettingsPage() {
   return (
-    <div class="flex flex-col container h-full grow py-0">
+    <div class="flex flex-col h-full grow p-2">
       <div class="flex flex-col w-full h-full grow">
         <DashboardFeatures />
       </div>
@@ -15,7 +15,7 @@ export default function SettingsPage() {
 const DashboardFeatures = () => {
   const { dashboardFeatures, setDashboardFeatures } = useDashboardFeatures();
   return (
-    <div class="w-full flex flex-col gap-4">
+    <div class="w-full flex flex-col gap-2">
       <h2 class="font-semibold text-neutral-900 dark:text-neutral-100">Dashboard Features</h2>
       <div class="flex flex-col w-full h-full border rounded-lg grow">
         <For each={Object.entries(dashboardFeatures).map(([key, value]) => ({ key, value }))}>

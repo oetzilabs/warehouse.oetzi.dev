@@ -14,12 +14,8 @@ export default function EditCatalogPage() {
   const updateCatalogAction = useAction(updateCatalog);
 
   return (
-    <div class="container py-4 flex flex-col gap-4 relative">
+    <div class="p-2 flex flex-col gap-2 relative">
       <div class="flex flex-row items-center gap-4">
-        <Button variant="outline" size="sm" as={A} href={`/catalogs/${params.cid}`}>
-          <ArrowLeft class="size-4" />
-          Back
-        </Button>
         <h1 class="text-xl font-semibold">Edit Catalog</h1>
       </div>
       <Suspense

@@ -54,13 +54,9 @@ export default function NewSupplierPage() {
   }));
 
   return (
-    <div class="container flex flex-col grow py-0 gap-4">
-      <div class="sticky top-12 z-10 flex items-center gap-2 justify-between w-full bg-background pb-2">
+    <div class="flex flex-col grow p-2 gap-2">
+      <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
         <div class="flex items-center gap-4">
-          <Button size="sm" variant="outline" as={A} href="/suppliers">
-            <ArrowLeft class="size-4" />
-            Back
-          </Button>
           <h1 class="font-semibold leading-none">New Supplier</h1>
         </div>
         <div class="flex items-center gap-4">

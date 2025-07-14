@@ -14,7 +14,7 @@ export default function EditCustomerPage() {
   const updateCustomerAction = useAction(updateCustomer);
 
   return (
-    <div class="container py-4 flex flex-col gap-4 relative">
+    <div class="p-2 flex flex-col gap-2 relative">
       <div class="flex flex-row items-center gap-4">
         <Button variant="outline" size="sm" as={A} href={`/customers/${params.csid}`}>
           <ArrowLeft class="size-4" />
