@@ -92,12 +92,12 @@ export default function DashboardLayout(props: { children: JSXElement }) {
   });
 
   return (
-    <div class="w-full flex flex-col gap-0 h-full bg-muted dark:bg-[rgb(18,18,21)]">
-      <SidebarProvider defaultOpen={open()} class="!border-r-0 dark:bg-[rgb(18,18,21)] !overflow-auto">
-        <Sidebar class="bg-background !border-r-0 md:bg-transparent  dark:bg-[rgb(18,18,21)] !overflow-auto">
+    <div class="w-full flex flex-col gap-0 h-[calc(100%-49px)] overflow-clip bg-muted dark:bg-[rgb(18,18,21)]">
+      <SidebarProvider defaultOpen={open()} class="!border-r-0 dark:bg-[rgb(18,18,21)]">
+        <Sidebar class="bg-background !border-r-0 md:bg-transparent  dark:bg-[rgb(18,18,21)]">
           <Show when={user.currentOrganization()}>
             {(org) => (
-              <SidebarContent class="gap-0 !border-r-0 bg-background md:bg-transparent dark:bg-[rgb(18,18,21)] overflow-auto">
+              <SidebarContent class="gap-0 !border-r-0 bg-background md:bg-transparent dark:bg-[rgb(18,18,21)]">
                 <SidebarGroup class="md:!pr-0">
                   <div class="bg-background w-full rounded-lg border px-3 py-2 text-sm cursor-pointer select-none flex flex-row items-center justify-between gap-4 text-muted-foreground hover:text-black dark:hover:text-white">
                     <span class="">Search</span>
@@ -266,36 +266,38 @@ export default function DashboardLayout(props: { children: JSXElement }) {
           </Show>
         </Sidebar>
         <div class="w-full h-full flex flex-col p-2">
-          <div class="relative w-full h-full flex flex-col overflow-auto border rounded-lg bg-background">
-            <div class="w-full h-max flex p-2 bg-background gap-2 border-b">
-              <SidebarButtonTrigger onToggle={setOpen} />
-              <Show when={true}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    if (window.history.length > 1) {
-                      navigate(-1);
-                    }
-                  }}
-                  class="px-2 md:px-3"
+          <div class="w-full h-full flex flex-col border rounded-lg bg-background overflow-hidden">
+            <div class="w-full h-full flex flex-col">
+              <div class="w-full h-max flex p-2 bg-background gap-2 border-b">
+                <SidebarButtonTrigger onToggle={setOpen} />
+                <Show when={true}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      if (window.history.length > 1) {
+                        navigate(-1);
+                      }
+                    }}
+                    class="px-2 md:px-3"
+                  >
+                    <ArrowLeft class="size-4" />
+                    <span class="sr-only md:not-sr-only">Back</span>
+                  </Button>
+                </Show>
+              </div>
+              <div class="w-full h-full flex flex-col overflow-hidden">
+                <Suspense
+                  fallback={
+                    <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+                      <Loader2 class="size-4 animate-spin" />
+                      <span class="text-sm">Loading...</span>
+                    </div>
+                  }
                 >
-                  <ArrowLeft class="size-4" />
-                  <span class="sr-only md:not-sr-only">Back</span>
-                </Button>
-              </Show>
-            </div>
-            <div class="w-full grow flex flex-col overflow-auto">
-              <Suspense
-                fallback={
-                  <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-                    <Loader2 class="size-4 animate-spin" />
-                    <span class="text-sm">Loading...</span>
-                  </div>
-                }
-              >
-                {props.children}
-              </Suspense>
+                  {props.children}
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>

@@ -140,7 +140,7 @@ const SidebarProvider: Component<SidebarProviderProps> = (rawProps) => {
           ...local.style,
         }}
         class={cn(
-          "group/sidebar-wrapper flex min-h-full grow w-full text-sidebar-foreground has-[[data-variant=inset]]:bg-sidebar",
+          "group/sidebar-wrapper flex h-full w-full text-sidebar-foreground has-[[data-variant=inset]]:bg-sidebar",
           local.class,
         )}
         {...others}

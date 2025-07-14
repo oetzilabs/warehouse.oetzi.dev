@@ -10,14 +10,14 @@ export const MostSoldProducts = () => {
   return (
     <Suspense
       fallback={
-        <div class="flex flex-col  w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
+        <div class="flex flex-col  w-full h-content border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
           <Loader2 class="size-4 animate-spin" />
         </div>
       }
     >
       <Show when={mostPopularProductsData()}>
         {(data) => (
-          <div class="flex flex-col  w-full h-full border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
+          <div class="flex flex-col  w-full h-content border border-neutral-200 dark:border-neutral-800 rounded-lg grow">
             <div class="flex flex-row items-center justify-between p-2 pl-4 bg-muted-foreground/5 dark:bg-muted/30">
               <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">Most Popular Products</h3>
               <div class="flex flex-row gap-2">
