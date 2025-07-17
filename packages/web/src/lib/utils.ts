@@ -1,3 +1,4 @@
+import { FacilityService } from "@warehouseoetzidev/core/src/entities/facilities";
 import { type InventoryInfo } from "@warehouseoetzidev/core/src/entities/inventory";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -39,3 +40,5 @@ export function createAbortablePromise<T extends unknown, E extends unknown>(
     abort: () => controller.abort(),
   };
 }
+
+export type InferQuery<T extends (...args: any) => any> = Awaited<ReturnType<T>>;
