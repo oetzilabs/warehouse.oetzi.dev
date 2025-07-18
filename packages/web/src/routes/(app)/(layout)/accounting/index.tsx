@@ -123,10 +123,10 @@ export default function AccountingPage() {
   });
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="w-full flex flex-row h-full">
+    <div class="flex flex-col-reverse md:flex-row w-full h-full gap-0 overflow-auto lg:overflow-hidden">
+      <div class="w-full flex flex-row h-full gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="w-full flex flex-col gap-0">
-          <div class="flex items-center gap-4 justify-between w-full bg-background pb-2">
+          <div class="flex items-center gap-4 justify-between w-full pb-4">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <Coins class="size-4" />
@@ -152,10 +152,10 @@ export default function AccountingPage() {
           </div>
           <Show when={accounting()}>
             {(accountingList) => (
-              <div class="flex flex-col gap-2 w-full grow">
-                <div class="flex flex-col gap-2 w-full">
-                  <div class="flex flex-col gap-2 w-full rounded-lg border h-60">
-                    <div class="flex flex-col gap-2 w-full h-full p-4">
+              <div class="flex flex-col gap-4 w-full grow">
+                <div class="flex flex-col gap-4 w-full">
+                  <div class="flex flex-col gap-4 w-full rounded-lg border h-60">
+                    <div class="flex flex-col gap-4 w-full h-full p-4">
                       <LineChart data={calculateAccountingStats(accountingList())} />
                     </div>
                   </div>
@@ -260,10 +260,6 @@ export default function AccountingPage() {
             )}
           </Show>
         </div>
-      </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="flex flex-col w-0 md:w-[500px] h-full">
-        <div class="flex flex-col w-0 md:w-[500px] grow"></div>
       </div>
     </div>
   );

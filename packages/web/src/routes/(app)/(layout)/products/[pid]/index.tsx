@@ -15,14 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getProductById } from "@/lib/api/products";
-import { A, createAsync, RouteDefinition, useParams } from "@solidjs/router";
+import { A, createAsync, RouteDefinition, useParams, useSearchParams } from "@solidjs/router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import ArrowLeft from "lucide-solid/icons/arrow-left";
-import Loader2 from "lucide-solid/icons/loader-2";
 import Map from "lucide-solid/icons/map";
 import PackageSearch from "lucide-solid/icons/package-search";
-import { ErrorBoundary, For, Show, Suspense } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 
 dayjs.extend(relativeTime);
 
@@ -37,13 +35,18 @@ export const route = {
 
 export default function ProductPage() {
   const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = createMemo(() => (searchParams.tab as string | undefined) ?? "codes");
+  const setTab = (value: string | undefined) => {
+    setSearchParams({ tab: value });
+  };
   const product = createAsync(() => getProductById(params.pid), { deferStream: true });
 
   return (
     <Loader query={product}>
       {(productInfo) => (
-        <div class="flex flex-col gap-0 relative px-2 h-full overflow-auto">
-          <div class="flex flex-row items-center justify-between gap-0 w-full bg-background py-2">
+        <div class="flex flex-col gap-0 relative px-4 h-full overflow-auto">
+          <div class="flex flex-row items-center justify-between gap-0 w-full bg-background py-4 container">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <PackageSearch class="size-4" />
@@ -58,7 +61,7 @@ export default function ProductPage() {
               <ProductMenu product={productInfo} />
             </div>
           </div>
-          <div class="flex flex-col w-full grow gap-4">
+          <div class="flex flex-col h-content gap-4 container">
             <div class="flex flex-col md:grid grid-cols-5 w-full grow gap-4">
               <div class="col-span-3 grow flex">
                 <ProductImages product={productInfo} />
@@ -73,7 +76,7 @@ export default function ProductPage() {
                           {dayjs(productInfo().updatedAt ?? productInfo().createdAt).format("MMM DD, YYYY - HH:mm A")}
                         </span>
                       </div>
-                      <span class="text-muted-foreground">{productInfo().description}</span>
+                      <span class="text-muted-foreground text-xs">{productInfo().description}</span>
                     </div>
                     <Show when={productInfo().deletedAt}>
                       <Badge variant="outline" class="bg-rose-500 border-0">
@@ -136,7 +139,12 @@ export default function ProductPage() {
                 </div>
               </div>
             </div>
-            <Tabs defaultValue="codes" class="w-full max-w-full">
+            <Tabs
+              defaultValue="codes"
+              class="w-full max-w-full grow flex flex-col"
+              onChange={(value) => setTab(value)}
+              value={tab()}
+            >
               <TabsList class="flex flex-row w-full items-center justify-start h-max max-w-screen overflow-x-auto">
                 <TabsTrigger value="codes">Codes</TabsTrigger>
                 <TabsTrigger value="labels">Labels</TabsTrigger>

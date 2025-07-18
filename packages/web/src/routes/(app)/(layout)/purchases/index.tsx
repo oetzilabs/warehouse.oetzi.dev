@@ -26,10 +26,10 @@ export default function PurchasesPage() {
   const data = createAsync(() => getPurchases(), { deferStream: true });
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="w-full flex flex-row h-full gap-4">
+    <div class="flex flex-col-reverse md:flex-row w-full h-full gap-0 overflow-auto lg:overflow-hidden">
+      <div class="w-full flex flex-row h-full gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="w-full flex flex-col bg-background">
-          <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
+          <div class="flex items-center gap-4 justify-between w-full bg-background pb-4">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <Tags class="size-4" />
@@ -71,29 +71,29 @@ export default function PurchasesPage() {
             >
               <Show when={data()}>
                 {(ps) => (
-                  <Tabs defaultValue="clean" class="w-full max-w-full">
+                  <Tabs defaultValue="clean" class="w-full max-w-full flex flex-col gap-2">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
                         value="clean"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         Purchases ({ps().filter((o) => !["completed", "deleted"].includes(o.status)).length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="completed"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         Completed ({ps().filter((o) => o.status === "completed").length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="deleted"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         Deleted ({ps().filter((o) => o.status === "deleted" || o.deletedAt).length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="all"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         All ({ps().length})
                       </TabsTrigger>
@@ -117,8 +117,7 @@ export default function PurchasesPage() {
           </div>
         </div>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full"></div>
+      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
     </div>
   );
 }

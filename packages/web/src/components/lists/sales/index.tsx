@@ -114,7 +114,7 @@ export function SalesList(props: SalesListProps) {
   });
 
   return (
-    <div class="w-full flex flex-col gap-2 pb-2">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
@@ -127,7 +127,7 @@ export function SalesList(props: SalesListProps) {
         </TextField>
       </div>
 
-      <div class="flex flex-col gap-2 w-full grow">
+      <div class="flex flex-col gap-4 w-full grow">
         <GenericList
           data={props.data}
           filteredData={filteredData}
@@ -135,7 +135,7 @@ export function SalesList(props: SalesListProps) {
           emptyMessage="No sales have been added"
           noResultsMessage="No sales have been found"
           searchTerm={search}
-          flexClass="gap-2"
+          flexClass="gap-4"
         />
       </div>
     </div>

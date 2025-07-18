@@ -116,7 +116,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-2 pb-2">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
@@ -128,7 +128,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
           <TextFieldInput placeholder="Search purchases" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
       </div>
-      <div class="flex flex-col gap-2 w-full grow">
+      <div class="flex flex-col gap-4 w-full grow">
         <GenericList
           data={props.data}
           filteredData={filteredData}
@@ -136,7 +136,7 @@ export const PurchasesList = (props: PurchasesListProps) => {
           emptyMessage="No orders have been added"
           noResultsMessage="No orders have been found"
           searchTerm={() => search()}
-          flexClass="gap-2"
+          flexClass="gap-4"
         />
       </div>
     </div>

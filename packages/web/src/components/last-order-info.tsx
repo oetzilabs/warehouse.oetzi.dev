@@ -31,13 +31,16 @@ export const LastOrderInfo: Component<{
     <div class="flex-1 text-sm text-muted-foreground">
       <Show when={lastPurchase()} fallback={<div>No previous purchases</div>}>
         {(lp) => (
-          <span>
-            Last purchased {dayjs(lp().createdAt).fromNow()} - Amount:{" "}
-            {lp()
-              .products.filter((p) => p.product.id === props.product.id)
-              .reduce((sum, p) => sum + p.quantity, 0)}{" "}
-            from {lp().supplierName}
-          </span>
+          <div class="flex flex-col items-start gap-1">
+            <span>
+              Last purchased {dayjs(lp().createdAt).fromNow()} (
+              {lp()
+                .products.filter((p) => p.product.id === props.product.id)
+                .reduce((sum, p) => sum + p.quantity, 0)}
+              x)
+            </span>
+            <span>From: {lp().supplierName}</span>
+          </div>
         )}
       </Show>
     </div>

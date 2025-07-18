@@ -32,8 +32,8 @@ export default function ProductsPage() {
   const data = createAsync(() => getProducts(), { deferStream: true });
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="w-full flex flex-row h-full">
+    <div class="flex flex-col-reverse md:flex-row w-full h-full gap-0 overflow-auto lg:overflow-hidden">
+      <div class="w-full flex flex-row h-full gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="w-full flex flex-col gap-2">
           <div class="flex items-center gap-2 justify-between w-full ">
             <div class="flex flex-row items-center gap-4">
@@ -89,23 +89,23 @@ export default function ProductsPage() {
             >
               <Show when={data()}>
                 {(productsList) => (
-                  <Tabs defaultValue="all" class="w-full max-w-full">
+                  <Tabs defaultValue="all" class="w-full max-w-full flex flex-col gap-2">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
                         value="all"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         All ({productsList().length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="active"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         Active ({productsList().filter((p) => p.status !== "out_of_stock").length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="out_of_stock"
-                        class="data-[selected]:text-primary data-[selected]:border-primary gap-2"
+                        class="data-[selected]:text-primary data-[selected]:border-primary gap-4"
                       >
                         Out of Stock ({productsList().filter((p) => p.status === "out_of_stock").length})
                       </TabsTrigger>
@@ -126,8 +126,7 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full"></div>
+      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
     </div>
   );
 }

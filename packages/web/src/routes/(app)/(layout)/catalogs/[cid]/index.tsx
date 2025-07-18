@@ -107,7 +107,7 @@ export default function CatalogPage() {
           <Show when={catalog()}>
             {(catalogInfo) => (
               <>
-                <div class="flex flex-col gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+                <div class="flex flex-col gap-2 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <div class="flex flex-row items-baseline gap-2">
                       <h2 class="text-2xl font-bold tracking-wide uppercase">{catalogInfo().name}</h2>
@@ -396,8 +396,8 @@ export default function CatalogPage() {
           </Show>
         </Suspense>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full"></div>
+
+      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
     </div>
   );
 }

@@ -10,24 +10,26 @@ type ResolvedAccessorValue<K extends unknown, T extends AccessorWithLatest<K>> =
 
 type LoaderProps<K extends unknown, T extends AccessorWithLatest<K>> = {
   query: T;
-  fallback?: JSX.Element;
+  error?: JSX.Element;
   children: (data: Accessor<NonNullable<ResolvedAccessorValue<K, T>>>) => JSX.Element;
+  fallback?: JSX.Element;
+  initial?: Accessor<NonNullable<ResolvedAccessorValue<K, T>>>;
 };
 
 export const Loader = <K extends unknown, T extends AccessorWithLatest<K>>(props: LoaderProps<K, T>) => {
   return (
     <ErrorBoundary
       fallback={(error, reset) =>
-        props.fallback ?? (
+        props.error ?? (
           <div class="w-full h-full flex items-center justify-center flex-col gap-2">
             <span class="text-sm text-red-500 font-semibold">Something went wrong</span>
             <details class="text-sm text-muted-foreground">
               <summary class="cursor-pointer">Details</summary>
               <pre class="whitespace-pre-wrap break-all">{JSON.stringify(error, null, 2)}</pre>
             </details>
-            <Button size="sm" as={A} href="/products">
+            <Button size="sm" as={A} href="/dashboard">
               <ArrowLeft class="size-4" />
-              Back to Products
+              Back to Dashboard
             </Button>
           </div>
         )
@@ -35,13 +37,15 @@ export const Loader = <K extends unknown, T extends AccessorWithLatest<K>>(props
     >
       <Suspense
         fallback={
-          <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-            <Loader2 class="size-4 animate-spin" />
-            <span class="text-sm">Loading...</span>
-          </div>
+          props.fallback ?? (
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          )
         }
       >
-        <Show when={props.query()}>
+        <Show when={props.query()} fallback={props.initial ? props.children(props.initial!) : undefined}>
           {(data) => props.children(data as Accessor<NonNullable<ResolvedAccessorValue<K, T>>>)}
         </Show>
       </Suspense>

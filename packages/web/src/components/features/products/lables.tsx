@@ -18,6 +18,7 @@ import Loader2 from "lucide-solid/icons/loader-2";
 import Plus from "lucide-solid/icons/plus";
 import X from "lucide-solid/icons/x";
 import { Accessor, createSignal, For, Show, Suspense } from "solid-js";
+import { createStore } from "solid-js/store";
 import { toast } from "solid-sonner";
 
 type LabelsProps = {
@@ -28,8 +29,8 @@ export const Labels = (props: LabelsProps) => {
   const labels = createAsync(() => getProductLabels(), { deferStream: true });
   const [addLabelDialogOpen, setAddLabelDialogOpen] = createSignal(false);
 
-  const [selectedLabels, setSelectedLabels] = createSignal<string[]>([]);
-  const [deleteLabelDialogOpen, setDeleteLabelDialogOpen] = createSignal<{
+  const [selectedLabels, setSelectedLabels] = createSignal<string[]>(props.product().labels.map((l) => l.label.id));
+  const [deleteLabelDialogOpen, setDeleteLabelDialogOpen] = createStore<{
     isOpen: boolean;
     labelId: string | null;
     labelName: string | null;
@@ -50,7 +51,7 @@ export const Labels = (props: LabelsProps) => {
           <Dialog open={addLabelDialogOpen()} onOpenChange={setAddLabelDialogOpen}>
             <DialogTrigger as={Button} variant="outline" size="sm" class="bg-background">
               <Plus class="size-4" />
-              Add Label{selectedLabels().length > 0 && ` (${selectedLabels().length})`}
+              Change Label{selectedLabels().length > 0 && ` (${selectedLabels().length})`}
             </DialogTrigger>
             <DialogContent class="sm:max-w-[800px]">
               <DialogHeader>
@@ -194,7 +195,7 @@ export const Labels = (props: LabelsProps) => {
               </div>
               <div class="flex items-center gap-2 h-full">
                 <Dialog
-                  open={deleteLabelDialogOpen().isOpen && deleteLabelDialogOpen().labelId === label.label.id}
+                  open={deleteLabelDialogOpen.isOpen && deleteLabelDialogOpen.labelId === label.label.id}
                   onOpenChange={(open) =>
                     setDeleteLabelDialogOpen({
                       isOpen: open,
@@ -203,19 +204,25 @@ export const Labels = (props: LabelsProps) => {
                     })
                   }
                 >
-                  <DialogTrigger as={Button} variant="outline" class="bg-background size-6" size="icon">
+                  <DialogTrigger
+                    as={Button}
+                    variant="outline"
+                    class="bg-background size-6 h-6 md:w-auto md:px-2 gap-1"
+                    size="sm"
+                  >
                     <X class="!size-3" />
+                    <span class="sr-only md:not-sr-only">Remove Label</span>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent class="flex flex-col gap-4">
                     <DialogHeader>
-                      <DialogTitle>Remove Label</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to remove the label "{deleteLabelDialogOpen().labelName}" from this
-                        product?
-                      </DialogDescription>
+                      <DialogTitle>Remove Label '{deleteLabelDialogOpen.labelName}'?</DialogTitle>
                     </DialogHeader>
+                    <DialogDescription>
+                      Are you sure you want to remove the label "{deleteLabelDialogOpen.labelName}" from this product?
+                    </DialogDescription>
                     <DialogFooter>
                       <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => {
                           setDeleteLabelDialogOpen({ isOpen: false, labelId: null, labelName: null });
@@ -224,6 +231,7 @@ export const Labels = (props: LabelsProps) => {
                         Cancel
                       </Button>
                       <Button
+                        size="sm"
                         variant="destructive"
                         disabled={isRemovingLabelsFromProduct.pending}
                         onClick={() => {

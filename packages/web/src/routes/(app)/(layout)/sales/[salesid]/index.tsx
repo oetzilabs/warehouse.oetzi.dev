@@ -67,8 +67,8 @@ export default function SalePage() {
   };
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
-      <div class="w-full flex flex-col h-full gap-2">
+    <div class="flex flex-col md:flex-row w-full h-full gap-0 overflow-auto">
+      <div class="flex flex-col gap-4 w-full p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
           <div class="flex flex-row items-center gap-4">
             <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
@@ -146,7 +146,7 @@ export default function SalePage() {
         >
           <Show when={sale()}>
             {(saleInfo) => (
-              <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="text-2xl font-bold tracking-wide">#{saleInfo().barcode.replace("sale-", "")}</h2>
@@ -234,8 +234,7 @@ export default function SalePage() {
           </Show>
         </Suspense>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full">
+      <div class="flex flex-col w-full md:w-[500px] p-4 h-content">
         <Suspense
           fallback={
             <div class="w-full h-full flex items-center justify-center flex-col gap-2">
@@ -246,8 +245,8 @@ export default function SalePage() {
         >
           <Show when={sale()}>
             {(saleInfo) => (
-              <div class="flex flex-col gap-2">
-                <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-4">
                   <div class="flex flex-col gap-4 p-4 border rounded-lg">
                     <h2 class="font-medium">Summary</h2>
                     <div class="flex flex-col">
@@ -385,7 +384,7 @@ export default function SalePage() {
                         Send Sale
                       </Button>
                     </div>
-                    <div class="w-full flex flex-col gap-2">
+                    <div class="w-full flex flex-col gap-4">
                       <Suspense
                         fallback={
                           <div class="w-full bg-muted-foreground/5 rounded-md p-2 flex items-center justify-center col-span-full">

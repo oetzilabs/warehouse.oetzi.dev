@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@kobalte/core/dialog";
 import type { PolymorphicProps } from "@kobalte/core/polymorphic";
+import X from "lucide-solid/icons/x";
 import { splitProps, type Component, type ComponentProps, type JSX, type ValidComponent } from "solid-js";
 
 const Dialog = DialogPrimitive.Root;
@@ -50,20 +51,8 @@ const DialogContent = <T extends ValidComponent = "div">(props: PolymorphicProps
         {...rest}
       >
         {props.children}
-        <DialogPrimitive.CloseButton class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[expanded]:bg-accent data-[expanded]:text-muted-foreground">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="size-4"
-          >
-            <path d="M18 6l-12 12" />
-            <path d="M6 6l12 12" />
-          </svg>
+        <DialogPrimitive.CloseButton class="absolute right-6 top-6 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[expanded]:bg-accent data-[expanded]:text-muted-foreground">
+          <X class="size-4" />
           <span class="sr-only">Close</span>
         </DialogPrimitive.CloseButton>
       </DialogPrimitive.Content>
@@ -73,12 +62,12 @@ const DialogContent = <T extends ValidComponent = "div">(props: PolymorphicProps
 
 const DialogHeader: Component<ComponentProps<"div">> = (props) => {
   const [, rest] = splitProps(props, ["class"]);
-  return <div class={cn("flex flex-col space-y-1.5 text-center sm:text-left", props.class)} {...rest} />;
+  return <div class={cn("flex flex-col space-y-1.5 text-left", props.class)} {...rest} />;
 };
 
 const DialogFooter: Component<ComponentProps<"div">> = (props) => {
   const [, rest] = splitProps(props, ["class"]);
-  return <div class={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", props.class)} {...rest} />;
+  return <div class={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", props.class)} {...rest} />;
 };
 
 type DialogTitleProps<T extends ValidComponent = "h2"> = DialogPrimitive.DialogTitleProps<T> & {

@@ -65,7 +65,7 @@ export const SuppliersList = (props: SuppliersListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-2 pb-2">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
@@ -77,7 +77,7 @@ export const SuppliersList = (props: SuppliersListProps) => {
           <TextFieldInput placeholder="Search suppliers" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
       </div>
-      <div class="flex flex-col gap-2 grow overflow-auto">
+      <div class="flex flex-col gap-4 grow overflow-auto">
         <GenericList
           data={props.data}
           filteredData={filteredData}
@@ -85,7 +85,7 @@ export const SuppliersList = (props: SuppliersListProps) => {
           emptyMessage="No suppliers have been added"
           noResultsMessage="No suppliers have been found"
           searchTerm={search}
-          flexClass="gap-2"
+          flexClass="gap-4"
         />
       </div>
     </div>

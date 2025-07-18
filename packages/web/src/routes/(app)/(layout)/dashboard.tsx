@@ -48,8 +48,8 @@ export default function DashboardPage() {
   const { dashboardFeatures } = useDashboardFeatures();
 
   return (
-    <div class="flex flex-col-reverse md:flex-row w-full gap-2 h-full">
-      <div class="flex flex-col gap-2 w-full p-2 border-r-0 md:border-r h-full overflow-auto">
+    <div class="flex flex-col-reverse md:flex-row w-full gap-0 h-full">
+      <div class="flex flex-col gap-4 w-full p-4 border-r-0 md:border-r h-full overflow-auto">
         <div class="grid grid-cols-2 md:grid-cols-4 w-full border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 items-center">
           <Show when={inventory()}>
             {(inv) => (
@@ -116,7 +116,7 @@ export default function DashboardPage() {
             <span class="text-2xl text-neutral-500 dark:text-neutral-400 font-['Geist_Mono_Variable']">0</span>
           </A>
         </div>
-        <div class="flex flex-col gap-2 w-full grow">
+        <div class="flex flex-col gap-4 w-full grow">
           <Show when={data()}>
             {(d) => (
               <>
@@ -249,7 +249,7 @@ export default function DashboardPage() {
           </Show>
         </div>
       </div>
-      <div class="w-full md:w-[500px] h-max relative p-2 md:pl-0">
+      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content">
         <Show when={notifications()}>
           {(notifs) => (
             <div class="flex flex-col w-full h-content gap-4">

@@ -16,6 +16,7 @@ import { getSuppliers } from "@/lib/api/suppliers";
 import { A, RouteDefinition } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Loader2 from "lucide-solid/icons/loader-2";
+import PackagePlus from "lucide-solid/icons/package-plus";
 import Plus from "lucide-solid/icons/plus";
 import Sparkles from "lucide-solid/icons/sparkles";
 import { createSignal, Show } from "solid-js";
@@ -42,15 +43,14 @@ export const route = {
 export default function NewProductPage() {
   const [withAI, setWithAI] = createSignal(false);
   return (
-    <div class="flex flex-row grow p-2">
+    <div class="flex flex-row overflow-auto pt-4">
       <NewProductFormProvider>
-        <div class="w-full flex flex-col gap-4">
+        <div class="w-full flex flex-col gap-4 container">
           <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
             <div class="flex items-center gap-4">
-              <Button size="sm" variant="outline" class="bg-background px-2 md:px-3" as={A} href="/products">
-                <ArrowLeft class="size-4" />
-                <span class="sr-only lg:not-sr-only">Back to Products</span>
-              </Button>
+              <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+                <PackagePlus class="size-4" />
+              </div>
               <h1 class="font-semibold leading-none">New Product</h1>
             </div>
             <div class="flex items-center gap-2">

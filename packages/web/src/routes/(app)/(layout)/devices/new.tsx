@@ -48,7 +48,7 @@ export default function NewDevicePage() {
   }));
 
   return (
-    <div class="p-2 flex flex-col gap-2 relative">
+    <div class="p-4 flex flex-col gap-2 relative container">
       <div class="flex items-center justify-between bg-background pb-2">
         <div class="flex items-center gap-4">
           <h1 class="text-lg font-semibold">New Device</h1>
@@ -56,7 +56,7 @@ export default function NewDevicePage() {
       </div>
 
       <form
-        class="space-y-4 w-full max-w-2xl"
+        class="space-y-4 w-full"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();

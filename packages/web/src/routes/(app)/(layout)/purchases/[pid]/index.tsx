@@ -54,10 +54,10 @@ export default function PurchasePage() {
   const isDeletingPurchase = useSubmission(deletePurchase);
 
   return (
-    <div class="flex flex-col md:flex-row w-full grow p-2 gap-2">
-      <div class="flex flex-col gap-2 w-full pr-0 md:pr-2 border-r-0 md:border-r">
-        <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
-          <div class="flex flex-row items-center gap-4 py-2">
+    <div class="flex flex-col md:flex-row w-full h-full gap-0 overflow-auto">
+      <div class="flex flex-col gap-4 w-full p-4 border-r-0 md:border-r md:overflow-auto">
+        <div class="flex flex-row items-center justify-between gap-0 w-full">
+          <div class="flex flex-row items-center gap-4">
             <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
               <Tags class="size-4" />
             </div>
@@ -137,7 +137,7 @@ export default function PurchasePage() {
               <>
                 <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                   <div class="flex flex-row items-center gap-2 justify-between">
-                    <h2 class="text-2xl font-bold tracking-wide">#{purchaseInfo().barcode ?? "N/A"}</h2>
+                    <h2 class="text-lg md:text-2xl font-bold tracking-wide">#{purchaseInfo().barcode ?? "N/A"}</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Show when={purchaseInfo().status}>
                         <span class="text-sm px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium uppercase">
@@ -222,7 +222,7 @@ export default function PurchasePage() {
           </Show>
         </Suspense>
       </div>
-      <div class="w-full md:w-[500px] h-full">
+      <div class="flex flex-col w-full md:w-[500px] p-4 h-content">
         <Suspense
           fallback={
             <div class="w-full h-full flex items-center justify-center flex-col gap-2">
@@ -233,7 +233,7 @@ export default function PurchasePage() {
         >
           <Show when={purchase()}>
             {(purchaseInfo) => (
-              <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Summary</h2>
                   <div class="flex flex-col">

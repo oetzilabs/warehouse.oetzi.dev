@@ -83,8 +83,8 @@ export default function UpdateProductInventoryPage() {
           )}
         </Show>
       </div>
-      <div class="hidden md:flex w-px h-full bg-border"></div>
-      <div class="w-0 md:w-[500px] h-full"></div>
+
+      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
     </div>
   );
 }

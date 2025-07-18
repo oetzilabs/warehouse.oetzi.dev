@@ -268,18 +268,18 @@ export default function DashboardLayout(props: { children: JSXElement }) {
         <div class="w-full h-full flex flex-col p-2">
           <div class="w-full h-full flex flex-col border rounded-lg bg-background overflow-hidden">
             <div class="w-full h-full flex flex-col">
-              <div class="w-full h-max flex p-2 bg-background gap-2 border-b">
+              <div class="w-full h-max flex p-4 bg-background gap-2 border-b">
                 <SidebarButtonTrigger onToggle={setOpen} />
                 <Show when={true}>
                   <Button
-                    variant="secondary"
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       if (window.history.length > 1) {
                         navigate(-1);
                       }
                     }}
-                    class="px-2 md:px-3"
+                    class="px-2 md:px-3 bg-background"
                   >
                     <ArrowLeft class="size-4" />
                     <span class="sr-only md:not-sr-only">Back</span>

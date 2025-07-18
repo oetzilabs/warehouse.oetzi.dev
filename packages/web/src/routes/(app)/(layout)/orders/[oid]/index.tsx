@@ -165,7 +165,7 @@ export default function CustomerOrderPage() {
           <Show when={order()}>
             {(orderInfo) => (
               <div class="flex flex-col gap-2 w-full">
-                <div class="flex flex-col gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+                <div class="flex flex-col gap-2 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
                   <div class="flex flex-row items-center gap-2 justify-between">
                     <h2 class="text-2xl font-bold tracking-wide">#{orderInfo().barcode ?? "N/A"}</h2>
                     <div class="flex flex-row items-center gap-2">

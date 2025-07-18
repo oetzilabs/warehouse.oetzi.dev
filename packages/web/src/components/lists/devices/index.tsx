@@ -56,7 +56,7 @@ export function DevicesList(props: DevicesListProps) {
   });
 
   return (
-    <div class="w-full flex flex-col gap-2 pb-2">
+    <div class="w-full flex flex-col gap-4 pb-4">
       <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
@@ -68,7 +68,7 @@ export function DevicesList(props: DevicesListProps) {
           <TextFieldInput placeholder="Search devices" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
       </div>
-      <div class="flex flex-col gap-2 w-full grow ">
+      <div class="flex flex-col gap-4 w-full grow ">
         <GenericList
           data={props.data}
           filteredData={filteredData}
