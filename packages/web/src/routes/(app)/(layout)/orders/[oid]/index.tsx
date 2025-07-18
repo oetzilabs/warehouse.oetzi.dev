@@ -86,18 +86,18 @@ export default function CustomerOrderPage() {
   };
 
   return (
-    <div class="flex flex-col md:flex-row gap-2 p-2 relative grow">
-      <div class="w-full flex flex-col gap-2 pr-0 md:pr-2 border-r-0 md:border-r">
+    <div class="flex flex-col md:flex-row w-full h-full gap-0 overflow-auto">
+      <div class="flex flex-col gap-4 w-full p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
           <div class="flex flex-row items-center gap-4">
             <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
               <ShoppingCart class="size-4" />
             </div>
-            <div class="flex flex-row items-baseline gap-2">
+            <div class="flex flex-row items-baseline gap-4">
               <h1 class="leading-none font-semibold">Customer Order</h1>
             </div>
           </div>
-          <div class="flex flex-row items-center gap-2">
+          <div class="flex flex-row items-center gap-4">
             <DropdownMenu placement="bottom-end">
               <DropdownMenuTrigger as={Button} variant="outline" size="icon">
                 <MoreHorizontal class="size-4" />
@@ -164,9 +164,9 @@ export default function CustomerOrderPage() {
         >
           <Show when={order()}>
             {(orderInfo) => (
-              <div class="flex flex-col gap-2 w-full">
-                <div class="flex flex-col gap-2 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
-                  <div class="flex flex-row items-center gap-2 justify-between">
+              <div class="flex flex-col gap-4 w-full">
+                <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
+                  <div class="flex flex-row items-center gap-4 justify-between">
                     <h2 class="text-2xl font-bold tracking-wide">#{orderInfo().barcode ?? "N/A"}</h2>
                     <div class="flex flex-row items-center gap-2">
                       <Show when={orderInfo().status}>
@@ -203,8 +203,8 @@ export default function CustomerOrderPage() {
                     </span>
                   </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                  <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-4">
+                  <div class="flex flex-col gap-4">
                     <div class="flex flex-col border rounded-lg overflow-clip">
                       <div class="flex flex-row items-center justify-between w-full p-4 border-b bg-muted/30">
                         <h2 class="font-medium">Products</h2>
@@ -376,7 +376,7 @@ export default function CustomerOrderPage() {
           </Show>
         </Suspense>
       </div>
-      <div class="w-full md:w-[500px] h-full flex grow">
+      <div class="flex flex-col w-full md:w-[500px] p-4 h-content">
         <Suspense
           fallback={
             <div class="w-full h-full flex items-center justify-center flex-col gap-2">
@@ -387,7 +387,7 @@ export default function CustomerOrderPage() {
         >
           <Show when={order()}>
             {(orderInfo) => (
-              <div class="flex flex-col gap-2 w-full">
+              <div class="flex flex-col gap-4 w-full">
                 <div class="flex flex-col gap-4 p-4 border rounded-lg">
                   <h2 class="font-medium">Summary</h2>
                   <div class="flex flex-col">
