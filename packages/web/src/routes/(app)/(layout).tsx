@@ -286,7 +286,7 @@ export default function DashboardLayout(props: { children: JSXElement }) {
                   </Button>
                 </Show>
               </div>
-              <div class="w-full h-full flex flex-col overflow-hidden">
+              <div class="w-full h-content md:h-full flex flex-col overflow-hidden">
                 <Suspense
                   fallback={
                     <div class="w-full h-full flex items-center justify-center flex-col gap-2">

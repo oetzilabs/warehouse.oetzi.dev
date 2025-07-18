@@ -56,7 +56,7 @@ export default function CatalogsPage() {
 
   return (
     <div class="flex flex-col-reverse md:flex-row w-full h-full gap-0 overflow-auto lg:overflow-hidden">
-      <div class="w-full flex flex-row h-full gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
+      <div class="w-full flex flex-row h-content gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="w-full flex flex-col gap-0">
           <div class="flex items-center gap-4 justify-between w-full pb-4">
             <div class="flex flex-row items-center gap-4">

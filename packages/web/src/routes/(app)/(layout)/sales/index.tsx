@@ -74,7 +74,7 @@ export default function SalesPage() {
 
   return (
     <div class="flex flex-col-reverse md:flex-row w-full h-full gap-0 overflow-auto lg:overflow-hidden">
-      <div class="w-full flex flex-row h-full gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
+      <div class="w-full flex flex-row h-content gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
         <div class="w-full flex flex-col">
           <div class="flex items-center gap-4 justify-between w-full pb-4">
             <div class="flex flex-row items-center gap-4">
@@ -118,7 +118,7 @@ export default function SalesPage() {
             >
               <Show when={sales()}>
                 {(ss) => (
-                  <Tabs defaultValue="clean" class="w-full max-w-full flex flex-col gap-2">
+                  <Tabs defaultValue="clean" class="w-full flex flex-col gap-2">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
                         value="clean"

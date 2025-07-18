@@ -61,47 +61,46 @@ export default function SupplierPage() {
   const isDeletingSupplier = useSubmission(deleteSupplier);
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
-      <Suspense
-        fallback={
-          <div class="w-full h-full flex items-center justify-center flex-col gap-2">
-            <Loader2 class="size-4 animate-spin" />
-            <span class="text-sm">Loading...</span>
+    <div class="flex flex-col md:flex-row w-full h-full gap-0 overflow-auto">
+      <div class="flex flex-col gap-4 w-full p-4 border-r-0 md:border-r md:overflow-auto">
+        <div class="flex flex-row items-center justify-between gap-0 w-full bg-background pb-2">
+          <div class="flex flex-row items-center gap-4">
+            <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
+              <Forklift class="size-4" />
+            </div>
+            <h1 class="text-xl font-semibold">Supplier</h1>
           </div>
-        }
-      >
-        <Show when={supplier()}>
-          {(supplierInfo) => (
-            <div class="flex flex-col gap-0 w-full grow">
-              <div class="flex flex-row items-center justify-between gap-0 w-full bg-background pb-2">
-                <div class="flex flex-row items-center gap-4">
-                  <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
-                    <Forklift class="size-4" />
-                  </div>
-                  <h1 class="text-xl font-semibold">Supplier</h1>
-                </div>
-                <div class="flex flex-row items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      toast.promise(revalidate(getSupplierById.keyFor(supplierInfo().supplier.id)), {
-                        loading: "Refreshing supplier...",
-                        success: "Refreshed supplier",
-                        error: "Failed to refresh supplier",
-                      });
-                    }}
-                  >
-                    <RotateCw class="size-4" />
-                    Refresh
-                  </Button>
-                </div>
-              </div>
-
-              <div class="flex flex-col gap-2 w-full h-content pb-4">
-                <div class="flex flex-col gap-2">
+          <div class="flex flex-row items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                toast.promise(revalidate(getSupplierById.keyFor(supplierInfo().supplier.id)), {
+                  loading: "Refreshing supplier...",
+                  success: "Refreshed supplier",
+                  error: "Failed to refresh supplier",
+                });
+              }}
+            >
+              <RotateCw class="size-4" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+        <Suspense
+          fallback={
+            <div class="w-full h-full flex items-center justify-center flex-col gap-2">
+              <Loader2 class="size-4 animate-spin" />
+              <span class="text-sm">Loading...</span>
+            </div>
+          }
+        >
+          <Show when={supplier()}>
+            {(supplierInfo) => (
+              <div class="flex flex-col gap-4 w-full h-content pb-4">
+                <div class="flex flex-col gap-4">
                   <div class="flex flex-col gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10 dark:border-primary/20 dark:bg-primary/20 dark:text-primary-foreground">
-                    <div class="flex flex-row items-center gap-2 justify-between">
+                    <div class="flex flex-row items-center gap-4 justify-between">
                       <h2 class="text-2xl font-bold tracking-wide uppercase">{supplierInfo().supplier.name}</h2>
                       <div class="flex flex-row items-center">
                         <DropdownMenu placement="bottom-end">
@@ -183,10 +182,10 @@ export default function SupplierPage() {
                   <Notes id={() => supplierInfo().supplier.id} list={() => supplierInfo().supplier.notes} />
                 </div>
               </div>
-            </div>
-          )}
-        </Show>
-      </Suspense>
+            )}
+          </Show>
+        </Suspense>
+      </div>
 
       <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
     </div>

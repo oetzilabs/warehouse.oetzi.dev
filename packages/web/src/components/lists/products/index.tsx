@@ -17,7 +17,7 @@ export const ProductsList = (props: ProductsListProps) => {
   const [search, setSearch] = createSignal("");
 
   const renderProductItem = (item: OrganizationProductInfo) => (
-    <div class="group flex flex-col bg-muted p-1 gap-1 grow">
+    <div class="group flex flex-col bg-muted p-1 gap-1 h-content">
       <A class="relative w-full aspect-[4/3] flex items-center justify-center" href={`./${item.product.id}`}>
         <Show
           when={item.product.images && item.product.images.length > 0}
@@ -113,7 +113,7 @@ export const ProductsList = (props: ProductsListProps) => {
   });
 
   return (
-    <div class="w-full flex flex-col gap-4 pb-4">
+    <div class="w-full flex flex-col gap-4 pb-4 h-content">
       <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
         <TextField
           value={search()}
@@ -125,7 +125,7 @@ export const ProductsList = (props: ProductsListProps) => {
           <TextFieldInput placeholder="Search products" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
       </div>
-      <div class="flex flex-col gap-4 w-full grow">
+      <div class="flex flex-col gap-4 w-full h-content">
         <GenericList
           data={props.data}
           filteredData={filteredData}

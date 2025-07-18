@@ -46,7 +46,7 @@ export default function ProductPage() {
     <Loader query={product}>
       {(productInfo) => (
         <div class="flex flex-col gap-0 relative px-4 h-full overflow-auto">
-          <div class="flex flex-row items-center justify-between gap-0 w-full bg-background py-4 container">
+          <div class="flex flex-row items-center justify-between gap-0 w-full bg-background py-4 md:container">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
                 <PackageSearch class="size-4" />
@@ -61,7 +61,7 @@ export default function ProductPage() {
               <ProductMenu product={productInfo} />
             </div>
           </div>
-          <div class="flex flex-col h-content gap-4 container">
+          <div class="flex flex-col h-content gap-4 md:container">
             <div class="flex flex-col md:grid grid-cols-5 w-full grow gap-4">
               <div class="col-span-3 grow flex">
                 <ProductImages product={productInfo} />
@@ -141,7 +141,7 @@ export default function ProductPage() {
             </div>
             <Tabs
               defaultValue="codes"
-              class="w-full max-w-full grow flex flex-col"
+              class="w-full max-w-full grow flex flex-col pb-8"
               onChange={(value) => setTab(value)}
               value={tab()}
             >

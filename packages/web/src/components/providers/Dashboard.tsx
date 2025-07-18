@@ -6,14 +6,16 @@ const DEFAULT_DASHBOARD_FEATURES = {
   mostPopularProducts: {
     enabled: true,
     label: "Most Popular Products",
+    description: "Shows the most popular products on the dashboard",
   },
   lastSoldProducts: {
     enabled: true,
     label: "Last Sold Products",
+    description: "Shows the last sold products on the dashboard",
   },
 };
 
-type DashboardFeaturesT = Record<string, { enabled: boolean; label: string }>;
+type DashboardFeaturesT = Record<string, { enabled: boolean; label: string; description: string }>;
 
 export const DashboardContext = createContext<{
   dashboardFeatures: DashboardFeaturesT;
@@ -33,7 +35,7 @@ export const useDashboardFeatures = () => {
 
 export const DashboardProvider = (props: { children: JSXElement }) => {
   const [dashboardFeatures, setDashboardFeatures] = makePersisted(
-    createStore<Record<string, { enabled: boolean; label: string }>>(DEFAULT_DASHBOARD_FEATURES),
+    createStore<Record<string, { enabled: boolean; label: string; description: string }>>(DEFAULT_DASHBOARD_FEATURES),
     {
       name: "show-dashboard-features",
       storage: cookieStorage,

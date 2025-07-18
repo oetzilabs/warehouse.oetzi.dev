@@ -33,8 +33,8 @@ export default function ProductsPage() {
 
   return (
     <div class="flex flex-col-reverse md:flex-row w-full h-full gap-0 overflow-auto lg:overflow-hidden">
-      <div class="w-full flex flex-row h-full gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
-        <div class="w-full flex flex-col gap-2">
+      <div class="w-full flex flex-row h-content gap-4 p-4 border-r-0 md:border-r md:overflow-auto">
+        <div class="w-full flex flex-col gap-2 h-content">
           <div class="flex items-center gap-2 justify-between w-full ">
             <div class="flex flex-row items-center gap-4">
               <div class="size-8 rounded-md flex items-center justify-center bg-muted-foreground/10 dark:bg-muted/50">
@@ -75,7 +75,7 @@ export default function ProductsPage() {
               </DropdownMenu>
             </div>
           </div>
-          <div class="flex flex-col gap-2 w-full grow">
+          <div class="flex flex-col gap-2 w-full h-content">
             <Suspense
               fallback={
                 <div class="flex flex-col gap-4 w-full">
@@ -89,7 +89,7 @@ export default function ProductsPage() {
             >
               <Show when={data()}>
                 {(productsList) => (
-                  <Tabs defaultValue="all" class="w-full max-w-full flex flex-col gap-2">
+                  <Tabs defaultValue="all" class="w-full max-w-full flex flex-col gap-2 pb-8 h-content">
                     <TabsList class="flex flex-row w-full items-center justify-start h-max">
                       <TabsTrigger
                         value="all"
