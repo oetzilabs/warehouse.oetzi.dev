@@ -4,6 +4,8 @@ import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizatio
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Effect, Layer } from "effect";
+import { stockCommand } from "./stock";
+import { warehouseCommand } from "./warehouse";
 
 dayjs.extend(localizedFormat);
 
@@ -46,4 +48,6 @@ const showOrganization = Command.make("show", { org: orgArg }).pipe(
   ),
 );
 
-export const orgCommand = Command.make("org").pipe(Command.withSubcommands([listOrganizations, showOrganization]));
+export const orgCommand = Command.make("org").pipe(
+  Command.withSubcommands([listOrganizations, showOrganization, warehouseCommand, stockCommand]),
+);
