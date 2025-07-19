@@ -32,6 +32,7 @@
     "@effect/platform-node": "0.91.0",
     "@effect/opentelemetry": "0.54.1",
     "@effect/vitest": "0.24.1",
+    "@effect/cli": "0.67.1",
     "@effect/sql": "0.42.0",
     "@effect/sql-drizzle": "0.31",
     "@effect/sql-pg": "0.43.0",

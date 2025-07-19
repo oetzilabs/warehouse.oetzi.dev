@@ -16,6 +16,7 @@
         "yazl": "^3.3.1",
       },
       "peerDependencies": {
+        "@effect/cli": "0.67.1",
         "@effect/language-service": "0.27.2",
         "@effect/opentelemetry": "0.54.1",
         "@effect/platform": "0.88.2",
@@ -41,6 +42,13 @@
     "packages/build": {
       "name": "@warehouseoetzidev/build",
       "version": "0.0.0",
+    },
+    "packages/cli": {
+      "name": "@warehouseoetzidev/cli",
+      "version": "0.0.0",
+      "dependencies": {
+        "@warehouseoetzidev/core": "workspace:*",
+      },
     },
     "packages/core": {
       "name": "@warehouseoetzidev/core",
@@ -470,6 +478,8 @@
 
     "@ecies/ciphers": ["@ecies/ciphers@0.2.4", "", { "peerDependencies": { "@noble/ciphers": "^1.0.0" } }, "sha512-t+iX+Wf5nRKyNzk8dviW3Ikb/280+aEJAnw9YXvCp2tYGPSkMki+NRY+8aNLmVFv3eNtMdvViPNOPxS8SZNP+w=="],
 
+    "@effect/cli": ["@effect/cli@0.67.1", "", { "dependencies": { "ini": "^4.1.3", "toml": "^3.0.0", "yaml": "^2.5.0" }, "peerDependencies": { "@effect/platform": "^0.88.1", "@effect/printer": "^0.44.14", "@effect/printer-ansi": "^0.44.14", "effect": "^3.16.14" } }, "sha512-+Dg3z2KqMjrynSESZL9dApXpj6sJdUuYRjZ8KFgso52F6uqlM/5RKZiHOG3eHK6mrsOC0jgX+qsUMO46F8l9zw=="],
+
     "@effect/cluster": ["@effect/cluster@0.38.16", "", { "peerDependencies": { "@effect/platform": "^0.84.11", "@effect/rpc": "^0.61.15", "@effect/sql": "^0.37.12", "@effect/workflow": "^0.1.14", "effect": "^3.16.7" } }, "sha512-Q3UJmDx/ABn3Rx/S6n9O8f2TS1qrJNbP0W6lfouel9JduvDW/1dKQ1dFJYRNCk3i5mcpPTSGn47Oq08muArrqw=="],
 
     "@effect/experimental": ["@effect/experimental@0.48.12", "", { "dependencies": { "uuid": "^11.0.3" }, "peerDependencies": { "@effect/platform": "^0.84.11", "effect": "^3.16.7", "ioredis": "^5", "lmdb": "^3" }, "optionalPeers": ["ioredis", "lmdb"] }, "sha512-tRCt57mdArna62L3xu7HIlGXOwHoUDZOQCbMqzQX29TtMflY26mCb9GF3/6s2DsTDWVUCCOroHnfA/XNP+uS/w=="],
@@ -486,6 +496,10 @@
 
     "@effect/platform-node-shared": ["@effect/platform-node-shared@0.39.16", "", { "dependencies": { "@parcel/watcher": "^2.5.1", "multipasta": "^0.2.5", "ws": "^8.18.2" }, "peerDependencies": { "@effect/cluster": "^0.38.16", "@effect/platform": "^0.84.11", "@effect/rpc": "^0.61.15", "@effect/sql": "^0.37.12", "effect": "^3.16.7" } }, "sha512-aJ7jVm9V+SEeNumRmHb+TxD0C38uv/1LLfBHB2Qg+xb5UjnZhak8SzwolAgSKkMNDFpAAdF2AlxZ1tO/HfhCiw=="],
 
+    "@effect/printer": ["@effect/printer@0.44.14", "", { "peerDependencies": { "@effect/typeclass": "^0.35.14", "effect": "^3.16.14" } }, "sha512-Z9YJbmRG++BJqpR+kmJIlo1XdVGtZXPcHSMKPUiZHkZNtX2dG5Ynk2PwdRiA68sz895Fr1QwdYel8zKorUij/w=="],
+
+    "@effect/printer-ansi": ["@effect/printer-ansi@0.44.14", "", { "dependencies": { "@effect/printer": "^0.44.14" }, "peerDependencies": { "@effect/typeclass": "^0.35.14", "effect": "^3.16.14" } }, "sha512-/AWQ1jDLfRm/Zk/jDlE9uX02Da4A4+4VBhU+huao29CcKsO5JPkJLVWiARutThFoVBmp+m4lVLCHqND/tc2W6A=="],
+
     "@effect/rpc": ["@effect/rpc@0.61.15", "", { "peerDependencies": { "@effect/platform": "^0.84.11", "effect": "^3.16.7" } }, "sha512-1PdFubnHanzyswxEzYTiPhTaNpnzS+ssm8xsOKIjE1CP+f54mx/5rJl7BY1VqBVcxw9faqq0g5+biMh9e2RN/Q=="],
 
     "@effect/sql": ["@effect/sql@0.37.12", "", { "dependencies": { "@opentelemetry/semantic-conventions": "^1.33.0", "uuid": "^11.0.3" }, "peerDependencies": { "@effect/experimental": "^0.48.12", "@effect/platform": "^0.84.11", "effect": "^3.16.7" } }, "sha512-DZarU+4NTwIYO8MALaRVg1rRN5gdrJW7nJLECl6nSTwbXRamo6GSarXUiACqE4csZZ7C2K6Jtu99UbEqZ3Iomw=="],
@@ -493,6 +507,8 @@
     "@effect/sql-drizzle": ["@effect/sql-drizzle@0.39.3", "", { "peerDependencies": { "@effect/sql": "^0.40.3", "drizzle-orm": ">=0.43.1 <0.50", "effect": "^3.16.11" } }, "sha512-q6hpAKBTteFSwjM752dYnfpNUNBvx6lUsob8YRLJ79E9yqk6RavHEpg59DxzU+KzKJ8g8+o2CCwuJBapIAUmJw=="],
 
     "@effect/sql-pg": ["@effect/sql-pg@0.41.3", "", { "dependencies": { "@opentelemetry/semantic-conventions": "^1.33.0", "postgres": "^3.4.4" }, "peerDependencies": { "@effect/experimental": "^0.51.3", "@effect/platform": "^0.87.3", "@effect/sql": "^0.40.3", "effect": "^3.16.11" } }, "sha512-cEixitG10iqP3XtGdEa0RkNm4p6uuUxncNQ1CxRh/SYRKY6+EP7/yAaUbJoR2XFzgeRPng69m4GqNK52GI43Hw=="],
+
+    "@effect/typeclass": ["@effect/typeclass@0.35.14", "", { "peerDependencies": { "effect": "^3.16.14" } }, "sha512-IYpbpTcqJ/h7v561dV9ZbBXYxCBS7gdIZYCysFl+Yjdi91k5Vj4F12MijJB6tWVT5JB8xgfgAX4vwbotQ7/G6Q=="],
 
     "@effect/vitest": ["@effect/vitest@0.23.9", "", { "peerDependencies": { "effect": "^3.16.9", "vitest": "^3.0.0" } }, "sha512-m9VsciDymwbuzJy/w0B5rV+05bSRD/f5VZdsw2AR6i8IWhfG2Ry9SViKcUqVtfoSMESAtZ0ZFKcLUMkqbPwgoA=="],
 
@@ -1538,6 +1554,8 @@
 
     "@warehouseoetzidev/build": ["@warehouseoetzidev/build@workspace:packages/build"],
 
+    "@warehouseoetzidev/cli": ["@warehouseoetzidev/cli@workspace:packages/cli"],
+
     "@warehouseoetzidev/core": ["@warehouseoetzidev/core@workspace:packages/core"],
 
     "@warehouseoetzidev/functions": ["@warehouseoetzidev/functions@workspace:packages/functions"],
@@ -2434,7 +2452,7 @@
 
     "inherits": ["inherits@2.0.4", "", {}, "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="],
 
-    "ini": ["ini@1.3.8", "", {}, "sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew=="],
+    "ini": ["ini@4.1.3", "", {}, "sha512-X7rqawQBvfdjS10YU1y1YVreA3SsLrW9dX2CewP2EbBJM4ypVNLDkO5y04gejPwKIY9lR+7r9gn3rFPt/kmWFg=="],
 
     "inline-style-parser": ["inline-style-parser@0.2.4", "", {}, "sha512-0aO8FkhNZlj/ZIbNi7Lxxr12obT7cL1moPfE4tg1LkX7LlLfC6DeX4l2ZEud1ukP9jNQyNnfzQVqwbwmAATY4Q=="],
 
@@ -4213,6 +4231,8 @@
     "proxy-addr/ipaddr.js": ["ipaddr.js@1.9.1", "", {}, "sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g=="],
 
     "psl/punycode": ["punycode@2.3.1", "", {}, "sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg=="],
+
+    "rc/ini": ["ini@1.3.8", "", {}, "sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew=="],
 
     "rc/strip-json-comments": ["strip-json-comments@2.0.1", "", {}, "sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ=="],
 
