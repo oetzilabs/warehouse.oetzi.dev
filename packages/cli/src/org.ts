@@ -11,7 +11,7 @@ const orgArg = Args.text({ name: "org" }).pipe(Args.withDescription("The org ID"
 // const deviceArg = Args.text({ name: "device" }).pipe(Args.withDescription("The device ID"));
 
 const listOrganizations = Command.make("list").pipe(
-  Command.withDescription("List all devices under a org"),
+  Command.withDescription("List all organizations"),
   Command.withHandler(() =>
     Effect.gen(function* () {
       const repo = yield* OrganizationService;
@@ -29,7 +29,7 @@ const listOrganizations = Command.make("list").pipe(
 );
 
 const showOrganization = Command.make("show", { org: orgArg }).pipe(
-  Command.withDescription("Show detailed info for a specific device"),
+  Command.withDescription("Show detailed info for a specific organization"),
   Command.withHandler(({ org }) =>
     Effect.gen(function* () {
       const repo = yield* OrganizationService;
