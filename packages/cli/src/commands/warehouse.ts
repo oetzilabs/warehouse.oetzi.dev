@@ -1,14 +1,11 @@
-import { Args, Command, Options } from "@effect/cli";
-import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
-import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
+import { Command } from "@effect/cli";
+import { WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
+import { orgArg } from "./shared";
 
 dayjs.extend(localizedFormat);
-
-const orgArg = Args.text({ name: "org" }).pipe(Args.withDescription("The org ID"));
-// const deviceArg = Args.text({ name: "device" }).pipe(Args.withDescription("The device ID"));
 
 const listWarehouses = Command.make("list", { org: orgArg }).pipe(
   Command.withDescription("List all warehouses for a specific organization"),
