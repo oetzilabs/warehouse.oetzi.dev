@@ -2,7 +2,7 @@
 import { Command } from "@effect/cli";
 import { BunContext, BunRuntime } from "@effect/platform-bun";
 import { OrganizationLive } from "@warehouseoetzidev/core/src/entities/organizations";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { commands } from "./commands";
 
 const command = Command.make("wh").pipe(Command.withSubcommands(commands));
