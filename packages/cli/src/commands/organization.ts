@@ -11,8 +11,8 @@ dayjs.extend(localizedFormat);
 
 const listOrganizations = Command.make("list").pipe(
   Command.withDescription("List all organizations"),
-  Command.withHandler(() =>
-    Effect.gen(function* () {
+  Command.withHandler(
+    Effect.fn("@warehouse/cli/org.list")(function* () {
       const repo = yield* OrganizationService;
       const organizations = yield* repo.all();
       if (!organizations) {
@@ -29,12 +29,12 @@ const listOrganizations = Command.make("list").pipe(
 
 const showOrganization = Command.make("show", { org: orgArg }).pipe(
   Command.withDescription("Show detailed info for a specific organization"),
-  Command.withHandler(({ org }) =>
-    Effect.gen(function* () {
+  Command.withHandler(
+    Effect.fn("@warehouse/cli/org.show")(function* ({ org }) {
       const repo = yield* OrganizationService;
       const organization = yield* repo.findById(org);
       if (!organization) {
-        console.log(`No org found for org: ${org}`);
+        console.log(`No org found for '${org}'`);
       } else {
         console.log(`Organization for org '${organization}':`);
         console.log(

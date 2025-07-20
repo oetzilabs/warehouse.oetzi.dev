@@ -9,8 +9,8 @@ dayjs.extend(localizedFormat);
 
 const listWarehouses = Command.make("list", { org: orgArg }).pipe(
   Command.withDescription("List all warehouses for a specific organization"),
-  Command.withHandler(({ org }) =>
-    Effect.gen(function* () {
+  Command.withHandler(
+    Effect.fn("@warehouse/cli/org/warehouse.list")(function* ({ org }) {
       const repo = yield* WarehouseService;
       const warehouses = yield* repo.findByOrganizationId(org);
       if (!warehouses) {
@@ -27,8 +27,8 @@ const listWarehouses = Command.make("list", { org: orgArg }).pipe(
 
 const showWarehouse = Command.make("show", { org: orgArg }).pipe(
   Command.withDescription("Show detailed info for a specific organization"),
-  Command.withHandler(({ org }) =>
-    Effect.gen(function* () {
+  Command.withHandler(
+    Effect.fn("@warehouse/cli/org/warehouse.show")(function* ({ org }) {
       const repo = yield* WarehouseService;
       const warehouse = yield* repo.findById(org);
       if (!warehouse) {
