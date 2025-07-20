@@ -17,6 +17,7 @@ import {
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { CustomerInvalidId } from "../customers/errors";
+import { DeviceInvalidId } from "../devices/errors";
 import { OrderInvalidId } from "../orders/errors";
 import { ProductInvalidId } from "../products/errors";
 import { SupplierInvalidId, SupplierPurchaseInvalidId, SupplierPurchaseNotCreated } from "../suppliers/errors";

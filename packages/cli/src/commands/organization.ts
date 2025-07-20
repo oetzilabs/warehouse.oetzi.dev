@@ -3,6 +3,7 @@ import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organi
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Effect } from "effect";
+import { deviceCommand } from "./device";
 import { orgArg } from "./shared";
 import { stockCommand } from "./stock";
 import { warehouseCommand } from "./warehouse";
