@@ -85,7 +85,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
 
     const all = Effect.fn("@warehouse/devices/all")(function* () {
       return yield* db.query.TB_devices.findMany({
-        where: (fields, operations) => operations.isNull(fields.deletedAt),
+        // where: (fields, operations) => operations.isNull(fields.deletedAt),
         with: {
           type: true,
         },

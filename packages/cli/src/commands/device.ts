@@ -39,8 +39,7 @@ export const devicesCommand = dvCmd.pipe(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.list")(function* ({ org }) {
             const repo = yield* DeviceService;
-            const inc = Option.getOrNull(include);
-            const devices = yield* inc !== null ? repo.allWithInclude(include) : repo.all();
+            const devices = yield* repo.allWithInclude(include);
             if (devices.length === 0) {
               yield* Console.log(`No devices found`);
             } else {
