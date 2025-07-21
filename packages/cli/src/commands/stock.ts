@@ -1,22 +1,21 @@
-import { Args, Command } from "@effect/cli";
+import { Args, Command, Options } from "@effect/cli";
 import { InventoryService } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Console, Effect, Layer } from "effect";
-import { orgArg } from "./shared";
+import { orgOption } from "./shared";
 
 dayjs.extend(localizedFormat);
 
-const storageArg = Args.text({ name: "storage" }).pipe(Args.withDescription("The storage ID"));
+const storageOption = Options.text("storage").pipe(Options.withDescription("The storage ID"));
 
 const stockCmd = Command.make(
   "stock",
-  { org: orgArg },
+  { org: orgOption },
   Effect.fn("@warehouse/cli/stock.show")(function* ({ org }) {
     const repo = yield* InventoryService;
-    const orgId = Layer.succeed(OrganizationId, org);
-    const stats = yield* repo.statistics().pipe(Effect.provide(orgId));
+    const stats = yield* repo.statistics().pipe(Effect.provide(Layer.succeed(OrganizationId, org)));
     yield* Console.log("Organization:", org);
     yield* Console.log("Total Capacity:", stats.capacity);
     yield* Console.log("Total Products:", stats.products.length);
@@ -38,7 +37,7 @@ export const stockCommand = stockCmd;
 // .pipe(
 // Command.withSubcommands([
 // Command.make("show", { org: orgArg }, () => Effect.void),
-// Command.make("show", { stock: storageArg }, ({ wh }) =>
+// Command.make("show", { stock: storageOption }, ({ wh }) =>
 //   Effect.flatMap(
 //     stockCmd,
 //     Effect.fn("@warehouse/cli/wh.show")(function* ({ org }) {

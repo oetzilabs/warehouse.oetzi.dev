@@ -6,7 +6,10 @@ import { InventoryLive } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive } from "@warehouseoetzidev/core/src/entities/organizations";
 import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Effect } from "effect";
-import { command, commands } from "./commands";
+import { orgCommand } from "./commands/organization";
+
+export const command = Command.make("wh");
+export const commands = [orgCommand] as const;
 
 export const cli = Command.run(command.pipe(Command.withSubcommands(commands)), {
   name: "Warehouse CLI",

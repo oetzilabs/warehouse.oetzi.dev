@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Console, Effect } from "effect";
 import { devicesCommand } from "./device";
-import { orgArg } from "./shared";
+import { orgOption } from "./shared";
 import { stockCommand } from "./stock";
 import { warehouseCommand } from "./warehouse";
 
@@ -35,7 +35,7 @@ export const orgCommand = Command.make("org").pipe(
     ),
     Command.make(
       "show",
-      { org: orgArg },
+      { org: orgOption },
       Effect.fn("@warehouse/cli/org.show")(function* ({ org }) {
         const repo = yield* OrganizationService;
         const organization = yield* repo.findById(org);

@@ -84,7 +84,11 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
     });
 
     const all = Effect.fn("@warehouse/devices/all")(function* () {
-      return yield* db.query.TB_devices.findMany();
+      return yield* db.query.TB_devices.findMany({
+        with: {
+          type: true,
+        },
+      });
     });
 
     const findByOrganizationId = Effect.fn("@warehouse/devices/findByOrganizationId")(function* () {

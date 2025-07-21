@@ -1,3 +1,3 @@
-import { Args } from "@effect/cli";
+import { Options } from "@effect/cli";
 
-export const orgArg = Args.text({ name: "org" }).pipe(Args.withDescription("The org ID"));
+export const orgOption = Options.text("org").pipe(Options.withDescription("The org ID"));

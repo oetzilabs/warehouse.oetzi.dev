@@ -1,15 +1,15 @@
-import { Args, Command } from "@effect/cli";
+import { Args, Command, Options } from "@effect/cli";
 import { WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Console, Effect } from "effect";
-import { orgArg } from "./shared";
+import { orgOption } from "./shared";
 
 dayjs.extend(localizedFormat);
 
-const whArg = Args.text({ name: "warehouse" }).pipe(Args.withDescription("The warehouse ID"));
+const warehouseOption = Options.text("warehouse").pipe(Options.withDescription("The warehouse ID"));
 
-const whCmd = Command.make("warehouse", { org: orgArg }, () => Effect.succeed(undefined));
+const whCmd = Command.make("warehouse", { org: orgOption }, () => Effect.succeed(undefined));
 
 export const warehouseCommand = whCmd.pipe(
   Command.withSubcommands([
@@ -18,7 +18,7 @@ export const warehouseCommand = whCmd.pipe(
         whCmd,
         Effect.fn("@warehouse/cli/wh.list")(function* ({ org }) {
           const repo = yield* WarehouseService;
-          const warehouses = yield* repo.all();
+          const warehouses = yield* repo.findByOrganizationId(org);
           if (!warehouses) {
             console.log(`No warehouses found`);
           } else {
@@ -35,7 +35,7 @@ export const warehouseCommand = whCmd.pipe(
         }),
       ),
     ),
-    Command.make("show", { wh: whArg }, ({ wh }) =>
+    Command.make("show", { wh: warehouseOption }, ({ wh }) =>
       Effect.flatMap(
         whCmd,
         Effect.fn("@warehouse/cli/wh.show")(function* ({ org }) {
