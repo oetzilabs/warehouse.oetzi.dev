@@ -1,13 +1,25 @@
 import { eq } from "drizzle-orm";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
-import { DeviceCreateSchema, DeviceUpdateSchema, TB_devices } from "../../drizzle/sql/schema";
+import {
+  device_status_enum_values,
+  DeviceCreateSchema,
+  DeviceUpdateSchema,
+  TB_devices,
+} from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import { OrganizationInvalidId, OrganizationNotFound } from "../organizations/errors";
 import { OrganizationId } from "../organizations/id";
 import { WarehouseInvalidId } from "../warehouses/errors";
 import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, DeviceNotUpdated } from "./errors";
+
+export const DeviceFindBySchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  status: Schema.optional(Schema.Literal(...device_status_enum_values)),
+  latestCreated: Schema.optional(Schema.Boolean),
+  latestUpdated: Schema.optional(Schema.Boolean),
+});
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/devices", {
   effect: Effect.gen(function* (_) {
@@ -92,6 +104,19 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       });
     });
 
+    const findBy = Effect.fn("@warehouse/devices/findByName")(function* (filter: typeof DeviceFindBySchema.Type) {
+      return yield* db.query.TB_devices.findMany({
+        where: (fields, operations) =>
+          operations.or(
+            ...(filter.name ? [operations.ilike(fields.name, `%${filter.name}%`)] : []),
+            ...(filter.status ? [operations.eq(fields.status, filter.status)] : []),
+          ),
+        with: {
+          type: true,
+        },
+      });
+    });
+
     type DeviceInclude = "deleted";
 
     const allWithInclude = Effect.fn("@warehouse/devices/allWithInclude")(function* (
@@ -160,6 +185,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
     return {
       create,
       findById,
+      findBy,
       update,
       remove,
       safeRemove,

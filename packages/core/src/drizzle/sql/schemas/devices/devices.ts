@@ -20,6 +20,8 @@ export const device_status = schema.enum("device_status", [
   "error",
 ]);
 
+export const device_status_enum_values = device_status.enumValues;
+
 export const TB_devices = commonTable(
   "devices",
   {

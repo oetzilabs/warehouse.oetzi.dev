@@ -1,9 +1,10 @@
 import { Args, Command, Options, Primitive, Prompt } from "@effect/cli";
+import { device_status_enum_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { DeviceService } from "@warehouseoetzidev/core/src/entities/devices";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { Console, Effect, Layer, Option } from "effect";
+import { Console, Effect, Layer, Option, Schema } from "effect";
 import { orgOption } from "./shared";
 
 dayjs.extend(localizedFormat);
@@ -25,10 +26,102 @@ const includeOption = Options.choice("include", ["deleted"]).pipe(
   Options.optional,
 );
 
+const findBy = Options.text("find").pipe(
+  Options.withDescription("Find a device by name"),
+  Options.optional,
+  Options.withSchema(
+    Schema.Struct({
+      name: Schema.optional(Schema.String),
+      status: Schema.optional(Schema.String),
+      latestCreated: Schema.optional(Schema.Boolean),
+      latestUpdated: Schema.optional(Schema.Boolean),
+    }),
+  ),
+);
+
+const findByNameOption = Args.text("name").pipe(Args.withDescription("Find a device by name"), Args.optional);
+const findByStatusOption = Args.text("status").pipe(
+  Args.withDescription("Find a device by name"),
+  Args.withSchema(Schema.Literal(...device_status_enum_values)),
+  Args.optional,
+);
+
 const dvCmd = Command.make("device", { org: orgOption }, () => Effect.succeed(undefined));
 
 export const devicesCommand = dvCmd.pipe(
   Command.withSubcommands([
+    Command.make("find").pipe(
+      Command.withSubcommands([
+        Command.make(
+          "--name",
+          {
+            name: findByNameOption,
+          },
+          ({ name }) =>
+            Effect.flatMap(
+              dvCmd,
+              Effect.fn("@warehouse/cli/devices.findByName")(function* ({ org }) {
+                const repo = yield* DeviceService;
+                const n = Option.getOrNull(name);
+                if (!n) {
+                  return yield* Console.error("No name provided");
+                }
+                const devices = yield* repo.findBy({ name: n });
+                yield* Console.dir(devices, { depth: Infinity });
+              }),
+            ),
+        ),
+        Command.make(
+          "--status",
+          {
+            status: findByStatusOption,
+          },
+          ({ status }) =>
+            Effect.flatMap(
+              dvCmd,
+              Effect.fn("@warehouse/cli/devices.findByStatus")(function* ({ org }) {
+                const repo = yield* DeviceService;
+                const s = Option.getOrNull(status);
+                if (!s) {
+                  return yield* Console.error("No status provided");
+                }
+                const devices = yield* repo.findBy({ status: s });
+                yield* Console.dir(devices, { depth: Infinity });
+              }),
+            ),
+        ),
+        Command.make("--latest-created", {}, ({}) =>
+          Effect.flatMap(
+            dvCmd,
+            Effect.fn("@warehouse/cli/devices.findByLatestCreated")(function* ({ org }) {
+              const repo = yield* DeviceService;
+              const devices = yield* repo.all();
+              const lastCreated = devices.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+              if (!lastCreated) {
+                return yield* Console.error("No devices found");
+              }
+              yield* Console.dir(lastCreated, { depth: Infinity });
+            }),
+          ),
+        ),
+        Command.make("--latest-updated", {}, ({}) =>
+          Effect.flatMap(
+            dvCmd,
+            Effect.fn("@warehouse/cli/devices.findByLatestUpdated")(function* ({ org }) {
+              const repo = yield* DeviceService;
+              const devices = yield* repo.all();
+              const lastUpdated = devices
+                .filter((device) => device.updatedAt !== null)
+                .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
+              if (!lastUpdated) {
+                return yield* Console.error("No devices found");
+              }
+              yield* Console.dir(lastUpdated, { depth: Infinity });
+            }),
+          ),
+        ),
+      ]),
+    ),
     Command.make(
       "list",
       {
@@ -40,20 +133,18 @@ export const devicesCommand = dvCmd.pipe(
           Effect.fn("@warehouse/cli/devices.list")(function* ({ org }) {
             const repo = yield* DeviceService;
             const devices = yield* repo.allWithInclude(include);
-            if (devices.length === 0) {
-              yield* Console.log(`No devices found`);
-            } else {
-              yield* Console.log(`Devices for organizations '${org}':`);
-              yield* Console.table(
-                devices.map((device) => ({
-                  id: device.id,
-                  name: device.name,
-                  type: device.type.name,
-                  createdAt: dayjs(device.createdAt).format("LLL"),
-                })),
-                ["id", "name", "createdAt", "type"],
-              );
-            }
+
+            yield* Console.log(`Devices for organizations '${org}':`);
+            yield* Console.table(
+              devices.map((device) => ({
+                id: device.id,
+                name: device.name,
+                status: device.status,
+                type: device.type.name,
+                createdAt: dayjs(device.createdAt).format("LLL"),
+              })),
+              ["id", "name", "status", "createdAt", "type"],
+            );
           }),
         ),
     ),
@@ -68,10 +159,7 @@ export const devicesCommand = dvCmd.pipe(
           if (!_device) {
             return yield* Console.log(`Device ${device} not found`);
           }
-          yield* Console.log(`Device:`);
-          yield* Console.log(
-            `  - ${_device.id}: name ${_device.name} | created at: ${dayjs(_device.createdAt).format("LLL")}`,
-          );
+          yield* Console.dir(_device, { depth: Infinity });
         }),
       ),
     ),
