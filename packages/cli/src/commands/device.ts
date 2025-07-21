@@ -26,21 +26,8 @@ const includeOption = Options.choice("include", ["deleted"]).pipe(
   Options.optional,
 );
 
-const findBy = Options.text("find").pipe(
-  Options.withDescription("Find a device by name"),
-  Options.optional,
-  Options.withSchema(
-    Schema.Struct({
-      name: Schema.optional(Schema.String),
-      status: Schema.optional(Schema.String),
-      latestCreated: Schema.optional(Schema.Boolean),
-      latestUpdated: Schema.optional(Schema.Boolean),
-    }),
-  ),
-);
-
-const findByNameOption = Args.text("name").pipe(Args.withDescription("Find a device by name"), Args.optional);
-const findByStatusOption = Args.text("status").pipe(
+const findByNameOption = Args.text({ name: "name" }).pipe(Args.withDescription("Find a device by name"), Args.optional);
+const findByStatusOption = Args.text({ name: "status" }).pipe(
   Args.withDescription("Find a device by name"),
   Args.withSchema(Schema.Literal(...device_status_enum_values)),
   Args.optional,
@@ -112,7 +99,7 @@ export const devicesCommand = dvCmd.pipe(
               const devices = yield* repo.all();
               const lastUpdated = devices
                 .filter((device) => device.updatedAt !== null)
-                .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
+                .sort((a, b) => b.updatedAt!.getTime() - a.updatedAt!.getTime())[0];
               if (!lastUpdated) {
                 return yield* Console.error("No devices found");
               }
