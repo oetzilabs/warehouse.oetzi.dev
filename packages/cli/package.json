@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build:linux": "bun build --platform=linux --minify --target=x86_64-unknown-linux-gnu ./src/index.ts",
-    "build:macos": "bun build --platform=darwin --minify --target=x86_64-apple-darwin ./src/index.ts",
-    "build:windows": "bun build --platform=windows --minify --target=x86_64-pc-windows-msvc ./src/index.ts"
+    "build:linux": "bun build --target=bun --platform=linux --minify ./src/index.ts --compile --outfile=dist/linux/warehouse",
+    "build:macos": "bun build --target=bun --platform=darwin --minify ./src/index.ts --compile --outfile=dist/darwin/warehouse",
+    "build:windows": "bun build --target=bun --platform=windows --minify ./src/index.ts --compile --outfile=dist/windows/warehouse.exe"
   },
   "dependencies": {
     "@warehouseoetzidev/core": "workspace:*"
