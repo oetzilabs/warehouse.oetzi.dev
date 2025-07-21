@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { array, object, parse, safeParse, type InferInput } from "valibot";
 import { DeviceCreateSchema, DeviceUpdateSchema, TB_devices } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
@@ -85,6 +85,28 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
 
     const all = Effect.fn("@warehouse/devices/all")(function* () {
       return yield* db.query.TB_devices.findMany({
+        where: (fields, operations) => operations.isNull(fields.deletedAt),
+        with: {
+          type: true,
+        },
+      });
+    });
+
+    type DeviceInclude = "deleted";
+
+    const allWithInclude = Effect.fn("@warehouse/devices/allWithInclude")(function* (
+      filter: Option.Option<DeviceInclude>,
+    ) {
+      const _filter = Option.getOrNull(filter);
+      return yield* db.query.TB_devices.findMany({
+        where: (fields, operations) => {
+          switch (_filter) {
+            case "deleted":
+              return undefined;
+            default:
+              return operations.isNull(fields.deletedAt);
+          }
+        },
         with: {
           type: true,
         },
@@ -142,6 +164,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       remove,
       safeRemove,
       all,
+      allWithInclude,
       findByOrganizationId,
       getDeviceTypes,
     } as const;
