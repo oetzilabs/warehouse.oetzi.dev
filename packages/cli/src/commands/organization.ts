@@ -1,14 +1,10 @@
 import { Command, Options } from "@effect/cli";
 import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
-import dayjs from "dayjs";
-import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Console, Effect, Option } from "effect";
 import { devicesCommand } from "./device";
-import { orgOption } from "./shared";
+import { formatOption, orgOption, output, transformDates } from "./shared";
 import { stockCommand } from "./stock";
 import { warehouseCommand } from "./warehouse";
-
-dayjs.extend(localizedFormat);
 
 const findByNameOption = Options.text("name").pipe(
   Options.withDescription("Find an organization by name"),
@@ -19,14 +15,14 @@ const orgCmd = Command.make("org", { org: orgOption }, () => Effect.succeed(unde
 
 export const orgCommand = Command.make("org").pipe(
   Command.withSubcommands([
-    Command.make("find", { name: findByNameOption }, ({ name }) =>
+    Command.make("find", { name: findByNameOption, format: formatOption }, ({ name, format }) =>
       Effect.flatMap(
         orgCmd,
         Effect.fn("@warehouse/cli/org.find")(function* () {
           const repo = yield* OrganizationService;
           const n = Option.getOrUndefined(name);
           const organizations = yield* repo.findBy({ name: n });
-          yield* Console.dir(organizations, { depth: Infinity });
+          return yield* output(organizations, format);
         }),
       ),
     ),
@@ -53,14 +49,11 @@ export const orgCommand = Command.make("org").pipe(
     ),
     Command.make(
       "show",
-      { org: orgOption },
-      Effect.fn("@warehouse/cli/org.show")(function* ({ org }) {
+      { org: orgOption, format: formatOption },
+      Effect.fn("@warehouse/cli/org.show")(function* ({ org, format }) {
         const repo = yield* OrganizationService;
         const organization = yield* repo.findById(org);
-        yield* Console.log(`Organization for org '${organization}':`);
-        yield* Console.log(
-          `  - ${organization.id}: name ${organization.name} | created at: ${dayjs(organization.createdAt).format("LLL")}`,
-        );
+        return yield* output(organization, format);
       }),
     ),
     warehouseCommand,

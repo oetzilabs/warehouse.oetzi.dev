@@ -4,8 +4,8 @@ import { DeviceService } from "@warehouseoetzidev/core/src/entities/devices";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { Console, Effect, Layer, Option, Schema } from "effect";
-import { orgOption } from "./shared";
+import { Cause, Console, Effect, Exit, Layer, Match, Option, Schema } from "effect";
+import { formatOption, orgOption, output } from "./shared";
 
 dayjs.extend(localizedFormat);
 
@@ -42,8 +42,9 @@ export const devicesCommand = dvCmd.pipe(
       {
         name: findByNameOption,
         status: findByStatusOption,
+        format: formatOption,
       },
-      ({ name, status }) =>
+      ({ name, status, format }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.find")(function* ({ org }) {
@@ -51,42 +52,53 @@ export const devicesCommand = dvCmd.pipe(
             const n = Option.getOrUndefined(name);
             const s = Option.getOrUndefined(status);
             const devices = yield* repo.findBy({ name: n, status: s });
-            yield* Console.dir(devices, { depth: Infinity });
+            return yield* output(devices, format);
           }),
         ),
     ),
-    Command.make("last-created", {}, ({}) =>
-      Effect.flatMap(
-        dvCmd,
-        Effect.fn("@warehouse/cli/devices.latestCreated")(function* ({ org }) {
-          const repo = yield* DeviceService;
-          const lastCreated = yield* repo.lastCreated();
-          if (!lastCreated) {
-            return yield* Console.error("No devices found");
-          }
-          yield* Console.dir(lastCreated, { depth: Infinity });
-        }),
-      ),
+    Command.make(
+      "last-created",
+      {
+        format: formatOption,
+      },
+      ({ format }) =>
+        Effect.flatMap(
+          dvCmd,
+          Effect.fn("@warehouse/cli/devices.latestCreated")(function* ({ org }) {
+            const repo = yield* DeviceService;
+            const lastCreated = yield* repo.lastCreated();
+            if (!lastCreated) {
+              return yield* Console.error("No devices found");
+            }
+            return yield* output(lastCreated, format);
+          }),
+        ),
     ),
-    Command.make("last-updated", {}, ({}) =>
-      Effect.flatMap(
-        dvCmd,
-        Effect.fn("@warehouse/cli/devices.latestUpdated")(function* ({ org }) {
-          const repo = yield* DeviceService;
-          const lastUpdated = yield* repo.lastUpdated();
-          if (!lastUpdated) {
-            return yield* Console.error("No devices found");
-          }
-          yield* Console.dir(lastUpdated, { depth: Infinity });
-        }),
-      ),
+    Command.make(
+      "last-updated",
+      {
+        format: formatOption,
+      },
+      ({ format }) =>
+        Effect.flatMap(
+          dvCmd,
+          Effect.fn("@warehouse/cli/devices.latestUpdated")(function* ({ org }) {
+            const repo = yield* DeviceService;
+            const lastUpdated = yield* repo.lastUpdated();
+            if (!lastUpdated) {
+              return yield* Console.error("No devices found");
+            }
+            return yield* output(lastUpdated, format);
+          }),
+        ),
     ),
     Command.make(
       "list",
       {
         include: includeOption,
+        format: formatOption,
       },
-      ({ include }) =>
+      ({ include, format }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.list")(function* ({ org }) {
@@ -107,7 +119,7 @@ export const devicesCommand = dvCmd.pipe(
           }),
         ),
     ),
-    Command.make("show", { device: deviceOption }, ({ device }) =>
+    Command.make("show", { device: deviceOption, format: formatOption }, ({ device, format }) =>
       Effect.flatMap(
         dvCmd,
         Effect.fn("@warehouse/cli/devices.show")(function* ({ org }) {
@@ -118,49 +130,54 @@ export const devicesCommand = dvCmd.pipe(
           if (!_device) {
             return yield* Console.log(`Device ${device} not found`);
           }
-          yield* Console.dir(_device, { depth: Infinity });
+          return yield* output(_device, format);
         }),
       ),
     ),
-    Command.make("register", {}, () =>
-      Effect.flatMap(
-        dvCmd,
-        Effect.fn("@warehouse/cli/devices.register")(function* ({ org }) {
-          const repo = yield* DeviceService;
-          const types = yield* repo.getDeviceTypes();
-          const chosenType = yield* Prompt.select({
-            message: "Choose a device type",
-            choices: types.map((t) => ({
-              title: t.name,
-              value: t.id,
-              description: t.description ?? "No description provided",
-              disabled: t.deletedAt !== null,
-            })),
-          });
-          if (!chosenType) {
-            return yield* Effect.fail(new Error("No device type selected"));
-          }
-          const nameInput = yield* Prompt.text({
-            message: "Enter the name of the device: ",
-            validate: (value) =>
-              value.length === 0 ? Effect.fail("Device name cannot be empty") : Effect.succeed(value),
-          });
-          const descriptionInput = yield* Prompt.text({
-            message: "Enter a description for the device: ",
-          });
+    Command.make(
+      "register",
+      {
+        format: formatOption,
+      },
+      () =>
+        Effect.flatMap(
+          dvCmd,
+          Effect.fn("@warehouse/cli/devices.register")(function* ({ org }) {
+            const repo = yield* DeviceService;
+            const types = yield* repo.getDeviceTypes();
+            const chosenType = yield* Prompt.select({
+              message: "Choose a device type",
+              choices: types.map((t) => ({
+                title: t.name,
+                value: t.id,
+                description: t.description ?? "No description provided",
+                disabled: t.deletedAt !== null,
+              })),
+            });
+            if (!chosenType) {
+              return yield* Effect.fail(new Error("No device type selected"));
+            }
+            const nameInput = yield* Prompt.text({
+              message: "Enter the name of the device: ",
+              validate: (value) =>
+                value.length === 0 ? Effect.fail("Device name cannot be empty") : Effect.succeed(value),
+            });
+            const descriptionInput = yield* Prompt.text({
+              message: "Enter a description for the device: ",
+            });
 
-          const device = yield* repo
-            .create({
-              name: nameInput,
-              type_id: chosenType,
-              description: descriptionInput,
-              status: "unknown",
-            })
-            .pipe(Effect.provide(Layer.succeed(OrganizationId, org)));
+            const device = yield* repo
+              .create({
+                name: nameInput,
+                type_id: chosenType,
+                description: descriptionInput,
+                status: "unknown",
+              })
+              .pipe(Effect.provide(Layer.succeed(OrganizationId, org)));
 
-          yield* Console.log(`Device created: ${device.id}`);
-        }),
-      ),
+            yield* Console.log(`Device created: ${device.id}`);
+          }),
+        ),
     ),
     Command.make(
       "unregister",
