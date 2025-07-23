@@ -6,7 +6,7 @@ import { Cause, Console, Effect, Exit, Match, Schema } from "effect";
 dayjs.extend(localizedFormat);
 
 export const orgOption = Options.text("org").pipe(Options.withDescription("The org ID"));
-const formatOptions = ["json", "text"] as const;
+const formatOptions = ["json", "text", "human"] as const;
 export const formatOption = Options.choice("format", formatOptions).pipe(
   Options.withDescription("The output format"),
   Options.withDefault("json"),
@@ -57,12 +57,62 @@ export const keysOption = Options.text("keys").pipe(
   Options.withDefault([] as string[]),
 );
 
+const printNestedObject = (
+  obj: unknown,
+  indentationLevel: number = 0,
+  displayOrder: string[] = [],
+): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    if (typeof obj !== "object" || obj === null) {
+      return yield* Console.log(`${"  ".repeat(indentationLevel)}Value: ${obj === null ? "null" : obj.toString()}`);
+    }
+
+    const indent = "  ".repeat(indentationLevel);
+    const nextIndent = "  ".repeat(indentationLevel + 1);
+
+    const keysToDisplay = displayOrder.length ? displayOrder.filter((key) => key in obj) : Object.keys(obj);
+
+    return yield* Effect.all(
+      keysToDisplay.map((key) =>
+        Effect.gen(function* () {
+          const value = obj[key];
+
+          if (Array.isArray(value)) {
+            yield* Console.log(`${indent}${key}: [`);
+            return yield* Effect.all(
+              value.map((element) =>
+                Effect.gen(function* () {
+                  if (typeof element === "object" && element !== null) {
+                    yield* Console.log(`${nextIndent}- `);
+                    return yield* Effect.suspend(() => printNestedObject(element, indentationLevel + 2));
+                  } else {
+                    return yield* Console.log(`${nextIndent}- ${element}`);
+                  }
+                }),
+              ),
+            );
+            yield* Console.log(`${indent}]`);
+          } else if (typeof value === "object" && value !== null) {
+            yield* Console.log(`${indent}${key}: {`);
+            yield* Effect.suspend(() => printNestedObject(value, indentationLevel + 1));
+            return yield* Console.log(`${indent}}`);
+          } else {
+            return yield* Console.log(`${indent}${key}: ${value}`);
+          }
+        }),
+      ),
+    );
+  });
+
 export const output = <T extends unknown>(
   data: T,
   format: (typeof formatOptions)[number],
   keys?: readonly (keyof T | (string & {}))[],
 ) => {
-  const _keys = keys ?? Object.keys(data);
+  let _keys = keys ?? Object.keys(data);
+  if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+    _keys = Object.keys(data[0]);
+  }
 
   const _output =
     keys.length > 0
@@ -74,13 +124,20 @@ export const output = <T extends unknown>(
     Match.when(
       "json",
       Effect.fn(function* () {
-        yield* Console.dir(_output, { depth: Infinity });
+        return yield* Console.dir(_output, { depth: Infinity });
       }),
     ),
     Match.when(
       "text",
       Effect.fn(function* () {
-        yield* Console.log(JSON.stringify(_output));
+        return yield* Console.log(JSON.stringify(_output));
+      }),
+    ),
+    Match.when(
+      "human",
+      Effect.fn(function* () {
+        yield* Console.log("Output (experimental):");
+        return yield* printNestedObject(_output);
       }),
     ),
     Match.orElse(

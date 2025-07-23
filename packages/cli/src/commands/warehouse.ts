@@ -25,11 +25,7 @@ export const warehouseCommand = whCmd.pipe(
           Effect.fn("@warehouse/cli/wh.list")(function* ({ org }) {
             const repo = yield* WarehouseService;
             const warehouses = yield* repo.findByOrganizationId(org);
-            if (!warehouses) {
-              console.log(`No warehouses found`);
-            } else {
-              return yield* output(warehouses, format, keys);
-            }
+            return yield* output(warehouses, format, keys);
           }),
         ),
     ),
