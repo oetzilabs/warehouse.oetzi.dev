@@ -26,88 +26,60 @@ const includeOption = Options.choice("include", ["deleted"]).pipe(
   Options.optional,
 );
 
-const findByNameOption = Args.text({ name: "name" }).pipe(Args.withDescription("Find a device by name"), Args.optional);
-const findByStatusOption = Args.text({ name: "status" }).pipe(
-  Args.withDescription("Find a device by name"),
-  Args.withSchema(Schema.Literal(...device_status_enum_values)),
-  Args.optional,
+const findByNameOption = Options.text("name").pipe(Options.withDescription("Find a device by name"), Options.optional);
+const findByStatusOption = Options.text("status").pipe(
+  Options.withDescription("Find a device by name"),
+  Options.withSchema(Schema.Literal(...device_status_enum_values)),
+  Options.optional,
 );
 
 const dvCmd = Command.make("device", { org: orgOption }, () => Effect.succeed(undefined));
 
 export const devicesCommand = dvCmd.pipe(
   Command.withSubcommands([
-    Command.make("find").pipe(
-      Command.withSubcommands([
-        Command.make(
-          "--name",
-          {
-            name: findByNameOption,
-          },
-          ({ name }) =>
-            Effect.flatMap(
-              dvCmd,
-              Effect.fn("@warehouse/cli/devices.findByName")(function* ({ org }) {
-                const repo = yield* DeviceService;
-                const n = Option.getOrNull(name);
-                if (!n) {
-                  return yield* Console.error("No name provided");
-                }
-                const devices = yield* repo.findBy({ name: n });
-                yield* Console.dir(devices, { depth: Infinity });
-              }),
-            ),
+    Command.make(
+      "find",
+      {
+        name: findByNameOption,
+        status: findByStatusOption,
+      },
+      ({ name, status }) =>
+        Effect.flatMap(
+          dvCmd,
+          Effect.fn("@warehouse/cli/devices.find")(function* ({ org }) {
+            const repo = yield* DeviceService;
+            const n = Option.getOrUndefined(name);
+            const s = Option.getOrUndefined(status);
+            const devices = yield* repo.findBy({ name: n, status: s });
+            yield* Console.dir(devices, { depth: Infinity });
+          }),
         ),
-        Command.make(
-          "--status",
-          {
-            status: findByStatusOption,
-          },
-          ({ status }) =>
-            Effect.flatMap(
-              dvCmd,
-              Effect.fn("@warehouse/cli/devices.findByStatus")(function* ({ org }) {
-                const repo = yield* DeviceService;
-                const s = Option.getOrNull(status);
-                if (!s) {
-                  return yield* Console.error("No status provided");
-                }
-                const devices = yield* repo.findBy({ status: s });
-                yield* Console.dir(devices, { depth: Infinity });
-              }),
-            ),
-        ),
-        Command.make("--latest-created", {}, ({}) =>
-          Effect.flatMap(
-            dvCmd,
-            Effect.fn("@warehouse/cli/devices.findByLatestCreated")(function* ({ org }) {
-              const repo = yield* DeviceService;
-              const devices = yield* repo.all();
-              const lastCreated = devices.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
-              if (!lastCreated) {
-                return yield* Console.error("No devices found");
-              }
-              yield* Console.dir(lastCreated, { depth: Infinity });
-            }),
-          ),
-        ),
-        Command.make("--latest-updated", {}, ({}) =>
-          Effect.flatMap(
-            dvCmd,
-            Effect.fn("@warehouse/cli/devices.findByLatestUpdated")(function* ({ org }) {
-              const repo = yield* DeviceService;
-              const devices = yield* repo.all();
-              const lastUpdated = devices
-                .filter((device) => device.updatedAt !== null)
-                .sort((a, b) => b.updatedAt!.getTime() - a.updatedAt!.getTime())[0];
-              if (!lastUpdated) {
-                return yield* Console.error("No devices found");
-              }
-              yield* Console.dir(lastUpdated, { depth: Infinity });
-            }),
-          ),
-        ),
-      ]),
+    ),
+    Command.make("last-created", {}, ({}) =>
+      Effect.flatMap(
+        dvCmd,
+        Effect.fn("@warehouse/cli/devices.latestCreated")(function* ({ org }) {
+          const repo = yield* DeviceService;
+          const lastCreated = yield* repo.lastCreated();
+          if (!lastCreated) {
+            return yield* Console.error("No devices found");
+          }
+          yield* Console.dir(lastCreated, { depth: Infinity });
+        }),
+      ),
+    ),
+    Command.make("last-updated", {}, ({}) =>
+      Effect.flatMap(
+        dvCmd,
+        Effect.fn("@warehouse/cli/devices.latestUpdated")(function* ({ org }) {
+          const repo = yield* DeviceService;
+          const lastUpdated = yield* repo.lastUpdated();
+          if (!lastUpdated) {
+            return yield* Console.error("No devices found");
+          }
+          yield* Console.dir(lastUpdated, { depth: Infinity });
+        }),
+      ),
     ),
     Command.make(
       "list",

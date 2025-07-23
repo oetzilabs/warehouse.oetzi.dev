@@ -1,8 +1,8 @@
-import { Command } from "@effect/cli";
+import { Command, Options } from "@effect/cli";
 import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { Console, Effect } from "effect";
+import { Console, Effect, Option } from "effect";
 import { devicesCommand } from "./device";
 import { orgOption } from "./shared";
 import { stockCommand } from "./stock";
@@ -10,8 +10,26 @@ import { warehouseCommand } from "./warehouse";
 
 dayjs.extend(localizedFormat);
 
+const findByNameOption = Options.text("name").pipe(
+  Options.withDescription("Find an organization by name"),
+  Options.optional,
+);
+
+const orgCmd = Command.make("org", { org: orgOption }, () => Effect.succeed(undefined));
+
 export const orgCommand = Command.make("org").pipe(
   Command.withSubcommands([
+    Command.make("find", { name: findByNameOption }, ({ name }) =>
+      Effect.flatMap(
+        orgCmd,
+        Effect.fn("@warehouse/cli/org.find")(function* () {
+          const repo = yield* OrganizationService;
+          const n = Option.getOrUndefined(name);
+          const organizations = yield* repo.findBy({ name: n });
+          yield* Console.dir(organizations, { depth: Infinity });
+        }),
+      ),
+    ),
     Command.make(
       "list",
       {},

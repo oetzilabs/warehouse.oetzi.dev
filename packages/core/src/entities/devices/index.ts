@@ -182,6 +182,23 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return deleted;
     });
 
+    const lastCreated = Effect.fn("@warehouse/devices/lastCreated")(function* () {
+      const lastCreatedDevice = yield* db.query.TB_devices.findFirst({
+        where: (fields, operations) => operations.isNull(fields.deletedAt),
+        orderBy: (fields, operations) => operations.desc(fields.createdAt),
+      });
+      return lastCreatedDevice;
+    });
+
+    const lastUpdated = Effect.fn("@warehouse/devices/lastUpdated")(function* () {
+      const lastUpdatedDevice = yield* db.query.TB_devices.findFirst({
+        where: (fields, operations) =>
+          operations.and(operations.isNull(fields.deletedAt), operations.isNotNull(fields.updatedAt)),
+        orderBy: (fields, operations) => operations.desc(fields.updatedAt),
+      });
+      return lastUpdatedDevice;
+    });
+
     return {
       create,
       findById,
@@ -193,6 +210,8 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       allWithInclude,
       findByOrganizationId,
       getDeviceTypes,
+      lastCreated,
+      lastUpdated,
     } as const;
   }),
   dependencies: [DatabaseLive],

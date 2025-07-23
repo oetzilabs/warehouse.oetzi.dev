@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import {
   CustomerOrderCreateSchema,
@@ -37,6 +37,10 @@ import {
   OrganizationUserRemoveFailed,
 } from "./errors";
 import { OrganizationId } from "./id";
+
+export const OrganizationFindBySchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+});
 
 export class OrganizationService extends Effect.Service<OrganizationService>()("@warehouse/organizations", {
   effect: Effect.gen(function* (_) {
@@ -900,9 +904,25 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
       return yield* db.query.TB_organizations.findMany();
     });
 
+    const findBy = Effect.fn("@warehouse/organizations/findBy")(function* (
+      filter: typeof OrganizationFindBySchema.Type,
+    ) {
+      return yield* db.query.TB_organizations.findMany({
+        where: (fields, operations) => {
+          switch (filter.name) {
+            case undefined:
+              return operations.isNull(fields.deletedAt);
+            default:
+              return operations.ilike(fields.name, `%${filter.name}%`);
+          }
+        },
+      });
+    });
+
     return {
       all,
       create,
+      findBy,
       findById,
       findBySlug,
       findByUserId,
