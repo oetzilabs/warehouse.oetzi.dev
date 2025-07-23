@@ -5,7 +5,7 @@ import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizatio
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Cause, Console, Effect, Exit, Layer, Match, Option, Schema } from "effect";
-import { formatOption, orgOption, output } from "./shared";
+import { formatOption, keysOption, orgOption, output } from "./shared";
 
 dayjs.extend(localizedFormat);
 
@@ -43,8 +43,9 @@ export const devicesCommand = dvCmd.pipe(
         name: findByNameOption,
         status: findByStatusOption,
         format: formatOption,
+        keys: keysOption,
       },
-      ({ name, status, format }) =>
+      ({ name, status, format, keys }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.find")(function* ({ org }) {
@@ -52,7 +53,7 @@ export const devicesCommand = dvCmd.pipe(
             const n = Option.getOrUndefined(name);
             const s = Option.getOrUndefined(status);
             const devices = yield* repo.findBy({ name: n, status: s });
-            return yield* output(devices, format);
+            return yield* output(devices, format, keys);
           }),
         ),
     ),
@@ -60,8 +61,9 @@ export const devicesCommand = dvCmd.pipe(
       "last-created",
       {
         format: formatOption,
+        keys: keysOption,
       },
-      ({ format }) =>
+      ({ format, keys }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.latestCreated")(function* ({ org }) {
@@ -70,7 +72,7 @@ export const devicesCommand = dvCmd.pipe(
             if (!lastCreated) {
               return yield* Console.error("No devices found");
             }
-            return yield* output(lastCreated, format);
+            return yield* output(lastCreated, format, keys);
           }),
         ),
     ),
@@ -78,8 +80,9 @@ export const devicesCommand = dvCmd.pipe(
       "last-updated",
       {
         format: formatOption,
+        keys: keysOption,
       },
-      ({ format }) =>
+      ({ format, keys }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.latestUpdated")(function* ({ org }) {
@@ -88,7 +91,7 @@ export const devicesCommand = dvCmd.pipe(
             if (!lastUpdated) {
               return yield* Console.error("No devices found");
             }
-            return yield* output(lastUpdated, format);
+            return yield* output(lastUpdated, format, keys);
           }),
         ),
     ),
@@ -97,29 +100,19 @@ export const devicesCommand = dvCmd.pipe(
       {
         include: includeOption,
         format: formatOption,
+        keys: keysOption,
       },
-      ({ include, format }) =>
+      ({ include, format, keys }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.list")(function* ({ org }) {
             const repo = yield* DeviceService;
             const devices = yield* repo.allWithInclude(include);
-
-            yield* Console.log(`Devices for organizations '${org}':`);
-            yield* Console.table(
-              devices.map((device) => ({
-                id: device.id,
-                name: device.name,
-                status: device.status,
-                type: device.type.name,
-                createdAt: dayjs(device.createdAt).format("LLL"),
-              })),
-              ["id", "name", "status", "createdAt", "type"],
-            );
+            return yield* output(devices, format, keys);
           }),
         ),
     ),
-    Command.make("show", { device: deviceOption, format: formatOption }, ({ device, format }) =>
+    Command.make("show", { device: deviceOption, format: formatOption, keys: keysOption }, ({ device, format, keys }) =>
       Effect.flatMap(
         dvCmd,
         Effect.fn("@warehouse/cli/devices.show")(function* ({ org }) {
@@ -128,9 +121,9 @@ export const devicesCommand = dvCmd.pipe(
             .findById(device)
             .pipe(Effect.catchTag("DeviceNotFound", () => Effect.succeed(null)));
           if (!_device) {
-            return yield* Console.log(`Device ${device} not found`);
+            return yield* Exit.failCause(Cause.fail(`Device ${device} not found`));
           }
-          return yield* output(_device, format);
+          return yield* output(_device, format, keys);
         }),
       ),
     ),
@@ -138,8 +131,9 @@ export const devicesCommand = dvCmd.pipe(
       "register",
       {
         format: formatOption,
+        keys: keysOption,
       },
-      () =>
+      ({ format, keys }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.register")(function* ({ org }) {
@@ -174,15 +168,14 @@ export const devicesCommand = dvCmd.pipe(
                 status: "unknown",
               })
               .pipe(Effect.provide(Layer.succeed(OrganizationId, org)));
-
-            yield* Console.log(`Device created: ${device.id}`);
+            return yield* output(device, format, keys);
           }),
         ),
     ),
     Command.make(
       "unregister",
-      { device: deviceOption, force: forceUnregisterOption, yes: yesOption },
-      ({ device, force, yes }) =>
+      { device: deviceOption, force: forceUnregisterOption, yes: yesOption, keys: keysOption, format: formatOption },
+      ({ device, force, yes, keys, format }) =>
         Effect.flatMap(
           dvCmd,
           Effect.fn("@warehouse/cli/devices.unregister")(function* ({ org }) {
@@ -203,10 +196,10 @@ export const devicesCommand = dvCmd.pipe(
             }
             if (!force) {
               const removed = yield* repo.safeRemove(_device.id);
-              return yield* Console.log(`Device ${_device.id} unregistered`);
+              return yield* output(_device, format, keys);
             } else {
               const removed = yield* repo.remove(_device.id);
-              return yield* Console.log(`Device ${_device.id} unregistered`);
+              return yield* output(_device, format, keys);
             }
           }),
         ),
