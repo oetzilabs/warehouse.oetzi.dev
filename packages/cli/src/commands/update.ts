@@ -26,9 +26,8 @@ export const updateCommand = Command.make(
     if (!hasVersion && !hasLocalVersion) {
       return yield* Exit.failCause(Cause.fail(`Version ${v} not found`));
     } else if (hasLocalVersion) {
-      const localVersion = listOfVersions.local[v];
-      const localPath = path.join(DefaultBinaryTargetFolderPath, localVersion);
-      yield* Console.log(`Using local version ${localVersion} at ${localPath}`);
+      const localVersionPath = listOfVersions.local[v];
+      yield* Console.log(`Using local version ${v} at ${localVersionPath}`);
       return;
     }
     const remoteVersionPath = listOfVersions.remote[v];
