@@ -2,7 +2,7 @@ import { Command, Options } from "@effect/cli";
 import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { Console, Effect, Option } from "effect";
 import { devicesCommand } from "./device";
-import { formatOption, orgOption, output, transformDates } from "./shared";
+import { formatOption, keysOption, orgOption, output, transformDates } from "./shared";
 import { stockCommand } from "./stock";
 import { warehouseCommand } from "./warehouse";
 
@@ -28,23 +28,14 @@ export const orgCommand = Command.make("org").pipe(
     ),
     Command.make(
       "list",
-      {},
-      Effect.fn("@warehouse/cli/org.list")(function* () {
+      {
+        format: formatOption,
+        keys: keysOption,
+      },
+      Effect.fn("@warehouse/cli/org.list")(function* ({ format, keys }) {
         const repo = yield* OrganizationService;
         const organizations = yield* repo.all();
-        if (!organizations) {
-          console.log(`No organizations found`);
-        } else {
-          yield* Console.log(`Organizations:`);
-          yield* Console.table(
-            organizations.map((organization) => ({
-              id: organization.id,
-              name: organization.name,
-              createdAt: dayjs(organization.createdAt).format("LLL"),
-            })),
-            ["id", "name", "createdAt"],
-          );
-        }
+        return yield* output(organizations, format, keys);
       }),
     ),
     Command.make(

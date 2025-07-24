@@ -107,7 +107,7 @@ const printNestedObject = (
 export const output = <T extends unknown>(
   data: T,
   format: (typeof formatOptions)[number],
-  keys?: readonly (keyof T | (string & {}))[],
+  keys?: readonly (keyof T | (string & {}))[] = [] as (keyof T | (string & {}))[],
 ) => {
   let _keys = keys ?? Object.keys(data);
   if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
