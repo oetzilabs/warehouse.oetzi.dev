@@ -15,6 +15,9 @@ export class WarehouseConfig extends Context.Tag("@warehouse/config")<
         readonly DatabaseProvider: string;
         readonly JWTSecret1: Redacted.Redacted<string>;
         readonly JWTSecret2: Redacted.Redacted<string>;
+        readonly IsLocal: boolean;
+        readonly BinaryDownloadBaseUrl: string;
+        readonly DefaultBinaryTargetFolderPath: string;
       },
       MissingConfig
     >;
@@ -43,11 +46,24 @@ export const WarehouseConfigLive = Layer.succeed(
             ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "JWT_SECRET_2" })),
           }),
         );
+        const binaryDownloadBaseUrl = yield* Config.string("BINARY_DOWNLOAD_BASE_URL").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "BINARY_DOWNLOAD_BASE_URL" })),
+          }),
+        );
+        const defaultBinaryTargetFolderPath = yield* Config.string("DEFAULT_BINARY_TARGET_FOLDER_PATH").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "DEFAULT_BINARY_TARGET_FOLDER_PATH" })),
+          }),
+        );
         return {
           DatabaseProvider: "local",
           DatabaseUrl: dbUrl,
           JWTSecret1: jwtSecret1,
           JWTSecret2: jwtSecret2,
+          BinaryDownloadBaseUrl: binaryDownloadBaseUrl,
+          DefaultBinaryTargetFolderPath: defaultBinaryTargetFolderPath,
+          IsLocal: true,
         };
       } else {
         const { Resource } = yield* Effect.promise(() => import("sst"));
@@ -58,11 +74,21 @@ export const WarehouseConfigLive = Layer.succeed(
         const dbUrl = Redacted.make(value);
         const jwtSecret1Value = Resource.JWTSecret1.value;
         const jwtSecret2Value = Resource.JWTSecret2.value;
+        // @ts-ignore
+        const binaryDownloadBaseUrlValue = Resource.BinaryDownloadBaseUrl.value;
+        // @ts-ignore
+        const defaultBinaryTargetFolderPathValue = Resource.DefaultBinaryTargetFolderPath.value;
         if (!jwtSecret1Value) {
           return yield* Effect.fail(MissingConfig.make({ key: "JWTSecret1" }));
         }
         if (!jwtSecret2Value) {
           return yield* Effect.fail(MissingConfig.make({ key: "JWTSecret2" }));
+        }
+        if (!binaryDownloadBaseUrlValue) {
+          return yield* Effect.fail(MissingConfig.make({ key: "BinaryDownloadBaseUrl" }));
+        }
+        if (!defaultBinaryTargetFolderPathValue) {
+          return yield* Effect.fail(MissingConfig.make({ key: "DefaultBinaryTargetFolderPath" }));
         }
         const jwtSecret1 = Redacted.make(jwtSecret1Value);
         const jwtSecret2 = Redacted.make(jwtSecret2Value);
@@ -72,6 +98,9 @@ export const WarehouseConfigLive = Layer.succeed(
           DatabaseUrl: dbUrl,
           JWTSecret1: jwtSecret1,
           JWTSecret2: jwtSecret2,
+          BinaryDownloadBaseUrl: binaryDownloadBaseUrlValue,
+          DefaultBinaryTargetFolderPath: defaultBinaryTargetFolderPathValue,
+          IsLocal: false,
         };
       }
     }),
