@@ -40,15 +40,12 @@ export const orgCommand = Command.make("org").pipe(
     ),
     Command.make(
       "show",
-      { org: orgOption, format: formatOption },
-      Effect.fn("@warehouse/cli/org.show")(function* ({ org, format }) {
+      { org: orgOption, format: formatOption, keys: keysOption },
+      Effect.fn("@warehouse/cli/org.show")(function* ({ org, format, keys }) {
         const repo = yield* OrganizationService;
         const organization = yield* repo.findById(org);
-        return yield* output(organization, format);
+        return yield* output(organization, format, keys);
       }),
     ),
-    warehouseCommand,
-    stockCommand,
-    devicesCommand,
   ]),
 );

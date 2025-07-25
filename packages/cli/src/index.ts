@@ -8,16 +8,21 @@ import { InventoryLive } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive } from "@warehouseoetzidev/core/src/entities/organizations";
 import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Cause, Console, Effect, Layer } from "effect";
+import { devicesCommand } from "./commands/device";
 import { orgCommand } from "./commands/organization";
+import { stockCommand } from "./commands/stock";
 import { updateCommand } from "./commands/update";
+import { warehouseCommand } from "./commands/warehouse";
 
-export const command = Command.make("wh");
-export const commands = [updateCommand, orgCommand] as const;
-
-export const cli = Command.run(command.pipe(Command.withSubcommands(commands)), {
-  name: "Warehouse CLI",
-  version: "0.0.1",
-});
+export const cli = Command.run(
+  Command.make("wh").pipe(
+    Command.withSubcommands([updateCommand, orgCommand, warehouseCommand, stockCommand, devicesCommand]),
+  ),
+  {
+    name: "Warehouse CLI",
+    version: "0.0.1",
+  },
+);
 
 const AppLayer = Layer.mergeAll(
   BunContext.layer,

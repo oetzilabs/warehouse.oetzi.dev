@@ -53,7 +53,7 @@ type StringToArraySchema = typeof stringToArraySchema.Type;
 
 export const keysOption = Options.text("keys").pipe(
   Options.withDescription("The keys to display"),
-  Options.withSchema(stringToArraySchema),
+  Options.map((t) => csvRowToArray(t)),
   Options.withDefault([] as string[]),
 );
 
@@ -64,7 +64,7 @@ const printNestedObject = (
 ): Effect.Effect<void> =>
   Effect.gen(function* () {
     if (typeof obj !== "object" || obj === null) {
-      return yield* Console.log(`${"  ".repeat(indentationLevel)}Value: ${obj === null ? "null" : obj.toString()}`);
+      return yield* Console.log(`${"  ".repeat(indentationLevel)}Value: ${obj === null ? "null" : obj?.toString()}`);
     }
 
     const indent = "  ".repeat(indentationLevel);
@@ -75,7 +75,10 @@ const printNestedObject = (
     return yield* Effect.all(
       keysToDisplay.map((key) =>
         Effect.gen(function* () {
-          const value = obj[key];
+          let value: unknown | undefined;
+          if (Object.hasOwn(obj, key)) {
+            value = obj[key as keyof typeof obj];
+          }
 
           if (Array.isArray(value)) {
             yield* Console.log(`${indent}${key}: [`);
@@ -107,18 +110,24 @@ const printNestedObject = (
 export const output = <T extends unknown>(
   data: T,
   format: (typeof formatOptions)[number],
-  keys?: readonly (keyof T | (string & {}))[] = [] as (keyof T | (string & {}))[],
+  keys?: readonly (keyof T | (string & {}))[],
 ) => {
-  let _keys = keys ?? Object.keys(data);
+  let _keys = keys;
+  if (!_keys && data instanceof Object) {
+    _keys = Object.keys(data);
+  }
   if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
     _keys = Object.keys(data[0]);
   }
+  if (!_keys) {
+    return Effect.succeed(undefined);
+  }
 
   const _output =
-    keys.length > 0
+    _keys.length > 0
       ? Array.isArray(data)
         ? data.map((d) => Object.fromEntries(_keys.map((k) => [k, d[k]])))
-        : Object.fromEntries(_keys.map((k) => [k, data[k]]))
+        : Object.fromEntries(_keys.map((k) => [k, data[k as keyof typeof data]]))
       : data;
   return Match.value(format).pipe(
     Match.when(
@@ -156,7 +165,8 @@ type Dates = {
 
 export const transformDates = <T extends Dates | Dates[]>(data: T): T =>
   Array.isArray(data)
-    ? data.map(transformDates)
+    ? // @ts-ignore
+      data.map(transformDates)
     : Object.assign(data, {
         createdAt: dayjs(data.createdAt).format("LLL"),
         updatedAt: data.updatedAt ? dayjs(data.updatedAt).format("LLL") : null,
