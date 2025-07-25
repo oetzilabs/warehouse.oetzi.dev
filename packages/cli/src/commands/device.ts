@@ -1,4 +1,4 @@
-import { Args, Command, Options, Primitive, Prompt } from "@effect/cli";
+import { Command, Options, Prompt } from "@effect/cli";
 import { device_status_enum_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { DeviceService } from "@warehouseoetzidev/core/src/entities/devices";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
