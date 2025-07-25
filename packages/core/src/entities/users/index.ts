@@ -254,12 +254,14 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
     });
 
     const all = Effect.fn("@warehouse/users/all")(function* () {
-      return yield* db.query.TB_users.findMany();
+      return yield* db.query.TB_users.findMany({
+        columns: { hashed_password: false },
+      });
     });
 
     const update = Effect.fn("@warehouse/users/update")(function* (
       id: string,
-      userInput: InferInput<typeof UserUpdateSchema>,
+      userInput: InferInput<typeof UserUpdateSchema>
     ) {
       const parsedId = safeParse(prefixed_cuid2, id);
       if (!parsedId.success) {
@@ -326,7 +328,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 
     const verifyPassword = Effect.fn("@warehouse/users/vrifyPassword")(function* (
       emailInput: string,
-      password: string,
+      password: string
     ) {
       const parsedEmail = safeParse(pipe(string(), email()), emailInput);
       if (!parsedEmail.success) {
@@ -337,7 +339,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         where: (users, operations) =>
           operations.and(
             operations.eq(users.email, parsedEmail.output),
-            operations.eq(users.hashed_password, hashPassword(password)),
+            operations.eq(users.hashed_password, hashPassword(password))
           ),
       });
 
