@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { email, InferInput, object, omit, pipe, safeParse, string } from "valibot";
 import { TB_users, UserCreateSchema, UserUpdateSchema } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
@@ -20,6 +20,12 @@ import {
   UserNotUpdated,
   UserPasswordRequired,
 } from "./errors";
+
+export const UserFindBySchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  email: Schema.optional(Schema.String),
+  verified: Schema.optional(Schema.Boolean),
+});
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
   effect: Effect.gen(function* (_) {
@@ -225,6 +231,32 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       return user;
     });
 
+    const findBy = Effect.fn("@warehouse/organizations/findBy")(function* (filter: typeof UserFindBySchema.Type) {
+      return yield* db.query.TB_users.findMany({
+        where: (fields, operations) => {
+          const collector = [];
+          if (filter.name) {
+            collector.push(operations.ilike(fields.name, `%${filter.name}%`));
+          }
+          if (filter.email) {
+            collector.push(operations.ilike(fields.email, `%${filter.email}%`));
+          }
+          if (filter.verified !== undefined) {
+            if (filter.verified) {
+              collector.push(operations.isNotNull(fields.verifiedAt));
+            } else {
+              collector.push(operations.isNull(fields.verifiedAt));
+            }
+          }
+          return operations.or(...collector);
+        },
+      });
+    });
+
+    const all = Effect.fn("@warehouse/users/all")(function* () {
+      return yield* db.query.TB_users.findMany();
+    });
+
     const update = Effect.fn("@warehouse/users/update")(function* (
       id: string,
       userInput: InferInput<typeof UserUpdateSchema>,
@@ -363,10 +395,12 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
     });
 
     return {
+      all,
       create,
       disable,
       findById,
       findByEmail,
+      findBy,
       update,
       remove,
       safeRemove,

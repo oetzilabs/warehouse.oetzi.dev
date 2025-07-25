@@ -16,7 +16,7 @@ const versionOption = Options.text("version").pipe(
 export const updateCommand = Command.make(
   "update",
   { version: versionOption },
-  Effect.fn("@warehouse/cli/stock.show")(function* ({ version }) {
+  Effect.fn("@warehouse/cli/update")(function* ({ version }) {
     const binaryService = yield* BinaryService;
     const listOfVersions = yield* binaryService.listVersions();
     const service = yield* DownloaderService;

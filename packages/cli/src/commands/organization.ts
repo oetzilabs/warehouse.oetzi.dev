@@ -1,10 +1,7 @@
 import { Command, Options } from "@effect/cli";
 import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { Console, Effect, Option } from "effect";
-import { devicesCommand } from "./device";
 import { formatOption, keysOption, orgOption, output, transformDates } from "./shared";
-import { stockCommand } from "./stock";
-import { warehouseCommand } from "./warehouse";
 
 const findByNameOption = Options.text("name").pipe(
   Options.withDescription("Find an organization by name"),
