@@ -79,7 +79,7 @@ export const userCommand = Command.make("user").pipe(
     Command.make(
       "verify",
       { userId: userIdOption, format: formatOption, keys: keysOption },
-      Effect.fn("@warehouse/cli/user.show")(function* ({ userId, format, keys }) {
+      Effect.fn("@warehouse/cli/user.verify")(function* ({ userId, format, keys }) {
         const repo = yield* UserService;
         const user = yield* repo.update(userId, { id: userId, verifiedAt: new Date() });
         return yield* output(user, format, keys);
@@ -88,7 +88,7 @@ export const userCommand = Command.make("user").pipe(
     Command.make(
       "reset-password",
       { userId: userIdOption, format: formatOption, keys: keysOption },
-      Effect.fn("@warehouse/cli/user.show")(function* ({ userId, format, keys }) {
+      Effect.fn("@warehouse/cli/user.reset-password")(function* ({ userId, format, keys }) {
         const repo = yield* UserService;
         // const user = yield* repo.update(userId, { id: userId, verifiedAt: new Date() });
         // return yield* output(user, format, keys);
@@ -103,7 +103,7 @@ export const userCommand = Command.make("user").pipe(
     Command.make(
       "notify",
       { userId: userIdOption, format: formatOption, keys: keysOption },
-      Effect.fn("@warehouse/cli/user.show")(function* ({ userId, format, keys }) {
+      Effect.fn("@warehouse/cli/user.notify")(function* ({ userId, format, keys }) {
         const repo = yield* UserService;
         // const user = yield* repo.update(userId, { id: userId, verifiedAt: new Date() });
         // return yield* output(user, format, keys);

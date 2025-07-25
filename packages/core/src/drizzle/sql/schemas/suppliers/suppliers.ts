@@ -14,6 +14,8 @@ import { TB_supplier_schedules } from "./suppliers_schedules";
 
 export const supplier_status = schema.enum("supplier_status", ["active", "inactive", "under_review", "blacklisted"]);
 
+export const supplier_status_enum_values = supplier_status.enumValues;
+
 export const TB_suppliers = commonTable(
   "suppliers",
   {

@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { InferInput, safeParse } from "valibot";
 import {
   SupplierContactCreateSchema,
@@ -29,6 +29,15 @@ import {
   SupplierNotFound,
   SupplierNotUpdated,
 } from "./errors";
+
+export const SupplierFindBySchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  email: Schema.optional(Schema.String),
+  contact: Schema.optional(Schema.String),
+  note: Schema.optional(Schema.String),
+  active: Schema.optional(Schema.Boolean),
+  blacklisted: Schema.optional(Schema.Boolean),
+});
 
 export class SupplierService extends Effect.Service<SupplierService>()("@warehouse/suppliers", {
   effect: Effect.gen(function* (_) {
@@ -108,6 +117,48 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
           isInSortiment: p.product.organizations.find((org) => org.organizationId === orgId)?.deletedAt,
         })),
       };
+    });
+
+    const findByIdWithoutOrg = Effect.fn("@warehouse/suppliers/findByIdWithoutOrg")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new SupplierInvalidId({ id }));
+      }
+      const supplier = yield* db.query.TB_suppliers.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          products: {
+            with: {
+              product: {
+                with: {
+                  labels: true,
+                  organizations: true,
+                },
+              },
+            },
+          },
+          contacts: true,
+          notes: {
+            orderBy: (fields, operations) => [operations.desc(fields.updatedAt), operations.desc(fields.createdAt)],
+          },
+          organizations: true,
+          purchases: {
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!supplier) {
+        return yield* Effect.fail(new SupplierNotFound({ id }));
+      }
+
+      return supplier;
     });
 
     const update = Effect.fn("@warehouse/suppliers/update")(function* (input: InferInput<typeof SupplierUpdateSchema>) {
@@ -382,9 +433,85 @@ export class SupplierService extends Effect.Service<SupplierService>()("@warehou
         .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
     });
 
+    const all = Effect.fn("@warehouse/suppliers/all")(function* () {
+      return yield* db.query.TB_suppliers.findMany({
+        with: {
+          contacts: true,
+          notes: true,
+          purchases: {
+            with: {
+              products: true,
+            },
+          },
+        },
+      });
+    });
+
+    const findBy = Effect.fn("@warehouse/suppliers/findBy")(function* (filter: typeof SupplierFindBySchema.Type) {
+      let suppliers = yield* db.query.TB_suppliers.findMany({
+        where: (fields, operations) => {
+          const collector = [];
+          if (filter.name) {
+            collector.push(operations.ilike(fields.name, `%${filter.name}%`));
+          }
+          if (filter.email) {
+            collector.push(operations.ilike(fields.email, `%${filter.email}%`));
+          }
+          if (filter.active !== undefined) {
+            if (filter.active) {
+              collector.push(operations.eq(fields.status, "active"));
+            } else {
+              collector.push(operations.eq(fields.status, "inactive"));
+            }
+          }
+          if (filter.blacklisted) {
+            collector.push(operations.eq(fields.status, "blacklisted"));
+          }
+          return operations.or(...collector);
+        },
+        with: {
+          contacts: true,
+          notes: true,
+          purchases: {
+            with: {
+              products: true,
+            },
+          },
+        },
+      });
+      if (filter.contact !== undefined) {
+        const contact = filter.contact!.toLowerCase();
+        suppliers = suppliers.filter((supplier) =>
+          supplier.contacts.find(
+            (c) =>
+              c.id === contact ||
+              c.name.toLowerCase().includes(contact.toLowerCase()) ||
+              (c.email?.toLowerCase().includes(contact.toLowerCase()) ?? false) ||
+              (c.phone?.toLowerCase().includes(contact.toLowerCase()) ?? false) ||
+              (c.position?.toLowerCase().includes(contact.toLowerCase()) ?? false),
+          ),
+        );
+      }
+      if (filter.note !== undefined) {
+        const note = filter.note!.toLowerCase();
+        suppliers = suppliers.filter((supplier) =>
+          supplier.notes.find(
+            (n) =>
+              n.id === note ||
+              n.title.toLowerCase().includes(note.toLowerCase()) ||
+              n.content.toLowerCase().includes(note),
+          ),
+        );
+      }
+      return suppliers;
+    });
+
     return {
+      all,
       create,
       findById,
+      findByIdWithoutOrg,
+      findBy,
       update,
       addContact,
       addNote,

@@ -113,10 +113,10 @@ export const output = <T extends unknown>(
   keys?: readonly (keyof T | (string & {}))[],
 ) => {
   let _keys = keys;
-  if (!_keys && data instanceof Object) {
+  if (!_keys && data instanceof Object && !Array.isArray(data)) {
     _keys = Object.keys(data);
   }
-  if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+  if (keys === undefined && Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
     _keys = Object.keys(data[0]);
   }
   if (!_keys) {

@@ -8,7 +8,9 @@ const findByNameOption = Options.text("name").pipe(
   Options.optional,
 );
 
-const orgCmd = Command.make("org", { org: orgOption }, () => Effect.succeed(undefined));
+const orgIdOption = Options.text("id").pipe(Options.withDescription("The organization ID"));
+
+const orgCmd = Command.make("org", { org: orgIdOption }, () => Effect.succeed(undefined));
 
 export const orgCommand = Command.make("org").pipe(
   Command.withSubcommands([
@@ -37,7 +39,7 @@ export const orgCommand = Command.make("org").pipe(
     ),
     Command.make(
       "show",
-      { org: orgOption, format: formatOption, keys: keysOption },
+      { org: orgIdOption, format: formatOption, keys: keysOption },
       Effect.fn("@warehouse/cli/org.show")(function* ({ org, format, keys }) {
         const repo = yield* OrganizationService;
         const organization = yield* repo.findById(org);
