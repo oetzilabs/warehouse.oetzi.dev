@@ -219,11 +219,37 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       return yield* db.query.TB_storage_types.findMany();
     });
 
+    const locate: (
+      id: string,
+    ) => Effect.Effect<
+      Effect.Effect.Success<ReturnType<typeof findById>>[],
+      StorageNotFound | StorageInvalidId | SqlError
+    > = Effect.fn("@warehouse/storages/locate")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new StorageInvalidId({ id }));
+      }
+
+      // find the recursive storage place. if there is no parent, return the storage+area.
+      const storage = yield* findById(id);
+      if (!storage) {
+        return yield* Effect.fail(new StorageNotFound({ id }));
+      }
+      const pId = storage.parentId;
+      if (!pId) {
+        return [storage];
+      }
+      const parent = yield* Effect.suspend(() => locate(pId));
+      // now we have to make an array of elements, starting from the parent, until we reach the storage.
+      return parent.concat(storage);
+    });
+
     return {
       create,
       findById,
       update,
       remove,
+      locate,
       safeRemove,
       findByAreaId,
       findChildren,

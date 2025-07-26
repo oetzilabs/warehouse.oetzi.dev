@@ -4,14 +4,19 @@ import { BunContext, BunRuntime } from "@effect/platform-bun";
 import { BinaryLive } from "@warehouseoetzidev/core/src/entities/binaries";
 import { DeviceLive } from "@warehouseoetzidev/core/src/entities/devices";
 import { DownloaderLive } from "@warehouseoetzidev/core/src/entities/downloader";
+import { FacilityLive } from "@warehouseoetzidev/core/src/entities/facilities";
 import { InventoryLive } from "@warehouseoetzidev/core/src/entities/inventory";
 import { OrganizationLive } from "@warehouseoetzidev/core/src/entities/organizations";
+import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
+import { ProductLive } from "@warehouseoetzidev/core/src/entities/products";
+import { StorageLive } from "@warehouseoetzidev/core/src/entities/storages";
 import { SupplierLive } from "@warehouseoetzidev/core/src/entities/suppliers";
 import { UserLive } from "@warehouseoetzidev/core/src/entities/users";
 import { WarehouseLive } from "@warehouseoetzidev/core/src/entities/warehouses";
 import { Cause, Console, Effect, Layer } from "effect";
 import { devicesCommand } from "./commands/device";
 import { orgCommand } from "./commands/organization";
+import { productCommand } from "./commands/product";
 import { stockCommand } from "./commands/stock";
 import { supplierCommand } from "./commands/suppliers";
 import { updateCommand } from "./commands/update";
@@ -28,6 +33,7 @@ export const cli = Command.run(
       devicesCommand,
       userCommand,
       supplierCommand,
+      productCommand,
     ]),
   ),
   {
@@ -44,9 +50,13 @@ const AppLayer = Layer.mergeAll(
   SupplierLive,
   WarehouseLive,
   InventoryLive,
+  StorageLive,
+  ProductLive,
+  FacilityLive,
   DeviceLive,
   BinaryLive,
   DownloaderLive,
+  createOtelLayer("warehouse"),
 );
 
 cli(Bun.argv).pipe(

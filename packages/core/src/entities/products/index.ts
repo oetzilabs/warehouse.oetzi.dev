@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { and, desc, eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { InferInput, safeParse } from "valibot";
 import {
   ProductCreateSchema,
@@ -38,6 +38,11 @@ import {
   ProductNotUpdated,
 } from "./errors";
 import { NewProductFormData } from "./schemas";
+
+export const ProductFindBySchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+});
 
 export class ProductService extends Effect.Service<ProductService>()("@warehouse/products", {
   effect: Effect.gen(function* (_) {
@@ -771,12 +776,282 @@ export class ProductService extends Effect.Service<ProductService>()("@warehouse
       (effect) => effect.pipe(Effect.provide(SupplierLive)),
     );
 
+    const all = Effect.fn("@warehouse/products/all")(function* () {
+      return yield* db.query.TB_products.findMany({
+        with: {
+          organizations: {
+            with: {
+              priceHistory: true,
+              tg: {
+                with: {
+                  crs: {
+                    with: {
+                      tr: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          stcs: {
+            with: {
+              condition: true,
+            },
+          },
+          certs: {
+            with: {
+              cert: true,
+            },
+          },
+          images: {
+            with: {
+              image: true,
+            },
+          },
+          space: {
+            with: {
+              storage: true,
+            },
+          },
+          brands: true,
+          saleItems: {
+            with: {
+              sale: {
+                with: {
+                  customer: true,
+                },
+              },
+            },
+          },
+          orders: {
+            with: {
+              customerOrder: true,
+            },
+          },
+          labels: {
+            with: {
+              label: true,
+            },
+          },
+          stco: {
+            with: {
+              condition: true,
+            },
+          },
+          suppliers: {
+            with: {
+              priceHistory: true,
+              supplier: {
+                with: {
+                  contacts: true,
+                  notes: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    const findBy = Effect.fn("@warehouse/products/findBy")(function* (filter: typeof ProductFindBySchema.Type) {
+      let products = yield* db.query.TB_products.findMany({
+        where: (fields, operations) => {
+          const collector = [];
+          if (filter.name) {
+            collector.push(operations.ilike(fields.name, `%${filter.name}%`));
+          }
+          if (filter.description) {
+            collector.push(operations.ilike(fields.description, `%${filter.description}%`));
+          }
+
+          return operations.or(...collector);
+        },
+        with: {
+          organizations: {
+            with: {
+              priceHistory: true,
+              tg: {
+                with: {
+                  crs: {
+                    with: {
+                      tr: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          stcs: {
+            with: {
+              condition: true,
+            },
+          },
+          certs: {
+            with: {
+              cert: true,
+            },
+          },
+          images: {
+            with: {
+              image: true,
+            },
+          },
+          space: {
+            with: {
+              storage: true,
+            },
+          },
+          brands: true,
+          saleItems: {
+            with: {
+              sale: {
+                with: {
+                  customer: true,
+                },
+              },
+            },
+          },
+          orders: {
+            with: {
+              customerOrder: true,
+            },
+          },
+          labels: {
+            with: {
+              label: true,
+            },
+          },
+          stco: {
+            with: {
+              condition: true,
+            },
+          },
+          suppliers: {
+            with: {
+              supplier: {
+                with: {
+                  contacts: true,
+                  notes: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return products;
+    });
+
+    const findByIdWithoutOrg = Effect.fn("@warehouse/products/findByIdWithoutOrg")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new ProductInvalidId({ id }));
+      }
+      const product = yield* db.query.TB_products.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          organizations: {
+            with: {
+              priceHistory: true,
+              tg: {
+                with: {
+                  crs: {
+                    with: {
+                      tr: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          stcs: {
+            with: {
+              condition: true,
+            },
+          },
+          certs: {
+            with: {
+              cert: true,
+            },
+          },
+          images: {
+            with: {
+              image: true,
+            },
+          },
+          space: {
+            with: {
+              storage: true,
+            },
+          },
+          brands: true,
+          saleItems: {
+            with: {
+              sale: {
+                with: {
+                  customer: true,
+                },
+              },
+            },
+          },
+          orders: {
+            with: {
+              customerOrder: true,
+            },
+          },
+          labels: {
+            with: {
+              label: true,
+            },
+          },
+          stco: {
+            with: {
+              condition: true,
+            },
+          },
+          purchases: {
+            with: {
+              product: true,
+              supplierPurchase: {
+                with: {
+                  products: true,
+                },
+              },
+            },
+          },
+          suppliers: {
+            with: {
+              priceHistory: true,
+              supplier: {
+                with: {
+                  schedules: true,
+                  contacts: true,
+                  notes: true,
+                  purchases: {
+                    with: {
+                      products: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!product) {
+        return yield* Effect.fail(new ProductNotFound({ id }));
+      }
+      return product;
+    });
+
     return {
+      all,
       create,
       findById,
       update,
       remove,
       safeRemove,
+      findBy,
+      findByIdWithoutOrg,
       findByOrganizationId,
       findByWarehouseId,
       addLabel,
