@@ -21,6 +21,8 @@ export const customer_order_status = schema.enum("customer_order_status", [
   "deleted",
 ]);
 
+export const customer_order_status_enum_values = customer_order_status.enumValues;
+
 export const TB_customer_orders = commonTable(
   "customer_orders",
   {

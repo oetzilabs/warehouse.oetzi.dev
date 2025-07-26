@@ -1,9 +1,10 @@
 import cuid2 from "@paralleldrive/cuid2";
 import dayjs from "dayjs";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
-import { Console, Effect } from "effect";
+import { Console, Effect, Schema } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import {
+  customer_order_status_enum_values,
   CustomerOrderCreateSchema,
   CustomerOrderSelect,
   CustomerOrderUpdateSchema,
@@ -38,6 +39,13 @@ import {
   OrderUserInvalidId,
   OrderWarehouseInvalidId,
 } from "./errors";
+
+export const CustomerOrderFindBySchema = Schema.Struct({
+  status: Schema.optional(Schema.Literal(...customer_order_status_enum_values)),
+  saleId: Schema.optional(Schema.String),
+  customerId: Schema.optional(Schema.String),
+  organizationId: Schema.optional(Schema.String),
+});
 
 export class CustomerOrderService extends Effect.Service<CustomerOrderService>()("@warehouse/customer-orders", {
   effect: Effect.gen(function* (_) {
@@ -672,9 +680,172 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
       return orgPurchases;
     });
 
+    const findByIdWithoutOrg = Effect.fn("@warehouse/customer-orders/findByIdWithoutOrg")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new OrderInvalidId({ id }));
+      }
+      const order = yield* db.query.TB_customer_orders.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          organization: true,
+          customer: {
+            with: {
+              pdt: true,
+              ppt: true,
+            },
+          },
+          sale: {
+            with: {
+              discounts: {
+                with: {
+                  discount: true,
+                },
+              },
+            },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+            },
+          },
+          products: {
+            with: {
+              product: {
+                with: {
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  brands: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!order) {
+        return yield* Effect.fail(new OrderNotFound({ id }));
+      }
+
+      const orgId = order.organization_id;
+
+      return {
+        ...order,
+        products: order.products.map((p) => ({
+          ...p,
+          product: {
+            ...p.product,
+            organizations: p.product.organizations.filter((org) => org.organizationId === orgId),
+            priceHistory:
+              p.product.organizations
+                .find((org) => org.organizationId === orgId)!
+                .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime()) || [],
+            currency: p.product.organizations
+              .find((org) => org.organizationId === orgId)!
+              .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].currency,
+            sellingPrice: p.product.organizations
+              .find((org) => org.organizationId === orgId)!
+              .priceHistory.sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0].sellingPrice,
+          },
+        })),
+      };
+    });
+
+    const findBy = Effect.fn("@warehouse/customer-orders/findBy")(function* (
+      filter: typeof CustomerOrderFindBySchema.Type,
+    ) {
+      let orders = yield* db.query.TB_customer_orders.findMany({
+        where: (fields, operations) => {
+          const collector = [];
+          if (filter.organizationId) {
+            collector.push(operations.eq(fields.organization_id, filter.organizationId));
+          }
+          if (filter.status) {
+            collector.push(operations.eq(fields.status, filter.status));
+          }
+          if (filter.saleId) {
+            collector.push(operations.eq(fields.saleId, filter.saleId));
+          }
+          if (filter.customerId) {
+            collector.push(operations.eq(fields.customer_id, filter.customerId));
+          }
+          return operations.or(...collector);
+        },
+        with: {
+          organization: true,
+          customer: {
+            with: {
+              pdt: true,
+              ppt: true,
+            },
+          },
+          sale: {
+            with: {
+              discounts: {
+                with: {
+                  discount: true,
+                },
+              },
+            },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+            },
+          },
+          products: {
+            with: {
+              product: {
+                with: {
+                  organizations: {
+                    with: {
+                      priceHistory: true,
+                      tg: {
+                        with: {
+                          crs: {
+                            with: {
+                              tr: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  brands: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return orders;
+    });
+
     return {
       create,
+      findBy,
       findById,
+      findByIdWithoutOrg,
       update,
       remove,
       safeRemove,
