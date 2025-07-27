@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { Effect, Schema } from "effect";
 import { email, InferInput, object, omit, pipe, safeParse, string } from "valibot";
-import { TB_users, UserCreateSchema, UserUpdateSchema } from "../../drizzle/sql/schema";
+import { TB_users, user_status_enun_values, UserCreateSchema, UserUpdateSchema } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
 import {
@@ -25,6 +25,7 @@ export const UserFindBySchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   email: Schema.optional(Schema.String),
   verified: Schema.optional(Schema.Boolean),
+  status: Schema.optional(Schema.Literal(...user_status_enun_values)),
 });
 
 export class UserService extends Effect.Service<UserService>()("@warehouse/users", {
@@ -241,6 +242,9 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
           if (filter.email) {
             collector.push(operations.ilike(fields.email, `%${filter.email}%`));
           }
+          if (filter.status) {
+            collector.push(operations.eq(fields.status, filter.status));
+          }
           if (filter.verified !== undefined) {
             if (filter.verified) {
               collector.push(operations.isNotNull(fields.verifiedAt));
@@ -249,6 +253,145 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
             }
           }
           return operations.or(...collector);
+        },
+        with: {
+          payment_methods: {
+            with: {
+              payment_method: true,
+            },
+          },
+          payment_history: {
+            with: {
+              paymentMethod: true,
+            },
+          },
+          orgs: {
+            with: {
+              org: true,
+            },
+          },
+          sessions: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+              wh: true,
+              fc: true,
+              org: {
+                with: {
+                  products: {
+                    with: {
+                      product: {
+                        with: {
+                          labels: true,
+                          brands: true,
+                          suppliers: true,
+                        },
+                      },
+                    },
+                  },
+                  supps: {
+                    with: {
+                      supplier: true,
+                    },
+                  },
+                  customers: {
+                    with: {
+                      customer: true,
+                    },
+                  },
+                  owner: {
+                    columns: {
+                      hashed_password: false,
+                    },
+                  },
+                  users: {
+                    with: {
+                      user: {
+                        columns: {
+                          hashed_password: false,
+                        },
+                      },
+                    },
+                  },
+                  customerOrders: {
+                    with: {
+                      customer: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                      sale: true,
+                    },
+                  },
+                  purchases: {
+                    with: {
+                      supplier: true,
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  devices: {
+                    with: {
+                      type: true,
+                    },
+                  },
+                  sales: {
+                    with: {
+                      sale: true,
+                    },
+                  },
+                  catalogs: {
+                    with: {
+                      products: {
+                        with: {
+                          product: true,
+                        },
+                      },
+                    },
+                  },
+                  whs: {
+                    with: {
+                      warehouse: {
+                        with: {
+                          addresses: {
+                            with: {
+                              address: true,
+                            },
+                          },
+                          facilities: {
+                            with: {
+                              areas: {
+                                with: {
+                                  storages: {
+                                    with: {
+                                      type: true,
+                                      area: true,
+                                      products: true,
+                                      children: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        columns: {
+          hashed_password: false,
         },
       });
     });

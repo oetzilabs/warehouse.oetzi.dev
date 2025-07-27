@@ -1,4 +1,5 @@
 import { Command, Options, Prompt } from "@effect/cli";
+import { user_status_enun_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { MessagingService } from "@warehouseoetzidev/core/src/entities/messaging";
 import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
@@ -17,32 +18,43 @@ const findByEmailOption = Options.text("email").pipe(
   Options.optional,
 );
 
-const findByVerifiedOption = Options.boolean("verified", { negationNames: ["non-verified"] }).pipe(
-  Options.withDescription("Find an user by verified status"),
+const findByVerifiedOption = Options.boolean("verified", { negationNames: ["non-verified"], ifPresent: true }).pipe(
+  Options.withDescription("Find an user by verification"),
   Options.optional,
 );
 
 const userIdOption = Options.text("id").pipe(Options.withDescription("The user ID"));
+
+const findByStatusOption = Options.choice("status", user_status_enun_values).pipe(
+  Options.withDescription("Find an user by status"),
+  Options.optional,
+);
 
 export const userCommand = Command.make("user").pipe(
   Command.withSubcommands([
     Command.make(
       "find",
       {
-        org: orgOption,
         name: findByNameOption,
         email: findByEmailOption,
+        status: findByStatusOption,
         verified: findByVerifiedOption,
         format: formatOption,
         keys: keysOption,
       },
-      Effect.fn("@warehouse/cli/user.find")(function* ({ name, email, format, org, keys, verified }) {
+      Effect.fn("@warehouse/cli/user.find")(function* ({ name, email, format, status, keys, verified }) {
         const repo = yield* UserService;
         const n = Option.getOrUndefined(name);
         const e = Option.getOrUndefined(email);
-        const v = Option.getOrUndefined(verified);
-        yield* Console.log(`Searching for ${n} ${e} ${v}`);
-        const users = yield* repo.findBy({ name: n, email: e, verified: v });
+        // somehow the `Option.getOrUndefined` is not working here.
+        let v = Option.getOrUndefined(verified);
+        const hasVerifiedOrNonVerified = Bun.argv.includes("--verified") || Bun.argv.includes("--non-verified");
+        if (!hasVerifiedOrNonVerified) {
+          v = undefined;
+        }
+        const s = Option.getOrUndefined(status);
+        yield* Console.log(`Searching for ${n} ${e} ${v} ${s}`);
+        const users = yield* repo.findBy({ name: n, email: e, verified: v, status: s });
         return yield* output(users, format, keys);
       }),
     ),
@@ -165,8 +177,8 @@ export const userCommand = Command.make("user").pipe(
 
         const repo = yield* OrganizationService;
         const createdUser = yield* userService.create({
-          name: "John Doe",
-          email: "john.doe@example.com",
+          name,
+          email,
           password,
         });
 
@@ -207,6 +219,16 @@ export const userCommand = Command.make("user").pipe(
         const user = yield* userService.findById(createdUser.id);
 
         return yield* output(user, format, keys);
+      }),
+    ),
+    Command.make(
+      "ban",
+      { userId: userIdOption, format: formatOption, keys: keysOption },
+      Effect.fn("@warehouse/cli/user.ban")(function* ({ userId, format, keys }) {
+        const repo = yield* UserService;
+        const user = yield* repo.findById(userId);
+        const updatedUser = yield* repo.update(userId, { id: userId, status: "suspended" });
+        return yield* output(updatedUser, format, keys);
       }),
     ),
   ]),

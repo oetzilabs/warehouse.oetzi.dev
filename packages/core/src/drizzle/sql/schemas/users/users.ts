@@ -16,6 +16,8 @@ import { TB_users_warehouses } from "./users_warehouses";
 
 export const user_status = schema.enum("user_status", ["active", "disabled", "suspended"]);
 
+export const user_status_enun_values = user_status.enumValues;
+
 export const TB_users = commonTable(
   "users",
   {
