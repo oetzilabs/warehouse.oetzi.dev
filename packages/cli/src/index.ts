@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 import { CliConfig, Command } from "@effect/cli";
-import { BunContext, BunRuntime } from "@effect/platform-bun";
+import { BunContext, BunPath, BunRuntime } from "@effect/platform-bun";
 import { BinaryLive } from "@warehouseoetzidev/core/src/entities/binaries";
 import { DeviceLive } from "@warehouseoetzidev/core/src/entities/devices";
 import { DownloaderLive } from "@warehouseoetzidev/core/src/entities/downloader";
 import { FacilityLive } from "@warehouseoetzidev/core/src/entities/facilities";
 import { InventoryLive } from "@warehouseoetzidev/core/src/entities/inventory";
+import { MessagingLive } from "@warehouseoetzidev/core/src/entities/messaging";
 import { CustomerOrderLive } from "@warehouseoetzidev/core/src/entities/orders";
 import { OrganizationLive } from "@warehouseoetzidev/core/src/entities/organizations";
 import { createOtelLayer } from "@warehouseoetzidev/core/src/entities/otel";
@@ -47,6 +48,7 @@ export const cli = Command.run(
 
 const AppLayer = Layer.mergeAll(
   BunContext.layer,
+  BunPath.layer,
   CliConfig.layer({ showBuiltIns: false, showAllNames: true }),
   OrganizationLive,
   UserLive,
@@ -56,6 +58,7 @@ const AppLayer = Layer.mergeAll(
   InventoryLive,
   StorageLive,
   ProductLive,
+  MessagingLive,
   FacilityLive,
   DeviceLive,
   BinaryLive,

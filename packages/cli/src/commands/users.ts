@@ -1,10 +1,14 @@
 import { Command, Options, Prompt } from "@effect/cli";
+import { MessagingService } from "@warehouseoetzidev/core/src/entities/messaging";
 import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import { UserService } from "@warehouseoetzidev/core/src/entities/users";
-import { Cause, Console, Effect, Exit, Option } from "effect";
+import { Cause, Console, Effect, Exit, Layer, Option } from "effect";
 import { formatOption, keysOption, orgOption, output, transformDates } from "./shared";
 import { stockCommand } from "./stock";
 import { warehouseCommand } from "./warehouse";
+
+const optionalOrgOption = Options.text("org").pipe(Options.withDescription("The organization ID"), Options.optional);
 
 const findByNameOption = Options.text("name").pipe(Options.withDescription("Find an user by name"), Options.optional);
 
@@ -77,6 +81,18 @@ export const userCommand = Command.make("user").pipe(
       }),
     ),
     Command.make(
+      "send-verification",
+      { userId: userIdOption, format: formatOption, keys: keysOption },
+      Effect.fn("@warehouse/cli/user.send-verification")(function* ({ userId, format, keys }) {
+        const repo = yield* UserService;
+        const user = yield* repo.findById(userId);
+        const messagingService = yield* MessagingService;
+        const message = yield* messagingService.create("verify-email", { name: user.name, email: user.email });
+        const verification = yield* messagingService.send(message);
+        return yield* output(verification, format, keys);
+      }),
+    ),
+    Command.make(
       "verify",
       { userId: userIdOption, format: formatOption, keys: keysOption },
       Effect.fn("@warehouse/cli/user.verify")(function* ({ userId, format, keys }) {
@@ -97,7 +113,16 @@ export const userCommand = Command.make("user").pipe(
         if (newPassword !== newPasswordConfirm) {
           return yield* Exit.failCause(Cause.fail("Passwords do not match"));
         }
-        return yield* Exit.failCause(Cause.fail("Not implemented"));
+        const messageService = yield* MessagingService;
+        const user = yield* repo.findById(userId);
+        const updatedUser = yield* repo.update(userId, { id: userId, password: newPassword });
+        const userMessage = yield* messageService.create("reset-password", {
+          name: user.name,
+          email: user.email,
+          password: newPassword,
+        });
+        const verification = yield* messageService.send(userMessage);
+        return yield* output(verification, format, keys);
       }),
     ),
     Command.make(
@@ -111,6 +136,77 @@ export const userCommand = Command.make("user").pipe(
         const message = yield* Prompt.text({ message: "Message" });
 
         return yield* Exit.failCause(Cause.fail("Not implemented"));
+      }),
+    ),
+    Command.make(
+      "create",
+      {
+        org: optionalOrgOption,
+        format: formatOption,
+        keys: keysOption,
+      },
+      Effect.fn("@warehouse/cli/user.create")(function* ({ org, format, keys }) {
+        const userService = yield* UserService;
+        const name = yield* Prompt.text({ message: "Name" });
+        const email = yield* Prompt.text({ message: "Email" });
+
+        const isTheUserEmailAlreadyRegistered = yield* userService
+          .findByEmail(email)
+          .pipe(Effect.catchTag("UserNotFoundViaEmail", () => Effect.succeed(undefined)));
+        if (isTheUserEmailAlreadyRegistered) {
+          return yield* Exit.failCause(Cause.fail("Email already registered"));
+        }
+
+        const password = yield* Prompt.text({ message: "Password" });
+        const passwordConfirm = yield* Prompt.text({ message: "Confirm password" });
+        if (password !== passwordConfirm) {
+          return yield* Exit.failCause(Cause.fail("Passwords do not match"));
+        }
+
+        const repo = yield* OrganizationService;
+        const createdUser = yield* userService.create({
+          name: "John Doe",
+          email: "john.doe@example.com",
+          password,
+        });
+
+        const _org = Option.getOrUndefined(org);
+
+        if (_org) {
+          const connectedToOrganization = yield* repo
+            .addUser(createdUser.id)
+            .pipe(Effect.provide(Layer.succeed(OrganizationId, _org)));
+          if (!connectedToOrganization) {
+            return yield* Exit.failCause(Cause.fail("Could not connect organization"));
+          }
+        } else {
+          const doYouWantToJoinAnOrganization = yield* Prompt.confirm({
+            message: "Do you want to join an organization?",
+          });
+
+          if (doYouWantToJoinAnOrganization) {
+            const listOfOrganizations = yield* repo.all();
+            const chosenOrganization = yield* Prompt.select({
+              message: "Choose an organization",
+              choices: listOfOrganizations.map((org) => ({
+                title: org.name,
+                value: org.id,
+                description: org.description ?? "No description for this organization",
+              })),
+            });
+
+            const connectedOrganization = yield* repo
+              .addUser(createdUser.id)
+              .pipe(Effect.provide(Layer.succeed(OrganizationId, chosenOrganization)));
+            if (!connectedOrganization) {
+              return yield* Exit.failCause(Cause.fail("Could not connect organization"));
+            }
+          }
+        }
+
+        const user = yield* userService.findById(createdUser.id);
+
+        return yield* output(user, format, keys);
       }),
     ),
   ]),

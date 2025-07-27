@@ -1,4 +1,13 @@
 import { Config, Context, Effect, Layer, Redacted, Schema } from "effect";
+import { createTransport } from "nodemailer";
+
+const EmailTransportConfigSchema = Schema.Struct({
+  name: Schema.String,
+  host: Schema.String,
+  port: Schema.Number,
+  auth: Schema.Struct({ user: Schema.String, pass: Schema.String }),
+});
+type EmailTransportConfig = typeof EmailTransportConfigSchema.Type;
 
 export class MissingConfig extends Schema.TaggedError<MissingConfig>("MissingConfig")("MissingConfig", {
   key: Schema.String,
@@ -18,6 +27,7 @@ export class WarehouseConfig extends Context.Tag("@warehouse/config")<
         readonly IsLocal: boolean;
         readonly BinaryDownloadBaseUrl: string;
         readonly DefaultBinaryTargetFolderPath: string;
+        readonly EmailTransportConfig: EmailTransportConfig;
       },
       MissingConfig
     >;
@@ -56,6 +66,44 @@ export const WarehouseConfigLive = Layer.succeed(
             ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "DEFAULT_BINARY_TARGET_FOLDER_PATH" })),
           }),
         );
+        const emailName = yield* Config.string("EMAIL_NAME").pipe(
+          Config.validate({
+            message: "EMAIL_NAME must be a string in this format: Name <name@domain>",
+            validation: (x) => x.length > 0 && new RegExp(/\w+\s+<.*@.*>/).test(x),
+          }),
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "EMAIL_NAME" })),
+          }),
+        );
+        const emailUsername = yield* Config.string("EMAIL_USERNAME").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "EMAIL_USERNAME" })),
+          }),
+        );
+        const emailPassword = yield* Config.string("EMAIL_PASSWORD").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "EMAIL_PASSWORD" })),
+          }),
+        );
+        const emailHost = yield* Config.string("EMAIL_HOST").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "EMAIL_HOST" })),
+          }),
+        );
+        const emailPort = yield* Config.number("EMAIL_PORT").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "EMAIL_PORT" })),
+          }),
+        );
+        const emailTransportConfig: EmailTransportConfig = {
+          name: emailName,
+          host: emailHost,
+          port: emailPort,
+          auth: {
+            user: emailUsername,
+            pass: emailPassword,
+          },
+        };
         return {
           DatabaseProvider: "local",
           DatabaseUrl: dbUrl,
@@ -64,6 +112,7 @@ export const WarehouseConfigLive = Layer.succeed(
           BinaryDownloadBaseUrl: binaryDownloadBaseUrl,
           DefaultBinaryTargetFolderPath: defaultBinaryTargetFolderPath,
           IsLocal: true,
+          EmailTransportConfig: emailTransportConfig,
         };
       } else {
         const { Resource } = yield* Effect.promise(() => import("sst"));
@@ -78,6 +127,27 @@ export const WarehouseConfigLive = Layer.succeed(
         const binaryDownloadBaseUrlValue = Resource.BinaryDownloadBaseUrl.value;
         // @ts-ignore
         const defaultBinaryTargetFolderPathValue = Resource.DefaultBinaryTargetFolderPath.value;
+        // @ts-ignore
+        const emailNameValue = Resource.EmailName.value;
+        // @ts-ignore
+        const emailHostValue = Resource.EmailHost.value;
+        // @ts-ignore
+        const emailPortValue = Resource.EmailPort.value;
+        // @ts-ignore
+        const emailUsernameValue = Resource.EmailUsername.value;
+        // @ts-ignore
+        const emailPasswordValue = Resource.EmailPassword.value;
+
+        const emailTransportConfigValue: EmailTransportConfig = {
+          name: emailNameValue,
+          host: emailHostValue,
+          port: emailPortValue,
+          auth: {
+            user: emailUsernameValue,
+            pass: emailPasswordValue,
+          },
+        };
+
         if (!jwtSecret1Value) {
           return yield* Effect.fail(MissingConfig.make({ key: "JWTSecret1" }));
         }
@@ -101,6 +171,7 @@ export const WarehouseConfigLive = Layer.succeed(
           BinaryDownloadBaseUrl: binaryDownloadBaseUrlValue,
           DefaultBinaryTargetFolderPath: defaultBinaryTargetFolderPathValue,
           IsLocal: false,
+          EmailTransportConfig: emailTransportConfigValue,
         };
       }
     }),

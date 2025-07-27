@@ -261,15 +261,19 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 
     const update = Effect.fn("@warehouse/users/update")(function* (
       id: string,
-      userInput: InferInput<typeof UserUpdateSchema>
+      userInput: InferInput<typeof UserUpdateSchema>,
     ) {
       const parsedId = safeParse(prefixed_cuid2, id);
       if (!parsedId.success) {
         return yield* Effect.fail(new UserInvalidId({ id }));
       }
+      let hashed_password: string | undefined;
+      if (userInput.password) {
+        hashed_password = hashPassword(userInput.password);
+      }
       const [updatedUser] = yield* db
         .update(TB_users)
-        .set({ ...userInput, updatedAt: new Date() })
+        .set({ ...userInput, updatedAt: new Date(), ...(hashed_password !== undefined ? { hashed_password } : {}) })
         .where(eq(TB_users.id, parsedId.output))
         .returning();
       if (!updatedUser) {
@@ -328,7 +332,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
 
     const verifyPassword = Effect.fn("@warehouse/users/vrifyPassword")(function* (
       emailInput: string,
-      password: string
+      password: string,
     ) {
       const parsedEmail = safeParse(pipe(string(), email()), emailInput);
       if (!parsedEmail.success) {
@@ -339,7 +343,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
         where: (users, operations) =>
           operations.and(
             operations.eq(users.email, parsedEmail.output),
-            operations.eq(users.hashed_password, hashPassword(password))
+            operations.eq(users.hashed_password, hashPassword(password)),
           ),
       });
 
