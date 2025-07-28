@@ -1,6 +1,8 @@
-import { Args, Command, Options } from "@effect/cli";
+import { Args, Command, Options, Prompt } from "@effect/cli";
+import { FileSystem, Path } from "@effect/platform";
 import { customer_order_status_enum_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
 import { CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -25,6 +27,26 @@ const findByStatusOption = Options.choice("status", customer_order_status_enum_v
 
 const findByOrganizationOption = Options.text("organization").pipe(
   Options.withDescription("Find an order by organization"),
+  Options.optional,
+);
+
+const sizeOption = Options.choice("size", ["A4", "A5"]).pipe(
+  Options.withDescription("Choose a size for the PDF generation."),
+  Options.optional,
+);
+
+const overrideOption = Options.boolean("override", { ifPresent: true }).pipe(
+  Options.withDescription("Override the file of the pdf generation output"),
+  Options.optional,
+);
+
+const orientationOption = Options.choice("size", ["landscape", "portrait"]).pipe(
+  Options.withDescription("Choose a orientation for the PDF generation"),
+  Options.optional,
+);
+
+const locationOption = Options.text("location").pipe(
+  Options.withDescription("Choose a location for the file to be saved to"),
   Options.optional,
 );
 
@@ -83,8 +105,76 @@ export const orderCommand = Command.make("order").pipe(
       { orderId: orderIdOption, format: formatOption, keys: keysOption },
       Effect.fn("@warehouse/cli/order.show")(function* ({ orderId, format, keys }) {
         const repo = yield* CustomerOrderService;
-        const product = yield* repo.findByIdWithoutOrg(orderId);
-        return yield* output(product, format, keys);
+        const order = yield* repo.findByIdWithoutOrg(orderId);
+        return yield* output(order, format, keys);
+      }),
+    ),
+    Command.make(
+      "pdf",
+      {
+        orderId: orderIdOption,
+        size: sizeOption,
+        orientation: orientationOption,
+        loc: locationOption,
+        override: overrideOption,
+      },
+      Effect.fn("@warehouse/cli/order.show")(function* ({ orderId, orientation, size, loc, override }) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* CustomerOrderService;
+        const orgRepo = yield* OrganizationService;
+        const order = yield* repo.findByIdWithoutOrg(orderId);
+        const _org = yield* orgRepo.findById(order.organization_id);
+        const _size = Option.getOrUndefined(size);
+        const _orientation = Option.getOrUndefined(orientation);
+        const buffer = yield* repo
+          .generatePDF(order.id, _org, {
+            page: { orientation: _orientation ?? "portrait", size: _size ?? "A4" },
+          })
+          .pipe(Effect.provide(Layer.succeed(OrganizationId, _org.id)));
+
+        let location = Option.getOrUndefined(loc);
+        if (!location) {
+          location = yield* Prompt.text({
+            message: "Where do you want to store the pdf?",
+            validate: Effect.fn(function* (value) {
+              const nonempty = value.length === 0;
+              const isAbsolute = path.isAbsolute(value);
+              const filepathParsed = path.parse(isAbsolute ? value : path.join(process.cwd(), value));
+              const directory = filepathParsed.dir;
+              const directoryExists = yield* fs.exists(directory).pipe(
+                Effect.catchTags({
+                  BadArgument: (cause) =>
+                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
+                  SystemError: (cause) =>
+                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
+                }),
+              );
+              const locationDoesNotExist = yield* fs.exists(value).pipe(
+                Effect.map((x) => !x),
+                Effect.catchTags({
+                  BadArgument: (cause) =>
+                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
+                  SystemError: (cause) =>
+                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
+                }),
+              );
+              if (nonempty) return yield* Effect.fail("Please provide a path");
+              if (!directoryExists)
+                return yield* Effect.fail("The directory of the filepath you wrote does not exist.");
+              if (locationDoesNotExist && !override)
+                return yield* Effect.fail("This file already exists. To override please provide `--override`");
+              return value;
+            }),
+          });
+        }
+
+        if (override) {
+          const hasExtension = path.extname(location) === ".pdf";
+          yield* fs.writeFile(hasExtension ? location : location.concat(".pdf"), buffer);
+        }
+
+        return;
       }),
     ),
   ]),

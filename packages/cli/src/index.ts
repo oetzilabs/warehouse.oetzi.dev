@@ -2,6 +2,7 @@
 import { CliConfig, Command } from "@effect/cli";
 import { BunContext, BunPath, BunRuntime } from "@effect/platform-bun";
 import { BinaryLive } from "@warehouseoetzidev/core/src/entities/binaries";
+import { WarehouseConfigLive } from "@warehouseoetzidev/core/src/entities/config";
 import { DeviceLive } from "@warehouseoetzidev/core/src/entities/devices";
 import { DownloaderLive } from "@warehouseoetzidev/core/src/entities/downloader";
 import { FacilityLive } from "@warehouseoetzidev/core/src/entities/facilities";
@@ -63,6 +64,7 @@ const AppLayer = Layer.mergeAll(
   DeviceLive,
   BinaryLive,
   DownloaderLive,
+  WarehouseConfigLive,
   createOtelLayer("warehouse"),
 );
 

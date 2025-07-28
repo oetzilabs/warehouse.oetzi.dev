@@ -28,6 +28,7 @@ export class WarehouseConfig extends Context.Tag("@warehouse/config")<
         readonly BinaryDownloadBaseUrl: string;
         readonly DefaultBinaryTargetFolderPath: string;
         readonly EmailTransportConfig: EmailTransportConfig;
+        readonly BaseDir: string;
       },
       MissingConfig
     >;
@@ -95,6 +96,11 @@ export const WarehouseConfigLive = Layer.succeed(
             ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "EMAIL_PORT" })),
           }),
         );
+        const baseDir = yield* Config.string("BASE_DIR").pipe(
+          Effect.catchTags({
+            ConfigError: (e) => Effect.fail(MissingConfig.make({ key: "BASE_DIR" })),
+          }),
+        );
         const emailTransportConfig: EmailTransportConfig = {
           name: emailName,
           host: emailHost,
@@ -113,6 +119,7 @@ export const WarehouseConfigLive = Layer.succeed(
           DefaultBinaryTargetFolderPath: defaultBinaryTargetFolderPath,
           IsLocal: true,
           EmailTransportConfig: emailTransportConfig,
+          BaseDir: baseDir,
         };
       } else {
         const { Resource } = yield* Effect.promise(() => import("sst"));
@@ -137,7 +144,8 @@ export const WarehouseConfigLive = Layer.succeed(
         const emailUsernameValue = Resource.EmailUsername.value;
         // @ts-ignore
         const emailPasswordValue = Resource.EmailPassword.value;
-
+        // @ts-ignore
+        const baseDir = Resource.BaseDir.value;
         const emailTransportConfigValue: EmailTransportConfig = {
           name: emailNameValue,
           host: emailHostValue,
@@ -172,6 +180,7 @@ export const WarehouseConfigLive = Layer.succeed(
           DefaultBinaryTargetFolderPath: defaultBinaryTargetFolderPathValue,
           IsLocal: false,
           EmailTransportConfig: emailTransportConfigValue,
+          BaseDir: baseDir,
         };
       }
     }),
