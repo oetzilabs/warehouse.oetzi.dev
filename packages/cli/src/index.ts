@@ -23,6 +23,7 @@ import { orgCommand } from "./commands/organization";
 import { productCommand } from "./commands/product";
 import { stockCommand } from "./commands/stock";
 import { supplierCommand } from "./commands/suppliers";
+import { testCommand } from "./commands/tests";
 import { updateCommand } from "./commands/update";
 import { userCommand } from "./commands/users";
 import { warehouseCommand } from "./commands/warehouse";
@@ -38,6 +39,7 @@ export const cli = Command.run(
       userCommand,
       supplierCommand,
       orderCommand,
+      testCommand,
       productCommand,
     ]),
   ),
