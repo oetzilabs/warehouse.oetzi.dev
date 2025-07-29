@@ -7,7 +7,9 @@
     "build:macos": "bun build --target=bun --platform=darwin --minify ./src/index.ts --compile --outfile=dist/darwin/warehouse",
     "build:windows": "bun build --target=bun --platform=windows --minify ./src/index.ts --compile --outfile=dist/windows/warehouse.exe"
   },
+  "devDependencies": {},
   "dependencies": {
-    "@warehouseoetzidev/core": "workspace:*"
+    "@warehouseoetzidev/core": "workspace:*",
+    "@holmlibs/unzip": "1.0.0"
   }
 }

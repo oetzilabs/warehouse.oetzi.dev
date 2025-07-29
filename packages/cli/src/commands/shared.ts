@@ -1,5 +1,6 @@
 import { Options, Prompt } from "@effect/cli";
 import { FileSystem, Path } from "@effect/platform";
+import { createZipReader } from "@holmlibs/unzip";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Cause, Console, Effect, Exit, Match, Schema } from "effect";
@@ -268,4 +269,16 @@ export const storeFile = (choice: "bucket" | "local", buffer: Buffer, override: 
       }),
     ),
   );
+};
+
+export const unzipFile = (
+  zipFilePath: string,
+  targetDir: string,
+  onProgress?: (current: number, total: number) => Effect.Effect<void>,
+) => {
+  const reader = createZipReader(zipFilePath);
+  return Effect.tryPromise({
+    try: () => reader.extractAll(targetDir, (current, total) => onProgress?.(current, total).pipe(Effect.runPromise)),
+    catch: (e) => new Error(`Failed to unzip ${zipFilePath} with @holmlibs/unzip: ${String(e)}`),
+  });
 };

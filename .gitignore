@@ -21,3 +21,4 @@ packages/ghostscript-layer
 out
 snapshots
 .warehouse/
+.vendor

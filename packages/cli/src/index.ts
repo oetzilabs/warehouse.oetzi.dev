@@ -20,6 +20,7 @@ import { Cause, Console, Effect, Layer } from "effect";
 import { devicesCommand } from "./commands/device";
 import { orderCommand } from "./commands/order";
 import { orgCommand } from "./commands/organization";
+import { prepareCommand } from "./commands/prepare";
 import { productCommand } from "./commands/product";
 import { stockCommand } from "./commands/stock";
 import { supplierCommand } from "./commands/suppliers";
@@ -35,6 +36,7 @@ export const cli = Command.run(
       orgCommand,
       warehouseCommand,
       stockCommand,
+      prepareCommand,
       devicesCommand,
       userCommand,
       supplierCommand,

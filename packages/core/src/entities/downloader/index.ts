@@ -1,6 +1,6 @@
 import { FetchHttpClient, FileSystem, HttpClient, HttpClientRequest, Path } from "@effect/platform";
 import { BunFileSystem, BunHttpPlatform, BunPath } from "@effect/platform-bun";
-import { Array, Chunk, Console, Effect, Stream } from "effect";
+import { Array, Chunk, Console, Effect, Match, Stream } from "effect";
 import { DownloaderError, DownloaderFileNotFound } from "./errors";
 
 export class DownloaderService extends Effect.Service<DownloaderService>()("@warehouse/downloader", {
@@ -14,6 +14,7 @@ export class DownloaderService extends Effect.Service<DownloaderService>()("@war
     const download = Effect.fn("@warehouse/downloader/download")(function* (
       url: string,
       targetFolderPath = DEFAULT_TARGET_FOLDER_PATH,
+      writeType: "buffer" | "stream" = "buffer",
     ) {
       const response = yield* client
         .get(url, {
@@ -33,19 +34,42 @@ export class DownloaderService extends Effect.Service<DownloaderService>()("@war
         return yield* Effect.fail(new DownloaderError({ cause: new Error(`Response status is ${response.status}`) }));
       }
       yield* Console.log(`Response status is ${response.status}`);
-      const stream = response.stream;
-      const collection = yield* stream.pipe(Stream.runCollect);
-      const dataArray = Chunk.toArray(collection);
-      const data = Uint8Array.from(dataArray);
-      const filename = path.basename(url);
-      const targetPath = path.join(targetFolderPath, filename);
-      yield* fs.writeFile(targetPath, data).pipe(
-        Effect.catchTags({
-          BadArgument: (cause) => Effect.fail(new DownloaderError({ cause })),
-          SystemError: (cause) => Effect.fail(new DownloaderError({ cause })),
-        }),
+      return yield* Match.value(writeType).pipe(
+        Match.when(
+          "buffer",
+          Effect.fn(function* () {
+            const buffer = yield* response.arrayBuffer;
+            const filename = path.basename(url);
+            const targetPath = path.join(targetFolderPath, filename);
+            yield* fs.writeFile(targetPath, Buffer.from(buffer)).pipe(
+              Effect.catchTags({
+                BadArgument: (cause) => Effect.fail(new DownloaderError({ cause })),
+                SystemError: (cause) => Effect.fail(new DownloaderError({ cause })),
+              }),
+            );
+            return yield* Effect.succeed(targetPath);
+          }),
+        ),
+        Match.when(
+          "stream",
+          Effect.fn(function* () {
+            const stream = response.stream;
+            const collection = yield* stream.pipe(Stream.runCollect);
+            const dataArray = Chunk.toArray(collection);
+            const data = Uint8Array.from(dataArray);
+            const filename = path.basename(url);
+            const targetPath = path.join(targetFolderPath, filename);
+            yield* fs.writeFile(targetPath, data).pipe(
+              Effect.catchTags({
+                BadArgument: (cause) => Effect.fail(new DownloaderError({ cause })),
+                SystemError: (cause) => Effect.fail(new DownloaderError({ cause })),
+              }),
+            );
+            return yield* Effect.succeed(targetPath);
+          }),
+        ),
+        Match.orElse(() => Effect.fail(new DownloaderError({ cause: new Error(`Invalid writeType ${writeType}`) }))),
       );
-      return yield* Effect.succeed(targetPath);
     });
 
     return {

@@ -47,6 +47,7 @@
       "name": "@warehouseoetzidev/cli",
       "version": "0.0.0",
       "dependencies": {
+        "@holmlibs/unzip": "1.0.0",
         "@warehouseoetzidev/core": "workspace:*",
       },
     },
@@ -639,6 +640,8 @@
     "@grpc/grpc-js": ["@grpc/grpc-js@1.13.4", "", { "dependencies": { "@grpc/proto-loader": "^0.7.13", "@js-sdsl/ordered-map": "^4.4.2" } }, "sha512-GsFaMXCkMqkKIvwCQjCrwH+GHbPKBjhwo/8ZuUkWHqbI73Kky9I+pQltrlT0+MWpedCoosda53lgjYfyEPgxBg=="],
 
     "@grpc/proto-loader": ["@grpc/proto-loader@0.7.15", "", { "dependencies": { "lodash.camelcase": "^4.3.0", "long": "^5.0.0", "protobufjs": "^7.2.5", "yargs": "^17.7.2" }, "bin": { "proto-loader-gen-types": "build/bin/proto-loader-gen-types.js" } }, "sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ=="],
+
+    "@holmlibs/unzip": ["@holmlibs/unzip@1.0.0", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-QsPQ6qJw4mt43WuQCDYsfdIptbXSO2J+aOGwG3ocTAdNTIdJHNqaFs8K0CoMU/X1sJ8fkMvNCKg1DmqtjWdMCQ=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
