@@ -1,4 +1,5 @@
-import { Options } from "@effect/cli";
+import { Options, Prompt } from "@effect/cli";
+import { FileSystem, Path } from "@effect/platform";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Cause, Console, Effect, Exit, Match, Schema } from "effect";
@@ -172,3 +173,99 @@ export const transformDates = <T extends Dates | Dates[]>(data: T): T =>
         updatedAt: data.updatedAt ? dayjs(data.updatedAt).format("LLL") : null,
         deletedAt: data.deletedAt ? dayjs(data.deletedAt).format("LLL") : null,
       });
+
+export const storeFile = (choice: "bucket" | "local", buffer: Buffer, override: boolean, location?: string) => {
+  return Match.value(choice).pipe(
+    Match.when(
+      "bucket",
+      Effect.fn("@warehouse/cli/shared/storeFile/location.bucket")(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        let loc = location;
+        if (!loc) {
+          loc = yield* Prompt.text({
+            message: "[BUCKET] Where do you want to store the pdf?",
+            validate: Effect.fn(function* (value) {
+              const nonempty = value.length === 0;
+              const isAbsolute = path.isAbsolute(value);
+              const filepathParsed = path.parse(isAbsolute ? value : path.join(process.cwd(), value));
+              const directory = filepathParsed.dir;
+              const directoryExists = yield* fs.exists(directory).pipe(
+                Effect.catchTags({
+                  BadArgument: (cause) =>
+                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
+                  SystemError: (cause) =>
+                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
+                }),
+              );
+              const locationExist = yield* fs.exists(value).pipe(
+                Effect.catchTags({
+                  BadArgument: (cause) =>
+                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
+                  SystemError: (cause) =>
+                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
+                }),
+              );
+              if (nonempty) return yield* Effect.fail("Please provide a path");
+              if (!directoryExists)
+                return yield* Effect.fail("The directory of the filepath you wrote does not exist.");
+              if (locationExist && !override)
+                return yield* Effect.fail("This file already exists. To override please provide `--override`");
+              return value;
+            }),
+          });
+        }
+        yield* fs.writeFile(loc, buffer);
+        return yield* Effect.succeed(loc);
+      }),
+    ),
+    Match.when(
+      "local",
+      Effect.fn("@warehouse/cli/shared/storeFile/location.local")(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        let loc = location;
+        if (!loc) {
+          loc = yield* Prompt.text({
+            message: "[LOCAL] Where do you want to store the pdf?",
+            validate: Effect.fn(function* (value) {
+              const nonempty = value.length === 0;
+              const isAbsolute = path.isAbsolute(value);
+              const filepathParsed = path.parse(isAbsolute ? value : path.join(process.cwd(), value));
+              const directory = filepathParsed.dir;
+              const directoryExists = yield* fs.exists(directory).pipe(
+                Effect.catchTags({
+                  BadArgument: (cause) =>
+                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
+                  SystemError: (cause) =>
+                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
+                }),
+              );
+              const locationExist = yield* fs.exists(value).pipe(
+                Effect.catchTags({
+                  BadArgument: (cause) =>
+                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
+                  SystemError: (cause) =>
+                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
+                }),
+              );
+              if (nonempty) return yield* Effect.fail("Please provide a path");
+              if (!directoryExists)
+                return yield* Effect.fail("The directory of the filepath you wrote does not exist.");
+              if (locationExist && !override)
+                return yield* Effect.fail("This file already exists. To override please provide `--override`");
+              return value;
+            }),
+          });
+        }
+        yield* fs.writeFile(loc, buffer);
+        return yield* Effect.succeed(loc);
+      }),
+    ),
+    Match.orElse(
+      Effect.fn(function* () {
+        return yield* Effect.failCause(Cause.fail(`Invalid choice ${choice}`));
+      }),
+    ),
+  );
+};

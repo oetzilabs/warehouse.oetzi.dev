@@ -6,8 +6,8 @@ import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organi
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { Cause, Console, Effect, Exit, Layer, Option } from "effect";
-import { formatOption, keysOption, orgOption, output } from "./shared";
+import { Cause, Console, Effect, Exit, Layer, Match, Option } from "effect";
+import { formatOption, keysOption, orgOption, output, storeFile } from "./shared";
 
 dayjs.extend(localizedFormat);
 
@@ -36,6 +36,7 @@ const sizeOption = Options.choice("size", ["A4", "A5"]).pipe(
 );
 
 const overrideOption = Options.boolean("override", { ifPresent: true }).pipe(
+  Options.withAlias("o"),
   Options.withDescription("Override the file of the pdf generation output"),
   Options.optional,
 );
@@ -118,9 +119,9 @@ export const orderCommand = Command.make("order").pipe(
         loc: locationOption,
         override: overrideOption,
       },
-      Effect.fn("@warehouse/cli/order.show")(function* ({ orderId, orientation, size, loc, override }) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
+      Effect.fn("@warehouse/cli/order.pdf")(function* ({ orderId, orientation, size, loc, override }) {
+        // const fs = yield* FileSystem.FileSystem;
+        // const path = yield* Path.Path;
         const repo = yield* CustomerOrderService;
         const orgRepo = yield* OrganizationService;
         const order = yield* repo.findByIdWithoutOrg(orderId);
@@ -133,48 +134,32 @@ export const orderCommand = Command.make("order").pipe(
           })
           .pipe(Effect.provide(Layer.succeed(OrganizationId, _org.id)));
 
+        const o = Option.getOrElse(override, () => Bun.argv.includes("--override") || Bun.argv.includes("--o"));
+
         let location = Option.getOrUndefined(loc);
         if (!location) {
-          location = yield* Prompt.text({
-            message: "Where do you want to store the pdf?",
-            validate: Effect.fn(function* (value) {
-              const nonempty = value.length === 0;
-              const isAbsolute = path.isAbsolute(value);
-              const filepathParsed = path.parse(isAbsolute ? value : path.join(process.cwd(), value));
-              const directory = filepathParsed.dir;
-              const directoryExists = yield* fs.exists(directory).pipe(
-                Effect.catchTags({
-                  BadArgument: (cause) =>
-                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
-                  SystemError: (cause) =>
-                    Effect.fail("The directory of the filepath you wrote could not be checked if it exists"),
-                }),
-              );
-              const locationDoesNotExist = yield* fs.exists(value).pipe(
-                Effect.map((x) => !x),
-                Effect.catchTags({
-                  BadArgument: (cause) =>
-                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
-                  SystemError: (cause) =>
-                    Effect.fail("The location of the filepath you wrote could not be checked if it exists"),
-                }),
-              );
-              if (nonempty) return yield* Effect.fail("Please provide a path");
-              if (!directoryExists)
-                return yield* Effect.fail("The directory of the filepath you wrote does not exist.");
-              if (locationDoesNotExist && !override)
-                return yield* Effect.fail("This file already exists. To override please provide `--override`");
-              return value;
-            }),
+          const choseLocationType = yield* Prompt.multiSelect({
+            message: "Please choose a location for the pdf",
+            choices: [
+              {
+                title: "Bucket",
+                value: "bucket" as const,
+                description: "Store the pdf in a bucket",
+              },
+              {
+                title: "Locally",
+                value: "local" as const,
+                description: "Store the pdf locally",
+              },
+            ],
           });
+          const stored = yield* Effect.all(choseLocationType.map((choice) => storeFile(choice, buffer, o)));
+          yield* Console.log("Stored the pdf in the following locations:");
+          return yield* Effect.all(stored.map((x) => Console.log(x)));
+        } else {
+          const stored = yield* storeFile("local", buffer, o, location);
+          return yield* Console.log("Stored the pdf in the following location:", stored);
         }
-
-        if (override) {
-          const hasExtension = path.extname(location) === ".pdf";
-          yield* fs.writeFile(hasExtension ? location : location.concat(".pdf"), buffer);
-        }
-
-        return;
       }),
     ),
   ]),
