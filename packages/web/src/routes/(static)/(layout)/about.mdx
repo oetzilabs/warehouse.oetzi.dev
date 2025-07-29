@@ -1,38 +1,75 @@
-# Hi & welcome to WareHouse.
+# About Our Warehouse System
 
-This is a place where you can find all the information you need to get started with your transit journeys.
+## What We Do
+We are building a **modular and modern warehouse management system** designed for small to mid-sized logistics and fulfillment businesses. Our platform aims to streamline operations across departments, from inventory and product tracking to order handling, shipping, and device control.
 
-## What is WareHouse?
+Our core belief is that warehouse software should be **robust, offline-friendly, easy to extend**, and able to **integrate with modern hardware and IoT devices**. Every part of the system is designed to be understandable, maintainable, and predictable.
 
-WareHouse is a platform that helps you find the best transit options for your journeys. It provides you with information about the different transit options available from logistics providers, as well as the costs and benefits of each option.
+## Why We're Building This
+Warehousing and logistics tools are often bloated, inflexible, and hard to use. We've experienced this firsthand. This project was born out of necessity, frustration, and a vision to build something **lean, functional, and future-proof**.
 
-## How does it work?
+We want to help businesses focus on what they do best — storing, organizing, shipping, and tracking — while we take care of the systems underneath.
 
-WareHouse uses a combination of data from different sources to provide you with the most accurate and up-to-date information about transit options. It uses data from logistics providers, transit agencies, customs and other sources to gather information about the different transit options available.
+## Our Mission
+Our mission is to build an open, transparent, and powerful system that:
 
-## What can I do with WareHouse?
+- **Supports everyday workflows** in warehouses and logistics
+- **Bridges the gap** between cloud services and offline/fallback-capable local systems
+- **Offers integration with modern tools** (CLI, APIs, MQTT, IoT, etc.)
+- **Is developer-first** and provides a solid foundation for extensions and automation
 
-WareHouse can help you find the best transit options for your journeys, including:
+## Principles We Follow
+- **Human-focused**: The system must help operators and admins — not get in their way.
+- **Transparent**: Clear logging, event tracking, and admin tools give you full insight into the system.
+- **Modular**: Components like order handling, inventory, devices, and payments can be used independently or together.
+- **Interoperable**: Expose all relevant actions via APIs, events, or webhooks.
+- **Offline-first**: We are attempting local-first data sync and failover support are core parts of the platform.
 
-- Finding the best transit options for your specific needs, such as delivering a package to a specific location or getting a specific type of service.
-- Comparing the costs and benefits of different transit options, such as the cost of the service, the time it takes, and the quality of service.
-- Getting real-time updates on the status of your transit request, such as when it will be delivered or when it will be picked up.
-- Customs Papers: WareHouse can help you with customs papers, including getting the right paperwork for your transit journey.
-- Authorized Logistics Providers: WareHouse can help you find the best logistics providers for your transit journey, including their rates, services, and reputation.
+## Key System Areas
+### Core Features
+- **Product Management**: Add, update, or remove products in your sortiment.
+- **User and Access Control**: Manage employees and their roles securely.
+- **Order Management**: Create and manage customer orders and printable order sheets.
+- **Inventory Overview**: Monitor incoming, outgoing, and stored stock.
 
-## How can I use WareHouse?
+### Advanced Modules (In Progress)
+- **POS System**: A point-of-sale terminal that syncs with the cloud via local services.
+- **Device Management**: IoT-ready, via MQTT brokers and a robust device registry.
+- **E-Mail & Notification System**: Automatic updates for stakeholders.
+- **API & CLI Tooling**: Developer-first integration and automation support.
 
-To use WareHouse, you can visit the WareHouse app and search for the transit options you need. You can also use the WareHouse app to compare the costs and benefits of different transit options, and to get real-time updates on the status of your transit request.
+## Local and Cloud Integration
+### Dual MQTT Setup
+Our system offers **two-way MQTT communication**:
 
-## What are the benefits of using WareHouse? 
+- **Local MQTT Broker**: For in-facility devices and fallback operations.
+- **Cloud MQTT Broker**: Centralized control and logging.
+- **Fallback Support**: If the cloud fails, your devices and workflows continue via the local broker.
 
-Using WareHouse can help you save time and money by finding the best transit options for your journeys. It can also help you avoid delays and inconvenience caused by transit delays or other issues. Additionally, WareHouse can provide you with real-time updates on the status of your transit request, which can be helpful for planning your journey and ensuring that you are on time.
+This allows our system to support **offline operations** and **deferred sync** when internet is restored.
 
-## How can I contact WareHouse?
+## Developer Ecosystem
+We are building a set of tools for internal teams and external developers:
 
-If you have any questions or need help using WareHouse, you can contact us at [support@northstar.app](mailto:support@northstar.app). We will be happy to assist you and provide you with the information you need to get started with your transit journeys.
+- A **CLI tool** to run, configure, and operate the system headlessly.
+- A **modular API** with endpoints for all major resources.
+- A **Webhook System** for real-time updates.
+- **Extensive docs** with examples, schemas, and integration recipes.
 
-# The Company behind the project
+We want to make it easy to extend, plug in devices, sync data, or build apps on top of our system.
 
-WareHouse is a project by [OetziLabs](https://oetzilabs.com). Where a team of developers and designers who are passionate about making the world a better place. We believe that everyone deserves access to safe and reliable IT services, and we are committed to making that a reality. 
+## Looking Forward
+This is a long-term project. We are building it with care, intention, and a deep respect for simplicity and resilience. Our aim is to offer a solution that doesn't lock you in but instead gives you **control, clarity, and adaptability**.
 
+Whether you're managing a single facility or coordinating a distributed warehouse network, our goal is to make your day smoother, not more complicated.
+
+## Who This Is For
+- **Warehouse operators** needing a better toolset.
+- **Developers and integrators** wanting reliable APIs and hardware integration.
+- **Founders or small logistics businesses** trying to avoid the chaos of outdated enterprise tools.
+- **Makers and hackers** interested in low-level hardware or automation.
+
+## Get Involved
+We're actively working on opening the platform up for contributors and organizations. Whether you're interested in testing, developing, or suggesting features, we welcome input and feedback.
+
+Contact us at **hello@our-warehouse-system.dev** or follow our roadmap to stay updated.

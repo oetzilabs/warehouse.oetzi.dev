@@ -34,18 +34,18 @@ export function Footer() {
         href: "/about",
       },
       {
-        name: "Blog",
+        name: "Blogs",
         href: "/blogs",
       },
     ],
     Project: [
       {
         name: "Roadmap",
-        href: "/roadmap",
+        href: "/blogs/roadmap",
       },
       {
         name: "Team",
-        href: "/about#team",
+        href: "/team",
       },
       {
         name: "Brand",

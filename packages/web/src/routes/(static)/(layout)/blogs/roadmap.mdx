@@ -1,0 +1,60 @@
+# Our Roadmap
+
+## Features 
+We have managed to build a working prototype of the Warehouse application. These features are already available: 
+### User Management
+The user management is already available, but we are working on an improvement to the user interface and authentication system.
+
+### Product Management
+The product management has the following features:
+- Product creation
+- Product update
+- Removal of products from the sortiment
+
+### Order Management
+The order management system does not have many features yet. Mostly it is a simple interface.
+You are able to create orders, add products to the order, and print sheets for the customer.
+
+
+### Inventory Management
+
+## The next steps are:
+### Payment Management
+The payment management system is not yet available. We are working on it.
+
+### Shipping Management
+We would like to add a shipping management system to the application. This system will allow the user to track the shipments and the delivery status.
+With the addition of this system, we will be able to provide a easier way to manage and improve shipments and deliveries.
+
+### POS System
+The POS system is ment to be used locally, with a local synchronization system. Via background synchronization, the POS system will be able to synchronize with the cloud system.
+
+### Device Management
+The Device Management system will be used to manage the devices in the facility. The devices will be able to communicate with the local MQTT broker and the cloud MQTT broker.
+
+#### MQTT Broker (local, cloud)
+The MQTT broker will be used to synchronize the local MQTT devices with the cloud MQTT broker.
+This will allow the user to manage the devices locally and synchronize them with the cloud.
+The Cloud Broker should be able to manage the one local central MQTT broker in the facility.
+
+#### MQTT Device Software (local)
+The IoT devices will be able to communicate with the local MQTT broker. The devices will be able to send and receive data from the broker.
+
+### Software Fallback System
+In case the cloud MQTT broker is not available, the local MQTT broker will be used as a fallback. In addition to this, we need to offer a *LOCAL* fallback system that handles the previous working software tools.
+
+### Product Feed Management
+We would like to add a product feed management system to the application. This system should be a central point for the organization to manage new products and updates.
+
+### E-Mail Management
+Automated e-mails for organizations, customers, suppliers, and other stakeholders will be available.
+
+### Webhook Management
+We would like to validate this feature amongst other features. This feature will allow the user to create webhooks to receive notifications from the cloud system.
+
+### API Management
+The API System should be widely available to the developers across the project. We will be working on this feature as an ongoing project. The main goal is to provide a extensive documentation + Tooling for the developers.
+
+### CLI Tool
+This tool will be used to manage the application. It will be available to the developers and administrators.
+

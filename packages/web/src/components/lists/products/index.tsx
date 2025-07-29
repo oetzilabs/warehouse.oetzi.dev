@@ -17,7 +17,7 @@ export const ProductsList = (props: ProductsListProps) => {
   const [search, setSearch] = createSignal("");
 
   const renderProductItem = (item: OrganizationProductInfo) => (
-    <div class="group flex flex-col bg-muted p-1 gap-1 h-content">
+    <div class="group flex flex-col bg-muted p-1 gap-1 h-content grow">
       <A class="relative w-full aspect-[4/3] flex items-center justify-center" href={`./${item.product.id}`}>
         <Show
           when={item.product.images && item.product.images.length > 0}
