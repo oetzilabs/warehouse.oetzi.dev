@@ -25,7 +25,7 @@ export const prepareCommand = Command.make(
   {
     outdir: outdirOption,
     root: rootOption,
-    override: overrideOption, // Add the override option
+    override: overrideOption,
   },
   Effect.fn("@warehouse/cli/prepare")(function* ({ outdir, root, override }) {
     const ghostscript_layer_url =
@@ -37,11 +37,10 @@ export const prepareCommand = Command.make(
     const path = yield* Path.Path;
     const downloader = yield* DownloaderService;
 
-    // Determine the effective root directory
     const effectiveRoot = Option.getOrElse(root, () => process.cwd());
     yield* Console.log(`Using effective root directory: ${effectiveRoot}`);
 
-    let finalBaseOutDir: string; // This will be 'packages' or your custom outdir
+    let finalBaseOutDir: string;
     if (path.isAbsolute(outdir)) {
       finalBaseOutDir = outdir;
       yield* Console.log(`Base output directory '${finalBaseOutDir}' is an absolute path.`);
@@ -50,24 +49,19 @@ export const prepareCommand = Command.make(
       yield* Console.log(`Base output directory '${outdir}' resolved relative to root: ${finalBaseOutDir}`);
     }
 
-    // Define the full vendor directory path
     const vendorDir = path.join(finalBaseOutDir, ".vendor");
 
-    // --- Check and Handle Existing Vendor Directory ---
     yield* Console.log(`Checking output vendor directory: ${vendorDir}`);
     const vendorDirExists = yield* fs.exists(vendorDir);
 
     if (vendorDirExists) {
       const entries = yield* fs.readDirectory(vendorDir);
       if (entries.length > 0) {
-        // Directory exists and is not empty
         if (Option.isSome(override)) {
           yield* Console.log(`Directory '${vendorDir}' is not empty. Clearing it due to --override flag.`);
-          // Remove the directory entirely and then recreate it
           yield* fs.remove(vendorDir, { recursive: true });
           yield* fs.makeDirectory(vendorDir, { recursive: true });
         } else {
-          // Directory not empty, and no --override flag
           return yield* Effect.fail(
             new Error(`Error: Directory '${vendorDir}' is not empty. Use --override to clear it and proceed.`),
           );
@@ -76,14 +70,11 @@ export const prepareCommand = Command.make(
         yield* Console.log(`Directory '${vendorDir}' exists and is empty. Proceeding.`);
       }
     } else {
-      // Directory does not exist, so create it
       yield* Console.log(`Directory '${vendorDir}' does not exist. Creating it.`);
       yield* fs.makeDirectory(vendorDir, { recursive: true });
     }
 
     const ghostLayerFn = Effect.fn("@warehouse/cli/prepare/downloadGhostscriptLayer")(function* () {
-      // --- Ghostscript Layer ---
-      // Paths are now relative to the new vendorDir
       const ghostscriptZipPath = path.join(vendorDir, "ghostscript-layer.zip");
       const ghostscriptLayerDir = path.join(vendorDir, "ghostscript-layer");
 
@@ -92,7 +83,6 @@ export const prepareCommand = Command.make(
       yield* Console.log(`Ghostscript layer downloaded to ${ghostscriptZipPath}`);
 
       yield* Console.log(`Unzipping ${ghostscriptZipPath}...`);
-      // Ensure the target directory for the unzipped content exists within vendor
       yield* fs.makeDirectory(ghostscriptLayerDir, { recursive: true });
       yield* unzipFile(ghostscriptZipPath, ghostscriptLayerDir, (current, total) =>
         Effect.gen(function* () {
@@ -111,8 +101,6 @@ export const prepareCommand = Command.make(
     });
 
     const imageMagickLayerFn = Effect.fn("@warehouse/cli/prepare/downloadImageMagickLayer")(function* () {
-      // --- ImageMagick Layer ---
-      // Paths are now relative to the new vendorDir
       const imagemagickZipPath = path.join(vendorDir, "imagemagick-layer.zip");
       const imagemagickLayerDir = path.join(vendorDir, "imagemagick-layer");
 
@@ -121,7 +109,6 @@ export const prepareCommand = Command.make(
       yield* Console.log(`ImageMagick layer downloaded to ${imagemagickZipPath}`);
 
       yield* Console.log(`Unzipping ${imagemagickZipPath}...`);
-      // Ensure the target directory for the unzipped content exists within vendor
       yield* fs.makeDirectory(imagemagickLayerDir, { recursive: true });
       yield* unzipFile(imagemagickZipPath, imagemagickLayerDir, (current, total) =>
         Effect.gen(function* () {
