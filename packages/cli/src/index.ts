@@ -29,6 +29,27 @@ import { updateCommand } from "./commands/update";
 import { userCommand } from "./commands/users";
 import { warehouseCommand } from "./commands/warehouse";
 
+const AppLayer = Layer.mergeAll(
+  BunContext.layer,
+  BunPath.layer,
+  CliConfig.layer({ showBuiltIns: false, showAllNames: true }),
+  OrganizationLive,
+  UserLive,
+  SupplierLive,
+  WarehouseLive,
+  CustomerOrderLive,
+  InventoryLive,
+  StorageLive,
+  ProductLive,
+  MessagingLive,
+  FacilityLive,
+  DeviceLive,
+  BinaryLive,
+  DownloaderLive,
+  WarehouseConfigLive,
+  createOtelLayer("warehouse"),
+);
+
 export const cli = Command.run(
   Command.make("wh").pipe(
     Command.withSubcommands([
@@ -51,29 +72,16 @@ export const cli = Command.run(
   },
 );
 
-const AppLayer = Layer.mergeAll(
-  BunContext.layer,
-  BunPath.layer,
-  CliConfig.layer({ showBuiltIns: false, showAllNames: true }),
-  OrganizationLive,
-  UserLive,
-  SupplierLive,
-  WarehouseLive,
-  CustomerOrderLive,
-  InventoryLive,
-  StorageLive,
-  ProductLive,
-  MessagingLive,
-  FacilityLive,
-  DeviceLive,
-  BinaryLive,
-  DownloaderLive,
-  WarehouseConfigLive,
-  createOtelLayer("warehouse"),
-);
+const c = function (args: string[]) {
+  return cli(args).pipe(
+    Effect.catchAllCause((cause) => Console.log(Cause.pretty(cause))),
+    Effect.provide(AppLayer),
+    BunRuntime.runMain,
+  );
+};
 
-cli(Bun.argv).pipe(
-  Effect.catchAllCause((cause) => Console.log(Cause.pretty(cause))),
-  Effect.provide(AppLayer),
-  BunRuntime.runMain,
-);
+export default c;
+
+if (import.meta.path === Bun.main) {
+  c(Bun.argv);
+}
