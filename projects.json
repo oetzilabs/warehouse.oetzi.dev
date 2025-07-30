@@ -19,6 +19,27 @@
       "command": "bun build ./src/client/index.ts --compile --outfile=.output/client/main",
       "dependsOn": ["@warehouseoetzidev/realtime/server"],
       "outputs": [".output/client"]
+    },
+    {
+      "id": "@warehouseoetzidev/cli/linux",
+      "entrypoint": "@warehouseoetzidev/cli",
+      "command": "bun run build:linux",
+      "dependsOn": [],
+      "outputs": [".output/cli"]
+    },
+    {
+      "id": "@warehouseoetzidev/cli/macos",
+      "entrypoint": "@warehouseoetzidev/cli",
+      "command": "bun run build:macos",
+      "dependsOn": [],
+      "outputs": [".output/cli"]
+    },
+    {
+      "id": "@warehouseoetzidev/cli/windows",
+      "entrypoint": "@warehouseoetzidev/cli",
+      "command": "bun run build:windows",
+      "dependsOn": [],
+      "outputs": [".output/cli"]
     }
   ]
 }
