@@ -1,13 +1,11 @@
 import { Command, Options, Prompt } from "@effect/cli";
 import { user_status_enun_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
-import { MessagingService } from "@warehouseoetzidev/core/src/entities/messaging";
-import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { MessagingLive, MessagingService } from "@warehouseoetzidev/core/src/entities/messaging";
+import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
-import { UserService } from "@warehouseoetzidev/core/src/entities/users";
+import { UserLive, UserService } from "@warehouseoetzidev/core/src/entities/users";
 import { Cause, Console, Effect, Exit, Layer, Option } from "effect";
 import { formatOption, keysOption, orgOption, output, transformDates } from "./shared";
-import { stockCommand } from "./stock";
-import { warehouseCommand } from "./warehouse";
 
 const optionalOrgOption = Options.text("org").pipe(Options.withDescription("The organization ID"), Options.optional);
 
@@ -30,7 +28,7 @@ const findByStatusOption = Options.choice("status", user_status_enun_values).pip
   Options.optional,
 );
 
-export const userCommand = Command.make("user").pipe(
+const userCommand = Command.make("user").pipe(
   Command.withSubcommands([
     Command.make(
       "find",
@@ -233,3 +231,6 @@ export const userCommand = Command.make("user").pipe(
     ),
   ]),
 );
+
+export default userCommand;
+export const layers = Layer.mergeAll(UserLive, OrganizationLive, MessagingLive);

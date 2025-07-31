@@ -13,7 +13,7 @@ const dryRunOption = Options.boolean("dry-run", { ifPresent: true, aliases: ["dr
   Options.optional,
 );
 
-export const testCommand = Command.make(
+const testCommand = Command.make(
   "test",
   {
     dryRun: dryRunOption,
@@ -34,3 +34,6 @@ export const testCommand = Command.make(
     // return yield* output("This function is not implemented yet.", "text");
   }),
 );
+
+export default testCommand;
+export const layers = Layer.mergeAll(Layer.empty);

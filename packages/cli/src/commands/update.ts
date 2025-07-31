@@ -1,6 +1,6 @@
 import { Args, Command, Options } from "@effect/cli";
-import { BinaryService } from "@warehouseoetzidev/core/src/entities/binaries";
-import { DownloaderService } from "@warehouseoetzidev/core/src/entities/downloader";
+import { BinaryLive, BinaryService } from "@warehouseoetzidev/core/src/entities/binaries";
+import { DownloaderLive, DownloaderService } from "@warehouseoetzidev/core/src/entities/downloader";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Cause, Console, Effect, Exit, Layer, Option } from "effect";
@@ -13,7 +13,7 @@ const versionOption = Options.text("version").pipe(
   Options.optional,
 );
 
-export const updateCommand = Command.make(
+const updateCommand = Command.make(
   "update",
   { version: versionOption },
   Effect.fn("@warehouse/cli/update")(function* ({ version }) {
@@ -39,3 +39,6 @@ export const updateCommand = Command.make(
     return;
   }),
 );
+
+export default updateCommand;
+export const layers = Layer.mergeAll(BinaryLive, DownloaderLive);

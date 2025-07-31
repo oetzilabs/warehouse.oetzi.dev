@@ -1,8 +1,8 @@
 import { Args, Command, Options, Prompt } from "@effect/cli";
 import { FileSystem, Path } from "@effect/platform";
 import { customer_order_status_enum_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
-import { CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
-import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { CustomerOrderLive, CustomerOrderService } from "@warehouseoetzidev/core/src/entities/orders";
+import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -51,7 +51,7 @@ const locationOption = Options.text("location").pipe(
   Options.optional,
 );
 
-export const orderCommand = Command.make("order").pipe(
+const orderCommand = Command.make("order").pipe(
   Command.withSubcommands([
     Command.make(
       "find",
@@ -164,3 +164,6 @@ export const orderCommand = Command.make("order").pipe(
     ),
   ]),
 );
+
+export default orderCommand;
+export const layers = Layer.mergeAll(CustomerOrderLive, OrganizationLive);

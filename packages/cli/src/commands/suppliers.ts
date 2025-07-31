@@ -1,12 +1,10 @@
 import { Command, Options, Prompt } from "@effect/cli";
 import { supplier_status_enum_values } from "@warehouseoetzidev/core/src/drizzle/sql/schema";
-import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
-import { SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
+import { SupplierLive, SupplierService } from "@warehouseoetzidev/core/src/entities/suppliers";
 import { Cause, Console, Effect, Exit, Layer, Option } from "effect";
 import { formatOption, keysOption, orgOption, output, transformDates } from "./shared";
-import { stockCommand } from "./stock";
-import { warehouseCommand } from "./warehouse";
 
 const findByNameOption = Options.text("name").pipe(
   Options.withDescription("Find an supplier by name"),
@@ -45,7 +43,7 @@ const blacklistedOption = Options.boolean("blacklisted", { negationNames: ["non-
 
 const supplierIdOption = Options.text("id").pipe(Options.withDescription("The supplier ID"));
 
-export const supplierCommand = Command.make("supplier").pipe(
+const supplierCommand = Command.make("supplier").pipe(
   Command.withSubcommands([
     Command.make(
       "find",
@@ -151,3 +149,6 @@ export const supplierCommand = Command.make("supplier").pipe(
     ),
   ]),
 );
+
+export default supplierCommand;
+export const layers = Layer.mergeAll(SupplierLive, OrganizationLive);

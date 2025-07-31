@@ -1,6 +1,6 @@
 import { Command, Options } from "@effect/cli";
-import { OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
-import { Console, Effect, Option } from "effect";
+import { OrganizationLive, OrganizationService } from "@warehouseoetzidev/core/src/entities/organizations";
+import { Console, Effect, Layer, Option } from "effect";
 import { formatOption, keysOption, orgOption, output, transformDates } from "./shared";
 
 const findByNameOption = Options.text("name").pipe(
@@ -12,7 +12,7 @@ const orgIdOption = Options.text("id").pipe(Options.withDescription("The organiz
 
 const orgCmd = Command.make("org", { org: orgIdOption }, () => Effect.succeed(undefined));
 
-export const orgCommand = Command.make("org").pipe(
+const orgCommand = Command.make("org").pipe(
   Command.withSubcommands([
     Command.make("find", { name: findByNameOption, format: formatOption }, ({ name, format }) =>
       Effect.flatMap(
@@ -48,3 +48,6 @@ export const orgCommand = Command.make("org").pipe(
     ),
   ]),
 );
+
+export default orgCommand;
+export const layers = Layer.mergeAll(OrganizationLive);

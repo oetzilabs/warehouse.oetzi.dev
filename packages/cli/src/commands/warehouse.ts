@@ -1,8 +1,8 @@
 import { Args, Command, Options } from "@effect/cli";
-import { WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
+import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { Console, Effect } from "effect";
+import { Console, Effect, Layer } from "effect";
 import { formatOption, keysOption, orgOption, output } from "./shared";
 
 dayjs.extend(localizedFormat);
@@ -11,7 +11,7 @@ const warehouseOption = Options.text("warehouse").pipe(Options.withDescription("
 
 const whCmd = Command.make("warehouse", { org: orgOption }, () => Effect.succeed(undefined));
 
-export const warehouseCommand = whCmd.pipe(
+const warehouseCommand = whCmd.pipe(
   Command.withSubcommands([
     Command.make(
       "list",
@@ -41,3 +41,6 @@ export const warehouseCommand = whCmd.pipe(
     ),
   ]),
 );
+
+export default warehouseCommand;
+export const layers = Layer.mergeAll(WarehouseLive);

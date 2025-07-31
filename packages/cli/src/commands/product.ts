@@ -1,9 +1,9 @@
 import { Args, Command, Options } from "@effect/cli";
 import { FacilityService } from "@warehouseoetzidev/core/src/entities/facilities";
 import { OrganizationId } from "@warehouseoetzidev/core/src/entities/organizations/id";
-import { ProductService } from "@warehouseoetzidev/core/src/entities/products";
-import { StorageService } from "@warehouseoetzidev/core/src/entities/storages";
-import { WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
+import { ProductLive, ProductService } from "@warehouseoetzidev/core/src/entities/products";
+import { StorageLive, StorageService } from "@warehouseoetzidev/core/src/entities/storages";
+import { WarehouseLive, WarehouseService } from "@warehouseoetzidev/core/src/entities/warehouses";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Cause, Console, Effect, Exit, Layer, Option } from "effect";
@@ -23,7 +23,7 @@ const findByDescriptionOption = Options.text("description").pipe(
   Options.optional,
 );
 
-export const productCommand = Command.make("product").pipe(
+const productCommand = Command.make("product").pipe(
   Command.withSubcommands([
     Command.make(
       "find",
@@ -123,3 +123,6 @@ export const productCommand = Command.make("product").pipe(
     ),
   ]),
 );
+
+export default productCommand;
+export const layers = Layer.mergeAll(ProductLive, StorageLive, WarehouseLive);

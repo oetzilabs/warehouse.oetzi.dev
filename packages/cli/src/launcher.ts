@@ -71,27 +71,37 @@ const downloadCliBundle = Effect.fn("@warehouse/cli/downloadCliBundle")(function
   return bundlePath;
 });
 
-const executeCliBundle = Effect.fn("@warehouse/cli/executeCliBundle")(function* (bundlePath: string, args: string[]) {
+const executeCliBundle = Effect.fn("@warehouse/cli/executeCliBundle")(function* (
+  bundlePath: string,
+  args: string[],
+  commands: string[] = [] as string[],
+) {
   const path = yield* Path.Path;
   const cli = yield* Effect.tryPromise({
-    try: () => import(bundlePath) as Promise<{ default: (args: string[]) => void; cli: (args: string[]) => void }>,
+    try: () =>
+      import(bundlePath) as Promise<{
+        default: (args: string[], commands: string[]) => void;
+        cli: (args: string[], commands: string[]) => void;
+      }>,
     catch: (e) => Effect.fail(new Error(`Failed to import the CLI bundle: ${e}`)),
   });
-  return cli.default(args);
+  return yield* cli.default(args, commands);
 });
 
-const cli = Effect.fn("@warehouse/cli/fn")(function* (args: string[]) {
+const cli = Effect.fn("@warehouse/cli/fn")(function* (args: string[], commands: string[] = [] as string[]) {
   const path = yield* Path.Path;
   const config = yield* loadConfig();
   const version = Option.getOrElse(config.activeVersion, () => "latest");
   const node_env = yield* Config.string("NODE_ENV").pipe(Config.withDefault("production"));
-  yield* Console.log(`Running CLI version ${version} in NODE_ENV: ${node_env}`);
-  if (node_env !== "production") {
-    return yield* executeCliBundle(path.join(process.cwd(), "src/index.ts"), args);
+  const verbose = yield* Config.boolean("VERBOSE").pipe(Config.withDefault(false));
+  if (verbose) {
+    yield* Console.log(`Running CLI version ${version} in NODE_ENV: ${node_env}`);
   }
-  yield* Console.log(`Running CLI version ${version}`);
+  if (node_env !== "production") {
+    return yield* executeCliBundle(path.join(process.cwd(), "src/index.ts"), args, commands);
+  }
   const bundlePath = yield* downloadCliBundle(version!);
-  return yield* executeCliBundle(bundlePath, args);
+  return yield* executeCliBundle(bundlePath, args, commands);
 });
 
 if (import.meta.path === Bun.main) {

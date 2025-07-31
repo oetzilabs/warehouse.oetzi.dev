@@ -1,6 +1,6 @@
 import { Command, Options } from "@effect/cli";
 import { FileSystem, Path } from "@effect/platform";
-import { DownloaderService } from "@warehouseoetzidev/core/src/entities/downloader";
+import { DownloaderLive, DownloaderService } from "@warehouseoetzidev/core/src/entities/downloader";
 import { Console, Effect, Layer, Option } from "effect";
 import { output, unzipFile } from "./shared"; // Assuming unzipFile and output are here
 
@@ -20,7 +20,7 @@ const overrideOption = Options.boolean("override", { ifPresent: true }).pipe(
   Options.optional,
 );
 
-export const prepareCommand = Command.make(
+const prepareCommand = Command.make(
   "prepare",
   {
     outdir: outdirOption,
@@ -133,3 +133,6 @@ export const prepareCommand = Command.make(
     yield* Console.log("Preparation complete!");
   }),
 );
+
+export default prepareCommand;
+export const layers = Layer.mergeAll(DownloaderLive);
