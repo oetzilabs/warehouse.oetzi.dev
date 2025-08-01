@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { decimal, text } from "drizzle-orm/pg-core";
+import { decimal, index, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -20,6 +20,7 @@ export const TB_storage_conditions = commonTable(
     lightLevelMax: decimal("light_level_max", { precision: 5, scale: 2, mode: "number" }),
   },
   "stcond",
+  (table) => [index("idx_storage_conditions_name").on(table.name)],
 );
 
 export const storage_conditions_relations = relations(TB_storage_conditions, ({ many }) => ({

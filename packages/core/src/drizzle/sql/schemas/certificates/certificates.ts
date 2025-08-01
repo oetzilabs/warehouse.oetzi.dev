@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text } from "drizzle-orm/pg-core";
+import { index, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -13,7 +13,6 @@ export const TB_certificates = commonTable(
   "certificates",
   {
     type: certificate_types("type").default("digital").notNull(),
-
     name: text("name").notNull(),
     description: text("description"),
     issuer: text("issuer").notNull(),
@@ -21,6 +20,11 @@ export const TB_certificates = commonTable(
     certificationNumber: text("certification_number"),
   },
   "cert",
+  (table) => [
+    index("idx_certificates_name").on(table.name),
+    index("idx_certificates_issuer").on(table.issuer),
+    index("idx_certificate_number").on(table.certificationNumber),
+  ],
 );
 
 export const certification_relations = relations(TB_certificates, ({ many }) => ({

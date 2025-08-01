@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { primaryKey, text } from "drizzle-orm/pg-core";
+import { index, primaryKey, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -16,6 +16,7 @@ export const TB_product_labels = commonTable(
     image: text("image"),
   },
   "labl",
+  (table) => [index("idx_product_labels_name").on(table.name)],
 );
 
 export const TB_products_to_labels = schema.table(

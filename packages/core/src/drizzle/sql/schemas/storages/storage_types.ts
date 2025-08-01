@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text } from "drizzle-orm/pg-core";
+import { index, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -14,6 +14,7 @@ export const TB_storage_types = commonTable(
     code: text("code").notNull(),
   },
   "storagetype",
+  (table) => [index("idx_storage_name").on(table.name), index("idx_storage_code").on(table.code)],
 );
 
 export const storage_type_relations = relations(TB_storage_types, ({ many }) => ({

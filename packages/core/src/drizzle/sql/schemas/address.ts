@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, json, numeric, point, text, varchar } from "drizzle-orm/pg-core";
+import { index, integer, json, numeric, point, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../utils/custom-cuid2-valibot";
@@ -22,6 +22,11 @@ export const TB_addresses = commonTable(
     lon: numeric("lon", { mode: "number" }).notNull(),
   },
   "addr",
+  (table) => [
+    index("idx_addresses_street").on(table.street),
+    index("idx_addresses_postal_code").on(table.postal_code),
+    index("idx_addresses_country").on(table.country),
+  ],
 );
 
 export const addresses_relation = relations(TB_addresses, ({ many }) => ({

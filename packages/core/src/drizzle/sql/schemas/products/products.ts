@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { relations } from "drizzle-orm";
-import { decimal, integer, json, text, timestamp } from "drizzle-orm/pg-core";
+import { decimal, index, integer, json, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { date, InferInput, nullable, object, omit, optional, partial, pipe, string, transform } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -50,6 +50,7 @@ export const TB_products = commonTable(
     countryOfOrigin: text("country_of_origin"),
   },
   "prod",
+  (table) => [index("idx_products_name").on(table.name), index("idx_products_barcode").on(table.barcode)],
 );
 
 export const product_relations = relations(TB_products, ({ many, one }) => ({

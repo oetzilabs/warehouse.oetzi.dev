@@ -1,6 +1,12 @@
 import { createId } from "@paralleldrive/cuid2";
 import { BuildExtraConfigColumns, Table } from "drizzle-orm";
-import { PgColumnBuilderBase, PgTableExtraConfig, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  PgColumnBuilderBase,
+  PgTableExtraConfig,
+  PgTableExtraConfigValue,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { schema } from "./utils";
 
 export * as Entity from "./entity";
@@ -35,7 +41,7 @@ export function commonTable<
   prefix: TPrefix,
   extraConfig?: (
     self: BuildExtraConfigColumns<TTableName, TColumnsMap & ReturnType<typeof defaults>, "pg">,
-  ) => PgColumnBuilderBase,
+  ) => PgTableExtraConfigValue[],
 ) {
   const combinedColumns = {
     ...columns,

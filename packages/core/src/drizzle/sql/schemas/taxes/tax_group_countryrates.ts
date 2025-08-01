@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, primaryKey, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, primaryKey, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -22,7 +22,10 @@ export const TB_tax_group_countryrates = schema.table(
     effective_date: timestamp("effective_date", { mode: "date" }).defaultNow().notNull(),
     expiration_date: timestamp("expiration_date", { mode: "date" }),
   }),
-  (table) => [primaryKey({ columns: [table.taxGroupId, table.taxRateId] })],
+  (table) => [
+    primaryKey({ columns: [table.taxGroupId, table.taxRateId] }),
+    index("idx_country_code").on(table.country_code),
+  ],
 );
 
 export const tax_group_coutryrates_relations = relations(TB_tax_group_countryrates, ({ one, many }) => ({

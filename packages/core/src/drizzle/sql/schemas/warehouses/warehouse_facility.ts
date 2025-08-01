@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { json, text } from "drizzle-orm/pg-core";
+import { index, json, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -29,6 +29,7 @@ export const TB_warehouse_facilities = commonTable(
       .references(() => TB_users.id, { onDelete: "cascade" }),
   },
   "whfc",
+  (table) => [index("idx_warehouse_facilities_name").on(table.name)],
 );
 
 export const warehouse_facilities_relations = relations(TB_warehouse_facilities, ({ one, many }) => ({

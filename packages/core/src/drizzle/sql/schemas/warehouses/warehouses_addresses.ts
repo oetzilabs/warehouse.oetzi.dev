@@ -17,7 +17,7 @@ export const TB_warehouse_addresses = commonTable(
       .references(() => TB_addresses.id, { onDelete: "cascade" })
       .notNull(),
   },
-  "wh_addr",
+  "whaddr",
 );
 
 export const warehouse_addresses_relation = relations(TB_warehouse_addresses, ({ one }) => ({

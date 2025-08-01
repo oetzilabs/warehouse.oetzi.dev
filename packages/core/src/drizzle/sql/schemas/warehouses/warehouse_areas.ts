@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { json, text } from "drizzle-orm/pg-core";
+import { index, json, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -25,6 +25,7 @@ export const TB_warehouse_areas = commonTable(
     barcode: text("barcode").unique(),
   },
   "wha",
+  (table) => [index("idx_warehouse_areas_name").on(table.name), index("idx_warehouse_areas_barcode").on(table.barcode)],
 );
 
 export const warehouse_area_relations = relations(TB_warehouse_areas, ({ one, many }) => ({

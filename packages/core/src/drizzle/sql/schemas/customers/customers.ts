@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text, timestamp } from "drizzle-orm/pg-core";
+import { index, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -29,6 +29,11 @@ export const TB_customers = commonTable(
     }),
   },
   "cust",
+  (table) => [
+    index("idx_customers_name").on(table.name),
+    index("idx_customers_email").on(table.email),
+    index("idx_customers_phone").on(table.phone),
+  ],
 );
 
 export const customer_relations = relations(TB_customers, ({ many, one }) => ({

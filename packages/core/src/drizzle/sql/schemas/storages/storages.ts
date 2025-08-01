@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { AnyPgColumn, integer, json, text, varchar } from "drizzle-orm/pg-core";
+import { AnyPgColumn, index, integer, json, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -33,6 +33,7 @@ export const TB_storages = commonTable(
     }>(),
   },
   "storage",
+  (table) => [index("idx_storages_name").on(table.name), index("idx_storages_barcode").on(table.barcode)],
 );
 
 export const storage_relations = relations(TB_storages, ({ one, many }) => ({

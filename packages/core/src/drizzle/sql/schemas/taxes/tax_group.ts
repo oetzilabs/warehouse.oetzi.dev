@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { decimal, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { decimal, index, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -14,6 +14,7 @@ export const TB_tax_groups = commonTable(
     description: text("description"),
   },
   "taxgroup",
+  (table) => [index("idx_tax_groups_name").on(table.name)],
 );
 
 export const tax_groups_relations = relations(TB_tax_groups, ({ many }) => ({

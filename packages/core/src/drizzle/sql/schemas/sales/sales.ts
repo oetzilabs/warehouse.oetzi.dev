@@ -1,5 +1,5 @@
 import { or, relations } from "drizzle-orm";
-import { decimal, text } from "drizzle-orm/pg-core";
+import { decimal, index, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -38,6 +38,7 @@ export const TB_sales = commonTable(
     barcode: text("barcode").unique().notNull(),
   },
   "sale",
+  (table) => [index("idx_sales_barcode").on(table.barcode)],
 );
 
 export const sales_relations = relations(TB_sales, ({ one, many }) => ({

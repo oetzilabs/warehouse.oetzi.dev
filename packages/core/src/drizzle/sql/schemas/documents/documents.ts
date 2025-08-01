@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { numeric, text, varchar } from "drizzle-orm/pg-core";
+import { index, numeric, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -22,6 +22,11 @@ export const TB_documents = commonTable(
       }),
   },
   "doc",
+  (table) => [
+    index("idx_documents_name").on(table.name),
+    index("idx_documents_path").on(table.path),
+    index("idx_documents_preview_path").on(table.previewPath),
+  ],
 );
 
 export const document_relations = relations(TB_documents, ({ one }) => ({

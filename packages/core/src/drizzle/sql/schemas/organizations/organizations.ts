@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { AnyPgColumn, boolean, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { AnyPgColumn, boolean, index, text, uuid, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, InferOutput, minLength, object, omit, partial, pipe, string } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -38,6 +38,11 @@ export const TB_organizations = commonTable(
       .notNull(),
   },
   "org",
+  (table) => [
+    index("idx_organizations_name").on(table.name),
+    index("idx_organizations_slug").on(table.slug),
+    index("idx_organizations_uid").on(table.uid),
+  ],
 );
 
 export const organizations_relation = relations(TB_organizations, ({ many, one }) => ({

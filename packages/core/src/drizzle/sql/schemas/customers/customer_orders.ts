@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text, varchar } from "drizzle-orm/pg-core";
+import { index, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -40,6 +40,11 @@ export const TB_customer_orders = commonTable(
     creator_id: varchar("creator_id").references(() => TB_users.id),
   },
   "cord",
+  (table) => [
+    index("idx_customer_orders_barcode").on(table.barcode),
+    index("idx_customer_orders_title").on(table.title),
+    index("idx_customer_orders_description").on(table.description),
+  ],
 );
 
 export const customer_order_relations = relations(TB_customer_orders, ({ one, many }) => ({

@@ -16,7 +16,7 @@ export const TB_user_orders = commonTable(
       .references(() => TB_customer_orders.id, { onDelete: "cascade" })
       .notNull(),
   },
-  "wh_ord",
+  "uord",
 );
 
 export const user_orders_relations = relations(TB_user_orders, ({ one }) => ({

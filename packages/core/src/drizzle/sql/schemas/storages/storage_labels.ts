@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text, varchar } from "drizzle-orm/pg-core";
+import { index, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -13,6 +13,7 @@ export const TB_storage_labels = commonTable(
     color: varchar("color", { length: 7 }).notNull(), // hex color
   },
   "storage_label",
+  (table) => [index("idx_storage_labels_name").on(table.name)],
 );
 
 export const storage_labels_relations = relations(TB_storage_labels, ({ many }) => ({

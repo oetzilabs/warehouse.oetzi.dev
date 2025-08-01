@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text, varchar } from "drizzle-orm/pg-core";
+import { index, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -15,6 +15,7 @@ export const TB_device_types = commonTable(
     description: text("description"),
   },
   "devicetype",
+  (table) => [index("idx_device_name").on(table.name), index("idx_device_code").on(table.code)],
 );
 
 export const device_type_relations = relations(TB_device_types, ({ many }) => ({

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text } from "drizzle-orm/pg-core";
+import { index, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { InferInput, object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -16,6 +16,7 @@ export const TB_images = commonTable(
     description: text("description"),
   },
   "img",
+  (table) => [index("idx_images_url").on(table.url), index("idx_images_title").on(table.title)],
 );
 
 export const images_relations = relations(TB_images, ({ one, many }) => ({

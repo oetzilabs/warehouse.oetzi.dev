@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { text, timestamp } from "drizzle-orm/pg-core";
+import { index, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -30,6 +30,7 @@ export const TB_messages = commonTable(
     }),
   },
   "message",
+  (table) => [index("idx_messages_title").on(table.title)],
 );
 
 export const messages_relations = relations(TB_messages, ({ one }) => ({}));

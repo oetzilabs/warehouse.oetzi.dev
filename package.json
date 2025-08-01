@@ -14,19 +14,19 @@
     "clean": "find . \\( -name 'node_modules' -or -name '.vinxi' -or -name '.output' \\) -type d -prune -exec rm -rf '{}' +;"
   },
   "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "4.4.1",
-    "@tsconfig/node22": "22.0.1",
+    "@ianvs/prettier-plugin-sort-imports": "4.5.1",
+    "@tsconfig/node22": "22.0.2",
     "@types/bun": "1.2.18",
     "@types/yazl": "^3.3.0",
-    "bun": "1.2.18",
-    "prettier": "3.5.3",
-    "prettier-plugin-tailwindcss": "0.6.11",
+    "bun": "1.2.19",
+    "prettier": "3.6.2",
+    "prettier-plugin-tailwindcss": "0.6.14",
     "sst": "3.14.29",
-    "typescript": "5.8.3",
+    "typescript": "5.9.2",
     "yazl": "^3.3.1"
   },
   "peerDependencies": {
-    "@effect/language-service": "0.31.2",
+    "@effect/language-service": "0.32.0",
     "@effect/platform": "0.90.0",
     "@effect/platform-bun": "0.77.0",
     "@effect/platform-node": "0.94.0",
@@ -45,7 +45,7 @@
     "@opentelemetry/sdk-trace-web": "2.0.1",
     "@opentelemetry/sdk-metrics": "2.0.1",
     "dayjs": "1.11.13",
-    "effect": "3.17.3",
+    "effect": "3.17.4",
     "valibot": "1.1.0"
   },
   "workspaces": [

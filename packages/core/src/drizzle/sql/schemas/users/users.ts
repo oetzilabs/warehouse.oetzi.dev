@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
 import { object, omit, partial, string } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
@@ -34,6 +34,7 @@ export const TB_users = commonTable(
     has_finished_onboarding: boolean("has_finished_onboarding").notNull().default(false),
   },
   "user",
+  (table) => [index("idx_users_name").on(table.name), index("idx_users_email").on(table.email)],
 );
 
 export const user_relation = relations(TB_users, ({ one, many }) => ({
