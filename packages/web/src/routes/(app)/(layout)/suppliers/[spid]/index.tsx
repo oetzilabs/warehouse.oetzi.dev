@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { deleteSupplier, getSupplierById } from "@/lib/api/suppliers";
 import {
@@ -36,7 +37,10 @@ import Edit from "lucide-solid/icons/edit";
 import Forklift from "lucide-solid/icons/forklift";
 import Loader2 from "lucide-solid/icons/loader-2";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
+import Notebook from "lucide-solid/icons/notebook";
+import PackageSearch from "lucide-solid/icons/package-search";
 import RotateCw from "lucide-solid/icons/rotate-cw";
+import Tags from "lucide-solid/icons/tags";
 import X from "lucide-solid/icons/x";
 import { createSignal, Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
@@ -75,7 +79,7 @@ export default function SupplierPage() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                toast.promise(revalidate(getSupplierById.keyFor(supplierInfo().supplier.id)), {
+                toast.promise(revalidate(getSupplierById.keyFor(params.spid)), {
                   loading: "Refreshing supplier...",
                   success: "Refreshed supplier",
                   error: "Failed to refresh supplier",
@@ -176,10 +180,37 @@ export default function SupplierPage() {
                       </span>
                     </div>
                   </div>
-
-                  <Products list={() => supplierInfo().supplier.products} />
-                  <Purchases list={() => supplierInfo().supplier.purchases} />
-                  <Notes id={() => supplierInfo().supplier.id} list={() => supplierInfo().supplier.notes} />
+                  <Tabs defaultValue="products" class="w-full">
+                    <TabsList class="flex flex-row w-full items-center justify-start h-max">
+                      <TabsTrigger value="products">
+                        <div class="flex flex-row items-center gap-2">
+                          <PackageSearch class="size-4" />
+                          Products
+                        </div>
+                      </TabsTrigger>
+                      <TabsTrigger value="purchases">
+                        <div class="flex flex-row items-center gap-2">
+                          <Tags class="size-4" />
+                          Purchases
+                        </div>
+                      </TabsTrigger>
+                      <TabsTrigger value="notes">
+                        <div class="flex flex-row items-center gap-2">
+                          <Notebook class="size-4" />
+                          Notes
+                        </div>
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="products" class="mt-4">
+                      <Products list={() => supplierInfo().supplier.products} />
+                    </TabsContent>
+                    <TabsContent value="purchases" class="mt-4">
+                      <Purchases list={() => supplierInfo().supplier.purchases} />
+                    </TabsContent>
+                    <TabsContent value="notes" class="mt-4">
+                      <Notes id={() => supplierInfo().supplier.id} list={() => supplierInfo().supplier.notes} />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
             )}
