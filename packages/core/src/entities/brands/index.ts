@@ -99,6 +99,20 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
       return yield* db.query.TB_brands.findMany();
     });
 
+    const generateCode = Effect.fn("@warehouse/brands/generateCode")(function* (name: string) {
+      // uppercase the name and remove all non-alphanumeric characters
+      const code = name.toUpperCase().replace(/[^A-Z0-9]+/gi, "");
+      const [existingBrand] = yield* db.query.TB_brands.findMany({
+        where: (brands, operations) => operations.eq(brands.code, code),
+      });
+      if (existingBrand) {
+        // add a random number to the end of the code
+        const randomNumber = Math.floor(Math.random() * 1000);
+        return `${code}${randomNumber}`;
+      }
+      return code;
+    });
+
     return {
       create,
       findById,
@@ -106,6 +120,7 @@ export class BrandService extends Effect.Service<BrandService>()("@warehouse/bra
       remove,
       safeRemove,
       all,
+      generateCode,
     } as const;
   }),
   dependencies: [DatabaseLive],

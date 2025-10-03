@@ -226,25 +226,37 @@ export default function CustomerOrderPage() {
                         >
                           {(product) => (
                             <div class="flex flex-col border-b last:border-b-0 p-4 gap-4">
+                              <div class="flex flex-col">
+                                <div class="flex flex-row items-center justify-between">
+                                  <div class="flex flex-row items-center gap-2">
+                                    <div class="text-xs bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded-lg border inline-flex items-center gap-1 ">
+                                      <span class="font-normal font-['Geist_Mono_Variable']">{product.quantity}</span>
+                                      <span>×</span>
+                                    </div>
+                                    <span class="font-medium">{product.product.name}</span>
+                                  </div>
+                                  <div class="flex flex-row items-center gap-1">
+                                    <span class="text-sm text-muted-foreground">
+                                      {product.product.sellingPrice.toFixed(2)} {product.product.currency}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                               <div class="flex flex-row items-center justify-between">
                                 <div class="flex flex-col gap-0.5">
-                                  <span class="font-medium">{product.product.name}</span>
-                                  <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
+                                  <span class="text-xs text-muted-foreground">SKU: {product.product.sku}</span>
                                   <Show when={product.product.organizations[0].tg}>
-                                    <span class="text-sm text-muted-foreground">
+                                    <span class="text-xs text-muted-foreground">
                                       {product.product.organizations[0].tg?.name} (
                                       {product.product.organizations[0].tg?.crs[0]?.tr.rate}%)
                                     </span>
                                   </Show>
+                                  <Show when={product.product.weight}>
+                                    {(weight) => <span class="text-xs text-muted-foreground">Weight</span>}
+                                  </Show>
                                 </div>
-                                <div class="flex flex-col items-end">
-                                  <div class="flex flex-row items-baseline gap-1">
-                                    <span class="text-sm text-muted-foreground">
-                                      {product.product.sellingPrice.toFixed(2)}
-                                    </span>
-                                    <span class="font-medium">x{product.quantity}</span>
-                                  </div>
-                                  <span class="text-sm text-muted-foreground">
+                                <div class="flex flex-col items-end font-normal font-['Geist_Mono_Variable'] gap-0.5">
+                                  <span class="text-xs text-muted-foreground">
                                     {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}
                                     {product.product.currency}
                                   </span>
@@ -258,6 +270,13 @@ export default function CustomerOrderPage() {
                                       ).toFixed(2)}{" "}
                                       {product.product.currency} Tax
                                     </span>
+                                  </Show>
+                                  <Show when={product.product.weight}>
+                                    {(weight) => (
+                                      <span class="text-xs text-muted-foreground">
+                                        {weight().value} {weight().unit}
+                                      </span>
+                                    )}
                                   </Show>
                                 </div>
                               </div>
@@ -277,7 +296,14 @@ export default function CustomerOrderPage() {
                                   }
                                 >
                                   {(availableDiscounts) => (
-                                    <Show when={availableDiscounts().length > 0}>
+                                    <Show
+                                      when={availableDiscounts().length > 0}
+                                      fallback={
+                                        <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg select-none">
+                                          No discounts for this product
+                                        </div>
+                                      }
+                                    >
                                       <div class="flex flex-col gap-4 ">
                                         <div class="grid grid-cols-2 gap-2">
                                           <For
@@ -462,7 +488,7 @@ export default function CustomerOrderPage() {
                             </div>
                             <div class="flex justify-between">
                               <span class="text-sm text-muted-foreground">Net Total</span>
-                              <span class="text-sm font-medium">
+                              <span class="text-sm font-normal font-['Geist_Mono_Variable']">
                                 {amounts.subtotal.toFixed(2)} {currency}
                               </span>
                             </div>
@@ -474,7 +500,7 @@ export default function CustomerOrderPage() {
                                       <span class="text-sm text-muted-foreground">
                                         {taxGroup.name} ({rateInfo.rate}%)
                                       </span>
-                                      <span class="text-sm font-medium">
+                                      <span class="text-sm font-normal font-['Geist_Mono_Variable']">
                                         {rateInfo.amount.toFixed(2)} {currency}
                                       </span>
                                     </div>
@@ -490,7 +516,7 @@ export default function CustomerOrderPage() {
                           </div>
                           <div class="flex justify-between py-2">
                             <span class="font-medium">Total</span>
-                            <span class="font-medium">
+                            <span class="font-normal font-['Geist_Mono_Variable']">
                               {amounts.total.toFixed(2)} {currency}
                             </span>
                           </div>

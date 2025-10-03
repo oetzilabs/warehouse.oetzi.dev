@@ -25,7 +25,7 @@ export default function InventoryPage() {
   const data = createAsync(() => getInventoryFromStorage(params.sid), { deferStream: true });
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
+    <div class="flex flex-row w-full grow p-4 gap-2">
       <div class="w-full flex flex-row h-full gap-4">
         <div class="w-full flex flex-col gap-0">
           <div class="flex items-center gap-4 justify-between w-full bg-background pb-2">
@@ -66,7 +66,7 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
+      {/* <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div> */}
     </div>
   );
 }

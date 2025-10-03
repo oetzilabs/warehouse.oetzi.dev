@@ -52,25 +52,22 @@ export const cli = Effect.fn(function* (commands: string[] = [] as string[]) {
 });
 
 const c = Effect.fn(function* (args: string[], commands: string[] = [] as string[]) {
-  const [theCommand, layers] = yield* cli(commands);
+  const [theCommand, layers] = yield* cli(commands).pipe(Effect.provide(BunContext.layer));
   return theCommand(args).pipe(
     Effect.catchAllCause((cause) => Console.log(Cause.pretty(cause))),
-    // @ts-ignore
     Effect.provide(
       Layer.mergeAll(
         BunContext.layer,
-        BunPath.layer,
         CliConfig.layer({ showBuiltIns: false, showAllNames: true, finalCheckBuiltIn: false }),
         createOtelLayer("warehouse"),
         ...layers,
       ),
     ),
-    BunRuntime.runMain,
   );
 });
 
 export default c;
 
 if (import.meta.path === Bun.main) {
-  c(Bun.argv);
+  BunRuntime.runMain(c(Bun.argv));
 }

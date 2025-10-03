@@ -30,7 +30,7 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
           <div class="flex flex-col gap-0.5">
             <div class="flex flex-row gap-2">
               <span class="text-sm font-medium">{item.title}</span>
-              <span class="text-sm text-muted-foreground">{item.barcode}</span>
+              <span class="text-sm text-muted-foreground select-none">{item.barcode}</span>
             </div>
             <span class="text-xs text-muted-foreground">
               {dayjs(item.updatedAt ?? item.createdAt).format("MMM DD, YYYY - h:mm A")}

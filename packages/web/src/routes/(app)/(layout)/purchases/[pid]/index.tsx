@@ -177,7 +177,13 @@ export default function PurchasePage() {
                             <div class="flex flex-col hover:bg-muted-foreground/5 border-b last:border-b-0 p-4 gap-4">
                               <div class="flex flex-row items-center justify-between">
                                 <div class="flex flex-col gap-0.5">
-                                  <span class="font-medium">{product.product.name}</span>
+                                  <div class="flex flex-row items-center gap-2">
+                                    <div class="text-xs bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded-lg border inline-flex items-center gap-1 ">
+                                      <span class="font-normal font-['Geist_Mono_Variable']">{product.quantity}</span>
+                                      <span>×</span>
+                                    </div>
+                                    <span class="font-medium">{product.product.name}</span>
+                                  </div>
                                   <span class="text-sm text-muted-foreground">SKU: {product.product.sku}</span>
                                   <Show when={product.product.organizations[0].tg}>
                                     <span class="text-sm text-muted-foreground">
@@ -186,12 +192,11 @@ export default function PurchasePage() {
                                     </span>
                                   </Show>
                                 </div>
-                                <div class="flex flex-col items-end">
-                                  <div class="flex flex-row items-baseline gap-1">
+                                <div class="flex flex-col items-end font-normal font-['Geist_Mono_Variable']">
+                                  <div class="flex flex-row items-center gap-1">
                                     <span class="text-sm text-muted-foreground">
-                                      {product.product.sellingPrice.toFixed(2)}
+                                      {product.product.sellingPrice.toFixed(2)} {product.product.currency}
                                     </span>
-                                    <span class="font-medium">x{product.quantity}</span>
                                   </div>
                                   <span class="text-sm text-muted-foreground">
                                     {(product.product.sellingPrice * product.quantity).toFixed(2)}{" "}

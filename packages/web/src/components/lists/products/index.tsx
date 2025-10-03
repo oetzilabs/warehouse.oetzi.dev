@@ -134,7 +134,7 @@ export const ProductsList = (props: ProductsListProps) => {
           noResultsMessage="No products have been found"
           searchTerm={search}
           variant="grid"
-          gridClass="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4"
+          gridClass="grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4"
           itemClass="hover:shadow-md !rounded-lg"
         />
       </div>

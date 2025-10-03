@@ -41,38 +41,59 @@ export function SalesList(props: SalesListProps) {
         >
           {(item) => (
             <div class="flex flex-col border-b last:border-b-0 p-4 gap-4">
-              <div class="flex flex-row items-center justify-between">
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-sm font-medium">{item.product.name}</span>
-                  <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
+              <div class="flex flex-col">
+                <div class="flex flex-row items-center justify-between">
+                  <div class="flex flex-row items-center gap-2">
+                    <div class="text-xs bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded-lg border inline-flex items-center gap-1 ">
+                      <span class="font-normal font-['Geist_Mono_Variable']">{item.quantity}</span>
+                      <span>×</span>
+                    </div>
+                    <span class="font-medium">{item.product.name}</span>
+                  </div>
+                  <div class="flex flex-row items-center gap-1">
+                    <span class="text-sm text-muted-foreground">
+                      {item.product.sellingPrice.toFixed(2)} {item.product.currency}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-row items-end justify-between">
+                <div class="flex flex-col gap-2">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-xs text-muted-foreground">SKU: {item.product.sku}</span>
+                    <Show when={item.product.organizations[0].tg}>
+                      {(tg) => (
+                        <span class="text-sm text-muted-foreground">
+                          {tg().name} ({tg().crs[0]?.tr.rate}%)
+                        </span>
+                      )}
+                    </Show>
+                    <Show when={item.product.weight}>
+                      {(weight) => <span class="text-xs text-muted-foreground">Weight</span>}
+                    </Show>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end font-normal font-['Geist_Mono_Variable']">
+                  <div class="flex flex-row items-center gap-1">
+                    <span class="text-xs text-muted-foreground">
+                      {(item.product.sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
+                    </span>
+                  </div>
                   <Show when={item.product.organizations[0].tg}>
-                    {(tg) => (
-                      <span class="text-sm text-muted-foreground">
-                        {tg().name} ({tg().crs[0]?.tr.rate}%)
-                      </span>
-                    )}
+                    <span class="text-xs text-muted-foreground">
+                      {(
+                        (item.product.sellingPrice *
+                          item.quantity *
+                          (item.product.organizations[0].tg!.crs[0]?.tr.rate ?? 0)) /
+                        100
+                      ).toFixed(2)}{" "}
+                      {item.product.currency} Tax
+                    </span>
                   </Show>
                   <Show when={item.product.weight}>
                     {(weight) => (
                       <span class="text-xs text-muted-foreground">
-                        Weight: {weight().value} {weight().unit}
-                      </span>
-                    )}
-                  </Show>
-                </div>
-                <div class="flex flex-col items-end">
-                  <div class="flex flex-row items-baseline gap-1">
-                    <span class="text-xs text-muted-foreground">{item.quantity}x</span>
-                    <span class="text-sm font-medium">{item.product.sellingPrice.toFixed(2)}</span>
-                  </div>
-                  <span class="text-xs text-muted-foreground">
-                    {(item.product.sellingPrice * item.quantity).toFixed(2)} {item.product.currency}
-                  </span>
-                  <Show when={item.product.organizations[0].tg}>
-                    {(tg) => (
-                      <span class="text-xs text-muted-foreground">
-                        {((item.product.sellingPrice * item.quantity * (tg().crs[0]?.tr.rate ?? 0)) / 100).toFixed(2)}{" "}
-                        {item.product.currency} Tax
+                        {weight().value} {weight().unit}
                       </span>
                     )}
                   </Show>

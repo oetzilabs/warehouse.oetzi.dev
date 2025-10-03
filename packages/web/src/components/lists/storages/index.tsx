@@ -78,7 +78,9 @@ export const StorageStatisticsList = (props: StorageStatisticsListProps) => {
 
         <Show
           when={filteredData().length > 0}
-          fallback={<div class="col-span-full p-8 text-center text-muted-foreground">No storages found</div>}
+          fallback={
+            <div class="col-span-full p-8 text-center text-muted-foreground text-sm select-none">No storages found</div>
+          }
         >
           <Switch>
             <Match when={view() === "space"}>

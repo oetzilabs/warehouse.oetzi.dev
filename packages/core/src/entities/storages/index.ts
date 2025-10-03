@@ -244,6 +244,22 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       return parent.concat(storage);
     });
 
+    const generateBarcode = Effect.fn("@warehouse/storages/generateBarcode")(function* () {
+      // this generates a fresh barcode for a storage-form.
+      let exists: Effect.Effect.Success<ReturnType<typeof db.query.TB_storages.findFirst>> | undefined;
+      let barcode = "";
+      do {
+        // generate a random barcode length of 32, not padded with zeros
+        barcode = Math.floor(Math.random() * 1000000000).toString();
+
+        exists = yield* db.query.TB_storages.findFirst({
+          where: (fields, operations) => operations.eq(fields.barcode, barcode),
+        });
+      } while (exists !== undefined);
+
+      return barcode;
+    });
+
     return {
       create,
       findById,
@@ -256,6 +272,7 @@ export class StorageService extends Effect.Service<StorageService>()("@warehouse
       findParent,
       findRoot,
       getTypes,
+      generateBarcode,
     } as const;
   }),
   dependencies: [DatabaseLive],

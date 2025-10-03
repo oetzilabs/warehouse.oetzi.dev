@@ -256,18 +256,20 @@ export default function DashboardPage() {
               <For
                 each={notifs()}
                 fallback={
-                  <div class="bg-muted-foreground/10 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-2">
+                  <div class="bg-muted-foreground/5 dark:bg-muted/30 flex flex-col p-4 border rounded-lg gap-4">
                     <div class="flex flex-row items-start gap-2 w-full justify-between">
                       <div class="flex flex-row items-center gap-2">
                         <Check class="size-4" />
                         <span class="text-sm font-medium">No notifications!</span>
                       </div>
-                      <Button size="sm" as={A} href="/notifications">
-                        View all messages
-                        <ArrowUpRight class="size-4" />
-                      </Button>
                     </div>
-                    <span class="text-xs text-muted-foreground">You're all caught up! No new notifications.</span>
+                    <div class="w-full flex items-center justify-center py-4 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-muted-foreground/10 dark:bg-muted/30">
+                      <span class="text-xs text-muted-foreground">You're all caught up! No new notifications.</span>
+                    </div>
+                    <Button size="sm" as={A} href="/notifications">
+                      <span class="hidden xl:block">All messages</span>
+                      <ArrowUpRight class="size-4" />
+                    </Button>
                   </div>
                 }
               >

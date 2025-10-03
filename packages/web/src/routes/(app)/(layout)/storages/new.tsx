@@ -10,27 +10,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { createAreaMatchingFacility, getAreas } from "@/lib/api/areas";
-import { addStorage, getStorageTypes } from "@/lib/api/storages";
+import { addStorage, generateBarcode, getStorageTypes } from "@/lib/api/storages";
 import { A, createAsync, useAction, useSubmission } from "@solidjs/router";
 import { createForm, formOptions } from "@tanstack/solid-form";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
 import Loader2 from "lucide-solid/icons/loader-2";
 import Plus from "lucide-solid/icons/plus";
+import Sparkles from "lucide-solid/icons/sparkles";
 import { Show, Suspense } from "solid-js";
 import { toast } from "solid-sonner";
 
 export default function NewStoragePage() {
   return (
-    <div class="flex flex-row grow p-2">
+    <div class="flex flex-row grow p-4">
       <div class="w-full flex flex-col gap-4">
         <div class="flex items-center gap-2 justify-between w-full bg-background pb-2">
-          <div class="flex items-center gap-4">
-            <Button size="sm" variant="outline" class="bg-background" as={A} href="/storages" type="button">
-              <ArrowLeft class="size-4" />
-              Storages
-            </Button>
-            <h1 class="font-semibold leading-none">New Storage</h1>
-          </div>
+          <h1 class="font-semibold leading-none">New Storage</h1>
         </div>
         <Form />
       </div>
@@ -65,6 +60,9 @@ const Form = () => {
 
   const createAreaAction = useAction(createAreaMatchingFacility);
   const isCreatingArea = useSubmission(createAreaMatchingFacility);
+
+  const generateBarcodeAction = useAction(generateBarcode);
+  const isGeneratingBarcode = useSubmission(generateBarcode);
 
   const form = createForm(() => ({
     ...formOpts,
@@ -110,6 +108,7 @@ const Form = () => {
               value={field().state.value}
               onBlur={field().handleBlur}
               onInput={(e) => field().handleChange(e.currentTarget.value)}
+              placeholder="What is the name of this storage?"
               required
             />
             <Show when={field().state.meta.errors[0]}>
@@ -132,6 +131,7 @@ const Form = () => {
               value={field().state.value}
               onBlur={field().handleBlur}
               onInput={(e) => field().handleChange(e.currentTarget.value)}
+              placeholder="How is this storage used?"
               rows={2}
             />
           </TextField>
@@ -156,7 +156,7 @@ const Form = () => {
                       field().handleChange(value);
                     }}
                     options={types().map((t) => t.id)}
-                    placeholder="Select a type…"
+                    placeholder="What kind of storage is this?"
                     itemComponent={(props) => {
                       const opt = types().find((t) => t.id === props.item.rawValue);
                       return <SelectItem item={props.item}>{opt?.name ?? props.item.rawValue}</SelectItem>;
@@ -188,7 +188,7 @@ const Form = () => {
               when={_areas().length > 0}
               fallback={
                 <div class="flex flex-col items-center justify-center gap-4 w-full border rounded-lg background-muted-foreground/5 dark:background-muted/30 p-10">
-                  <span class="text-sm text-muted-foreground">No areas have been created yet.</span>
+                  <span class="text-sm text-muted-foreground select-none">No areas have been created yet.</span>
                   <Button
                     size="sm"
                     // this button should create a new area for the facility (same size as the facility, for now)
@@ -327,18 +327,53 @@ const Form = () => {
         </form.Field>
         <form.Field name="barcode">
           {(field) => (
-            <TextField>
-              <label for={field().name} class="block font-medium mb-1">
-                Barcode
-              </label>
-              <TextFieldInput
-                id={field().name}
-                name={field().name}
-                value={field().state.value}
-                onBlur={field().handleBlur}
-                onInput={(e) => field().handleChange(e.currentTarget.value)}
-              />
-            </TextField>
+            <div class="flex flex-row gap-2 w-full">
+              <TextField class="w-full">
+                <label for={field().name} class="block font-medium mb-1">
+                  Barcode
+                </label>
+                <TextFieldInput
+                  id={field().name}
+                  name={field().name}
+                  value={field().state.value}
+                  onBlur={field().handleBlur}
+                  onInput={(e) => field().handleChange(e.currentTarget.value)}
+                />
+              </TextField>
+              <div class="flex flex-row gap-2 items-end justify-end">
+                <Button
+                  type="button"
+                  size="lg"
+                  class="w-max"
+                  disabled={isGeneratingBarcode.pending}
+                  onClick={async () => {
+                    const data = await generateBarcodeAction();
+                    field().handleChange(data.barcode);
+                    // toast.promise(, {
+                    //   loading: "Generating barcode...",
+                    //   success: (data) => {
+                    //     field().handleChange(data.barcode);
+                    //     return "Barcode generated";
+                    //   },
+                    //   error: "Failed to generate barcode",
+                    // });
+                  }}
+                >
+                  <Show
+                    when={isGeneratingBarcode.pending}
+                    fallback={
+                      <>
+                        <Sparkles class="size-4" />
+                        Generate
+                      </>
+                    }
+                  >
+                    <Loader2 class="size-4 animate-spin" />
+                    Generating
+                  </Show>
+                </Button>
+              </div>
+            </div>
           )}
         </form.Field>
       </div>

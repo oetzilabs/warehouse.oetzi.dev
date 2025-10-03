@@ -35,7 +35,7 @@ export const getStorages = query(async (areaId: string) => {
 export const getStorageTypes = query(async () => {
   "use server";
   return run(
-    "@query/get-storage-types",
+    "@query/storages/get-types",
     Effect.gen(function* (_) {
       const service = yield* StorageService;
       const types = yield* service.getTypes();
@@ -73,7 +73,7 @@ export const addStorage = action(
   }) => {
     "use server";
     return run(
-      "@action/add-storage",
+      "@action/storages/add",
       Effect.gen(function* (_) {
         const storageService = yield* StorageService;
         // based on the width, height and depth, determine the variant
@@ -98,3 +98,16 @@ export const addStorage = action(
     );
   },
 );
+
+export const generateBarcode = action(() => {
+  "use server";
+  return run(
+    "@action/storages/generate-barcode",
+    Effect.gen(function* (_) {
+      const service = yield* StorageService;
+      const barcode = yield* service.generateBarcode();
+      return json({ barcode });
+    }).pipe(Effect.provide(StorageLive)),
+    json({ barcode: "" }),
+  );
+});

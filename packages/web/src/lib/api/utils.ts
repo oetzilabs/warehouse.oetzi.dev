@@ -107,7 +107,7 @@ export const run = async <
     onFailure: (cause) => {
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
       const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
-      // console.error(`${name} errors:`, errors, cause);
+      console.error(`${name} errors:`, errors, cause);
       if (typeof onFailure === "function") {
         return onFailure(es);
       }
