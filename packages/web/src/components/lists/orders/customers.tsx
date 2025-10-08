@@ -1,23 +1,32 @@
 import { OrderStatusBadge } from "@/components/badges/order-status";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
+import { cn } from "@/lib/utils";
+import Calendar from "@corvu/calendar";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type CustomerOrderByOrganizationIdInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import Fuse, { IFuseOptions } from "fuse.js";
+import NavArrowLeft from "lucide-solid/icons/arrow-left";
+import NavArrowRight from "lucide-solid/icons/arrow-right";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
 import CalendarIcon from "lucide-solid/icons/calendar";
 import ArrowLeft from "lucide-solid/icons/chevron-left";
 import ArrowRight from "lucide-solid/icons/chevron-right";
 import Eye from "lucide-solid/icons/eye";
 import EyeOff from "lucide-solid/icons/eye-off";
-import { Accessor, createEffect, createMemo, createSignal, For, Show } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, For, Index, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { GenericList } from "../default";
 
 dayjs.extend(isBetween);
+
+const { format: formatWeekdayLong } = new Intl.DateTimeFormat("en", { weekday: "long" });
+const { format: formatWeekdayShort } = new Intl.DateTimeFormat("en", { weekday: "short" });
+const { format: formatMonth } = new Intl.DateTimeFormat("en", { month: "long" });
 
 type CustomersOrdersListProps = {
   data: Accessor<CustomerOrderByOrganizationIdInfo[]>;
@@ -99,31 +108,23 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
     </>
   );
 
-  const [customDateRange, setCustomDateRange] = createSignal<[Date, Date] | undefined>(undefined);
+  const [customDateRange, setCustomDateRange] = createSignal<[Date, Date]>([new Date(), new Date()]);
 
   createEffect(() => {
     const set = props.data();
-    if (set.length === 0) return;
-    if (!customDateRange()) {
-      if (set.length > 0) {
-        const min = set.reduce((min, o) => (dayjs(o.createdAt).isBefore(dayjs(min.createdAt)) ? o : min));
-        const max = set.reduce((max, o) => (dayjs(o.createdAt).isAfter(dayjs(max.createdAt)) ? o : max));
-        setCustomDateRange([dayjs(min.createdAt).toDate(), dayjs(max.createdAt).toDate()]);
-      }
+    if (set.length === 0) {
+      setCustomDateRange([new Date(), new Date()]);
+      return;
     }
+    const min = set.reduce((min, o) => (dayjs(o.createdAt).isBefore(dayjs(min.createdAt)) ? o : min));
+    const max = set.reduce((max, o) => (dayjs(o.createdAt).isAfter(dayjs(max.createdAt)) ? o : max));
+    setCustomDateRange([dayjs(min.createdAt).toDate(), dayjs(max.createdAt).toDate()]);
   });
 
   const dateRange = createMemo(() => {
     const set = props.data();
     if (set.length === 0) return "N/A";
     const cdr = customDateRange();
-    if (!cdr) {
-      return (
-        dayjs(set[0].createdAt).format("MMM DD, YYYY") +
-        " - " +
-        dayjs(set[set.length - 1].createdAt).format("MMM DD, YYYY")
-      );
-    }
     return dayjs(cdr[0]).format("MMM DD, YYYY") + " - " + dayjs(cdr[1]).format("MMM DD, YYYY");
   });
 
@@ -141,12 +142,10 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
       set = fuse.search(term).map((d) => d.item);
     }
     const cdr = customDateRange();
-    if (cdr) {
-      set = set.filter((o) => {
-        const createdAt = dayjs(o.createdAt);
-        return createdAt.isBetween(cdr[0], cdr[1], null, "[]");
-      });
-    }
+    set = set.filter((o) => {
+      const createdAt = dayjs(o.createdAt);
+      return createdAt.isBetween(cdr[0], cdr[1], null, "[]");
+    });
     return set;
   });
 
@@ -169,31 +168,169 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
               variant="ghost"
               class="size-10 rounded-lg rounded-r-none border border-r-0"
               onClick={() => {
-                setCustomDateRange((cdr) => {
-                  if (!cdr) return cdr;
-                  return [dayjs(cdr[0]).subtract(7, "day").toDate(), dayjs(cdr[1]).subtract(7, "day").toDate()];
-                });
+                setCustomDateRange((cdr) => [
+                  dayjs(cdr[0]).subtract(7, "day").toDate(),
+                  dayjs(cdr[1]).subtract(7, "day").toDate(),
+                ]);
               }}
             >
               <ArrowLeft class="size-4" />
               <span class="sr-only">Previous week</span>
             </Button>
-            <Button
-              size="lg"
-              variant="ghost"
-              class="size-10 rounded-lg rounded-l-none rounded-r-none border w-max px-4"
-            >
-              <span>{dateRange()}</span>
-            </Button>
+            <Popover sameWidth={false}>
+              <PopoverTrigger
+                as={Button}
+                size="lg"
+                variant="ghost"
+                class="size-10 rounded-lg rounded-l-none rounded-r-none border w-max px-4"
+              >
+                <span>{dateRange()}</span>
+              </PopoverTrigger>
+              <PopoverContent class="w-full gap-2 flex flex-col">
+                <Button
+                  class=""
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // reset the date range to the set of orders
+                    setCustomDateRange([
+                      props.data().reduce((min, o) => (dayjs(o.createdAt).isBefore(dayjs(min.createdAt)) ? o : min))
+                        .createdAt,
+                      props.data().reduce((max, o) => (dayjs(o.createdAt).isAfter(dayjs(max.createdAt)) ? o : max))
+                        .createdAt,
+                    ]);
+                  }}
+                >
+                  Reset
+                </Button>
+                <Calendar
+                  mode="range"
+                  numberOfMonths={2}
+                  initialValue={{
+                    from: customDateRange()[0],
+                    to: customDateRange()[1],
+                  }}
+                  onValueChange={(date) => {
+                    if (!date.from || !date.to) return;
+                    setCustomDateRange([date.from, date.to]);
+                  }}
+                >
+                  {(props) => {
+                    return (
+                      <div class="relative w-full">
+                        <Calendar.Nav
+                          action="prev-month"
+                          aria-label="Go to previous month"
+                          as={Button}
+                          size="icon"
+                          class="absolute left-0"
+                          variant="secondary"
+                          type="button"
+                        >
+                          <NavArrowLeft class="size-4" />
+                        </Calendar.Nav>
+                        <Calendar.Nav
+                          action="next-month"
+                          aria-label="Go to next month"
+                          as={Button}
+                          size="icon"
+                          class="absolute right-0"
+                          variant="secondary"
+                          type="button"
+                        >
+                          <NavArrowRight class="size-4" />
+                        </Calendar.Nav>
+                        <div class="w-full h-content flex flex-row gap-4">
+                          <Index each={props.months}>
+                            {(month, index) => (
+                              <div class="w-full flex flex-col gap-4">
+                                <div class="flex h-8 items-center justify-center">
+                                  <Calendar.Label index={index} class="text-sm  select-none">
+                                    {formatMonth(month().month)} {month().month.getFullYear()}
+                                  </Calendar.Label>
+                                </div>
+                                <Calendar.Table index={index} class="w-full">
+                                  <thead>
+                                    <tr>
+                                      <Index each={props.weekdays}>
+                                        {(weekday) => (
+                                          <Calendar.HeadCell
+                                            abbr={formatWeekdayLong(weekday())}
+                                            class="w-8 flex-1 pb-1 text-sm font-normal text-muted-foreground select-none"
+                                          >
+                                            {formatWeekdayShort(weekday())}
+                                          </Calendar.HeadCell>
+                                        )}
+                                      </Index>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="gap-0">
+                                    <Index each={month().weeks}>
+                                      {(week) => (
+                                        <tr>
+                                          <Index each={week()}>
+                                            {(day) => (
+                                              <Calendar.Cell class="p-0">
+                                                <Calendar.CellTrigger
+                                                  type="button"
+                                                  day={day()}
+                                                  month={month().month}
+                                                  as={Button}
+                                                  size="sm"
+                                                  variant="ghost"
+                                                  class={cn(
+                                                    "inline-flex w-full bg-background rounded-none",
+                                                    dayjs(day()).isSame(customDateRange()[0], "day")
+                                                      ? "rounded-l-md"
+                                                      : dayjs(day()).isSame(customDateRange()[1], "day")
+                                                        ? "rounded-r-md"
+                                                        : dayjs(day()).isBetween(
+                                                              customDateRange()[0],
+                                                              customDateRange()[1],
+                                                            )
+                                                          ? "rounded-none"
+                                                          : "rounded-lg",
+                                                    {
+                                                      "bg-primary/10 text-primary/70": dayjs(day()).isBetween(
+                                                        customDateRange()[0],
+                                                        customDateRange()[1],
+                                                      ),
+                                                      "bg-primary text-white": dayjs().isSame(day(), "day"),
+                                                      "!bg-primary/50 !text-primary":
+                                                        dayjs(day()).isSame(customDateRange()[0], "day") ||
+                                                        dayjs(day()).isSame(customDateRange()[1], "day"),
+                                                    },
+                                                  )}
+                                                >
+                                                  {day().getDate()}
+                                                </Calendar.CellTrigger>
+                                              </Calendar.Cell>
+                                            )}
+                                          </Index>
+                                        </tr>
+                                      )}
+                                    </Index>
+                                  </tbody>
+                                </Calendar.Table>
+                              </div>
+                            )}
+                          </Index>
+                        </div>
+                      </div>
+                    );
+                  }}
+                </Calendar>
+              </PopoverContent>
+            </Popover>
             <Button
               size="icon"
               variant="ghost"
               class="size-10 rounded-lg rounded-l-none border border-l-0"
               onClick={() => {
-                setCustomDateRange((cdr) => {
-                  if (!cdr) return cdr;
-                  return [dayjs(cdr[0]).add(7, "day").toDate(), dayjs(cdr[1]).add(7, "day").toDate()];
-                });
+                setCustomDateRange((cdr) => [
+                  dayjs(cdr[0]).add(7, "day").toDate(),
+                  dayjs(cdr[1]).add(7, "day").toDate(),
+                ]);
               }}
             >
               <ArrowRight class="size-4" />
