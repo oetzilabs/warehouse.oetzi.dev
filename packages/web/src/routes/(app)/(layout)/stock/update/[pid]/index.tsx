@@ -34,7 +34,7 @@ export default function UpdateProductInventoryPage() {
   const isUpdatingInventoryForProduct = useSubmission(updateInventoryForProduct);
 
   return (
-    <div class="flex flex-row w-full grow p-2 gap-2">
+    <div class="flex flex-row w-full max-w-5xl grow p-4 gap-2">
       <div class="w-full flex flex-row h-full gap-4">
         <Show when={data()}>
           {(product) => (
@@ -83,8 +83,6 @@ export default function UpdateProductInventoryPage() {
           )}
         </Show>
       </div>
-
-      <div class="flex flex-col w-full md:w-[500px] p-4 md:overflow-auto border-b md:border-b-0 h-content"></div>
     </div>
   );
 }

@@ -29,6 +29,7 @@ import {
   Text,
 } from "./components";
 import { PDFGenerationError } from "./errors";
+import { OrderPDF, ProductPDF, SalePDF } from "./schemas";
 
 export type PaperSize = "A4" | "A5";
 export type PaperOrientation = "portrait" | "landscape";
@@ -155,7 +156,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     });
 
     const product = Effect.fn("@warehouse/pdf/product")(function* (
-      data: any,
+      data: ProductPDF,
       organization: OrganizationInfo,
       contents: ("conditions" | "labels" | "certifications" | "map" | "information" | "suppliers")[],
       config: {
@@ -302,7 +303,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     });
 
     const order = Effect.fn("@warehouse/pdf/order")(function* (
-      data: any,
+      data: OrderPDF,
       organization: OrganizationInfo,
       config: {
         page: {
@@ -570,7 +571,7 @@ export class PDFService extends Effect.Service<PDFService>()("@warehouse/pdf", {
     });
 
     const sale = Effect.fn("@warehouse/pdf/sale")(function* (
-      data: any,
+      data: SalePDF,
       organization: OrganizationInfo,
       config: {
         page: {

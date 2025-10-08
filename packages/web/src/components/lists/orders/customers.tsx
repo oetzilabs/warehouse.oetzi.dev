@@ -1,19 +1,23 @@
 import { OrderStatusBadge } from "@/components/badges/order-status";
-import { FilterPopover } from "@/components/filters/popover";
 import { Button } from "@/components/ui/button";
 import { TextField, TextFieldInput } from "@/components/ui/text-field";
-import { FilterConfig, useFilter } from "@/lib/filtering";
 import { debounce, leadingAndTrailing } from "@solid-primitives/scheduled";
 import { A } from "@solidjs/router";
 import { type CustomerOrderByOrganizationIdInfo } from "@warehouseoetzidev/core/src/entities/orders";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 import Fuse, { IFuseOptions } from "fuse.js";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
+import CalendarIcon from "lucide-solid/icons/calendar";
+import ArrowLeft from "lucide-solid/icons/chevron-left";
+import ArrowRight from "lucide-solid/icons/chevron-right";
 import Eye from "lucide-solid/icons/eye";
 import EyeOff from "lucide-solid/icons/eye-off";
-import { Accessor, createMemo, createSignal, For, Show } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { GenericList } from "../default";
+
+dayjs.extend(isBetween);
 
 type CustomersOrdersListProps = {
   data: Accessor<CustomerOrderByOrganizationIdInfo[]>;
@@ -95,25 +99,60 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
     </>
   );
 
+  const [customDateRange, setCustomDateRange] = createSignal<[Date, Date] | undefined>(undefined);
+
+  createEffect(() => {
+    const set = props.data();
+    if (set.length === 0) return;
+    if (!customDateRange()) {
+      if (set.length > 0) {
+        const min = set.reduce((min, o) => (dayjs(o.createdAt).isBefore(dayjs(min.createdAt)) ? o : min));
+        const max = set.reduce((max, o) => (dayjs(o.createdAt).isAfter(dayjs(max.createdAt)) ? o : max));
+        setCustomDateRange([dayjs(min.createdAt).toDate(), dayjs(max.createdAt).toDate()]);
+      }
+    }
+  });
+
+  const dateRange = createMemo(() => {
+    const set = props.data();
+    if (set.length === 0) return "N/A";
+    const cdr = customDateRange();
+    if (!cdr) {
+      return (
+        dayjs(set[0].createdAt).format("MMM DD, YYYY") +
+        " - " +
+        dayjs(set[set.length - 1].createdAt).format("MMM DD, YYYY")
+      );
+    }
+    return dayjs(cdr[0]).format("MMM DD, YYYY") + " - " + dayjs(cdr[1]).format("MMM DD, YYYY");
+  });
+
   const filteredData = createMemo(() => {
     const term = search();
     let set = props.data();
-    if (!term) {
-      return set;
+    if (term) {
+      const options: IFuseOptions<CustomerOrderByOrganizationIdInfo> = {
+        isCaseSensitive: false,
+        threshold: 0.4,
+        minMatchCharLength: 1,
+        keys: ["title", "barcode", "products.product.name", "products.product.sku"],
+      };
+      const fuse = new Fuse(set, options);
+      set = fuse.search(term).map((d) => d.item);
     }
-    const options: IFuseOptions<CustomerOrderByOrganizationIdInfo> = {
-      isCaseSensitive: false,
-      threshold: 0.4,
-      minMatchCharLength: 1,
-      keys: ["title", "barcode", "products.product.name", "products.product.sku"],
-    };
-    const fuse = new Fuse(set, options);
-    return fuse.search(term).map((d) => d.item);
+    const cdr = customDateRange();
+    if (cdr) {
+      set = set.filter((o) => {
+        const createdAt = dayjs(o.createdAt);
+        return createdAt.isBetween(cdr[0], cdr[1], null, "[]");
+      });
+    }
+    return set;
   });
 
   return (
     <div class="w-full flex flex-col gap-4 pb-4">
-      <div class="flex flex-row items-center justify-between gap-0 w-full bg-background">
+      <div class="flex flex-row items-center justify-between gap-4 w-full bg-background">
         <TextField
           value={search()}
           onChange={(e) => {
@@ -123,6 +162,45 @@ export const CustomersOrdersList = (props: CustomersOrdersListProps) => {
         >
           <TextFieldInput placeholder="Search orders" class="w-full max-w-full rounded-lg px-4" />
         </TextField>
+        <div class="w-max flex flex-row items-center gap-4">
+          <div class="w-max flex flex-row items-center gap-0">
+            <Button
+              size="icon"
+              variant="ghost"
+              class="size-10 rounded-lg rounded-r-none border border-r-0"
+              onClick={() => {
+                setCustomDateRange((cdr) => {
+                  if (!cdr) return cdr;
+                  return [dayjs(cdr[0]).subtract(7, "day").toDate(), dayjs(cdr[1]).subtract(7, "day").toDate()];
+                });
+              }}
+            >
+              <ArrowLeft class="size-4" />
+              <span class="sr-only">Previous week</span>
+            </Button>
+            <Button
+              size="lg"
+              variant="ghost"
+              class="size-10 rounded-lg rounded-l-none rounded-r-none border w-max px-4"
+            >
+              <span>{dateRange()}</span>
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              class="size-10 rounded-lg rounded-l-none border border-l-0"
+              onClick={() => {
+                setCustomDateRange((cdr) => {
+                  if (!cdr) return cdr;
+                  return [dayjs(cdr[0]).add(7, "day").toDate(), dayjs(cdr[1]).add(7, "day").toDate()];
+                });
+              }}
+            >
+              <ArrowRight class="size-4" />
+              <span class="sr-only">Next week</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div class="flex flex-col gap-4 w-full grow">

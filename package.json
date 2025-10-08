@@ -26,10 +26,10 @@
     "yazl": "3.3.1"
   },
   "peerDependencies": {
-    "@effect/language-service": "0.41.1",
+    "@effect/language-service": "0.43.1",
     "@effect/platform": "0.92.1",
-    "@effect/platform-bun": "0.81.0",
-    "@effect/platform-node": "0.98.2",
+    "@effect/platform-bun": "0.81.1",
+    "@effect/platform-node": "0.98.3",
     "@effect/opentelemetry": "0.58.0",
     "@effect/vitest": "0.26.0",
     "@effect/cli": "0.71.0",
@@ -45,7 +45,7 @@
     "@opentelemetry/sdk-trace-web": "2.0.1",
     "@opentelemetry/sdk-metrics": "2.0.1",
     "dayjs": "1.11.13",
-    "effect": "3.18.1",
+    "effect": "3.18.4",
     "valibot": "1.1.0"
   },
   "workspaces": [

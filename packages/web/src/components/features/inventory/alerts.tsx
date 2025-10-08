@@ -107,7 +107,7 @@ export const Alerts = () => {
                           as={A}
                           href={`/stock/update/${a.product.id}`}
                         >
-                          <span class="sr-only lg:not-sr-only">Update Inventory</span>
+                          <span class="sr-only xl:not-sr-only">Update Inventory</span>
                           <PackageSearch class="size-4" />
                         </Button>
                         <Reorder
