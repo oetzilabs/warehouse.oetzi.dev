@@ -42,7 +42,7 @@ export const run = async <
     _tag: string;
     message?: string;
   },
-  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
+  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>) | undefined,
 >(
   name: string,
   program: Effect.Effect<A, E, OrganizationId>,
@@ -108,6 +108,9 @@ export const run = async <
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
       const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
       console.error(`${name} errors:`, errors, cause);
+      if (!onFailure) {
+        return { status: 500, body: errors };
+      }
       if (typeof onFailure === "function") {
         return onFailure(es);
       }
@@ -123,7 +126,7 @@ export const runWithSession = async <
     _tag: string;
     message?: string;
   },
-  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
+  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>) | undefined,
 >(
   name: string,
   program: (session: {
@@ -200,6 +203,9 @@ export const runWithSession = async <
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
       const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
       // console.error(es);
+      if (!onFailure) {
+        return { status: 500, body: errors };
+      }
       if (typeof onFailure === "function") {
         return onFailure(es);
       }
@@ -215,7 +221,7 @@ export const runUnAuthenticated = async <
     _tag: string;
     message?: string;
   },
-  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>),
+  F extends A | ((error: FormattedError) => CustomResponse<A | FormattedError>) | undefined,
 >(
   functionName: string,
   effect: Effect.Effect<A, E, never>,
@@ -260,6 +266,9 @@ export const runUnAuthenticated = async <
       const errors = Chunk.toReadonlyArray(Cause.failures(cause));
       const es = errors.map((e) => ({ name: e._tag ?? "unknown", message: e.message ?? "unknown" }));
       // console.error(es);
+      if (!onFailure) {
+        return { status: 500, body: errors };
+      }
       if (typeof onFailure === "function") {
         return onFailure(es);
       }

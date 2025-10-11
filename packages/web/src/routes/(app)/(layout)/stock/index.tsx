@@ -1,20 +1,13 @@
 import { Alerts } from "@/components/features/inventory/alerts";
-import { StorageMap } from "@/components/features/inventory/map";
 import { Loader } from "@/components/features/loader";
 import { InventoryList } from "@/components/lists/inventory";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser, getSessionToken } from "@/lib/api/auth";
 import { getInventory, getInventoryAlerts } from "@/lib/api/inventory";
-import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { A, createAsync, revalidate, RouteDefinition } from "@solidjs/router";
-import ArrowLeft from "lucide-solid/icons/arrow-left";
 import ArrowUpRight from "lucide-solid/icons/arrow-up-right";
-import List from "lucide-solid/icons/list";
-import MapIcon from "lucide-solid/icons/map";
 import PackageOpen from "lucide-solid/icons/package-open";
-import Plus from "lucide-solid/icons/plus";
 import RotateCw from "lucide-solid/icons/rotate-cw";
-import { createSignal, Match, Show, Switch } from "solid-js";
 import { toast } from "solid-sonner";
 
 export const route = {

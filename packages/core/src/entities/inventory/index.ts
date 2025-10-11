@@ -389,6 +389,30 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       return productsWithAlerts;
     });
 
+    const alertsHistory = Effect.fn("@warehouse/inventory/alertsHistory")(function* () {
+      const orgId = yield* OrganizationId;
+      const { products } = yield* statistics();
+
+      const productsWithAlerts = products
+        .filter((p) => p.count < (p.product.reorderPoint ?? p.product.minimumStock))
+        .map((p) => ({
+          ...p,
+          product: {
+            ...p.product,
+            lastPurchase: p.product.suppliers
+              .flatMap((s) => s.supplier.purchases)
+              // First get purchases for this organization
+              .filter((po) => po.organization_id === orgId)
+              // Then filter completed ones
+              .filter((po) => po.status === "completed")
+              // Sort by date descending (most recent first)
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0], // Get the most recent one
+          },
+        }));
+
+      return productsWithAlerts;
+    });
+
     const storageStatistics = Effect.fn("@warehouse/inventory/storageStatistics")(function* (storageId: string) {
       const storage = yield* storageBox(storageId);
       const storageDeep = yield* storageList(storage.id);
@@ -468,17 +492,17 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
     ) {
       const parsedId = safeParse(prefixed_cuid2, productId);
       if (!parsedId.success) {
-        return yield* Effect.fail(new Error("Invalid product id"));
+        return yield* Effect.fail(new ProductInvalidId({ id: productId }));
       }
       const product = yield* db.query.TB_products.findFirst({
         where: (fields, operations) => operations.eq(fields.id, parsedId.output),
       });
       if (!product) {
-        return yield* Effect.fail(new Error("Product not found"));
+        return yield* Effect.fail(new ProductNotFound({ id: parsedId.output }));
       }
       const parsedStorageId = safeParse(prefixed_cuid2, data.storageId);
       if (!parsedStorageId.success) {
-        return yield* Effect.fail(new Error("Invalid storage id"));
+        return yield* Effect.fail(new StorageInvalidId({ id: data.storageId }));
       }
       const storage = yield* storageBox(parsedStorageId.output);
       if (!storage) {
@@ -527,6 +551,7 @@ export class InventoryService extends Effect.Service<InventoryService>()("@wareh
       storageStatistics,
       statistics,
       alerts,
+      alertsHistory,
       storageCapacity,
       productCountByStorageId,
       getStockForProducts,
