@@ -42,3 +42,14 @@ export class DeviceNotOffline extends Schema.TaggedError<DeviceNotOffline>()("De
 export class DeviceAlreadyOnline extends Schema.TaggedError<DeviceAlreadyOnline>()("DeviceAlreadyOnline", {
   id: Schema.String,
 }) {}
+
+export class DeviceFailedToConnect extends Schema.TaggedError<DeviceFailedToConnect>()("FailedToConnectToDevice", {
+  connection_string: Schema.String,
+}) {}
+
+export class DeviceHasNoConnectionString extends Schema.TaggedError<DeviceHasNoConnectionString>()(
+  "DeviceHasNoConnectionString",
+  {
+    id: Schema.String,
+  },
+) {}

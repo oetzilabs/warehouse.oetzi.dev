@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Effect, Option, Schema } from "effect";
-import { array, object, parse, safeParse, type InferInput } from "valibot";
+import { safeParse, type InferInput } from "valibot";
 import {
   device_status_enum_values,
   DeviceCreateSchema,
@@ -9,10 +9,17 @@ import {
 } from "../../drizzle/sql/schema";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
-import { OrganizationInvalidId, OrganizationNotFound } from "../organizations/errors";
+import { OrganizationNotFound } from "../organizations/errors";
 import { OrganizationId } from "../organizations/id";
-import { WarehouseInvalidId } from "../warehouses/errors";
-import { DeviceInvalidId, DeviceNotCreated, DeviceNotDeleted, DeviceNotFound, DeviceNotUpdated } from "./errors";
+import { device } from "./device";
+import {
+  DeviceHasNoConnectionString,
+  DeviceInvalidId,
+  DeviceNotCreated,
+  DeviceNotDeleted,
+  DeviceNotFound,
+  DeviceNotUpdated,
+} from "./errors";
 
 export const DeviceFindBySchema = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -51,6 +58,11 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         where: (devices, operations) => operations.eq(devices.id, parsedId.output),
         with: {
           type: true,
+          actions: {
+            with: {
+              action: true,
+            },
+          },
         },
       });
 
@@ -199,6 +211,68 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return lastUpdatedDevice;
     });
 
+    const getActions = Effect.fn("@warehouse/devices/getDeviceActions")(function* (id: string) {
+      const parsedId = safeParse(prefixed_cuid2, id);
+      if (!parsedId.success) {
+        return yield* Effect.fail(new DeviceInvalidId({ id }));
+      }
+      const device = yield* db.query.TB_devices.findFirst({
+        where: (fields, operations) => operations.eq(fields.id, parsedId.output),
+        with: {
+          actions: {
+            with: {
+              action: true,
+            },
+          },
+        },
+      });
+
+      if (!device) {
+        return yield* Effect.fail(new DeviceNotFound({ id }));
+      }
+
+      return device.actions.map((a) => a.action);
+    });
+
+    const sendAction = Effect.fn("@warehouse/devices/sendDeviceAction")(function* (deviceId: string, actionId: string) {
+      // const deviceAction = yield* db.insert(TB_device_actions).values({ deviceId: device.id, data }).returning();
+      // return deviceAction;
+      return true;
+    });
+
+    const getHistory = Effect.fn("@warehouse/devices/getDeviceHistory")(function* (deviceId: string) {
+      // const deviceHistory = yield* db.query.TB_device_history.findMany({
+      //   where: (fields, operations) => operations.eq(fields.deviceId, device.id),
+      // });
+      // return deviceHistory;
+      return [] as any[];
+    });
+
+    const getSettings = Effect.fn("@warehouse/devices/getDeviceSettings")(function* (deviceId: string) {
+      // const deviceSettings = yield* db.query.TB_device_settings.findMany({
+      //   where: (fields, operations) => operations.eq(fields.deviceId, device.id),
+      // });
+      // return deviceSettings;
+      return [] as any[];
+    });
+
+    const getLogs = Effect.fn("@warehouse/devices/getDeviceLogs")(function* (deviceId: string) {
+      // lets say we are connected to the device and just want to get the logs.
+      const d = yield* findById(deviceId);
+      if (!d) {
+        return yield* Effect.fail(new DeviceNotFound({ id: deviceId }));
+      }
+      const connection_string = d.connection_string;
+      if (!connection_string) {
+        return yield* Effect.fail(new DeviceHasNoConnectionString({ id: deviceId }));
+      }
+
+      const dev = yield* device(connection_string);
+
+      const result = yield* dev.sendAction("log", { filter: "warehouse" });
+      return result;
+    });
+
     return {
       create,
       findById,
@@ -212,6 +286,11 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       getDeviceTypes,
       lastCreated,
       lastUpdated,
+      getHistory,
+      getActions,
+      sendAction,
+      getSettings,
+      getLogs,
     } as const;
   }),
   dependencies: [DatabaseLive],
@@ -222,3 +301,8 @@ export const DeviceLive = DeviceService.Default;
 // Type exports
 export type DeviceInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["findById"]>>>>;
 export type DeviceUpdateInfo = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["update"]>>>>;
+export type DeviceTypes = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["getDeviceTypes"]>>>>;
+export type DeviceHistory = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["getHistory"]>>>>;
+export type DeviceActions = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["getActions"]>>>>;
+export type DeviceSettings = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["getSettings"]>>>>;
+export type DeviceLogs = NonNullable<Awaited<Effect.Effect.Success<ReturnType<DeviceService["getLogs"]>>>>;

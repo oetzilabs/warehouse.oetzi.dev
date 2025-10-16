@@ -7,6 +7,7 @@ import { commonTable } from "../entity";
 import { TB_organizations } from "../organizations/organizations";
 import { schema } from "../utils";
 import { TB_warehouse_facilities } from "../warehouses/warehouse_facility";
+import { TB_device_device_actions } from "./device_device_action";
 import { TB_device_types } from "./device_type";
 
 export const device_status = schema.enum("device_status", [
@@ -28,6 +29,7 @@ export const TB_devices = commonTable(
     name: text("name").notNull(),
     description: text("description"),
     status: device_status("status").default("unknown").notNull(),
+    connection_string: text("connection_string"),
     type_id: varchar("type_id")
       .references(() => TB_device_types.id, { onDelete: "restrict" })
       .notNull(),
@@ -48,6 +50,7 @@ export const device_relations = relations(TB_devices, ({ one, many }) => ({
     fields: [TB_devices.organization_id],
     references: [TB_organizations.id],
   }),
+  actions: many(TB_device_device_actions),
 }));
 
 export type DeviceSelect = typeof TB_devices.$inferSelect;

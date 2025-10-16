@@ -7,6 +7,8 @@ export * from "./schemas/messages/messages";
 
 export * from "./schemas/devices/devices";
 export * from "./schemas/devices/device_type";
+export * from "./schemas/devices/device_actions";
+export * from "./schemas/devices/device_device_action";
 
 export * from "./schemas/sessions";
 export * from "./schemas/address";
