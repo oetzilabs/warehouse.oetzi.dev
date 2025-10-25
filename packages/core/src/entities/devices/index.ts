@@ -29,7 +29,7 @@ export const DeviceFindBySchema = Schema.Struct({
 });
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/devices", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/devices/create")(function* (

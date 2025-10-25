@@ -5,7 +5,7 @@ import { object, omit, partial } from "valibot";
 import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { commonTable } from "../entity";
 import { schema } from "../utils";
-import { TB_devices } from "./devices";
+import { TB_device_device_actions } from "./device_device_action";
 
 export const TB_device_actions = commonTable(
   "device_actions",
@@ -18,11 +18,21 @@ export const TB_device_actions = commonTable(
 );
 
 export const device_action_relations = relations(TB_device_actions, ({ many }) => ({
-  devices: many(TB_devices),
+  devices: many(TB_device_device_actions),
 }));
 
 export type DeviceActionSelect = typeof TB_device_actions.$inferSelect;
-export type DeviceActionInsert = typeof TB_device_actions.$inferInsert;
+export type DeviceActionInsert = Omit<
+  typeof TB_device_actions.$inferInsert,
+  "id" | "createdAt" | "updatedAt" | "deletedAt"
+>;
+export type DeviceActionUpdate = Omit<
+  typeof TB_device_actions.$inferInsert,
+  "createdAt" | "updatedAt" | "deletedAt"
+> & {
+  id: string;
+};
+
 export const DeviceActionCreateSchema = omit(createInsertSchema(TB_device_actions), [
   "createdAt",
   "updatedAt",

@@ -6,7 +6,7 @@
     "generate": "drizzle-zero generate --drizzle-kit-config ../core/drizzle.config.ts --format --schema ../core/src/drizzle/sql/schema.ts --output src/schema.gen.ts"
   },
   "devDependencies": {
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "@warehouseoetzidev/core": "workspace:*",

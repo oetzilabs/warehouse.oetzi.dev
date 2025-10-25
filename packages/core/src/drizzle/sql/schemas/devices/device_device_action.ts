@@ -1,8 +1,6 @@
 import { relations } from "drizzle-orm";
 import { primaryKey, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-valibot";
-import { object, omit, partial } from "valibot";
-import { prefixed_cuid2 } from "../../../../utils/custom-cuid2-valibot";
 import { schema } from "../utils";
 import { TB_device_actions } from "./device_actions";
 import { TB_devices } from "./devices";

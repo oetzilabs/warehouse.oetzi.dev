@@ -6,10 +6,10 @@ import { PrinterConfig, PrinterConfigLive } from "./config";
 import { MQTTLive, MQTTService } from "./services/mqtt-3";
 import { PrinterLive, PrinterService } from "./services/printer";
 
-export const program = Effect.gen(function* (_) {
+export const program = Effect.gen(function* () {
   yield* Console.log("Preparing...");
-  const C = yield* _(PrinterConfig);
-  const RT = yield* _(RealtimeService);
+  const C = yield* PrinterConfig;
+  const RT = yield* RealtimeService;
   const config = yield* C.getConfig;
   const org_id = Redacted.value(config.OrgId);
   const brokerUrl = Redacted.value(config.BrokerUrl);
@@ -19,19 +19,19 @@ export const program = Effect.gen(function* (_) {
   const channel = x.subscribe[0];
   // const pingChannel = x.publish;
 
-  const mqtt = yield* _(MQTTService);
-  const printer = yield* _(PrinterService);
+  const mqtt = yield* MQTTService;
+  const printer = yield* PrinterService;
   yield* Console.log("Starting...", { brokerUrl, org_id, prefix, channel });
 
   // yield* Effect.sleep(1000);
 
   const client = yield* Effect.acquireRelease(mqtt.connect(brokerUrl, org_id, prefix, clientId), (client, exit) =>
-    mqtt.disconnect(client)
+    mqtt.disconnect(client),
   );
 
   const subscription = yield* mqtt.subscribe(client, channel);
 
-  const messageHandler = Effect.gen(function* (_) {
+  const messageHandler = Effect.gen(function* () {
     while (true) {
       const packet = yield* subscription.take();
       const message = packet.payload;
@@ -47,7 +47,7 @@ export const program = Effect.gen(function* (_) {
       if (!json.messages) return;
 
       yield* Effect.scoped(
-        Effect.gen(function* (_) {
+        Effect.gen(function* () {
           const device = yield* printer.device();
           yield* printer.print(device, {
             text: [
@@ -91,7 +91,7 @@ export const program = Effect.gen(function* (_) {
                 align: "ct",
                 style: "normal",
               },
-              ...json.messages.map((message:string) => ({
+              ...json.messages.map((message: string) => ({
                 content: message,
                 align: "lt",
                 style: "normal",
@@ -121,17 +121,16 @@ export const program = Effect.gen(function* (_) {
                 align: "ct",
                 style: "normal",
               },
-
             ],
           });
-        })
+        }),
       );
     }
   });
 
   yield* Effect.fork(messageHandler);
 
-  const ping = Effect.gen(function* (_) {
+  const ping = Effect.gen(function* () {
     yield* Console.log("Pinging...");
     // yield* mqtt.publish(client, channel, "ignore:ping");
     yield* subscription.publish({
@@ -147,16 +146,11 @@ export const program = Effect.gen(function* (_) {
   });
 
   yield* Effect.addFinalizer(() =>
-    Effect.all([Console.log("Cleaning up..."), Effect.sync(() => subscription.unsub())])
+    Effect.all([Console.log("Cleaning up..."), Effect.sync(() => subscription.unsub())]),
   );
 
   const schedule = Schedule.spaced("1 seconds");
   yield* Effect.schedule(ping, schedule);
 
   return yield* Effect.never;
-}).pipe(
-  Effect.provide(MQTTLive),
-  Effect.provide(PrinterLive),
-  Effect.provide(PrinterConfigLive),
-  Effect.provide(RealtimeLive)
-);
+}).pipe(Effect.provide([MQTTLive, PrinterLive, PrinterConfigLive, RealtimeLive]));

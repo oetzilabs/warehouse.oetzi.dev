@@ -38,7 +38,7 @@ export class WarehouseConfig extends Context.Tag("@warehouse/config")<
 export const WarehouseConfigLive = Layer.succeed(
   WarehouseConfig,
   WarehouseConfig.of({
-    getConfig: Effect.gen(function* (_) {
+    getConfig: Effect.gen(function* () {
       const env = process.env;
       const statsWithSST = Object.entries(env).filter(([key]) => key.startsWith("SST_")).length > 0;
       if (!statsWithSST) {

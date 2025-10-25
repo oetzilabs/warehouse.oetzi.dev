@@ -1,4 +1,4 @@
-import cuid2 from "@paralleldrive/cuid2";
+import { createId } from "@paralleldrive/cuid2";
 import dayjs from "dayjs";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { Console, Effect, Schema } from "effect";
@@ -544,7 +544,7 @@ export class CustomerOrderService extends Effect.Service<CustomerOrderService>()
         } satisfies Omit<SaleItemCreate, "saleId">;
       });
 
-      const barcode = `sale-${cuid2.createId()}`;
+      const barcode = `sale-${createId()}`;
 
       // Insert sale
       const [sale] = yield* db

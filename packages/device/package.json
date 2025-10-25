@@ -1,0 +1,22 @@
+{
+  "name": "@warehouseoetzidev/device",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "24.0.1",
+    "@types/mqtt": "^2.5.0",
+    "@types/node": "24.9.1",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4",
+    "tsx": "4.20.3"
+  },
+  "dependencies": {
+    "@seriousme/opifex": "1.11.2",
+    "@warehouseoetzidev/core": "workspace:*",
+    "mqtt": "^5.13.1",
+    "mqtts": "^1.5.0"
+  }
+}

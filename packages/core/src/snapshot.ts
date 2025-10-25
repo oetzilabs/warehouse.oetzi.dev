@@ -1,13 +1,12 @@
-import { BunContext, BunFileSystem } from "@effect/platform-bun";
-import { Cause, Chunk, ConfigError, Effect, Exit } from "effect";
-import { flatten } from "valibot";
+import { BunContext } from "@effect/platform-bun";
+import { Cause, Chunk, Effect, Exit } from "effect";
 import { SnapshotLive, SnapshotService } from "./entities/snapshot";
 
 const backupProgram = Effect.scoped(
-  Effect.gen(function* (_) {
-    const snapshotService = yield* _(SnapshotService);
-    yield* snapshotService.backup("json");
-  }).pipe(Effect.provide(SnapshotLive), Effect.provide(BunFileSystem.layer), Effect.provide(BunContext.layer)),
+  Effect.gen(function* () {
+    const snapshotService = yield* SnapshotService;
+    return yield* snapshotService.backup("json");
+  }).pipe(Effect.provide([SnapshotLive, BunContext.layer])),
 ).pipe(
   Effect.catchTags({
     ConfigError: (error) => Effect.fail(new Error(`ConfigError`, { cause: error })),
@@ -17,11 +16,11 @@ const backupProgram = Effect.scoped(
 );
 
 const recoverProgram = Effect.scoped(
-  Effect.gen(function* (_) {
-    const snapshotService = yield* _(SnapshotService);
+  Effect.gen(function* () {
+    const snapshotService = yield* SnapshotService;
     const previous = yield* snapshotService.getPreviousSnapshot();
-    yield* snapshotService.recover(previous);
-  }).pipe(Effect.provide(SnapshotLive), Effect.provide(BunFileSystem.layer), Effect.provide(BunContext.layer)),
+    return yield* snapshotService.recover(previous);
+  }).pipe(Effect.provide([SnapshotLive, BunContext.layer])),
 ).pipe(
   Effect.catchTags({
     ConfigError: (error) => Effect.fail(new Error(`ConfigError`, { cause: error })),

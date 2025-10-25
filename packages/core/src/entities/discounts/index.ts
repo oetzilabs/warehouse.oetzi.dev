@@ -1,10 +1,13 @@
+import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { safeParse, type InferInput } from "valibot";
 import { DiscountV1CreateSchema, DiscountV1UpdateSchema, TB_discounts_v1 } from "../../drizzle/sql/schemas/discounts";
 import { DatabaseLive, DatabaseService } from "../../drizzle/sql/service";
 import { prefixed_cuid2 } from "../../utils/custom-cuid2-valibot";
+import { OrderInvalidId } from "../orders/errors";
 import { OrganizationInvalidId } from "../organizations/errors";
+import { ProductInvalidId } from "../products/errors";
 import {
   DiscountInvalidId,
   DiscountNotCreated,
@@ -15,7 +18,7 @@ import {
 } from "./errors";
 
 export class DiscountService extends Effect.Service<DiscountService>()("@warehouse/discounts", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const db = yield* DatabaseService;
 
     const create = Effect.fn("@warehouse/discounts/create")(function* (
@@ -124,10 +127,79 @@ export class DiscountService extends Effect.Service<DiscountService>()("@warehou
       return deleted;
     });
 
+    const findByOrderId = Effect.fn("@warehouse/discounts/findByOrderId")(function* (orderId: string) {
+      const parsedOrderId = safeParse(prefixed_cuid2, orderId);
+      if (!parsedOrderId.success) {
+        return yield* Effect.fail(new OrderInvalidId({ id: orderId }));
+      }
+
+      // check the sales discounts
+      const salesDiscounts = yield* db.query.TB_sales_discounts.findMany({
+        where: (fields, operations) => operations.eq(fields.saleId, parsedOrderId.output),
+        with: {
+          discount: true,
+        },
+      });
+      return salesDiscounts;
+    });
+
+    const findByOrderIdAndProductId = Effect.fn("@warehouse/discounts/findByOrderIdAndProductId")(function* (
+      orderId: string,
+      productId: string,
+    ) {
+      const parsedOrderId = safeParse(prefixed_cuid2, orderId);
+      if (!parsedOrderId.success) {
+        return yield* Effect.fail(new OrderInvalidId({ id: orderId }));
+      }
+
+      const parsedProductId = safeParse(prefixed_cuid2, productId);
+      if (!parsedProductId.success) {
+        return yield* Effect.fail(new ProductInvalidId({ id: productId }));
+      }
+
+      // check the sales discounts
+      const salesDiscounts = yield* db.query.TB_sales_discounts.findMany({
+        where: (fields, operations) =>
+          operations.and(
+            operations.eq(fields.saleId, parsedOrderId.output),
+            operations.eq(fields.productId, parsedProductId.output),
+          ),
+        with: {
+          discount: true,
+        },
+      });
+      return salesDiscounts;
+    });
+
+    const findGlobalDiscounts = Effect.fn("@warehouse/discounts/findGlobalDiscounts")(function* () {
+      return [
+        {
+          id: "discv1_" + createId(),
+          code: "GLOBAL",
+          active: true,
+          name: "Global Test Discount",
+          description: "This is a global test discount",
+          canBeCombined: false,
+          target: "product",
+          type: "percentage",
+          value: 10,
+          minimumQuantity: 1,
+          startDate: new Date(),
+          endDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: null,
+          deletedAt: null,
+        },
+      ];
+    });
+
     return {
       create,
       findById,
       findByOrganizationId,
+      findGlobalDiscounts,
+      findByOrderIdAndProductId,
+      findByOrderId,
       update,
       remove,
       safeRemove,

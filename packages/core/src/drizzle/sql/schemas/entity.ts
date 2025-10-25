@@ -1,12 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
-import { BuildExtraConfigColumns, Table } from "drizzle-orm";
-import {
-  PgColumnBuilderBase,
-  PgTableExtraConfig,
-  PgTableExtraConfigValue,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { BuildExtraConfigColumns } from "drizzle-orm";
+import { PgColumnBuilderBase, PgTableExtraConfigValue, timestamp, varchar } from "drizzle-orm/pg-core";
 import { schema } from "./utils";
 
 export * as Entity from "./entity";

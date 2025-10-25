@@ -1,4 +1,6 @@
 import { ConvertToSaleDialog } from "@/components/dialogs/convert-to-sale-dialog";
+import { ApplyDiscountModal } from "@/components/features/orders/apply-discount-modal";
+import { ApplyDiscountModalOnProduct } from "@/components/features/orders/apply-discount-modal-on-product";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,7 +42,11 @@ export const route = {
   preload: async (props) => {
     const user = await getAuthenticatedUser();
     const sessionToken = await getSessionToken();
-    const order = await getOrderById(props.params.oid);
+    const oid = props.params.oid;
+    if (!oid) {
+      return { user, sessionToken, order: undefined };
+    }
+    const order = await getOrderById(oid);
     return { user, sessionToken, order };
   },
 } as RouteDefinition;
@@ -234,6 +240,9 @@ export default function CustomerOrderPage() {
                                       <span>×</span>
                                     </div>
                                     <span class="font-medium">{product.product.name}</span>
+                                    <Button size="sm" variant="outline" as={A} href={`/products/${product.product.id}`}>
+                                      View Product
+                                    </Button>
                                   </div>
                                   <div class="flex flex-row items-center gap-1">
                                     <span class="text-sm text-muted-foreground">
@@ -299,37 +308,54 @@ export default function CustomerOrderPage() {
                                     <Show
                                       when={availableDiscounts().length > 0}
                                       fallback={
-                                        <div class="text-center py-4 text-sm text-muted-foreground bg-muted-foreground/5 rounded-lg select-none">
-                                          No discounts for this product
+                                        <div class="text-center py-10 bg-muted-foreground/5 rounded-lg flex flex-col items-center justify-center gap-3">
+                                          <span class="text-sm text-muted-foreground select-none">
+                                            No discounts for this product
+                                          </span>
+                                          <ApplyDiscountModal
+                                            orderId={orderInfo().id}
+                                            customerId={orderInfo().customer.id}
+                                          />
                                         </div>
                                       }
                                     >
                                       <div class="flex flex-col gap-4 ">
-                                        <div class="grid grid-cols-2 gap-2">
-                                          <For
-                                            each={orderInfo()
-                                              .sale?.discounts.filter((d) => d.productId === product.product.id)
-                                              .map((d) => d.discount)}
-                                          >
-                                            {(discount) => (
-                                              <div class="flex flex-row items-center gap-2">
-                                                <span class="text-sm text-muted-foreground">
-                                                  {discount.name} ({discount.code})
-                                                </span>
-                                                <span class="text-sm font-medium">
-                                                  -{(discount.value ?? 0).toFixed(2)}{" "}
-                                                  {discount.type === "percentage" ? "%" : ""}
-                                                </span>
-                                              </div>
-                                            )}
-                                          </For>
-
+                                        <For
+                                          each={orderInfo()
+                                            .sale?.discounts.filter((d) => d.productId === product.product.id)
+                                            .map((d) => d.discount)}
+                                          fallback={
+                                            <div class="flex flex-col items-center py-10 justify-center bg-muted-foreground/5 rounded-lg gap-3">
+                                              <span class="text-center text-sm text-muted-foreground ">
+                                                No discounts available.
+                                              </span>
+                                              <ApplyDiscountModalOnProduct
+                                                orderId={orderInfo().id}
+                                                customerId={orderInfo().customer.id}
+                                                productId={product.product.id}
+                                              />
+                                            </div>
+                                          }
+                                        >
+                                          {(discount) => (
+                                            <div class="flex flex-row items-center gap-2">
+                                              <span class="text-sm text-muted-foreground">
+                                                {discount.name} ({discount.code})
+                                              </span>
+                                              <span class="text-sm font-medium">
+                                                -{(discount.value ?? 0).toFixed(2)}{" "}
+                                                {discount.type === "percentage" ? "%" : ""}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </For>
+                                        <Show when={(orderInfo().sale?.discounts.length ?? 0) > 0}>
                                           <Dialog open={dialogOpen()} onOpenChange={setDialogOpen}>
                                             <DialogTrigger
                                               as={Button}
                                               size="lg"
                                               variant="outline"
-                                              class="size-40 bg-background"
+                                              class="size-40 bg-background w-full"
                                             >
                                               <Tag class="size-4" />
                                               Apply Coupon
@@ -384,7 +410,7 @@ export default function CustomerOrderPage() {
                                               </DialogFooter>
                                             </DialogContent>
                                           </Dialog>
-                                        </div>
+                                        </Show>
                                       </div>
                                     </Show>
                                   )}

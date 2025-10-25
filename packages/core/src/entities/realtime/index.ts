@@ -35,7 +35,7 @@ export type RealtimeEvents =
 export type RealtimeTopicPattern = `${string}/${string}/realtime/${RealtimeEvents["type"]}/${RealtimeEvents["action"]}`;
 
 export class RealtimeService extends Effect.Service<RealtimeService>()("@warehouse/realtime", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const createTopics = Effect.fn("@warehouse/realtime/createTopics")(function* (prefix: string, orgId: string) {
       return {
         subscribe: [`${prefix}${orgId}/realtime/#`],

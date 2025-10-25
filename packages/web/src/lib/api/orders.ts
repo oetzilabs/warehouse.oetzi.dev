@@ -52,7 +52,10 @@ export const getOrderById = query(async (oid: string) => {
   "use server";
   return run(
     "@query/order-by-id",
-    Effect.gen(function* (_) {
+    Effect.gen(function* () {
+      if (!oid) {
+        return json(undefined);
+      }
       const orderService = yield* CustomerOrderService;
       return yield* orderService.findById(oid);
     }).pipe(Effect.provide(CustomerOrderLive)),

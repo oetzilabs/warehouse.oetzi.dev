@@ -21,7 +21,7 @@ export default function IndexPage() {
             <div class="flex flex-col items-center justify-center w-full container px-4 pt-32 sm:pt-48 lg:pt-56 gap-10 lg:gap-40">
               <div class="text-center flex flex-col items-center justify-center gap-6">
                 <div class="hidden sm:flex sm:justify-center">
-                  <div class="rounded-full px-3 py-1 text-sm/6 ring-1 ring-neutral-900/10 backdrop-blur-sm bg-white[0.01] dark:bg-neutral-950[0.01] dark:ring-neutral-200/10">
+                  <div class="rounded-full px-3 py-1 text-sm/6 ring-1 ring-neutral-900/10 backdrop-blur-sm bg-white[0.01] dark:bg-neutral-950[0.01] dark:ring-neutral-200/10 select-none">
                     This application is currently in development.
                   </div>
                 </div>
@@ -43,7 +43,7 @@ export default function IndexPage() {
                   </Button>
                 </div>
               </div>
-              <div class="w-full border-t border-x rounded-t-lg aspect-[16/4.5] bg-neutral-50 dark:bg-white/[0.005] drop-shadow-xl z-0 overflow-clip touch-none select-none"></div>
+              <div class="w-full border-t border-x rounded-t-lg aspect-[16/6] bg-neutral-50 dark:bg-white/[0.005] drop-shadow-xl z-0 overflow-clip touch-none select-none"></div>
             </div>
           </div>
           <div class="relative isolate w-full flex flex-col items-center justify-center py-20 z-10 bg-background">
@@ -53,7 +53,7 @@ export default function IndexPage() {
                   Trusted and used by these companies
                 </h2>
                 <div class="flex flex-row gap-4 items-center">
-                  <span class="text-sm text-muted-foreground">Missing your company?</span>
+                  <span class="text-sm text-muted-foreground select-none">Missing your company?</span>
                   <Button as={A} href="/request-hero" size="sm" variant="outline" class="bg-background">
                     Chat with us
                     <ArrowUpRight class="size-4" />
@@ -76,7 +76,7 @@ export default function IndexPage() {
                   Features? We got you covered!
                 </h2>
                 <div class="flex flex-row gap-4 items-center">
-                  <span class="text-sm text-muted-foreground">Want to add a feature?</span>
+                  <span class="text-sm text-muted-foreground select-none">Want to add a feature?</span>
                   <Button as={A} href="/blog/roadmap" size="sm" variant="outline" class="bg-background">
                     Check out our roadmap
                     <ArrowUpRight class="size-4" />

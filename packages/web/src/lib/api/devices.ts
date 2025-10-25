@@ -92,15 +92,17 @@ export const getDeviceById = query(async (id: string) => {
       if (!device) {
         return yield* Effect.fail(new DeviceNotFound({ id }));
       }
-      return Object.assign(device, {
-        tabs: {
-          history: true,
-          actions: device.actions.length > 0,
-          logs: false,
-          terminal: false,
-          settings: false,
-        },
-      });
+      return json(
+        Object.assign(device, {
+          tabs: {
+            history: true,
+            actions: device.actions.length > 0,
+            logs: false,
+            terminal: false,
+            settings: false,
+          },
+        }),
+      );
     }).pipe(Effect.provide(DeviceLive)),
     undefined,
   );

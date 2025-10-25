@@ -4,9 +4,9 @@ import { Effect } from "effect";
 import { PrinterNotConnected, PrinterNotFound } from "./errors";
 
 export class PrinterService extends Effect.Service<PrinterService>()("@warehouse/printers", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const device = (options = { encoding: "GB18030" }) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function* () {
         const findDevice = Effect.try({
           try: () => {
             const usbDevice = new USB();
@@ -53,24 +53,24 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         tableData,
         customTableData,
       }: {
-        text?: {
-          content: string;
-          font?: FontFamily;
-          align?: Alignment;
-          style?: StyleString;
+        readonly text?: readonly {
+          readonly content: string;
+          readonly font?: FontFamily;
+          readonly align?: Alignment;
+          readonly style?: StyleString;
           size?: [number, number];
         }[];
         imagePath?: string;
         qrContent?: string;
         barcodeData?: { code: number; type: string; width: number; height: number };
-        tableData?: string[];
+        tableData?: (string | number)[];
         customTableData?: {
           columns: CustomTableItem[];
           options?: { encoding: string; size: [number, number] };
         };
       },
     ) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function* () {
         // Basic text printing
         if (text) {
           for (const t of text) {

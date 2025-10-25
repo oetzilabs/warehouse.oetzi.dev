@@ -61,7 +61,7 @@ export function Footer() {
 
   return (
     <footer class="w-full z-0">
-      <div class="w-full p-4 bg-background">
+      <div class="w-full p-4 bg-background pb-20 pt-40">
         <div class="container p-4">
           <div class="flex flex-col xl:flex-row gap-6 w-full">
             <div class="flex flex-col gap-4 items-center justify-center md:items-start md:justify-start col-span-full sm:col-span-1 w-full">

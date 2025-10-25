@@ -5,12 +5,12 @@ import { IncomingListenMessage, MqttClient, TcpTransport, WebsocketTransport } f
 import { MQTTConnectionError, MQTTPublishError, MQTTSubscribeError } from "./errors";
 
 export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const isSST = Option.isSome(yield* Config.option(Config.string("SST_RESOURCE_App")));
     const te = new TextEncoder();
 
     const connectWithoutRetry = (brokerUrl: string, orgId: string, prefix: string, clientId: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function* () {
         const url = new URL(brokerUrl);
         const client = new MqttClient({
           transport: isSST
@@ -75,7 +75,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
       });
 
     const connect = (brokerUrl: string, orgId: string, prefix: string, clientId: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function* () {
         const retryPolicy = Schedule.intersect(Schedule.exponential("1 seconds"), Schedule.recurs(5));
         const client = yield* Effect.retry(connectWithoutRetry(brokerUrl, orgId, prefix, clientId), retryPolicy);
         return yield* Effect.succeed(client);
@@ -88,7 +88,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
       });
 
     const subscribe = (client: MqttClient, topic: string) =>
-      Effect.gen(function* (_) {
+      Effect.gen(function* () {
         // const t = isSST ? topic : topic.replaceAll("#", "*");
         yield* Console.log("Subscribing to topic", topic);
 
