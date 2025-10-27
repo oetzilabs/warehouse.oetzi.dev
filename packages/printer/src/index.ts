@@ -1,12 +1,17 @@
+import { FileSystem, Path } from "@effect/platform";
+import { BunContext } from "@effect/platform-bun";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { Adapter } from "@node-escpos/adapter";
 import { Alignment, BarcodeType, FontFamily, Image, Printer, PrinterOptions, StyleString } from "@node-escpos/core";
 import Network from "@node-escpos/network-adapter";
 import Serial from "@node-escpos/serialport-adapter";
 import Server from "@node-escpos/server";
 import USB from "@node-escpos/usb-adapter";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import mdns from "multicast-dns";
 import {
+  ImageNotFound,
+  ImageNotLoaded,
   PrinterBluetoothBindingError,
   PrinterBluetoothCountError,
   PrinterFailedToGetBluetoothAdapter,
@@ -29,6 +34,8 @@ type NetworkPrinter = {
 
 export class PrinterService extends Effect.Service<PrinterService>()("@warehouse/printers", {
   effect: Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
     const bluetooth_discover = Effect.fn(function* () {
       const simpleble = yield* Effect.tryPromise({
         try: () => import("simpleble"),
@@ -383,7 +390,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         if (barcodeData) {
           printer = yield* Effect.try({
             try: () =>
-              printer.barcode(barcodeData.code, barcodeData.type as BarcodeType, {
+              printer.barcode(barcodeData.code, barcodeData.type, {
                 width: barcodeData.width,
                 height: barcodeData.height,
               }),
@@ -449,7 +456,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         if (imagePath) {
           const image = yield* Effect.promise(() => Image.load(imagePath));
           printer = yield* Effect.tryPromise({
-            try: () => printer.image(image, "s8"),
+            try: () => printer.image(image, "s24"),
             catch: (error) =>
               new PrintOperationError({
                 message: "Failed to print image",
@@ -520,6 +527,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       // server,
     } as const;
   }),
+  dependencies: [BunContext.layer],
 }) {}
 
 export const PrinterLive = PrinterService.Default;

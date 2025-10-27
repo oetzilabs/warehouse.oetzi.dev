@@ -56,3 +56,15 @@ export class PrinterFailedToGetUSBDevices extends Schema.TaggedError<PrinterFail
     cause: Schema.optional(Schema.Unknown),
   },
 ) {}
+
+export class ImageNotFound extends Schema.TaggedError<ImageNotFound>()("ImageNotFound", {
+  message: Schema.optional(Schema.String),
+  path: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.Unknown),
+}) {}
+
+export class ImageNotLoaded extends Schema.TaggedError<ImageNotLoaded>()("ImageNotLoaded", {
+  message: Schema.optional(Schema.String),
+  path: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.Unknown),
+}) {}

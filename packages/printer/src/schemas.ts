@@ -37,8 +37,20 @@ const TextItem = Schema.Struct({
 });
 
 const BarcodeData = Schema.Struct({
-  code: Schema.Number,
-  type: Schema.String,
+  code: Schema.Union(Schema.Number, Schema.String),
+  type: Schema.Literal(
+    "UPC_A",
+    "UPC-A",
+    "UPC-E",
+    "UPC_E",
+    "EAN13",
+    "EAN8",
+    "CODE39",
+    "ITF",
+    "NW7",
+    "CODE93",
+    "CODE128",
+  ),
   width: Schema.Number,
   height: Schema.Number,
 });
