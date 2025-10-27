@@ -2,6 +2,9 @@
   "name": "@warehouseoetzidev/printer",
   "version": "0.0.0",
   "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "scripts": {
     "test": "vitest",
     "test:paths": "vitest src/entities/paths.test.ts",
@@ -15,12 +18,13 @@
     "@types/mqtt": "^2.5.0",
     "@types/node": "24.9.1",
     "@types/qrcode": "^1.5.5",
+    "@types/multicast-dns": "7.2.4",
     "@types/uuid": "10.0.0",
     "cross-env": "7.0.3",
     "typescript": "5.9.3",
     "vitest": "2.0.5",
     "esbuild": "0.25.5",
-    "tsx": "4.20.3"
+    "tsx": "4.20.6"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.70",
@@ -31,7 +35,8 @@
     "@node-escpos/serialport-adapter": "1.0.0",
     "@node-escpos/server": "0.0.1",
     "@node-escpos/adapter": "0.0.1",
-    "@seriousme/opifex": "1.11.2",
+    "simpleble": "1.2.0",
+    "multicast-dns": "7.2.5",
     "@warehouseoetzidev/core": "workspace:*",
     "mqtt": "^5.13.1",
     "mqtts": "^1.5.0"

@@ -1,2 +1,16 @@
 packages:
-  - 'packages/*'
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@abandonware/bluetooth-hci-socket'
+  - '@abandonware/noble'
+  - '@parcel/watcher'
+  - '@rocicorp/zero-sqlite3'
+  - '@serialport/bindings-cpp'
+  - aws-sdk
+  - bun
+  - esbuild
+  - msgpackr-extract
+  - protobufjs
+  - simpleble
+  - usb

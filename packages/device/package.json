@@ -11,7 +11,7 @@
     "@types/node": "24.9.1",
     "typescript": "5.9.3",
     "vitest": "^3.2.4",
-    "tsx": "4.20.3"
+    "tsx": "4.20.6"
   },
   "dependencies": {
     "@seriousme/opifex": "1.11.2",

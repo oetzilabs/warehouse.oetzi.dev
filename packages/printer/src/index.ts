@@ -1,16 +1,211 @@
 import { Adapter } from "@node-escpos/adapter";
-import Bluetooth from "@node-escpos/bluetooth-adapter";
 import { Alignment, BarcodeType, FontFamily, Image, Printer, PrinterOptions, StyleString } from "@node-escpos/core";
 import Network from "@node-escpos/network-adapter";
 import Serial from "@node-escpos/serialport-adapter";
 import Server from "@node-escpos/server";
 import USB from "@node-escpos/usb-adapter";
 import { Effect } from "effect";
-import { PrinterNotConnected, PrinterNotFound, PrintOperationError } from "./errors";
+import mdns from "multicast-dns";
+import {
+  PrinterBluetoothBindingError,
+  PrinterBluetoothCountError,
+  PrinterFailedToGetBluetoothAdapter,
+  PrinterFailedToGetBluetoothAdress,
+  PrinterFailedToGetUSBDevices,
+  PrinterNotConnected,
+  PrinterNotFound,
+  PrintOperationError,
+} from "./errors";
 import { PrintJob } from "./schemas";
+
+type NetworkPrinter = {
+  name: string;
+  type: string;
+  host?: string;
+  port?: number;
+  addresses: string[];
+  txt?: Record<string, string>;
+};
 
 export class PrinterService extends Effect.Service<PrinterService>()("@warehouse/printers", {
   effect: Effect.gen(function* () {
+    const bluetooth_discover = Effect.fn(function* () {
+      const simpleble = yield* Effect.tryPromise({
+        try: () => import("simpleble"),
+        catch: (error) =>
+          new PrinterBluetoothBindingError({
+            message: "Failed to load Bluetooth bindings",
+            cause: error,
+          }),
+      });
+      const bindings = yield* Effect.tryPromise({
+        try: () => simpleble.SimpleBLE.load(),
+        catch: (error) =>
+          new PrinterBluetoothBindingError({
+            message: "Failed to load Bluetooth bindings",
+            cause: error,
+          }),
+      });
+      const count = yield* Effect.try({
+        try: () => bindings.simpleble_adapter_get_count(),
+        catch: (error) =>
+          new PrinterBluetoothCountError({ message: "Failed to discover Bluetooth printers", cause: error }),
+      });
+      if (count === 0) {
+        return yield* Effect.fail(
+          new PrinterBluetoothCountError({
+            message: "No Bluetooth printers found",
+          }),
+        );
+      }
+      const adapter = yield* Effect.try({
+        try: () => bindings.simpleble_adapter_get_handle(0),
+        catch: (error) =>
+          new PrinterFailedToGetBluetoothAdapter({
+            message: "Failed to discover Bluetooth printer adapters",
+            cause: error,
+          }),
+      });
+
+      const address = yield* Effect.try({
+        try: () => bindings.simpleble_adapter_address(adapter),
+        catch: (error) =>
+          new PrinterFailedToGetBluetoothAdress({
+            message: "Failed to discover Bluetooth printer address",
+            cause: error,
+          }),
+      });
+      // import Bluetooth from "@node-escpos/bluetooth-adapter";
+      const Bluetooth = yield* Effect.promise(() => import("@node-escpos/bluetooth-adapter").then((m) => m.default));
+      return yield* Effect.try({
+        try: () => new Bluetooth(address, {}),
+        catch: (error) => new PrinterNotFound({ message: "Failed to discover Bluetooth printers", type: "bluetooth" }),
+      });
+    });
+
+    const network_discover = Effect.fn(function* (timeout = 2000) {
+      return yield* Effect.async<NetworkPrinter[]>((resume) => {
+        const mdns_client = mdns();
+        const printers = new Map<string, NetworkPrinter>();
+
+        const targets = ["_ipp._tcp.local", "_printer._tcp.local"];
+
+        // Query for both IPP and generic printers
+        for (const name of targets) {
+          mdns_client.query({ questions: [{ name, type: "PTR" }] });
+        }
+
+        mdns_client.on("response", (response) => {
+          for (const answer of response.answers) {
+            if (answer.type === "PTR" && targets.includes(answer.name)) {
+              const full_name = answer.data;
+              printers.set(full_name, {
+                name: full_name,
+                type: answer.name,
+                addresses: [],
+              });
+
+              // Request SRV/TXT records for details
+              mdns_client.query([{ name: full_name, type: "SRV" }]);
+              mdns_client.query([{ name: full_name, type: "TXT" }]);
+            }
+
+            if (answer.type === "SRV") {
+              const service = printers.get(answer.name);
+              if (service) {
+                service.host = answer.data.target;
+                service.port = answer.data.port;
+                mdns_client.query([{ name: service.host, type: "A" }]);
+                mdns_client.query([{ name: service.host, type: "AAAA" }]);
+              }
+            }
+
+            if (answer.type === "A" || answer.type === "AAAA") {
+              for (const [key, p] of printers.entries()) {
+                if (p.host === answer.name && !p.addresses.includes(answer.data)) {
+                  p.addresses.push(answer.data);
+                }
+              }
+            }
+
+            if (answer.type === "TXT") {
+              const txt: Record<string, string> = {};
+              for (const entry of answer.data) {
+                const str = entry.toString();
+                const [k, v] = str.split("=");
+                if (k && v) txt[k] = v;
+              }
+              const p = printers.get(answer.name);
+              if (p) p.txt = txt;
+            }
+          }
+        });
+
+        setTimeout(() => {
+          mdns_client.destroy();
+          resume(Effect.succeed(Array.from(printers.values())));
+        }, timeout);
+      });
+    });
+
+    const discover = Effect.fn(function* (timeout = 2000, with_bluetooth = false) {
+      return yield* Effect.all({
+        usb: Effect.try({
+          try: () =>
+            USB.findPrinter().flatMap((p) =>
+              p.portNumbers.map((port) => ({
+                type: "usb",
+                name: `USB Printer (${p.deviceDescriptor?.iProduct ? `Product ${p.deviceDescriptor.iProduct}` : "Unknown Device"})`,
+                description: `VID: ${p.deviceDescriptor?.idVendor?.toString(16).padStart(4, "0").toUpperCase() || "Unknown"}, PID: ${p.deviceDescriptor?.idProduct?.toString(16).padStart(4, "0").toUpperCase() || "Unknown"}`,
+                port: port,
+                device: p,
+              })),
+            ),
+          catch: (error) =>
+            new PrinterFailedToGetUSBDevices({ message: "Failed to discover USB printers", cause: error }),
+        }),
+        serial: Effect.promise(() => Serial.list()).pipe(
+          Effect.map((p) =>
+            p.map((p) => ({
+              type: "serial",
+              name: `Serial Printer (${p.manufacturer || "Unknown"})`,
+              description: `Port: ${p.path}, Baud: ${p.baudRate || "Auto"}`,
+              port: p.path,
+              device: p,
+            })),
+          ),
+        ),
+        network: network_discover(timeout).pipe(
+          Effect.map((p) =>
+            p.map((printer) => ({
+              type: "network",
+              name: printer.name,
+              description: `Host: ${printer.host || "Unknown"}, Port: ${printer.port || "Default"}`,
+              addresses: printer.addresses,
+              device: printer,
+            })),
+          ),
+        ),
+        ...(with_bluetooth
+          ? {
+              bluetooth: bluetooth_discover().pipe(
+                Effect.map((p) => [
+                  {
+                    type: "bluetooth",
+                    name: p.device.peripheral.id,
+                    description: p.device.characteristic.descriptors
+                      .map((d) => `${d.name}: ${d.type} (${d.uuid})`)
+                      .join(", "),
+                    addresses: p.device.peripheral.address,
+                    device: p,
+                  },
+                ]),
+              ),
+            }
+          : {}),
+      });
+    });
+
     const usb = Effect.fn(function* (options: PrinterOptions = { encoding: "GB18030" }) {
       const usbDevice = yield* Effect.try({
         try: () => new USB(),
@@ -87,6 +282,8 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       parameters: { address: string; options?: any },
       options: PrinterOptions = { encoding: "GB18030" },
     ) {
+      // import Bluetooth from "@node-escpos/bluetooth-adapter";
+      const Bluetooth = yield* Effect.promise(() => import("@node-escpos/bluetooth-adapter").then((m) => m.default));
       const device = yield* Effect.try({
         try: () => new Bluetooth(parameters.address, parameters.options),
         catch: (error) => new PrinterNotFound({ message: "No printer device found" }),
@@ -314,6 +511,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
     });
 
     return {
+      discover,
       usb,
       network,
       bluetooth,
