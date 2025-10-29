@@ -14,7 +14,7 @@ import { StorageInvalidId, StorageNotFound } from "../storages/errors";
 import { InvalidProductIds } from "./errors";
 
 export class InventoryService extends Effect.Service<InventoryService>()("@warehouse/inventory", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const db = yield* DatabaseService;
     const productService = yield* ProductService;
 

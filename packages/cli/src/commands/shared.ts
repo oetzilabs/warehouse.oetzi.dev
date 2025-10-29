@@ -1,4 +1,4 @@
-import { Options, Prompt } from "@effect/cli";
+import { Args, Options, Prompt } from "@effect/cli";
 import { FileSystem, Path } from "@effect/platform";
 import { createZipReader } from "@holmlibs/unzip";
 import dayjs from "dayjs";
@@ -13,6 +13,7 @@ export const formatOption = Options.choice("format", formatOptions).pipe(
   Options.withDescription("The output format"),
   Options.withDefault("json"),
 );
+export const printOption = Options.boolean("print").pipe(Options.withDescription("Print the output to a printer"));
 
 function csvRowToArray(inputString: string): string[] {
   const result: string[] = [];

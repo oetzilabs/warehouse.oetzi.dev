@@ -7,7 +7,7 @@ import Network from "@node-escpos/network-adapter";
 import Serial from "@node-escpos/serialport-adapter";
 import Server from "@node-escpos/server";
 import USB from "@node-escpos/usb-adapter";
-import { Console, Effect } from "effect";
+import { Console, Duration, Effect } from "effect";
 import mdns from "multicast-dns";
 import {
   ImageNotFound,
@@ -155,7 +155,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       });
     });
 
-    const discover = Effect.fn(function* (timeout = 2000, with_bluetooth = false) {
+    const discover = Effect.fn(function* (timeout: number = 2000, with_bluetooth: boolean = false) {
       return yield* Effect.all({
         usb: Effect.try({
           try: () =>
@@ -196,17 +196,21 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
         ...(with_bluetooth
           ? {
               bluetooth: bluetooth_discover().pipe(
-                Effect.map((p) => [
-                  {
-                    type: "bluetooth",
-                    name: p.device.peripheral.id,
-                    description: p.device.characteristic.descriptors
-                      .map((d) => `${d.name}: ${d.type} (${d.uuid})`)
-                      .join(", "),
-                    addresses: p.device.peripheral.address,
-                    device: p,
-                  },
-                ]),
+                Effect.map((p) =>
+                  p.device !== null
+                    ? [
+                        {
+                          type: "bluetooth",
+                          name: p.device.peripheral.id,
+                          description: p.device.characteristic.descriptors
+                            .map((d) => `${d.name}: ${d.type} (${d.uuid})`)
+                            .join(", "),
+                          addresses: p.device.peripheral.address,
+                          device: p,
+                        },
+                      ]
+                    : [],
+                ),
               ),
             }
           : {}),
@@ -388,22 +392,24 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
 
         // Barcode printing
         if (barcodeData) {
-          printer = yield* Effect.try({
-            try: () =>
-              printer.barcode(barcodeData.code, barcodeData.type, {
-                width: barcodeData.width,
-                height: barcodeData.height,
-              }),
-            catch: (error) =>
-              Effect.fail(
+          for (const barcode of barcodeData) {
+            printer = yield* Effect.try({
+              try: () =>
+                printer
+                  .barcode(barcode.code, barcode.type, {
+                    width: barcode.width,
+                    height: barcode.height,
+                  })
+                  .feed(2),
+              catch: (error) =>
                 new PrintOperationError({
                   message: "Failed to print barcode",
                   cause: error,
                   operation: "barcode",
-                  value: barcodeData,
+                  value: barcode,
                 }),
-              ),
-          });
+            });
+          }
         }
 
         // Table printing
@@ -466,6 +472,18 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
               }),
           });
         }
+
+        printer = yield* Effect.try({
+          try: () => printer.feed(4),
+          catch: (error) =>
+            new PrintOperationError({
+              message: "Failed to print",
+              cause: error,
+              operation: "print",
+            }),
+        });
+
+        yield* Effect.sleep(Duration.millis(200));
 
         printer = yield* Effect.tryPromise({
           try: () => printer.cut().close(),

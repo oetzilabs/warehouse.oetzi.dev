@@ -471,12 +471,14 @@ const program = Effect.gen(function* () {
       },
     ],
     qrContent: "https://warehouse.oetzi.dev",
-    barcodeData: {
-      code: "S-0123-E",
-      type: "CODE39",
-      width: 2,
-      height: 40,
-    },
+    barcodeData: [
+      {
+        code: "S-0123-E",
+        type: "CODE39",
+        width: 2,
+        height: 40,
+      },
+    ],
   });
 }).pipe(Effect.provide([PrinterLive, BunContext.layer]), Effect.scoped);
 

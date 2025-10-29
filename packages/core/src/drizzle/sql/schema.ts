@@ -102,4 +102,4 @@ export * from "./schemas/organizations/organization_notifications";
 
 export * from "./schemas/websocket";
 
-export { schema } from "./schemas/utils";
+export * from "./schemas/utils";

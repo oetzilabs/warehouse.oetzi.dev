@@ -10,25 +10,28 @@ import packageJson from "../package.json";
 import updateCommand from "./commands/update";
 
 const loadCommands = Effect.fn("@warehouse/cli/loadCommands")(function* (names: string[] = [] as string[]) {
+  const entry = process.cwd();
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const skip = ["shared.ts"];
   let files: string[] = [];
   if (names.length === 0) {
-    files = yield* fs.readDirectory(path.join(process.cwd(), "src/commands"));
+    files = yield* fs.readDirectory(path.join(entry, "src/commands"));
     files = files.filter((f) => !skip.includes(f));
   } else {
     files = names;
   }
+  // yield* Console.log(files);
   // @ts-ignore
-  let layers = [];
+  const layers = [];
   const loaded = yield* Effect.forEach(
     files,
     Effect.fn("@warehouse/cli/loadCommands/forEach")(function* (name) {
       const module = yield* Effect.tryPromise({
-        try: () => import(path.join(process.cwd(), "src/commands", name.replace(".ts", ""))),
+        try: () => import(path.join(entry, "src", "commands", name.replace(".ts", ""))),
         catch: (e) => Effect.fail(new Error(`Failed to load command ${name}: ${e}`)),
       });
+      // yield* Console.log(name, module.default);
       const layerCollection = module.layers;
       layers.push(layerCollection);
       return module.default;

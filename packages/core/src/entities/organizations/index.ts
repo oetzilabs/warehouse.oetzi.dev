@@ -43,7 +43,7 @@ export const OrganizationFindBySchema = Schema.Struct({
 });
 
 export class OrganizationService extends Effect.Service<OrganizationService>()("@warehouse/organizations", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const db = yield* DatabaseService;
     const generateRandomLetters = (length: number): string => {
       let result = "";
@@ -901,7 +901,103 @@ export class OrganizationService extends Effect.Service<OrganizationService>()("
     });
 
     const all = Effect.fn("@warehouse/organizations/all")(function* () {
-      return yield* db.query.TB_organizations.findMany();
+      return yield* db.query.TB_organizations.findMany({
+        with: {
+          customerOrders: {
+            with: {
+              customer: true,
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+              sale: true,
+            },
+          },
+          purchases: {
+            with: {
+              supplier: true,
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          },
+          devices: {
+            with: {
+              type: true,
+            },
+          },
+          sales: {
+            with: {
+              sale: true,
+            },
+          },
+          products: {
+            with: {
+              product: true,
+            },
+          },
+          supps: {
+            with: {
+              supplier: true,
+            },
+          },
+          customers: {
+            with: {
+              customer: true,
+            },
+          },
+          catalogs: {
+            with: {
+              products: {
+                with: {
+                  product: true,
+                },
+              },
+            },
+          },
+          users: {
+            with: {
+              user: {
+                columns: {
+                  hashed_password: false,
+                },
+              },
+            },
+          },
+          whs: {
+            with: {
+              warehouse: {
+                with: {
+                  addresses: {
+                    with: {
+                      address: true,
+                    },
+                  },
+                  facilities: {
+                    with: {
+                      areas: {
+                        with: {
+                          storages: {
+                            with: {
+                              type: true,
+                              area: true,
+                              products: true,
+                              children: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
     });
 
     const findBy = Effect.fn("@warehouse/organizations/findBy")(function* (
