@@ -4,10 +4,10 @@ import { Effect } from "effect";
 import { PrinterLive, PrinterService } from "../src/index.js";
 
 const program = Effect.gen(function* () {
-  const printer = yield* PrinterService;
-  const usb = yield* printer.usb();
+  const printerService = yield* PrinterService;
+  let usbPrinter = yield* printerService.usb();
 
-  yield* printer.print(usb, {
+  usbPrinter = yield* printerService.print(usbPrinter, {
     text: [
       // Header with company info
       {
@@ -480,6 +480,7 @@ const program = Effect.gen(function* () {
       },
     ],
   });
+  // yield* Effect.addFinalizer(() => Effect.promise(() => usbPrinter.close()));
 }).pipe(Effect.provide([PrinterLive, BunContext.layer]), Effect.scoped);
 
 BunRuntime.runMain(program);

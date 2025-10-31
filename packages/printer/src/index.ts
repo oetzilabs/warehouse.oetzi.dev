@@ -14,6 +14,7 @@ import {
   ImageNotLoaded,
   PrinterBluetoothBindingError,
   PrinterBluetoothCountError,
+  PrinterFailedToClose,
   PrinterFailedToGetBluetoothAdapter,
   PrinterFailedToGetBluetoothAdress,
   PrinterFailedToGetUSBDevices,
@@ -239,13 +240,14 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       });
 
       const release = (printer: Printer<[]>) =>
-        Effect.sync(() => {
-          try {
-            usbDevice.close();
-          } catch (err) {
-            console.error("Error closing device:", err);
-          }
-        });
+        Effect.tryPromise({
+          try: () => printer.close(),
+          catch: (error) => new PrinterFailedToClose({ message: "Failed to close printer", cause: error }),
+        }).pipe(
+          Effect.catchTags({
+            PrinterFailedToClose: (error) => Console.log(error),
+          }),
+        );
 
       return yield* Effect.acquireRelease(acquire, release);
     });
@@ -473,7 +475,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
           });
         }
 
-        yield* Effect.sleep(Duration.millis(200));
+        // yield* Effect.sleep(Duration.millis(200));
 
         printer = yield* Effect.try({
           try: () => printer.cut(),

@@ -68,3 +68,8 @@ export class ImageNotLoaded extends Schema.TaggedError<ImageNotLoaded>()("ImageN
   path: Schema.optional(Schema.String),
   cause: Schema.optional(Schema.Unknown),
 }) {}
+
+export class PrinterFailedToClose extends Schema.TaggedError<PrinterFailedToClose>()("PrinterFailedToClose", {
+  message: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.Unknown),
+}) {}

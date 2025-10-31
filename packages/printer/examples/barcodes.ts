@@ -10,22 +10,23 @@ type Barcode = {
 
 const program = Effect.gen(function* () {
   const printerService = yield* PrinterService;
-  const usb = yield* printerService.usb();
+  let printer = yield* printerService.usb();
 
   // Test all barcode types
   const barcodeTypes: Barcode[] = [
     { type: "UPC-A", code: "012345678901" },
-    { type: "UPC-E", code: "01234567" },
     { type: "EAN13", code: "012345678901" },
     { type: "EAN8", code: "0123456" },
-    { type: "CODE39", code: "BARCODE-39" },
     { type: "ITF", code: "0123456789" },
     { type: "NW7", code: "0123456" },
-    { type: "CODE93", code: "CODE-93" },
-    { type: "code128", code: "Code128Test" },
+    // broken:
+    // { type: "UPC-E", code: "01234567" },
+    // { type: "code128", code: "Code128Test" },
+    // { type: "CODE39", code: "BARCODE-39" },
+    // { type: "CODE93", code: "CODE-93" },
   ];
 
-  let printer = yield* printerService.print(usb, {
+  printer = yield* printerService.print(printer, {
     text: [
       {
         content: "BARCODE TEST:",
@@ -58,7 +59,7 @@ const program = Effect.gen(function* () {
       ],
     });
   }
-  yield* Effect.addFinalizer(() => Effect.promise(() => printer.close()));
+  // yield* Effect.addFinalizer(() => Effect.promise(() => printer.close()));
 }).pipe(Effect.provide([PrinterLive, BunContext.layer]), Effect.scoped);
 
 BunRuntime.runMain(program);
