@@ -19,11 +19,11 @@ const program = Effect.gen(function* () {
     { type: "EAN8", code: "0123456" },
     { type: "ITF", code: "0123456789" },
     { type: "NW7", code: "0123456" },
+    { type: "CODE39", code: "S-0123-E" },
     // broken:
-    // { type: "UPC-E", code: "01234567" },
-    // { type: "code128", code: "Code128Test" },
-    // { type: "CODE39", code: "BARCODE-39" },
-    // { type: "CODE93", code: "CODE-93" },
+    // { type: "CODE128", code: "ABC-abc-1234" },
+    // { type: "UPC-E", code: "0123456" },
+    // { type: "CODE93", code: "ABC-1234-/+" },
   ];
 
   printer = yield* printerService.print(printer, {
