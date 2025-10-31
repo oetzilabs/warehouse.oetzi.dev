@@ -9,8 +9,8 @@ type Barcode = {
 };
 
 const program = Effect.gen(function* () {
-  const printer = yield* PrinterService;
-  const usb = yield* printer.usb();
+  const printerService = yield* PrinterService;
+  const usb = yield* printerService.usb();
 
   // Test all barcode types
   const barcodeTypes: Barcode[] = [
@@ -25,14 +25,40 @@ const program = Effect.gen(function* () {
     { type: "code128", code: "Code128Test" },
   ];
 
-  yield* printer.print(usb, {
-    barcodeData: barcodeTypes.map(({ type, code }) => ({
-      type,
-      code,
-      width: 2,
-      height: 50,
-    })),
+  let printer = yield* printerService.print(usb, {
+    text: [
+      {
+        content: "BARCODE TEST:",
+        font: "a",
+        align: "lt",
+        style: "b",
+        size: [1, 1],
+      },
+    ],
   });
+
+  for (const barcode of barcodeTypes) {
+    printer = yield* printerService.print(printer, {
+      text: [
+        {
+          content: `${barcode.type}: ${barcode.code}`,
+          font: "a",
+          align: "lt",
+          style: "NORMAL",
+          size: [1, 1],
+        },
+      ],
+      barcodeData: [
+        {
+          type: barcode.type,
+          code: barcode.code,
+          width: 2,
+          height: 50,
+        },
+      ],
+    });
+  }
+  yield* Effect.addFinalizer(() => Effect.promise(() => printer.close()));
 }).pipe(Effect.provide([PrinterLive, BunContext.layer]), Effect.scoped);
 
 BunRuntime.runMain(program);

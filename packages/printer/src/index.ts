@@ -473,20 +473,10 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
           });
         }
 
-        printer = yield* Effect.try({
-          try: () => printer.feed(4),
-          catch: (error) =>
-            new PrintOperationError({
-              message: "Failed to print",
-              cause: error,
-              operation: "print",
-            }),
-        });
-
         yield* Effect.sleep(Duration.millis(200));
 
-        printer = yield* Effect.tryPromise({
-          try: () => printer.cut().close(),
+        printer = yield* Effect.try({
+          try: () => printer.cut(),
           catch: (error) =>
             new PrintOperationError({
               message: "Failed to print",
@@ -494,6 +484,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
               operation: "print",
             }),
         });
+        return printer;
       });
 
     // This server will be used sometime, for now it's not needed
