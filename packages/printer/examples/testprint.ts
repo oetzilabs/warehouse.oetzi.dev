@@ -480,7 +480,6 @@ const program = Effect.gen(function* () {
       },
     ],
   });
-  // yield* Effect.addFinalizer(() => Effect.promise(() => usbPrinter.close()));
 }).pipe(Effect.provide([PrinterLive, BunContext.layer]), Effect.scoped);
 
 BunRuntime.runMain(program);

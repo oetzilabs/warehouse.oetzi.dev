@@ -1,5 +1,6 @@
 import { Prompt } from "@effect/cli";
-import { FileSystem, HttpBody, HttpClient, Path, Terminal } from "@effect/platform";
+import { FetchHttpClient, FileSystem, HttpBody, HttpClient, Path } from "@effect/platform";
+import { BunContext } from "@effect/platform-bun";
 import { Config, Effect, Pretty, Schema } from "effect";
 import { DeviceBannedError, DeviceConfigNotFound } from "./errors";
 import { DeviceConfig, DeviceConfigSchema } from "./schemas";
@@ -150,9 +151,22 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return config;
     });
 
+    const listOfDevices = Effect.fn(function* () {
+      const devicesPath = CONFIG_DIR;
+      const devicesFolders = yield* fs.readDirectory(devicesPath);
+      const devices = [];
+      for (const deviceFolder of devicesFolders) {
+        const deviceConfigPath = path.join(devicesPath, deviceFolder, "config.json");
+        const deviceConfig = yield* fs.readFileString(deviceConfigPath, "utf-8");
+        const deviceConfigObject = yield* Schema.decodeUnknown(DeviceConfigSchema)(deviceConfig);
+        devices.push(deviceConfigObject);
+      }
+      return devices;
+    });
+
     return { connect } as const;
   }),
-  dependencies: [],
+  dependencies: [BunContext.layer, FetchHttpClient.layer],
 }) {}
 
 export const DeviceLive = DeviceService.Default;
