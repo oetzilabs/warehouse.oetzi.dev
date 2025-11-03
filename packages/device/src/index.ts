@@ -130,7 +130,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         }),
       });
 
-      const isBannedResponse = yield* Schema.decodeUnknown(
+      const remoteDeviceStatusResponse = yield* Schema.decodeUnknown(
         Schema.Struct(
           {
             status: Schema.Literal("banned", "ok", "unknown"),
@@ -142,10 +142,14 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
         ),
       )(yield* connectResponse.json);
 
-      if (isBannedResponse.status === "banned") {
+      if (remoteDeviceStatusResponse.status === "banned") {
         return yield* Effect.fail(
           new DeviceBannedError({ deviceId: config.deviceId, message: "Device is banned", token: config.token }),
         );
+      }
+
+      // TODO: If status is "unknown" send a post-request to the api to reset the device status.
+      if (remoteDeviceStatusResponse.status === "unknown") {
       }
 
       return config;
