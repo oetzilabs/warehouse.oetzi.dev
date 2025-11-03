@@ -1,7 +1,8 @@
 # warehouse.oetzi.dev
 
-**Private monorepo for oetzilabs' warehouse platform**  
-> *Built with TypeScript, SST, Effect, AWS SDK, and more.*
+**Private monorepo for oetzilabs' warehouse platform**
+
+> _Built with TypeScript, SST, Effect, AWS SDK, and more._
 
 ---
 
@@ -16,8 +17,12 @@ It employs a modern TypeScript monorepo architecture, leveraging SST for serverl
 
 - **packages/core**: Core library, business logic, and shared utilities.
 - **packages/functions**: Cloud/serverless API functions (AWS Lambda, etc).
-- **packages/web**: (presumed) Frontend application (see scripts).
-- Additional packages may be added under `packages/*`.
+- **packages/web**: Frontend application built with Vinxi and SolidStart.
+- **packages/cli**: Command-line interface for warehouse operations.
+- **packages/device**: Device management and communication.
+- **packages/printer**: Label and barcode printing functionality.
+- **packages/realtime**: Real-time communication and MQTT services.
+- **packages/docker**: PostgreSQL configuration and Docker setup.
 
 ---
 
@@ -29,7 +34,9 @@ It employs a modern TypeScript monorepo architecture, leveraging SST for serverl
 - **AWS SDK** (S3, SNS, SES, Textract, IoT, EventBridge, etc)
 - **Drizzle ORM & Valibot** (data modeling/validation)
 - **Hono** (API framework)
-- **Solid.js** (frontend, if present)
+- **Vinxi & SolidStart** (frontend framework)
+- **Solid.js** (UI framework)
+- **MQTT** (real-time messaging)
 - **Vitest** (testing)
 - **Bun** (monorepo & dev tooling)
 - **OpenTelemetry** (observability)
@@ -54,13 +61,15 @@ bun install
 
 ```bash
 bun run dev              # Start SST dev environment (full stack)
+bun run local:dev        # Start web frontend locally with Vinxi
 ```
 
-- To run the web app locally:
-    ```bash
-    cd packages/web
-    bun run dev
-    ```
+- To run individual packages locally:
+  ```bash
+  cd packages/web && bun run dev     # Frontend (Vinxi dev server)
+  cd packages/cli && bun run dev     # CLI tools
+  cd packages/printer && bun run dev # Printer examples
+  ```
 
 ### Build & Deploy
 
@@ -75,14 +84,14 @@ bun run deploy           # Deploy to AWS
 
 Common scripts (from root):
 
-- `dev`          – Start SST dev environment
-- `local:dev`    – Start web frontend locally
-- `build`        – Build all packages
-- `deploy`       – Deploy to AWS
-- `remove`       – Remove stack from AWS
-- `console`      – SST console
-- `typecheck`    – TypeScript check
-- `clean`        – Remove build/node_modules artifacts
+- `dev` – Start SST dev environment
+- `local:dev` – Start web frontend locally
+- `build` – Build all packages
+- `deploy` – Deploy to AWS
+- `remove` – Remove stack from AWS
+- `console` – SST console
+- `typecheck` – TypeScript check
+- `clean` – Remove build/node_modules artifacts
 
 See each `package.json` for more.
 
@@ -92,14 +101,16 @@ See each `package.json` for more.
 
 - **Functional, type-safe code** via Effect, Valibot, and TypeScript
 - **Serverless-first** with AWS and SST
-- **Monorepo** for cohesive development
-- **Extensible** with workspaces and modular packages
+- **Real-time capabilities** with MQTT and WebSocket connections
+- **Modular architecture** with specialized packages for different concerns
+- **Device integration** for warehouse hardware (printers, scanners)
+- **Monorepo** for cohesive development and shared dependencies
 
 ---
 
 ## License
 
-*This repository is private and does not specify a license.*
+_This repository is private and does not specify a license._
 
 ---
 
