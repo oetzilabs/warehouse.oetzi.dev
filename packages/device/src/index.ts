@@ -9,7 +9,10 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
   effect: Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const XDG_CONFIG_HOME = yield* Config.string("XDG_CONFIG_HOME").pipe(Config.withDefault("~/.config"));
+    const HOME = yield* Config.string("HOME");
+    const XDG_CONFIG_HOME = yield* Config.string("XDG_CONFIG_HOME").pipe(
+      Config.withDefault(path.join(HOME, ".config")),
+    );
     const CONFIG_HOME_ABSOLUTE = path.normalize(XDG_CONFIG_HOME);
     const CONFIG_DIR = yield* Config.string("CONFIG_DIR").pipe(
       Config.withDefault(`${CONFIG_HOME_ABSOLUTE}/warehouse/devices`),
@@ -168,7 +171,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return devices;
     });
 
-    return { connect } as const;
+    return { connect, setup, getConfig, listOfDevices } as const;
   }),
   dependencies: [BunContext.layer, FetchHttpClient.layer],
 }) {}
