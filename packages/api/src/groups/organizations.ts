@@ -2,7 +2,6 @@ import { HttpApiBuilder } from "@effect/platform";
 import { Effect, Layer } from "effect";
 import { WarehouseApi } from "../api";
 
-// Organizations group implementation
 export const OrganizationsGroupLive = HttpApiBuilder.group(WarehouseApi, "organizations", (handlers) =>
   Effect.gen(function* () {
     return handlers.handle(

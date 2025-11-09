@@ -9,7 +9,6 @@ import {
   Organization,
 } from "./schemas";
 
-// API Groups
 const DeviceGroup = HttpApiGroup.make("devices")
   .add(
     HttpApiEndpoint.get("getTypes")`/types`

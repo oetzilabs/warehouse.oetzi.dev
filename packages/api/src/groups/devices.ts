@@ -3,7 +3,6 @@ import { Effect, Layer } from "effect";
 import { Date } from "effect/Schema";
 import { WarehouseApi } from "../api";
 
-// Device handlers - implement your business logic here
 export const DevicesGroupLive = HttpApiBuilder.group(WarehouseApi, "devices", (handlers) =>
   handlers
     .handle(
