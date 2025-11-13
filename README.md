@@ -1,6 +1,6 @@
 # warehouse.oetzi.dev
 
-**Private monorepo for oetzilabs' warehouse platform**
+**Monorepo for oetzilabs' warehouse platform**
 
 > _Built with TypeScript, SST, Effect, AWS SDK, and more._
 
