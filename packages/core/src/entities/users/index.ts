@@ -473,7 +473,7 @@ export class UserService extends Effect.Service<UserService>()("@warehouse/users
       return updatedUser;
     });
 
-    const verifyPassword = Effect.fn("@warehouse/users/vrifyPassword")(function* (
+    const verifyPassword = Effect.fn("@warehouse/users/verifyPassword")(function* (
       emailInput: string,
       password: string,
     ) {

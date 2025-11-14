@@ -66,7 +66,7 @@ export const loginViaEmail = action(async (email: string, password: string) => {
   "use server";
   return runUnAuthenticated(
     "@action/login-via-email",
-    Effect.gen(function* (_) {
+    Effect.gen(function* () {
       const authService = yield* AuthService;
       const { session } = yield* authService.login(email, Redacted.make(password));
       setCookie("session_token", session.access_token, {
