@@ -14,7 +14,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { createQuery } from "@rocicorp/zero/solid";
 import { cookieStorage, makePersisted } from "@solid-primitives/storage";
 import { A, useLocation, useNavigate, useResolvedPath } from "@solidjs/router";
 import ArrowLeft from "lucide-solid/icons/arrow-left";
@@ -68,20 +67,6 @@ export default function DashboardLayout(props: { children: JSXElement }) {
   const user = useUser();
 
   // const z = user.z();
-
-  // const [orgData] = createQuery(() => {
-  //   const userId = user.user()?.id;
-  //   const mainQuery = z!.query.TB_organizations.related("owner")
-  //     .related("customerOrders")
-  //     .related("purchases")
-  //     .related("sales")
-  //     .related("customers")
-  //     .related("products");
-  //   if (!userId) {
-  //     return mainQuery.limit(0);
-  //   }
-  //   return mainQuery.limit(1).where("owner_id", "=", userId);
-  // });
 
   const location = useLocation();
   const relativePath = useResolvedPath(() => location.pathname);
