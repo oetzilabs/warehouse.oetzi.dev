@@ -4,13 +4,13 @@ import { InfallibleEventHandler } from "../../types";
 import { MQTTConnectionError, MQTTPublishError } from "./errors";
 
 export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt", {
-  effect: Effect.gen(function* (_) {
+  effect: Effect.gen(function* () {
     const clientRef = yield* Ref.make<MqttClient | null>(null);
 
     const connect = Effect.fn("@warehouse/mqtt/connect")(function* (brokerUrl: string, clientId: string) {
       const retryPolicy = Schedule.intersect(Schedule.exponential("1 seconds"), Schedule.recurs(5));
       const client = yield* Effect.retry(
-        Effect.gen(function* (_) {
+        Effect.gen(function* () {
           const url = new URL(brokerUrl);
           if (!url.port)
             return yield* Effect.fail(new MQTTConnectionError({ message: "Invalid broker URL, misising PORT" }));
@@ -80,7 +80,7 @@ export class MQTTService extends Effect.Service<MQTTService>()("@warehouse/mqtt"
             const unsub = yield* Effect.promise(() =>
               client.listenSubscribe(handler.channel, (message) => {
                 Effect.runFork(
-                  Effect.gen(function* (_) {
+                  Effect.gen(function* () {
                     const event = td.decode(message.payload);
                     const payload = yield* Effect.option(Schema.decodeUnknown(handler.schema)(event));
                     if (Option.isNone(payload)) return;

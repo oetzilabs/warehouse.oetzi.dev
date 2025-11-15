@@ -1,13 +1,12 @@
 #!/usr/bin/env bun
 import { Command } from "@effect/cli";
 import { BunContext, BunRuntime } from "@effect/platform-bun";
-import { Console, Effect } from "effect";
+import { Effect } from "effect";
 
 const deviceCommand = Command.make(
   "device",
   {},
   Effect.fn("deviceCommand")(function* () {
-    yield* Console.log("Device command is currently empty - architecture needs to be rethought");
     return Effect.void;
   }),
 );
