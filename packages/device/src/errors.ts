@@ -17,3 +17,10 @@ export class DeviceBannedError extends Schema.TaggedError<DeviceBannedError>()("
 export class DeviceConfigNotFound extends Schema.TaggedError<DeviceConfigNotFound>()("DeviceConfigNotFound", {
   message: Schema.String,
 }) {}
+
+export class DeviceCapabilitiesNotFound extends Schema.TaggedError<DeviceCapabilitiesNotFound>()(
+  "DeviceCapabilitiesNotFound",
+  {
+    message: Schema.String,
+  },
+) {}

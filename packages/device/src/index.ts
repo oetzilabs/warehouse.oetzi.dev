@@ -1,9 +1,10 @@
 import { Prompt } from "@effect/cli";
 import { FetchHttpClient, FileSystem, HttpBody, HttpClient, Path } from "@effect/platform";
 import { BunContext } from "@effect/platform-bun";
+import { DownloaderLive, DownloaderService } from "@warehouseoetzidev/core/src/entities/downloader";
 import { Config, Effect, Pretty, Schema } from "effect";
-import { DeviceBannedError, DeviceConfigNotFound } from "./errors";
-import { DeviceConfig, DeviceConfigSchema } from "./schemas";
+import { DeviceBannedError, DeviceCapabilitiesNotFound, DeviceConfigNotFound } from "./errors";
+import { DeviceCapability, DeviceConfig, DeviceConfigSchema } from "./schemas";
 
 export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/device", {
   effect: Effect.gen(function* () {
@@ -158,7 +159,7 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return config;
     });
 
-    const listOfDevices = Effect.fn(function* () {
+    const listOfDevices = Effect.fn("@warehouse/device/listOfDevices")(function* () {
       const devicesPath = CONFIG_DIR;
       const devicesFolders = yield* fs.readDirectory(devicesPath);
       const devices = [];
@@ -171,7 +172,59 @@ export class DeviceService extends Effect.Service<DeviceService>()("@warehouse/d
       return devices;
     });
 
-    return { connect, setup, getConfig, listOfDevices } as const;
+    const capabilities = Effect.fn("@warehouse/device/capabilities")(function* (deviceId: string) {
+      const deviceConfig = yield* getConfig(deviceId);
+      if (!deviceConfig) return yield* Effect.fail(new DeviceCapabilitiesNotFound({ message: "Device not found" }));
+      return yield* Effect.all(
+        deviceConfig.capabilities.map(
+          Effect.fnUntraced(function* (cap) {
+            const fileTargetPath = path.join(CONFIG_DIR, deviceId, "capabilities", `${cap}.cap.json`);
+            const fileExists = yield* fs.exists(fileTargetPath);
+            if (!fileExists) return yield* Effect.fail(new DeviceCapabilitiesNotFound({ message: "File not found" }));
+            const fileContent = yield* fs.readFileString(fileTargetPath, "utf-8");
+            const capJson = yield* Schema.decodeUnknown(DeviceCapability)(fileContent);
+            return capJson.type;
+          }),
+        ),
+      );
+    });
+
+    const updateCapabilities = Effect.fn("@warehouse/device/updateCapabilities")(
+      function* (deviceId: string, capabilities: DeviceCapability[]) {
+        const deviceConfig = yield* getConfig(deviceId);
+        if (!deviceConfig) return yield* Effect.fail(new DeviceCapabilitiesNotFound({ message: "Device not found" }));
+        const capabilityFilePath = path.join(CONFIG_DIR, deviceId, "capabilities");
+        const capabilityFileExists = yield* fs.exists(capabilityFilePath);
+        if (!capabilityFileExists) {
+          yield* fs.makeDirectory(capabilityFilePath, { recursive: true });
+        }
+        const downloader = yield* DownloaderService;
+        yield* Effect.all(
+          capabilities.map(
+            Effect.fnUntraced(function* (cap) {
+              const fileTargetPath = path.join(capabilityFilePath, `${cap.version}.cap.json`);
+              yield* fs.writeFileString(fileTargetPath, JSON.stringify(cap));
+              const capFileFilename = path.join(capabilityFilePath, `${cap.version}.js`);
+              const fileTargetPath2 = yield* downloader.download(cap.fileUrl, capFileFilename, "buffer").pipe(
+                Effect.catchTags({
+                  ResponseError: (e) => Effect.fail(new DeviceCapabilitiesNotFound({ message: e.message })),
+                }),
+              );
+              deviceConfig.capabilities.push(cap.type);
+              return fileTargetPath2;
+            }),
+          ),
+          {
+            concurrency: "unbounded",
+          },
+        );
+
+        return deviceConfig;
+      },
+      (effect) => effect.pipe(Effect.provide([DownloaderLive])),
+    );
+
+    return { connect, setup, getConfig, listOfDevices, capabilities, updateCapabilities } as const;
   }),
   dependencies: [BunContext.layer, FetchHttpClient.layer],
 }) {}
