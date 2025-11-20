@@ -1,19 +1,14 @@
 import { BunContext, BunRuntime } from "@effect/platform-bun";
-import { BarcodeType } from "@node-escpos/core";
 import { Effect } from "effect";
 import { PrinterLive, PrinterService } from "../src/index.js";
-
-type Barcode = {
-  type: BarcodeType;
-  code: string;
-};
+import { BarcodeData, PrintJob } from "../src/schemas";
 
 const program = Effect.gen(function* () {
   const printerService = yield* PrinterService;
   let printer = yield* printerService.usb();
 
   // Test all barcode types
-  const barcodeTypes: Barcode[] = [
+  const barcodeTypes: Omit<BarcodeData, "width" | "height">[] = [
     { type: "UPC-A", code: "012345678901" },
     { type: "EAN13", code: "012345678901" },
     { type: "EAN8", code: "0123456" },
@@ -21,7 +16,7 @@ const program = Effect.gen(function* () {
     { type: "NW7", code: "0123456" },
     { type: "CODE39", code: "S-0123-E" },
     // broken:
-    // { type: "CODE128", code: "ABC-abc-1234" },
+    // { type: "CODE128", code: "A" },
     // { type: "UPC-E", code: "0123456" },
     // { type: "CODE93", code: "ABC-1234-/+" },
   ];
@@ -38,8 +33,9 @@ const program = Effect.gen(function* () {
     ],
   });
 
-  for (const barcode of barcodeTypes) {
-    printer = yield* printerService.print(printer, {
+  // Print each barcode sequentially, threading the `printer` state
+  printer = yield* Effect.reduce(barcodeTypes, printer, (pr, barcode) =>
+    printerService.print(pr, {
       text: [
         {
           content: `${barcode.type}: ${barcode.code}`,
@@ -57,8 +53,8 @@ const program = Effect.gen(function* () {
           height: 50,
         },
       ],
-    });
-  }
+    }),
+  );
 }).pipe(Effect.provide([PrinterLive, BunContext.layer]), Effect.scoped);
 
 BunRuntime.runMain(program);

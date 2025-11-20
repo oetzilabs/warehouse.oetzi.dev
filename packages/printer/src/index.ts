@@ -368,36 +368,35 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       { text, imagePath, qrContent, barcodeData, tableData, customTableData }: PrintJob,
     ) =>
       Effect.gen(function* () {
+        printer = yield* flush(printer);
         // Basic text printing
         if (text) {
-          for (const t of text) {
-            printer = yield* Effect.try({
+          printer = yield* Effect.reduce(text, printer, (pr, t) =>
+            Effect.try({
               try: () =>
-                printer
+                pr
                   .font(t.font ?? ("a" as FontFamily))
                   .align(t.align || ("ct" as Alignment))
                   .style(t.style || ("bu" as StyleString))
                   .size(...(t.size || [1, 1]))
                   .text(t.content),
               catch: (error) =>
-                Effect.fail(
-                  new PrintOperationError({
-                    message: "Failed to print text",
-                    cause: error,
-                    operation: "text",
-                    value: t.content,
-                  }),
-                ),
-            });
-          }
+                new PrintOperationError({
+                  message: "Failed to print text",
+                  cause: error,
+                  operation: "text",
+                  value: t.content,
+                }),
+            }),
+          );
         }
 
         // Barcode printing
         if (barcodeData) {
-          for (const barcode of barcodeData) {
-            printer = yield* Effect.try({
+          printer = yield* Effect.reduce(barcodeData, printer, (pr, barcode) =>
+            Effect.try({
               try: () =>
-                printer
+                pr
                   .barcode(barcode.code, barcode.type, {
                     width: barcode.width,
                     height: barcode.height,
@@ -410,8 +409,8 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
                   operation: "barcode",
                   value: barcode,
                 }),
-            });
-          }
+            }),
+          );
         }
 
         // Table printing
@@ -528,6 +527,18 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       return yield* Effect.acquireRelease(acquire, release);
     });
 
+    const flush = Effect.fn(function* (printer: Printer<[]>) {
+      return yield* Effect.tryPromise({
+        try: () => printer.flush(),
+        catch: (error) =>
+          new PrintOperationError({
+            message: "Failed to clear printer",
+            cause: error,
+            operation: "clear",
+          }),
+      });
+    });
+
     return {
       discover,
       usb,
@@ -535,6 +546,7 @@ export class PrinterService extends Effect.Service<PrinterService>()("@warehouse
       bluetooth,
       serial,
       print,
+      flush,
       // server,
     } as const;
   }),
